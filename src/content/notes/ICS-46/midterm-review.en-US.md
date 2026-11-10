@@ -1,6 +1,6 @@
 ---
 title: "Midterm Review"
-summary: "Midterm review for Lectures 0–12: exam scope and strategy, Big-O and loop counting, ArrayList and amortized analysis, linked lists, stacks/queues/deques built from each other, the four comparison sorts plus heap sort, the Lec 0–2 C++ topics, and the sample midterm, quizzes, homework and labs solved with likely variants."
+summary: "Midterm review for Lectures 0–12: exam scope and strategy, Big-O and loop counting, ArrayList and amortized analysis, linked lists, stacks/queues/deques built from each other, the four comparison sorts, trees and traversals, heaps and priority queues, binary search trees, the Lec 0–2 C++ topics, and the sample midterm, quizzes, homework and labs solved with likely variants."
 ---
 
 # Information and Computer Science 46 — Midterm Review
@@ -15,11 +15,14 @@ summary: "Midterm review for Lectures 0–12: exam scope and strategy, Big-O and
 - [6. Linked Lists (Sample Q3)](#6-linked-lists-sample-q3)
 - [7. Stacks, Queues and Deques (Sample Q4)](#7-stacks-queues-and-deques-sample-q4)
 - [8. Comparison Sorting (Sample Q5)](#8-comparison-sorting-sample-q5)
-- [9. Heap Sort](#9-heap-sort)
-- [10. Templates, Pointers, Smart Pointers, 2D Arrays](#10-templates-pointers-smart-pointers-2d-arrays)
-- [11. The Design Question](#11-the-design-question)
-- [12. Lab Code to Know by Heart](#12-lab-code-to-know-by-heart)
-- [13. Quick Reference and Last-Night Checklist](#13-quick-reference-and-last-night-checklist)
+- [9. Trees, Binary Trees and Traversals](#9-trees-binary-trees-and-traversals)
+- [10. Heaps and Priority Queues](#10-heaps-and-priority-queues)
+- [11. Binary Search Trees](#11-binary-search-trees)
+- [12. Heap Sort (Not on the Midterm)](#12-heap-sort-not-on-the-midterm)
+- [13. Templates, Pointers, Smart Pointers, 2D Arrays](#13-templates-pointers-smart-pointers-2d-arrays)
+- [14. The Design Question](#14-the-design-question)
+- [15. Lab Code to Know by Heart](#15-lab-code-to-know-by-heart)
+- [16. Quick Reference and Last-Night Checklist](#16-quick-reference-and-last-night-checklist)
 
 > UCI ICS 46: Data Structure Implementation and Analysis — Prof. Tom Yeh, Fall 2026. Midterm: Thursday 11/12/26, in lecture.
 > Built from the sample midterm, Quiz 2, Quiz 3, HW 1/2/3/5, Labs 1–4 and the "Midterm Topics & Prep" slide of Lecture 12. Each topic links back to its lecture notes for the full explanation; this page is the exam layer on top.
@@ -29,7 +32,7 @@ summary: "Midterm review for Lectures 0–12: exam scope and strategy, Big-O and
 
 ## 1. Scope and Format
 
-The official topic list (Lecture 12, slide 3):
+The topic list (Lecture 12, slide 3), plus the trees Prof. Yeh added later:
 
 | Midterm topic | Where it was taught |
 |---|---|
@@ -37,12 +40,13 @@ The official topic list (Lecture 12, slide 3):
 | Analysis of algorithms, ArrayList, Linked List, Circular Array | [Lec 2](lec-02.en-US.md), [Lec 3](lec-03.en-US.md), [Lec 4](lec-04.en-US.md), [Lec 7](lec-07.en-US.md) |
 | Stacks, Queues, Deques | [Lec 4](lec-04.en-US.md), [Lec 5](lec-05.en-US.md), [Lec 7](lec-07.en-US.md) |
 | Amortized analysis, analysis of recursion | [Lec 3](lec-03.en-US.md), [Lec 6](lec-06.en-US.md) |
-| Comparison-based sorting | [Lec 7](lec-07.en-US.md), [Lec 8](lec-08.en-US.md), [Lec 9](lec-09.en-US.md), plus heap sort ([Lec 11](lec-11.en-US.md), [§9](#9-heap-sort)) |
+| Comparison-based sorting (selection, insertion, merge, quick) | [Lec 7](lec-07.en-US.md), [Lec 8](lec-08.en-US.md), [Lec 9](lec-09.en-US.md) |
+| Trees, binary trees, traversals; heaps and priority queues; binary search trees | [Lec 10](lec-10.en-US.md), [Lec 11](lec-11.en-US.md), Lec 12 ([§9](#9-trees-binary-trees-and-traversals)–[§11](#11-binary-search-trees)) |
 
 Study materials named on the same slide: the sample midterm, quizzes, lecture activities, homeworks and labs — and **"Lab implementations will be covered."**
 
-- **Heap sort.** The sample says "ignore Heapsort", but heap sort *is* a comparison sort and was finished in Lecture 12, the week before the exam. This page covers it ([§9](#9-heap-sort)); treat it as likely.
-- **Not on the list:** trees, traversals and BSTs (Lectures 10, 12). You still need the heap's array/tree picture for heap sort.
+- **Trees are in.** The slide's list stops at sorting, but Prof. Yeh has since said trees will be on the midterm: tree terminology and traversals, heaps and priority queues (including bottom-up heap construction), and BSTs ([§9](#9-trees-binary-trees-and-traversals)–[§11](#11-binary-search-trees)). The sample has no tree question, so those sections are built from the Lecture 10–12 activities.
+- **Heap sort is out** (confirmed by Prof. Yeh, matching the sample's "ignore Heapsort"). Its notes stay on this page, folded away ([§12](#12-heap-sort-not-on-the-midterm)), for the final.
 - **Format:** free response on paper, closed book, C++ written by hand (the quizzes allowed no cheat sheet; assume the same unless told otherwise). The sample has five 10-point questions (Big-O, loop counting, a linked-list method, a structure built from another structure, sorting).
 - **The sample is the blueprint.** Expect the same five questions with details changed — a different method (`removeFirst` instead of `removeLast`), a different pointer (head instead of tail), a different input (reverse-sorted instead of sorted). Each section below solves the sample question and then the variants most likely to replace it.
 
@@ -95,9 +99,9 @@ Before you write any linked-structure or array method, go down this list and han
 ### 2.6 Time
 
 - The paper is long. Do the question types you have drilled first (Big-O table, loop counts, sort table), then the code.
-- Expect one harder design-style question ([§11](#11-the-design-question)). Budget for it, and if you are stuck write the idea, the invariant and the complexity you are aiming for — that alone is worth points.
+- Expect one harder design-style question ([§14](#14-the-design-question)). Budget for it, and if you are stuck write the idea, the invariant and the complexity you are aiming for — that alone is worth points.
 - Listen for corrections announced during the exam.
-- Recent material shows up: make sure heap sort ([§9](#9-heap-sort)) is solid, not just the early lectures.
+- Recent material shows up: make sure trees, heaps and BSTs ([§9](#9-trees-binary-trees-and-traversals)–[§11](#11-binary-search-trees)) are solid, not just the early lectures.
 
 Prof. Yeh's own prep advice (Ed): be able to do **every lecture activity and homework question and their variations**, and review the labs; the assessments test depth of understanding.
 
@@ -312,7 +316,7 @@ removeLast -> 37  12 99 (count 2)
 
 ### 6.3 Variants on the same list
 
-All in the [compiled code](#122-the-code-bank-compiled); with `tail` only:
+All in the [compiled code](#152-the-code-bank-compiled); with `tail` only:
 
 ```cpp
 void addLast(const T& item) {                    // O(1)
@@ -526,9 +530,9 @@ void resize(int newCap) {                        // copy in QUEUE order, not arr
 | Insertion | ✓ | ✓ | O(n) | O(n²) | O(n²) | small or partially sorted arrays |
 | Merge | | ✓ | O(n log n) | O(n log n) | O(n log n) | guaranteed; O(n) extra space |
 | Quick | ✓ | | O(n log n) | O(n log n) | O(n²) | probabilistic guarantee; fastest in practice |
-| Heap | ✓ | | O(n log n) | O(n log n) | O(n log n) | guaranteed and in place |
+| Heap (not on the midterm) | ✓ | | O(n log n) | O(n log n) | O(n log n) | guaranteed and in place |
 
-Code for all of them: [selection and insertion](lec-07.en-US.md#5-selection-sort), [merge](lec-08.en-US.md#2-merging-two-sorted-halves), [quick](lec-09.en-US.md#2-partitioning-hoare-2-pointer-scheme), [heap](#9-heap-sort).
+Code for all of them: [selection and insertion](lec-07.en-US.md#5-selection-sort), [merge](lec-08.en-US.md#2-merging-two-sorted-halves), [quick](lec-09.en-US.md#2-partitioning-hoare-2-pointer-scheme), [heap](#12-heap-sort-not-on-the-midterm).
 
 ### 8.2 Recognizing an intermediate state
 
@@ -538,7 +542,7 @@ Code for all of them: [selection and insertion](lec-07.en-US.md#5-selection-sort
 | Insertion | prefix = the **first k original keys**, sorted (not the k smallest); suffix untouched |
 | Merge (top-down) | sorted runs on recursion boundaries (first 2, 3, 5, 9 … items), everything after them untouched |
 | Quick (pivot `a[lo]`, no shuffle) | after the first partition: the original first key sits at index j with only smaller keys left of it and larger keys right of it |
-| Heap | suffix = the **largest** keys, sorted, in final places; prefix is heap-ordered (its first element is its maximum) |
+| Heap (not on the midterm) | suffix = the **largest** keys, sorted, in final places; prefix is heap-ordered (its first element is its maximum) |
 
 ### 8.3 Sample Q5(a) solved
 
@@ -546,7 +550,7 @@ Rows are numbered by the table's last column (row 0 = input, row 6 = sorted). I 
 
 | Row | Array | Algorithm | Why |
 |---|---|---|---|
-| 1 | 11 10 **12 15 16 18 20 21 28 32 35 40 41 42 43 44 46 47** | **5 Heapsort** | 16 largest keys sorted at the end; prefix `11 10` is heap-ordered |
+| 1 | 11 10 **12 15 16 18 20 21 28 32 35 40 41 42 43 44 46 47** | **5 Heapsort** | 16 largest keys sorted at the end; prefix `11 10` is heap-ordered (heap sort is excluded this term, so a modified version of this question would likely list only the other four sorts) |
 | 2 | **11 12 20 35 42 43 46 47** 44 32 16 10 … | **2 Insertion** | the first 8 *original* keys sorted, rest untouched (10 is not at the front, so not selection) |
 | 3 | **11 12 20 35 46** 43 42 47 44 … | **3 Mergesort** | `sort(0,8)` → `sort(0,4)` finished: first 5 merged, rest untouched |
 | 4 | 10 11 **12** 46 20 43 42 47 44 32 16 35 40 18 41 21 28 15 | **4 Quicksort** | first partition: the old first key 12 is at index 2 with only smaller keys (10 11) left of it and larger keys right of it (35 was swapped into 10's old spot) |
@@ -558,7 +562,7 @@ Rows are numbered by the table's last column (row 0 = input, row 6 = sorted). I 
 
 Measured with the course code (counting every key comparison), n = 1000 → n = 2000:
 
-| Input | Selection | Insertion | Merge | Quick, pivot = first | Quick, median-of-3 | Heap |
+| Input | Selection | Insertion | Merge | Quick, pivot = first | Quick, median-of-3 | Heap (not tested) |
 |---|---|---|---|---|---|---|
 | **sorted** (sample) | **O(n²)** 499,500 → 1,999,000 | **O(n)** 999 → 1999 | **O(n log n)** 5,044 → 11,088 | **O(n²)** 501,498 → 2,002,998 | O(n log n) | O(n log n) |
 | reverse sorted | O(n²) | **O(n²)** 499,500 | O(n log n) | **O(n²)** | O(n log n) | O(n log n) |
@@ -590,7 +594,7 @@ H ends at index 3: everything left is ≤ H, everything right ≥ H. Step throug
 {"title": "HW 5 Q3: partition H O M E W O R K F I V E", "items": "H, O, M, E, W, O, R, K, F, I, V, E", "mode": "partition"}
 ```
 
-**Q5: pick the pivot from two fixed indices to fix the O(n²) worst case?** (a) Impossible: for any deterministic rule that looks at fixed positions, an adversary can build an input where both of those positions hold the smallest keys of every subarray, so each partition still splits 0 / n−1 → O(n²). (b) The question rules out shuffling and random pivots, so the fix has to change what the pivot *is*, not where it is read from. A worst-case O(n log n) guarantee needs a pivot that always splits well: the **true median**, found in O(n) per call with the median-of-medians algorithm, gives T(n) = 2T(n/2) + O(n) = O(n log n). The practical alternative is to stop quick sort when recursion gets too deep and finish with heap sort (O(n log n) worst case, [§9](#9-heap-sort)) — that is what `std::sort` does. (Both are beyond the slides; the slides' own tools, shuffle and Lab 4's `RANDOM` pivot, only make the worst case *unlikely*.) Median-of-three ([Lec 9](lec-09.en-US.md#71-pivot-strategies-in-code-lab-4)) is also a fixed-position rule, so it has the same problem as the classmate's idea.
+**Q5: pick the pivot from two fixed indices to fix the O(n²) worst case?** (a) Impossible: for any deterministic rule that looks at fixed positions, an adversary can build an input where both of those positions hold the smallest keys of every subarray, so each partition still splits 0 / n−1 → O(n²). (b) The question rules out shuffling and random pivots, so the fix has to change what the pivot *is*, not where it is read from. A worst-case O(n log n) guarantee needs a pivot that always splits well: the **true median**, found in O(n) per call with the median-of-medians algorithm, gives T(n) = 2T(n/2) + O(n) = O(n log n). The practical alternative is to stop quick sort when recursion gets too deep and finish with heap sort (O(n log n) worst case, [§12](#12-heap-sort-not-on-the-midterm)) — that is what `std::sort` does. (Both are beyond the slides; the slides' own tools, shuffle and Lab 4's `RANDOM` pivot, only make the worst case *unlikely*.) Median-of-three ([Lec 9](lec-09.en-US.md#71-pivot-strategies-in-code-lab-4)) is also a fixed-position rule, so it has the same problem as the classmate's idea.
 
 **Q1–2: merge without the `i > mid` / `j > hi` tests**: copy the right half into `aux` **reversed**, then merge from both ends; each half's largest key acts as a sentinel. Faster, but not stable. Full code in [Lec 8 §6.2](lec-08.en-US.md#62-merging-without-the-exhaustion-checks-hw-5).
 
@@ -604,26 +608,158 @@ H ends at index 3: everything left is ≤ H, everything right ≥ H. Step throug
 
 ---
 
-## 9. Heap Sort
+## 9. Trees, Binary Trees and Traversals
 
-Two phases on the heap's 1-based array (`a[1..n]`, children of k at 2k and 2k + 1; recap of [Lecture 11](lec-11.en-US.md#8-optimal-bottom-up-heap-construction)):
+Full explanations: [Lecture 10](lec-10.en-US.md). The exam-relevant facts:
+
+| Term | Definition | Trap |
+|---|---|---|
+| Depth (= level) of a node | edges from the root down to it; root = 0 | counted in **edges**, not nodes |
+| Height of a node | edges on the longest path down to a leaf; leaf = 0 | empty tree = −1 in the recursive formula |
+| Height of the tree | height of the root = max depth | a single node has height 0 |
+| Leaf / internal | 0 children / at least 1 child | a node with one child is internal |
+| Degree | number of children (binary tree: ≤ 2) | |
+| Full (proper) | every node has **0 or 2** children | |
+| Complete | every level full except possibly the last, which is filled **from the left** | full and complete are independent |
+
+**Node counts.** Level k holds at most 2ᵏ nodes; a tree of height h has h + 1 ≤ n ≤ 2^(h+1) − 1 nodes, so its height is between ⌈log₂(n+1)⌉ − 1 (complete) and n − 1 (a "stick"). Every operation that walks one root-to-leaf path is O(height): O(log n) when the tree is short, O(n) when it is a stick.
+
+**Traversals** (all O(n) time; the recursive ones use O(height) stack space):
+
+| Order | Rule | Typical use |
+|---|---|---|
+| Pre-order | root, left, right | copy a tree |
+| In-order | left, root, right | **sorted order of a BST** |
+| Post-order | left, right, root | delete / free a tree, compute heights |
+| Level order | level by level, left to right, with a **queue** | breadth-first |
 
 ```cpp
-// 1. heap construction (bottom-up): sink every non-leaf, right to left
-for (int k = n/2; k >= 1; k--)
-    sink(a, k, n);
-// 2. sortdown: move the max to the end, shrink the heap, fix the root
-while (n > 1) {
-    exch(a, 1, n--);
-    sink(a, 1, n);
+void preorder(Node* t) {
+    if (t == nullptr) return;
+    visit(t->item);              // root first
+    preorder(t->left);
+    preorder(t->right);
+}
+// inorder:   inorder(t->left);  visit(t->item);  inorder(t->right);
+// postorder: postorder(t->left); postorder(t->right); visit(t->item);
+
+void levelorder() const {
+    std::queue<Node*> q;
+    if (root) q.push(root);
+    while (!q.empty()) {
+        Node* t = q.front(); q.pop();
+        visit(t->item);
+        if (t->left)  q.push(t->left);
+        if (t->right) q.push(t->right);
+    }
+}
+
+int height(Node* t) {            // post-order: children first
+    if (t == nullptr) return -1;
+    return 1 + std::max(height(t->left), height(t->right));
 }
 ```
 
-`sink(a, k, n)`: while k has a child (`2k <= n`), pick the **larger** child j, stop if `a[k]` is not smaller than it, else exchange and continue at j.
+> 💡 **Key Insight**: check a traversal by the root: first in pre-order, last in post-order, and in in-order it splits the left subtree's keys from the right subtree's.
 
-### 9.1 Lecture 12 Activity, Part 1: construct a heap from [2, 9, 7, 6, 5, 8]
+**Lecture 10 practice, solved** (details in [Lec 10 §15](lec-10.en-US.md#15-in-class-activities-with-solutions)):
+- Activity 1 (root 8; 5 → 9, 7; 7 → 1, 12; 12 → 2 on the left; 4 → 11 on the right; 11 → 3 on the left): pre `8 5 9 7 1 12 2 4 11 3`, in `9 5 1 7 2 12 8 4 3 11`, post `9 1 2 12 7 5 3 11 4 8`, level `8 5 4 9 7 11 1 12 3 2`.
+- Full or complete: a root whose only child is on the **right** is neither; a tree whose last level is left-packed but has a node with one child is complete, not full.
 
-n = 6, so the loop starts at k = 6/2 = 3 (nodes 4–6 are leaves).
+**Variant: the four orders of the BST used in Lec 12's activities** (8; 3 → 1, 6; 6 → 4, 7; 10 → 14 on the right; 14 → 13 on the left), from the compiled run:
+
+| Order | Sequence |
+|---|---|
+| Pre-order | 8 3 1 6 4 7 10 14 13 |
+| In-order | 1 3 4 6 7 8 10 13 14 (sorted — it is a BST) |
+| Post-order | 1 4 7 6 3 13 14 10 8 |
+| Level order | 8 3 10 1 6 14 4 7 13 |
+
+Height 3, 9 nodes. Step through the in-order below (← / → keys work when the demo is focused):
+
+```viz tree-traversal
+{"title": "Variant: in-order of the Lec 12 activity BST", "tree": "8, 3, 10, 1, 6, -, 14, -, -, 4, 7, -, -, 13", "order": "in", "interactive": true}
+```
+
+> ⚠️ **Pitfall**: in in-order, a node with no left child is visited **before** its right subtree (10 comes before 13 and 14 above). In level order, a deep node on the left still comes after every shallower node on the right.
+
+---
+
+## 10. Heaps and Priority Queues
+
+Full explanations: [Lecture 10](lec-10.en-US.md#9-heap-ordered-binary-trees) and [Lecture 11](lec-11.en-US.md).
+
+A **binary heap** is a **complete** binary tree that is **heap-ordered** (every parent ≥ its children in a max-heap), stored in an array from index 1:
+
+| 1-based (slides) | 0-based (if you use one) |
+|---|---|
+| parent of k = k/2 | parent of i = (i − 1)/2 |
+| children of k = 2k, 2k + 1 | children of i = 2i + 1, 2i + 2 |
+| last internal node = n/2 | last internal node = n/2 − 1 |
+
+The slide code (a fixed-size array `pq[0..capacity]`, `pq[0]` unused; the `std::vector` version in [Lec 11 §9](lec-11.en-US.md#9-complete-implementation) uses `push_back` instead of `pq[++n] = x`):
+
+```cpp
+void swim(size_t k) {                 // move up while larger than the parent
+    while (k > 1 && less(k/2, k)) {
+        exch(k, k/2);
+        k = k/2;
+    }
+}
+void sink(size_t k) {                 // move down toward the LARGER child
+    while (2*k <= n) {
+        size_t j = 2*k;
+        if (j < n && less(j, j+1)) j++;
+        if (!less(k, j)) break;
+        exch(k, j);
+        k = j;
+    }
+}
+void insert(const Key& x) { pq[++n] = x; swim(n); }
+Key delMax() {
+    Key max = pq[1];
+    exch(1, n--);                     // last key to the root
+    sink(1);
+    return max;
+}
+```
+
+| Operation | Worst case | Compares |
+|---|---|---|
+| insert (append + swim) | O(log n) | ≤ log n + 1 |
+| delMax (exch + sink) | O(log n) | ≤ 2 log n (two per level) |
+| find max | O(1) | 0 |
+| naive build (n inserts) | O(n log n) | |
+| bottom-up build | **O(n)** | |
+
+| Priority queue on | insert | delete max |
+|---|---|---|
+| unordered array | O(1) | O(n) |
+| ordered array | O(n) | O(1) |
+| binary heap | O(log n) | O(log n) |
+
+**Min-heap**: the same code with the comparison flipped — the smallest key is at the root, a key swims while **smaller** than its parent, and sink goes toward the **smaller** child.
+
+### 10.1 Lecture 11 exercises, solved
+
+Starting max-heap: `– 100 19 36 17 3 25 1 2 7` (details in [Lec 11 §10](lec-11.en-US.md#10-in-class-activities-with-solutions)); all results checked by the compiled run.
+
+| Exercise | Answer |
+|---|---|
+| insert 47 | 47 goes to index 10 (left child of index 5); swims past 3 and 19, stops under 100 → `– 100 47 36 17 19 25 1 2 7 3` |
+| sink 7 in `– 19 7 36 17 3 25 1 2` | 7 < larger child 17 → swap; 7 > its child 2 → stop → `– 19 17 36 7 3 25 1 2` |
+| delMax | returns 100; 7 moves to the root and sinks past 36 and 25 → `– 36 19 25 17 3 7 1 2` |
+| 9 × delMax | returns `100 36 25 19 17 7 3 2 1`; the array ends sorted ascending |
+| min-heap: insert P, Q, E, delMin, … (12 steps) | final heap `L P M Q P X`; see the step table in Lec 11 §10.4 |
+
+### 10.2 Building a heap bottom-up (Lecture 12 Activity, Parts 1–3)
+
+```cpp
+for (int k = n/2; k >= 1; k--)        // skip the leaves; sink every internal node
+    sink(a, k, n);
+```
+
+**Part 1: [2, 9, 7, 6, 5, 8].** n = 6, so the loop starts at k = 6/2 = 3 (nodes 4–6 are leaves).
 
 | Call | What happens | Array |
 |---|---|---|
@@ -641,9 +777,186 @@ Step through it below (← / → keys work when the demo is focused):
 **Part 2 — naive construction** (insert one at a time, each swims): n inserts × O(log n) = **O(n log n)**.
 **Part 3 — bottom-up construction: O(n).** Half the nodes are leaves (sink cost 0), a quarter can sink 1 level, an eighth 2 levels, …: total ≤ n (0/2 + 1/4 + 2/8 + 3/16 + …) ≤ n · 1. Most nodes are near the bottom, where sinking is cheap. (Shifting method from the slide: S = Σ k/2^(k+1); S − S/2 is a geometric series, so S = 1.)
 
-### 9.2 Activity 1: sortdown from 9 6 8 2 5 7
+### 10.3 Variants
 
-From the compiled run (the part after `|` is already sorted):
+| Question | Answer |
+|---|---|
+| Is `– 50 30 40 35 10 20` a max-heap? | No: 35 (index 4) is a child of 30 (index 2). Check every k ≥ 2: `pq[k/2] >= pq[k]` |
+| Where is the **minimum** of a max-heap? | in one of the leaves, indices n/2 + 1 … n; finding it is O(n) |
+| Height of a heap with n keys | ⌊log₂ n⌋ — it is complete, so it can never become a stick |
+| Why start bottom-up construction at n/2? | ⌊n/2⌋ is the last node with a child; sinking a leaf does nothing |
+| Why does sink pick the **larger** child? | the larger child becomes the parent of the other one, so heap order holds |
+| Is a sorted-descending array a max-heap? | yes — every parent comes before (and is ≥) its children |
+
+> ⚠️ **Pitfall**: index arithmetic. Mixing the 1-based formulas (children 2k, 2k + 1) with a 0-based C++ array is the classic heap bug — say which convention you use.
+
+---
+
+## 11. Binary Search Trees
+
+**Symmetric order**: every node's key is **larger than all keys in its left subtree** and **smaller than all keys in its right subtree**. We assume **no duplicate keys**. The textbook's BST is a dictionary: each node holds a key-value pair, two subtree pointers, and optionally a **size** (nodes in its subtree, used for k-th smallest). The BST itself is just `Node* root`.
+
+Slide code (slide p18, the `put`/`get` slides):
+
+```cpp
+template <typename Key, typename Value>   // slide has a typo: "template <template Key, ...>"
+class BST {
+private:
+    class Node {
+        Key key;              // sorted by key
+        Value val;            // associated value
+        Node* left, right;    // roots of left and right subtrees
+        int size;             // #nodes in subtree rooted at this
+        Node(const Key& k, const Value& v, int s)
+            : key(k), val(v), left(nullptr), right(nullptr), size(s) {}
+    };
+    Node* root;               // root of BST
+};
+```
+
+> ⚠️ **Pitfall**: the slide declares `Node* left, right;` — in C++ that makes `left` a pointer and `right` a plain `Node` (which can't even compile inside `Node`). Write `Node* left; Node* right;` (or `Node *left, *right;`). The class also needs `public:` on `Node`'s members, or `friend` access, for `BST` to use them.
+
+```cpp
+Value get(Node* x, const Key& key) const {
+    if (x == nullptr)
+        return Value();                 // miss
+    if (key < x->key)
+        return get(x->left, key);
+    else if (key > x->key)
+        return get(x->right, key);
+    else
+        return x->val;                  // hit
+}
+Node* put(Node* x, const Key& key, const Value& val) {
+    if (x == nullptr)
+        return new Node(key, val, 1);   // reached a null link: new leaf
+    if (key < x->key)
+        x->left = put(x->left, key, val);
+    else if (key > x->key)
+        x->right = put(x->right, key, val);
+    else
+        x->val = val;                   // key exists: update the value
+    x->size = 1 + size(x->left) + size(x->right);
+    return x;
+}
+```
+
+- **Search/insert compares = depth of the node + 1.**
+- `put` returns the subtree's (possibly new) root and the caller re-assigns the link (`x->left = put(...)`) — that is how a `nullptr` link becomes the new node, and how sizes are fixed on the way back up.
+
+### 11.1 Deletion (Hibbard)
+
+| Case | What to do |
+|---|---|
+| 1. leaf | delete it (parent's link becomes `nullptr`) |
+| 2. one child | replace the node with its child |
+| 3. two children | replace it with its **successor** — the next larger key = the **leftmost node of its right subtree**; the successor's right child (it has no left child) moves up into the successor's old place |
+
+Hibbard deletion always uses the successor, so after many deletions the tree leans left (skewed). **Symmetric Hibbard deletion** alternates (or randomly picks) successor and predecessor; it keeps the height close to O(log n) in experiments, with no formal proof.
+
+My implementation of Hibbard deletion (the slides show the cases as pictures, not code); compiled and checked on Activities 4 and 5:
+
+```cpp
+Node* min(Node* x) const { return x->left == nullptr ? x : min(x->left); }
+Node* deleteMin(Node* x) {                // unlink the min, don't free it
+    if (x->left == nullptr) return x->right;
+    x->left = deleteMin(x->left);
+    x->size = 1 + size(x->left) + size(x->right);
+    return x;
+}
+Node* remove(Node* x, const Key& key) {
+    if (x == nullptr) return nullptr;     // key not found
+    if (key < x->key) x->left = remove(x->left, key);
+    else if (key > x->key) x->right = remove(x->right, key);
+    else {
+        if (x->right == nullptr) { Node* l = x->left; delete x; return l; }
+        if (x->left == nullptr) { Node* r = x->right; delete x; return r; }
+        Node* t = x;                      // two children:
+        x = min(t->right);                // successor
+        x->right = deleteMin(t->right);   // its right child moves up
+        x->left = t->left;
+        delete t;
+    }
+    x->size = 1 + size(x->left) + size(x->right);
+    return x;
+}
+```
+
+### 11.2 Shape and cost
+
+| | Search | Insert | Delete |
+|---|---|---|---|
+| BST, worst case | O(n) | O(n) | O(n) |
+| BST, average (random insertion order) | O(log n) | O(log n) | not guaranteed — Hibbard deletions skew the tree |
+| Goal (balanced trees, after the midterm) | O(log n) | O(log n) | O(log n) |
+
+- The same keys give different trees depending on insertion order. Random order → expected height O(log n). **Sorted (or reverse-sorted) order → a stick of height n − 1**: inserting 1 … 7 in order gives height 6; inserting 4 2 6 1 3 5 7 gives height 2 (compiled run).
+- In-order traversal prints the keys sorted (O(n)); the minimum is the leftmost node, the maximum the rightmost.
+
+### 11.3 Lecture 12 Activities 2–5, solved
+
+All on this BST (keys only), and all results from the compiled run:
+
+```viz binary-tree
+{"title": "Lec 12 Activities 2–4: the BST", "tree": "8, 3, 10, 1, 6, -, 14, -, -, 4, 7, -, -, 13", "views": "plain; path:8-3-6-4; path:8-10"}
+```
+
+**Activity 2 — search 4 and 9.** 4: 8 → left, 3 → right, 6 → left, 4 **hit** (4 compares = depth 3 + 1). 9: 8 → right, 10 → left is `nullptr` → **miss** after 2 compares.
+
+**Activity 3 — add (4, 3) and (9, 2).** 4 already exists → its value is **updated** to 3, no new node. 9: 8 → right, 10 → left is null → new leaf **9 as 10's left child**. Size goes from 9 to 10.
+
+**Activity 4 — remove each key from the original tree:**
+
+| Remove | Case | Result |
+|---|---|---|
+| 1 | leaf | 3's left becomes `nullptr` |
+| 14 | one child | 13 takes 14's place as 10's right child |
+| 6 | two children | successor 7 (leftmost of {7}) replaces 6; 7's left = 4 |
+| 3 | two children | successor 4 (leftmost of 6's subtree) replaces 3: 4 → 1, 6; 6 keeps only 7 |
+| 8 | two children | successor 10 (10 has no left child) becomes the root: 10 → 3, 14 |
+
+```viz binary-tree
+{"title": "Lec 12 Activity 4: the tree after each removal", "tree": "remove 1 = 8, 3, 10, -, 6, -, 14, -, -, 4, 7, -, -, 13 | remove 14 = 8, 3, 10, 1, 6, -, 13, -, -, 4, 7 | remove 6 = 8, 3, 10, 1, 7, -, 14, -, -, 4, -, -, -, 13 | remove 3 = 8, 4, 10, 1, 6, -, 14, -, -, -, 7, -, -, 13 | remove 8 = 10, 3, 14, 1, 6, 13, -, -, -, 4, 7"}
+```
+
+**Activity 5 — delete 21 (Hibbard).** 21 has two children. Successor = leftmost of the right subtree: 79 → 73 → **70** (no left child). 70's right child 71 moves up into 70's place (73's left), and 70 replaces 21 at the root.
+
+```viz binary-tree
+{"title": "Lec 12 Activity 5: delete 21", "tree": "before = 21, 10, 79, -, -, 73, 95, -, -, -, -, 70, 74, -, -, -, -, -, -, -, -, -, -, -, 71 | after = 70, 10, 79, -, -, 73, 95, -, -, -, -, 71, 74"}
+```
+
+### 11.4 Variants
+
+| Question | Answer |
+|---|---|
+| Delete with the **predecessor** instead | rightmost node of the **left** subtree; its left child moves up. Remove 8 above → 7 becomes the root |
+| Which insertion order gives a stick? | sorted or reverse-sorted keys — more generally, any order where each key is the smallest or largest of the keys **not yet inserted** (e.g. 1, 7, 4 gives a zig-zag stick; 4, 1, 7 does not) |
+| Height after inserting n keys in sorted order | n − 1; search/insert/delete then cost O(n) |
+| Number of compares to find a key | its depth + 1 (a miss: depth of the null link reached) |
+| Is the in-order sequence enough to check a BST? | yes — a binary tree is a BST exactly when its in-order traversal is strictly increasing |
+| Checking only `left->key < key < right->key` at each node | **not** enough: every key in the left subtree must be smaller, not just the child |
+
+> ⚠️ **Pitfall**: in case 3 the successor is **never** just "the right child" unless that child has no left child (Activity 4, remove 8). Go right once, then left as far as possible.
+
+---
+
+## 12. Heap Sort (Not on the Midterm)
+
+Prof. Yeh confirmed heap sort will **not** be on the midterm. The material stays here for the final — expand it when you need it.
+
+<details>
+<summary><b>Heap sort: sortdown, Lecture 12 Activity 1 and analysis (click to expand)</b></summary>
+
+Two phases on the heap's 1-based array: build a heap bottom-up ([§10.2](#102-building-a-heap-bottom-up-lecture-12-activity-parts-13)), then **sortdown** — move the max to the end, shrink the heap, fix the root:
+
+```cpp
+while (n > 1) {
+    exch(a, 1, n--);
+    sink(a, 1, n);
+}
+```
+
+**Lecture 12 Activity 1: sortdown from 9 6 8 2 5 7.** From the compiled run (the part after `|` is already sorted):
 
 | Step | Array |
 |---|---|
@@ -656,24 +969,19 @@ From the compiled run (the part after `|` is already sorted):
 
 **Worst case of sortdown: O(n log n)** — n − 1 exchanges, each followed by a sink of at most log₂ n levels (2 compares per level).
 
-The demo below runs the same five steps as `delMax()` calls. It draws the heap shrinking and returns 9, 8, 7, 6, 5; in heap sort those returned keys are not discarded but stay parked at the end of the array, as in the table above:
-
-```viz binary-heap
-{"title": "Lec 12 Activity 1: sortdown from 9 6 8 2 5 7", "heap": "9, 6, 8, 2, 5, 7", "ops": "delMax(); delMax(); delMax(); delMax(); delMax()"}
-```
-
-### 9.3 Heap sort analysis (Lec 12 slide)
+**Heap sort analysis (Lec 12 slide).**
 
 - Construction: O(n) compares and exchanges. Sortdown and total: **O(n log n)** compares and exchanges, **worst case**, in place (no extra array).
 - Versus merge sort: same guarantee, but merge needs O(n) extra space. Versus quick sort: in place too, but quick sort's worst case is O(n²).
 - Why it is still not the default: a longer inner loop (higher constant per compare than quick sort), **poor cache locality** (k jumps to 2k: far-apart memory), and **not stable**.
 - Key invariant during sortdown: the array is a heap-ordered prefix followed by a suffix in final sorted order.
+- On all-equal keys no `sink` ever moves, so heap sort makes only O(n) compares (beyond the slides).
 
-> ⚠️ **Pitfall**: index arithmetic. With a 0-based C++ array, the children of i are 2i + 1 and 2i + 2, and the last internal node is n/2 − 1. Mixing the 1-based formulas with a 0-based array is the classic heap bug — say which convention you use.
+</details>
 
 ---
 
-## 10. Templates, Pointers, Smart Pointers, 2D Arrays
+## 13. Templates, Pointers, Smart Pointers, 2D Arrays
 
 The early-lecture topics are on the list even though the sample has no question on them. The facts that make good short questions:
 
@@ -715,7 +1023,7 @@ char Pair<TheType>::CompareWith(Pair<TheType>* otherPair) {
 
 ---
 
-## 11. The Design Question
+## 14. The Design Question
 
 Expect one question that asks you to **design** a structure with given costs, usually by combining two you know — the way Lab 2's `BalancedList` combines an array and a linked list. A method that works:
 
@@ -738,18 +1046,18 @@ Why the plain unrolled list (10 items per node) is not enough: it has n/10 nodes
 
 ---
 
-## 12. Lab Code to Know by Heart
+## 15. Lab Code to Know by Heart
 
-### 12.1 What each lab contributes
+### 15.1 What each lab contributes
 
 | Lab | Implement from memory | Where |
 |---|---|---|
 | 1 | a small class with constructor, getters, `toString`; Google Test `EXPECT_EQ` | [Lec 0 §2](lec-00.en-US.md#2-c-unit-tests-with-google-test) |
-| 2 | ArrayList `add(i)`, `remove(i)`, `expand`, `shrink`; SLL with tail `get`, `add(i)`, `remove(i)`, `addLast`, `removeLast`; BalancedList idea | [§5](#5-arraylist-and-amortized-analysis), [§6](#6-linked-lists-sample-q3), [§11](#11-the-design-question) |
+| 2 | ArrayList `add(i)`, `remove(i)`, `expand`, `shrink`; SLL with tail `get`, `add(i)`, `remove(i)`, `addLast`, `removeLast`; BalancedList idea | [§5](#5-arraylist-and-amortized-analysis), [§6](#6-linked-lists-sample-q3), [§14](#14-the-design-question) |
 | 3 | `CircularArray` enqueue/dequeue/resize; `QueueStack` with two queues; postfix calculator | [§7](#7-stacks-queues-and-deques-sample-q4) |
 | 4 | selection, insertion (swap version), optimized merge (cutoff + aux), quick with Hoare partition, median-of-three, random pivot | [§8](#8-comparison-sorting-sample-q5) |
 
-### 12.2 The code bank (compiled)
+### 15.2 The code bank (compiled)
 
 Everything on this page in one place: `CircularLinkedList` (tail only), the one-queue stack in both designs, the two-queue stack, the two-stack queue, the one-stack queue, `CircularArray` with resize, the five sorts with a compare counter, and the mystery methods.
 
@@ -782,7 +1090,7 @@ public:
     }
 };
 
-// Heap sort on a 0-based C++ array: heap index k (1..n) lives in a[k-1]
+// Heap sort (not on the midterm) on a 0-based C++ array: heap index k (1..n) lives in a[k-1]
 template <typename T>
 void sink(T* a, int k, int n) {
     while (2 * k <= n) {
@@ -829,7 +1137,7 @@ n=1000: 2000 10 999999 21
 
 ---
 
-## 13. Quick Reference and Last-Night Checklist
+## 16. Quick Reference and Last-Night Checklist
 
 **Costs to know cold**
 
@@ -843,6 +1151,8 @@ n=1000: 2000 10 999999 21
 | Stack from 1 or 2 queues | pop, peek | push (or the reverse design) | |
 | Queue from 2 stacks | enqueue; dequeue amortized | dequeue worst case | transfer only when out is empty |
 | Binary heap | max | | insert / delMax O(log n); build O(n) |
+| BST | | search / insert / delete in the worst case (stick) | search and insert O(log n) on average; in-order = sorted |
+| Any tree traversal | | O(n) | recursion uses O(height) stack |
 
 **Last-night checklist**
 
@@ -855,7 +1165,9 @@ n=1000: 2000 10 999999 21
 - [ ] Circular-array index formulas for all four deque operations, plus the resize unroll.
 - [ ] Identify a sort from a snapshot; compare counts on sorted / reversed / equal input.
 - [ ] Partition an array by hand with the slide's Hoare scheme.
-- [ ] Build a heap bottom-up and run sortdown by hand; explain O(n) construction.
+- [ ] Insert into / delMax from a heap by hand (array and tree); build a heap bottom-up and explain why it is O(n).
+- [ ] List pre-, in-, post- and level order of a tree; depth vs height; full vs complete.
+- [ ] BST search, insert and all three Hibbard deletion cases by hand; why sorted insertion makes a stick.
 - [ ] `unique_ptr` move, `shared_ptr` cycle, row-major address formula.
 
 ### Top 5 things to remember
@@ -864,4 +1176,4 @@ n=1000: 2000 10 999999 21
 2. Every complexity answer needs the case (worst / amortized) and a one-line reason.
 3. A tail pointer makes **adding** at the end O(1), never **removing** it in an SLL; only `prev` fixes that.
 4. Building one structure from another: put the expensive work in one operation, and make your complexity answers match the design you wrote.
-5. Sorted input: insertion O(n), selection O(n²), merge O(n log n), first-element-pivot quick sort O(n²); heap sort is O(n log n) always and in place but not stable.
+5. Sorted input: insertion O(n), selection O(n²), merge O(n log n), first-element-pivot quick sort O(n²) — and a BST built from sorted keys is a stick with O(n) operations.
