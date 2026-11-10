@@ -25,7 +25,7 @@ summary: "Midterm review for Lectures 0–12: exam scope and strategy, Big-O and
 - [16. Quick Reference and Last-Night Checklist](#16-quick-reference-and-last-night-checklist)
 
 > UCI ICS 46: Data Structure Implementation and Analysis — Prof. Tom Yeh, Fall 2026. Midterm: Thursday 11/12/26, in lecture.
-> Built from the sample midterm, Quiz 2, Quiz 3, HW 1/2/3/5, Labs 1–4 and the "Midterm Topics & Prep" slide of Lecture 12. Each topic links back to its lecture notes for the full explanation; this page is the exam layer on top.
+> Built from the sample midterm, Quizzes 2–4, HW 1/2/3/5, Labs 1–4 and the "Midterm Topics & Prep" slide of Lecture 12. Each topic links back to its lecture notes for the full explanation; this page is the exam layer on top.
 > Every piece of code here was compiled with `g++ -std=c++17 -Wall -Wextra -fsanitize=address,undefined` and run; printed results are real output.
 
 ---
@@ -596,6 +596,8 @@ H ends at index 3: everything left is ≤ H, everything right ≥ H. Step throug
 
 **Q5: pick the pivot from two fixed indices to fix the O(n²) worst case?** (a) Impossible: for any deterministic rule that looks at fixed positions, an adversary can build an input where both of those positions hold the smallest keys of every subarray, so each partition still splits 0 / n−1 → O(n²). (b) The question rules out shuffling and random pivots, so the fix has to change what the pivot *is*, not where it is read from. A worst-case O(n log n) guarantee needs a pivot that always splits well: the **true median**, found in O(n) per call with the median-of-medians algorithm, gives T(n) = 2T(n/2) + O(n) = O(n log n). The practical alternative is to stop quick sort when recursion gets too deep and finish with heap sort (O(n log n) worst case, [§12](#12-heap-sort-not-on-the-midterm)) — that is what `std::sort` does. (Both are beyond the slides; the slides' own tools, shuffle and Lab 4's `RANDOM` pivot, only make the worst case *unlikely*.) Median-of-three ([Lec 9](lec-09.en-US.md#71-pivot-strategies-in-code-lab-4)) is also a fixed-position rule, so it has the same problem as the classmate's idea.
 
+**Quiz 4 Q1 (quick sort analysis).** Worst case: when the input is already sorted, ascending **or** descending (with the pivot taken from a fixed position), the run time is **O(n²)**. Two methods that give a *probabilistic* guarantee on any input: (1) **randomly shuffle** the array before sorting; (2) choose the pivot **randomly** (or as the median of 3 randomly chosen samples). Both keep the O(n²) case possible but make it extremely unlikely for every input.
+
 **Q1–2: merge without the `i > mid` / `j > hi` tests**: copy the right half into `aux` **reversed**, then merge from both ends; each half's largest key acts as a sentinel. Faster, but not stable. Full code in [Lec 8 §6.2](lec-08.en-US.md#62-merging-without-the-exhaustion-checks-hw-5).
 
 **Lab 4 additions to know**: insertion-sort cutoff for small subarrays (the inner loop must stop at `j > lo`), the "already in order" skip `if (data[mid] <= data[mid + 1]) return;`, median-of-three moving the median into `a[lo]` so the unchanged partition can use it ([Lec 8 §6.1](lec-08.en-US.md#61-improvements-1-and-2-in-code-lab-4), [Lec 9 §7.1](lec-09.en-US.md#71-pivot-strategies-in-code-lab-4)).
@@ -682,6 +684,30 @@ Height 3, 9 nodes. Step through the in-order below (← / → keys work when the
 ```
 
 > ⚠️ **Pitfall**: in in-order, a node with no left child is visited **before** its right subtree (10 comes before 13 and 14 above). In level order, a deep node on the left still comes after every shallower node on the right.
+
+### 9.1 Rebuilding a tree from pre-order and in-order (Quiz 4 Q3)
+
+**What each order tells you:** pre-order (root, left, right) — its **first** key is the root. In-order (left, root, right) — the root **splits** it into the left subtree's keys and the right subtree's keys. Recurse on each side, taking the next roots from pre-order in turn.
+
+**Quiz 4:** pre-order `50 36 17 2 0 3 28 30 1`, in-order `2 17 0 36 3 50 30 28 1`.
+
+| Step | Root (from pre-order) | In-order split: left \| right |
+|---|---|---|
+| whole tree | 50 | 2 17 0 36 3 \| 30 28 1 |
+| left of 50 | 36 | 2 17 0 \| 3 |
+| left of 36 | 17 | 2 \| 0 |
+| right of 50 | 28 | 30 \| 1 |
+
+So 50 → 36, 28; 36 → 17, 3; 17 → 2, 0; 28 → 30, 1. Check (compiled run): its post-order is `2 0 17 3 36 30 1 28 50`.
+
+```viz binary-tree
+{"title": "Quiz 4 Q3: the rebuilt tree", "tree": "50, 36, 28, 17, 3, 30, 1, 2, 0", "views": "plain; subtree:36; subtree:28"}
+```
+
+Variants:
+- **Post-order + in-order** works the same way, but the root is the **last** key of post-order, and you build the **right** subtree first when reading post-order from the back.
+- **Pre-order + post-order** is not enough in general: a node with a single child gives the same pre- and post-order whether that child is on the left or the right. In-order is what fixes left vs right.
+- Only one order given? Not unique — unless the tree is a **BST**: then in-order is just the sorted keys, and pre-order alone determines it (insert the keys in pre-order).
 
 ---
 
@@ -789,6 +815,29 @@ Step through it below (← / → keys work when the demo is focused):
 | Is a sorted-descending array a max-heap? | yes — every parent comes before (and is ≥) its children |
 
 > ⚠️ **Pitfall**: index arithmetic. Mixing the 1-based formulas (children 2k, 2k + 1) with a 0-based C++ array is the classic heap bug — say which convention you use.
+
+### 10.4 Quiz 4, Q2 and Q4
+
+**Q2.** For a 1-indexed heap: parent = i/2, left = 2i, right = 2i + 1. Optimized (bottom-up) construction starts sinking at index **n/2** and costs **O(n)** worst case.
+
+**Q4.** Build a max-heap from `50 36 17 2 0 3 28 30 1` (n = 9, start at k = 9/2 = 4), then call delete max. From the compiled run:
+
+| Step | Array (index 1 … 9) |
+|---|---|
+| start | 50 36 17 2 0 3 28 30 1 |
+| `sink(4)`: 2 < larger child 30 → swap | 50 36 17 **30** 0 3 28 **2** 1 |
+| `sink(3)`: 17 < larger child 28 → swap | 50 36 **28** 30 0 3 **17** 2 1 |
+| `sink(2)`, `sink(1)`: already in order | 50 36 28 30 0 3 17 2 1 |
+| delMax, initial exchange `exch(1, 9)` | **1** 36 28 30 0 3 17 2 \| 50 |
+| `sink(1)`: 1 ↓ 36, ↓ 30, ↓ 2 | 36 30 28 2 0 3 17 1 |
+
+delMax returns 50. The answer key accepts the "initial exchange" drawing with or without 50 still shown at index 9.
+
+```viz binary-heap
+{"title": "Quiz 4 Q4: build a max-heap, then delMax", "heap": "50, 36, 17, 2, 0, 3, 28, 30, 1", "ops": "sink(4); sink(3); sink(2); sink(1); delMax()"}
+```
+
+(Q2's last part, heap sort with a min-heap, is in the folded [§12](#12-heap-sort-not-on-the-midterm).)
 
 ---
 
@@ -976,6 +1025,7 @@ while (n > 1) {
 - Why it is still not the default: a longer inner loop (higher constant per compare than quick sort), **poor cache locality** (k jumps to 2k: far-apart memory), and **not stable**.
 - Key invariant during sortdown: the array is a heap-ordered prefix followed by a suffix in final sorted order.
 - On all-equal keys no `sink` ever moves, so heap sort makes only O(n) compares (beyond the slides).
+- Quiz 4: heap sort with a **min-heap** moves the minimum to the end each time, so the array ends **largest to smallest** (descending).
 
 </details>
 
@@ -1167,6 +1217,7 @@ n=1000: 2000 10 999999 21
 - [ ] Partition an array by hand with the slide's Hoare scheme.
 - [ ] Insert into / delMax from a heap by hand (array and tree); build a heap bottom-up and explain why it is O(n).
 - [ ] List pre-, in-, post- and level order of a tree; depth vs height; full vs complete.
+- [ ] Rebuild a binary tree from its pre-order and in-order (Quiz 4).
 - [ ] BST search, insert and all three Hibbard deletion cases by hand; why sorted insertion makes a stick.
 - [ ] `unique_ptr` move, `shared_ptr` cycle, row-major address formula.
 
