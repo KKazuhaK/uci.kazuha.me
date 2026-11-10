@@ -1,16 +1,17 @@
 // Binary heap (array-backed, pq[0] unused): insert + swim, sink, swim, and
-// delMax, step by step, drawn both as the tree and as the array.
+// delMax, plus heap sort's sortdown, step by step, drawn both as the tree
+// and as the array.
 import { checkParams } from "./_core.js";
 
 const MAXN = 15;
 
 export const meta = {
 	name: "binary-heap",
-	summary: "Array-backed binary heap: insert (swim up), swim(k), sink(k), delMax(), shown as tree and array.",
+	summary: "Array-backed binary heap: insert (swim up), swim(k), sink(k), delMax(), and heap sort's sortdown(), shown as tree and array.",
 	groupLabel: "operation",
 	params: {
 		heap: { type: "string", default: "", desc: "Starting keys pq[1..n] in level order, comma-separated (ints or 1–3 char words; at most 15). Need not be heap-ordered when the first op is swim/sink." },
-		ops: { type: "string", required: true, desc: "Operations separated by ';': insert(x), swim(k), sink(k), delMax(). delMin() on a min-heap. At most 16." },
+		ops: { type: "string", required: true, desc: "Operations separated by ';': insert(x), swim(k), sink(k), delMax(). delMin() on a min-heap. sortdown() (heap sort's second phase; must be the last op) keeps each removed max in the array, sorted. At most 16." },
 		order: { type: "enum", values: ["max", "min"], default: "max", desc: "Max-heap (parent ≥ children) or min-heap (parent ≤ children; less() is flipped, use delMin())." },
 		code: { type: "enum", values: ["cpp", "none"], default: "cpp", desc: "Code shown beside the demo, with the running line highlighted." }
 	},
@@ -40,7 +41,8 @@ function parseOps(text) {
 		if ((m = /^insert\(\s*"?([^"),\s]{1,3})"?\s*\)$/.exec(p))) ops.push({ op: "insert", x: m[1] });
 		else if ((m = /^(swim|sink)\(\s*(\d+)\s*\)$/.exec(p))) ops.push({ op: m[1], k: Number(m[2]) });
 		else if ((m = /^del(Max|Min)\(\s*\)$/.exec(p))) ops.push({ op: "delMax", name: "del" + m[1] });
-		else return { error: "\"ops\": can't read \"" + p + "\" (use insert(x), swim(k), sink(k), delMax())" };
+		else if (/^sortdown\(\s*\)$/.test(p)) ops.push({ op: "sortdown" });
+		else return { error: "\"ops\": can't read \"" + p + "\" (use insert(x), swim(k), sink(k), delMax(), sortdown())" };
 	}
 	return { ops: ops };
 }
@@ -65,7 +67,13 @@ export function validate(config) {
 		if (x.name && x.name !== want) return ["\"ops\": " + x.name + "() doesn't match a " + (config.order === "min" ? "min" : "max") + "-heap; use " + want + "()"];
 	}
 	let n = h.items.length;
-	for (const x of o.ops) {
+	for (let i = 0; i < o.ops.length; i++) {
+		const x = o.ops[i];
+		if (x.op === "sortdown") {
+			if (i !== o.ops.length - 1) return ["\"ops\": sortdown() must be the last operation"];
+			if (n < 1) return ["\"ops\": sortdown() on an empty heap"];
+			continue;
+		}
 		if (x.op === "insert") { n++; if (n > MAXN) return ["\"ops\": insert would make the heap bigger than " + MAXN]; }
 		else if (x.op === "delMax") { if (n === 0) return ["\"ops\": delMax() on an empty heap"]; n--; }
 		else if (x.k < 1 || x.k > n) return ["\"ops\": " + x.op + "(" + x.k + ") is out of range (heap has n = " + n + ")"];
@@ -100,19 +108,25 @@ const CODE_LINES = [
 	"    exch(1, n--);",                  // 23
 	"    sink(1);",                       // 24
 	"    return max;",                    // 25
-	"}"                                   // 26
+	"}",                                  // 26
+	"void sortdown() {",                  // 27
+	"    while (n > 1) {",                // 28
+	"        exch(1, n--);",              // 29
+	"        sink(1);",                   // 30
+	"    }",                              // 31
+	"}"                                   // 32
 ];
 
 // Sections of CODE_LINES (1-based, inclusive); show only the ones the ops use.
-const SECTIONS = { insert: [1, 4], swim: [5, 10], sink: [11, 20], delMax: [21, 26] };
+const SECTIONS = { insert: [1, 4], swim: [5, 10], sink: [11, 20], delMax: [21, 26], sortdown: [27, 32] };
 
 function usedSections(config) {
 	const r = parseOps(config.ops || "");
-	const used = { insert: false, swim: false, sink: false, delMax: false };
+	const used = { insert: false, swim: false, sink: false, delMax: false, sortdown: false };
 	(r.ops || []).forEach(function(o) {
 		used[o.op] = true;
 		if (o.op === "insert") used.swim = true;
-		if (o.op === "delMax") used.sink = true;
+		if (o.op === "delMax" || o.op === "sortdown") used.sink = true;
 	});
 	if (!r.ops) for (const k in used) used[k] = true;
 	return used;
@@ -123,7 +137,7 @@ function lineMap(config) {
 	const used = usedSections(config);
 	const map = {};
 	let shown = 0;
-	for (const name of ["insert", "swim", "sink", "delMax"]) {
+	for (const name of ["insert", "swim", "sink", "delMax", "sortdown"]) {
 		const sec = SECTIONS[name];
 		for (let l = sec[0]; l <= sec[1]; l++) map[l] = used[name] ? ++shown : 0;
 	}
@@ -190,6 +204,7 @@ export function steps(config) {
 	function push(f) {
 		frames.push({
 			pq: pq.slice(0, n + 1),
+			sorted: pq.slice(n + 1),
 			ghost: f.ghost || null,
 			k: f.k || 0, j: f.j || 0,
 			swapped: f.swapped || null,
@@ -275,6 +290,20 @@ export function steps(config) {
 		} else if (o.op === "sink") {
 			push({ k: o.k, lines: [11], group: g, msg: "`sink(" + o.k + ")`: `" + pq[o.k] + "` may be " + (isMin ? "larger" : "smaller") + " than a child." });
 			sink(o.k, g);
+		} else if (o.op === "sortdown") {
+			push({ lines: [27, 28], group: g, msg: "`sortdown()`: repeatedly move the maximum to the end of the heap and shrink n; the removed keys stay in the array, sorted." });
+			while (n > 1) {
+				const top = pq[1];
+				exch(1, n);
+				n--;
+				push({ k: 1, swapped: n + 1 !== 1 ? [1, n + 1] : null, lines: [29], group: g,
+					msg: "`exch(1, n--)`: max `" + top + "` goes to a[" + (n + 1) + "], its final place; n is now " + n + ". The array is a heap a[1.." + n + "] followed by the sorted part a[" + (n + 1) + ".." + (pq.length - 1) + "]." });
+				if (n > 1) {
+					push({ k: 1, lines: [30, 11], group: g, msg: "`sink(1)`: restore heap order on a[1.." + n + "]." });
+					sink(1, g);
+				}
+			}
+			push({ k: 1, settled: 1, lines: [28], group: g, msg: "n = 1: a single key is already in place, so the loop stops. Sorted: " + pq.slice(1).join(" ") + "." });
 		} else {
 			const top = pq[1];
 			push({ k: 1, lines: [21, 22], group: g, msg: "`" + (isMin ? "delMin" : "delMax") + "()`: the " + (isMin ? "minimum" : "maximum") + " is at the root, `max = pq[1] = " + top + "`." });
@@ -298,7 +327,11 @@ export function steps(config) {
 
 	const map = lineMap(config);
 	frames.forEach(function(f) { f.lines = f.lines.map(function(l) { return map[l]; }).filter(Boolean); });
-	push({ group: ops.length, msg: "Done. Heap: " + (n ? pq.slice(1, n + 1).join(" ") : "(empty)") + ". Each swim/sink walks one root-to-leaf path: O(log n)." });
+	if (ops[ops.length - 1].op === "sortdown") {
+		push({ k: 1, settled: 1, group: ops.length, msg: "Done. Sorted in place: " + pq.slice(1).join(" ") + ". n − 1 exchanges and sinks, each O(log n): O(n log n) overall." });
+	} else {
+		push({ group: ops.length, msg: "Done. Heap: " + (n ? pq.slice(1, n + 1).join(" ") : "(empty)") + ". Each swim/sink walks one root-to-leaf path: O(log n)." });
+	}
 	return frames;
 }
 
@@ -322,6 +355,7 @@ const CSS = `
 .vz-bh .bh-node.is-swap text { fill: var(--vz-swap-fg); }
 .vz-bh .bh-node.is-sorted circle { fill: var(--vz-sorted-bg); stroke: var(--vz-sorted-bd); }
 .vz-bh .bh-node.is-sorted text { fill: var(--vz-sorted-fg); }
+.vz-bh .bh-node.is-out circle { stroke-dasharray: 4 3; }
 .vz-bh .bh-node.is-ghost circle { stroke-dasharray: 4 3; fill: none; }
 .vz-bh .bh-node.is-ghost text { fill: var(--vz-muted); }
 .vz-bh .bh-node.is-new { animation: vz-bh-pop .45s ease-out; }
@@ -411,7 +445,8 @@ export function render(stage, frame) {
 	ensureCss();
 	const pq = frame.pq;
 	const n = pq.length - 1;
-	const total = Math.max(n, frame.ghost ? frame.ghost.idx : 0);
+	const sorted = frame.sorted || [];
+	const total = Math.max(n + sorted.length, frame.ghost ? frame.ghost.idx : 0);
 	let st = stage._bh;
 	// Rebuild only when the number of slots changes (insert / delMax) or the stage was emptied.
 	if (!st || st.total !== total || !stage.contains(st.cells[0])) {
@@ -430,6 +465,7 @@ export function render(stage, frame) {
 		const node = st.nodes[i];
 		let label, c;
 		if (i <= n) { label = pq[i]; c = cls(frame, i); }
+		else if (i - n - 1 < sorted.length) { label = sorted[i - n - 1]; c = (frame.swapped && frame.swapped.indexOf(i) >= 0) ? "is-swap is-out" : "is-sorted is-out"; }
 		else if (frame.ghost && frame.ghost.idx === i) { label = frame.ghost.key; c = "is-ghost"; }
 		else { label = null; }
 		node.g.style.display = label === null ? "none" : "";
@@ -451,6 +487,7 @@ export function render(stage, frame) {
 		const cell = st.cells[i];
 		if (i === 0) { cell.textContent = "–"; cell.className = "vz-cell is-unused"; }
 		else if (i <= n) { cell.textContent = String(pq[i]); cell.className = "vz-cell " + cls(frame, i); }
+		else if (i - n - 1 < sorted.length) { cell.textContent = String(sorted[i - n - 1]); cell.className = "vz-cell " + ((frame.swapped && frame.swapped.indexOf(i) >= 0) ? "is-swap" : "is-sorted"); }
 		else { cell.textContent = String(frame.ghost.key); cell.className = "vz-cell is-ghost"; }
 	}
 
