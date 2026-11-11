@@ -99,7 +99,8 @@ Rules:
 - Don't repeat the summary as a bare label (`**Solution.**`) on the first line. A label that carries content stays: `**Answer: C**`, `**Solution (a).**`, `**Answer** (\`solution1.js\`)`.
 - No "Try it first" / "先自己试一试" line, because the closed fold already does that job. A hint stays as a plain `> Hint: …` / `> 提示：…` line before the fold.
 - The concept section still states the result in full and links down with `> 📝 **Practice**`. Someone who never opens an answer must miss nothing.
-- Fold answers. Fold other content only when it is long and non-essential (a full listing, a long derivation), and never as a blanket rule.
+- Fold answers. Fold other content only when it is long and non-essential (a full listing, a long derivation, a topic that is off the exam), and never as a blanket rule. Such a fold says what it holds instead of Solution/Answer, e.g. the ICS 46 midterm review's "Heap Sort (Not on the Midterm)" section, folded under a `<summary>` naming the topic. It may contain worked answers, since the whole topic is set aside. `check_md.py` WARNs on any summary other than Solution/Answer, so check that each WARN is such a fold and not a bare exercise answer.
+- A review sheet that works through sample questions as its content (the ICS 46 midterm review) is not folded question by question: the worked answers are what it teaches.
 
 ## 7. Translations (zh-CN)
 
@@ -139,7 +140,8 @@ Follow docs/notes-authoring.md in the site repo (KKazuhaK/uci.kazuha.me). In sho
 
   (zh-CN: 解答 / 答案). Blank lines after <summary> and around </details>;
   only the answer inside; no "Try it first" line; same folds in the same
-  order in both languages; fold nothing else unless it is long and
-  non-essential.
+  order in both languages. Fold nothing else unless it is long and
+  non-essential (then the summary names what it holds). A review sheet
+  whose worked questions are its content is not folded question by question.
 - Run check_md.py and fix every ERROR before delivering.
 ```

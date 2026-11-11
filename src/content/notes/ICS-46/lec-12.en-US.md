@@ -601,20 +601,27 @@ Try each one before reading the solution. The activities use one BST several tim
 
 **Part 3.** What is the worst-case time complexity of optimized heap construction?
 
-> ✍️ **Try it first.** Hint: n = 6, so the first call is `sink(3, 6)`.
+> Hint: n = 6, so the first call is `sink(3, 6)`.
 
-**Solution.**
+<details>
+<summary>Solution</summary>
+
 **Part 1:** `sink(3, 6)`: 7 < 8 → swap → `2 9 8 6 5 7`; `sink(2, 6)`: 9 is larger than 6 and 5 → no move; `sink(1, 6)`: 2 < 9 → swap, then 2 < 6 → swap → **`9 6 8 2 5 7`** (3 exchanges in total).
+
 **Part 2:** **O(n log n)** — n insertions, each O(log n).
+
 **Part 3:** **O(n)** — most nodes sit near the bottom and sink only a short distance; the series n · Σ h/2^(h+1) ≤ n. See [§1](#1-heap-construction-naive-vs-bottom-up) and [§2](#2-why-bottom-up-construction-is-on).
+
+</details>
 
 ### 13.2 Activity 1: Sortdown (slide 11)
 
 Given the heap you constructed before (`9 6 8 2 5 7`), run the second step of heapsort, sortdown, to sort the array. What is the worst-case time complexity of sortdown?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** The bar separates the heap from the sorted part:
+The bar separates the heap from the sorted part:
 
 | Step | After `exch(1, n--)` | After `sink(1, n)` |
 |---|---|---|
@@ -630,27 +637,41 @@ Result: **2 5 6 7 8 9**. Worst case: **O(n log n)** — n − 1 iterations, each
 {"title": "Activity 1 check: sortdown on 9 6 8 2 5 7", "heap": "9, 6, 8, 2, 5, 7", "ops": "sortdown()"}
 ```
 
+</details>
+
 Back to [§3](#3-sortdown).
 
 ### 13.3 Activity 2: Search (slide 26)
 
 Search for the keys 4 and 9 in the BST above.
 
-> ✍️ **Try it first.** Count the compares.
+> Hint: count the compares.
 
-**Solution.** **4:** 4 < 8 → left; 4 > 3 → right; 4 < 6 → left; 4 == 4 → **hit**, 4 compares (depth 3 + 1). **9:** 9 > 8 → right; 9 < 10 → left; 10's left link is null → **miss** (`nullptr` / `Value()`), 2 compares. Back to [§7](#7-search).
+<details>
+<summary>Solution</summary>
+
+**4:** 4 < 8 → left; 4 > 3 → right; 4 < 6 → left; 4 == 4 → **hit**, 4 compares (depth 3 + 1). **9:** 9 > 8 → right; 9 < 10 → left; 10's left link is null → **miss** (`nullptr` / `Value()`), 2 compares.
+
+</details>
+
+Back to [§7](#7-search).
 
 ### 13.4 Activity 3: Insert (slide 27)
 
 How do we add to BST while keeping symmetric ordering? Add the key-value pairs (4,3) and (9,2) in the BST above. (Nodes are shown with only keys.)
 
-> ✍️ **Try it first.** Hint: one of these keys is already in the tree.
+> Hint: one of these keys is already in the tree.
 
-**Solution.** **(4,3):** the search path 8 → 3 → 6 → 4 ends at an existing node, so **only its value is updated** to 3; the tree shape doesn't change. **(9,2):** 9 > 8 → right; 9 < 10 → left; null → **new node 9 (value 2) becomes 10's left child**. Check both, together with Activity 2:
+<details>
+<summary>Solution</summary>
+
+**(4,3):** the search path 8 → 3 → 6 → 4 ends at an existing node, so **only its value is updated** to 3; the tree shape doesn't change. **(9,2):** 9 > 8 → right; 9 < 10 → left; null → **new node 9 (value 2) becomes 10's left child**. Check both, together with Activity 2:
 
 ```viz bst
 {"title": "Activities 2 and 3 check", "keys": "8, 3, 10, 1, 6, 14, 4, 7, 13", "ops": "get(4); get(9); put(4, 3); put(9, 2)"}
 ```
+
+</details>
 
 Back to [§8](#8-insert).
 
@@ -664,9 +685,10 @@ How do we remove a key-value pair while keeping symmetric ordering? Remove each 
 - remove 3
 - remove 8
 
-> ✍️ **Try it first.** Name the case for each one before you redraw the tree.
+> Hint: name the case for each one before you redraw the tree.
 
-**Solution.**
+<details>
+<summary>Solution</summary>
 
 | Remove | Case | Result (`key(left right)`, `-` = empty) |
 |---|---|---|
@@ -676,19 +698,26 @@ How do we remove a key-value pair while keeping symmetric ordering? Remove each 
 | 3 | two children; successor 4 = min of the subtree at 6 | 8(4(1 6(- 7)) 10(- 14(13 -))) |
 | 8 | two children; successor 10 = min of the right subtree (10 has no left child), so 10's right subtree stays put | 10(3(1 6(4 7)) 14(13 -)) |
 
-The trap is **remove 3**: its successor is not its right child 6 but the left-most node under 6, which is 4. Back to [§10](#10-hibbard-deletion).
+The trap is **remove 3**: its successor is not its right child 6 but the left-most node under 6, which is 4.
+
+</details>
+
+Back to [§10](#10-hibbard-deletion).
 
 ### 13.6 Activity 5: Hibbard Deletion (slide 34)
 
 Delete the node 21 following Hibbard's deletion, in the tree 21 / 10, 79 / 73, 95 / 70, 74 (73's children) / 71 (70's right child).
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** 21 has two children → case 3. The successor is the minimum of the right subtree: 79 → 73 → **70** (70 has no left child). 70's right child **71 moves up to be 73's left child**, then 70 takes 21's place: **70 / 10, 79 / 73, 95 / 71, 74**. Check it:
+21 has two children → case 3. The successor is the minimum of the right subtree: 79 → 73 → **70** (70 has no left child). 70's right child **71 moves up to be 73's left child**, then 70 takes 21's place: **70 / 10, 79 / 73, 95 / 71, 74**. Check it:
 
 ```viz bst
 {"title": "Activity 5 check: delete 21", "keys": "21, 10, 79, 73, 95, 70, 74, 71", "ops": "remove(21)"}
 ```
+
+</details>
 
 Back to [§10](#10-hibbard-deletion).
 
