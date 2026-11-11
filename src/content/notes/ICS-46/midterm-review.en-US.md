@@ -25,7 +25,7 @@ summary: "Midterm review for Lectures 0–12: exam scope and strategy, Big-O and
 - [16. Quick Reference and Last-Night Checklist](#16-quick-reference-and-last-night-checklist)
 
 > UCI ICS 46: Data Structure Implementation and Analysis — Prof. Tom Yeh, Fall 2026. Midterm: Thursday 11/12/26, in lecture.
-> Built from the sample midterm, Quizzes 2–4, HW 1/2/3/5, Labs 1–4 and the "Midterm Topics & Prep" slide of Lecture 12. Each topic links back to its lecture notes for the full explanation; this page is the exam layer on top.
+> Built from the sample midterm, Quizzes 2–4, HW 1/2/3/5, Labs 1–4, the "Midterm Topics & Prep" slide of Lecture 12, and the in-class review in Lecture 14 (11/10). Each topic links back to its lecture notes for the full explanation; this page is the exam layer on top.
 > Every piece of code here was compiled with `g++ -std=c++17 -Wall -Wextra -fsanitize=address,undefined` and run; printed results are real output.
 
 ---
@@ -48,6 +48,7 @@ Study materials named on the same slide: the sample midterm, quizzes, lecture ac
 - **Trees are in.** The slide's list stops at sorting, but Prof. Yeh has since said trees will be on the midterm: tree terminology and traversals, heaps and priority queues (including bottom-up heap construction), and BSTs ([§9](#9-trees-binary-trees-and-traversals)–[§11](#11-binary-search-trees)). The sample has no tree question, so those sections are built from the Lecture 10–12 activities.
 - **Heap sort is out** (confirmed by Prof. Yeh, matching the sample's "ignore Heapsort"). Its notes stay on this page, folded away ([§12](#12-heap-sort-not-on-the-midterm)), for the final.
 - **Format:** free response on paper, closed book, C++ written by hand (the quizzes allowed no cheat sheet; assume the same unless told otherwise). The sample has five 10-point questions (Big-O, loop counting, a linked-list method, a structure built from another structure, sorting).
+- **Reviewed in class.** The Lecture 14 review (11/10) walked through exactly two sample questions: Q3, `removeLast` on a circular SLL ([§6.2](#62-sample-q3-solved-removelast-on-a-circular-sll-with-only-tail)), and Q4, a stack from one queue ([§7.2](#72-sample-q4-solved-a-stack-with-one-queue)). Know both, and their variants, cold.
 - **The sample is the blueprint.** Expect the same five questions with details changed — a different method (`removeFirst` instead of `removeLast`), a different pointer (head instead of tail), a different input (reverse-sorted instead of sorted). Each section below solves the sample question and then the variants most likely to replace it.
 
 ---
@@ -936,7 +937,7 @@ Node* remove(Node* x, const Key& key) {
 | | Search | Insert | Delete |
 |---|---|---|---|
 | BST, worst case | O(n) | O(n) | O(n) |
-| BST, average (random insertion order) | O(log n) | O(log n) | not guaranteed — Hibbard deletions skew the tree |
+| BST, average (random insertion order) | O(log n) | O(log n) | O(√n) — Hibbard deletions skew the tree (Lec 14 summary table) |
 | Goal (balanced trees, after the midterm) | O(log n) | O(log n) | O(log n) |
 
 - The same keys give different trees depending on insertion order. Random order → expected height O(log n). **Sorted (or reverse-sorted) order → a stick of height n − 1**: inserting 1 … 7 in order gives height 6; inserting 4 2 6 1 3 5 7 gives height 2 (compiled run).
@@ -1201,7 +1202,7 @@ n=1000: 2000 10 999999 21
 | Stack from 1 or 2 queues | pop, peek | push (or the reverse design) | |
 | Queue from 2 stacks | enqueue; dequeue amortized | dequeue worst case | transfer only when out is empty |
 | Binary heap | max | | insert / delMax O(log n); build O(n) |
-| BST | | search / insert / delete in the worst case (stick) | search and insert O(log n) on average; in-order = sorted |
+| BST | | search / insert / delete in the worst case (stick) | average: search, insert O(log n), Hibbard delete O(√n); in-order = sorted |
 | Any tree traversal | | O(n) | recursion uses O(height) stack |
 
 **Last-night checklist**
