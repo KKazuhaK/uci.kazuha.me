@@ -35,10 +35,20 @@ for inside in "$PWD" "$(readlink -f "$DIST_DIR" 2>/dev/null || echo "$DIST_DIR")
   case "$inside/" in "$real"/*) echo "refusing to deploy into $web: it contains $inside; check WEB_ROOT in deploy.env" >&2; exit 1 ;; esac
 done
 
+# sync_count <dest> <rsync options…>: sync $src into <dest>, print a "Changes:" line
+sync_count() {
+  local dest=$1 changes updated deleted
+  shift
+  changes="$(rsync -a --delete --chmod=D755,F644 --itemize-changes "$@" "$src/" "$dest")"
+  updated="$(grep -c '^>f' <<<"$changes" || true)"
+  deleted="$(grep -c '^\*deleting .*[^/]$' <<<"$changes" || true)"  # files, not dirs
+  echo "Changes: $updated files updated, $deleted removed"
+}
+
 case "$target" in
   next)
     mkdir -p "$web/next"
-    rsync -a --delete --chmod=D755,F644 --exclude=/.git/ "$src/" "$web/next/"
+    sync_count "$web/next/" --exclude=/.git/
     echo "Staged: ${PUBLIC_URL%/}/next/"
     ;;
   prod)
@@ -52,7 +62,7 @@ case "$target" in
     excludes=(--exclude=/.git/)
     for k in ${KEEP_PATHS[@]+"${KEEP_PATHS[@]}"}; do excludes+=("--exclude=/${k#/}"); done
     mkdir -p "$web"
-    rsync -a --delete --chmod=D755,F644 "${excludes[@]}" "$src/" "$web/"
+    sync_count "$web/" "${excludes[@]}"
     echo "Deployed: $PUBLIC_URL"
     ;;
   *)

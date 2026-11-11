@@ -6,20 +6,30 @@
 # No Node needed on the server.
 #   scripts/pull-deploy.sh           # deploy only if the build changed
 #   scripts/pull-deploy.sh --force   # redeploy the current build anyway
+# Two stages (fetch, publish), printed by scripts/progress.sh; update_site.sh numbers
+# them 3-4 and passes EXPECT_SOURCE (the main commit it checked CI for).
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
 . "$here/scripts/deploy-env.sh"
+STAGE_TOTAL="${STAGE_TOTAL:-2}"
+. "$here/scripts/progress.sh"
 dist="$DIST_DIR"
 state="$STATE_DIR"
 mkdir -p "$state"
 exec 9>"$state/site-pull-deploy.lock"
-flock -n 9 || exit 0
+if ! flock -n 9; then
+  echo "  ✗ another publish is running (lock $state/site-pull-deploy.lock); try again when it is done" >&2
+  exit 1
+fi
 
+stage "Fetching the build ($DEPLOY_BRANCH)"
 # Keep the source checkout current too (fast-forward only; never touches local edits).
-git -C "$here" pull -q --ff-only 2>/dev/null || echo "$(date -Is) note: $here not fast-forwarded (local commits or conflicts)"
+# update_site.sh has just done this; it matters when this script is run on its own.
+git -C "$here" pull -q --ff-only 2>/dev/null || info "note: $here not fast-forwarded (local commits or conflicts)"
 
 repo="$(git -C "$here" remote get-url origin)"
 if [ ! -d "$dist/.git" ]; then
+  info "first run: cloning $DEPLOY_BRANCH into $dist"
   git clone -q --depth 1 --branch "$DEPLOY_BRANCH" "$repo" "$dist"
 else
   git -C "$dist" fetch -q --depth 1 origin "$DEPLOY_BRANCH"
@@ -29,18 +39,30 @@ else
   fi
 fi
 
+head="$(git -C "$dist" rev-parse HEAD)"
+msg="$(git -C "$dist" log -1 --format=%B)"
+source_commit="$(sed -n 's/^Source-Commit: //p' <<<"$msg" | tail -1)"
+built_base="$(sed -n 's/^Site-Base: //p' <<<"$msg" | tail -1)"
+built_at="$(git -C "$dist" log -1 --format=%cd --date=format-local:'%Y-%m-%d %H:%M')"
+if [ -n "$source_commit" ]; then ok "build of ${source_commit:0:7}, made $built_at"
+else ok "$(git -C "$dist" log -1 --format=%s), made $built_at"; fi
+if [ -n "${EXPECT_SOURCE:-}" ] && [ -n "$source_commit" ] && [ "$source_commit" != "$EXPECT_SOURCE" ]; then
+  info "note: this is not the build of main (${EXPECT_SOURCE:0:7}); a newer push may have replaced it"
+fi
+
+stage "Publishing to $WEB_ROOT"
 # Compare with what was last deployed (not with the previous fetch), so a deploy
 # that failed half-way is retried on the next run.
-head="$(git -C "$dist" rev-parse HEAD)"
 marker="$state/site-deployed-$DEPLOY_BRANCH"
-if [ "$head" != "$(cat "$marker" 2>/dev/null || true)" ] || [ "${1:-}" = "--force" ]; then
-  # CI tags each build with the base it was built for; refuse one meant for another server.
-  built_base="$(git -C "$dist" log -1 --format=%B | sed -n 's/^Site-Base: //p' | tail -1)"
-  if [ -n "$built_base" ] && [ "${built_base%/}/" != "$SITE_BASE" ]; then
-    echo "$(date -Is) not deployed: $DEPLOY_BRANCH was built for base $built_base, deploy.env says $SITE_BASE" >&2
-    exit 1
-  fi
-  SRC="$dist" "$here/scripts/deploy.sh" prod >/dev/null
-  echo "$head" > "$marker"
-  echo "$(date -Is) deployed: $(git -C "$dist" log -1 --format=%s)"
+if [ "$head" = "$(cat "$marker" 2>/dev/null || true)" ] && [ "${1:-}" != "--force" ]; then
+  ok "already live; nothing to do (--force republishes)"
+  exit 0
 fi
+# CI tags each build with the base it was built for; refuse one meant for another server.
+if [ -n "$built_base" ] && [ "${built_base%/}/" != "$SITE_BASE" ]; then
+  fail "not deployed: $DEPLOY_BRANCH was built for base $built_base, deploy.env says $SITE_BASE"
+  exit 1
+fi
+summary="$(SRC="$dist" "$here/scripts/deploy.sh" prod | sed -n 's/^Changes: //p')"
+echo "$head" > "$marker"
+ok "deployed${summary:+: $summary}"
