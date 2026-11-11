@@ -47,7 +47,12 @@ Study materials named on the same slide: the sample midterm, quizzes, lecture ac
 
 - **Trees are in.** The slide's list stops at sorting, but Prof. Yeh has since said trees will be on the midterm: tree terminology and traversals, heaps and priority queues (including bottom-up heap construction), and BSTs ([§9](#9-trees-binary-trees-and-traversals)–[§11](#11-binary-search-trees)). The sample has no tree question, so those sections are built from the Lecture 10–12 activities.
 - **Heap sort is out** (confirmed by Prof. Yeh, matching the sample's "ignore Heapsort"). Its notes stay on this page, folded away ([§12](#12-heap-sort-not-on-the-midterm)), for the final.
-- **Format:** free response on paper, closed book, C++ written by hand (the quizzes allowed no cheat sheet; assume the same unless told otherwise). The sample has five 10-point questions (Big-O, loop counting, a linked-list method, a structure built from another structure, sorting).
+- **Format** (as announced in lecture): free response on paper, closed book, C++ written by hand (the quizzes allowed no cheat sheet; assume the same unless told otherwise).
+  - **No multiple choice.** Mostly fill-in-the-blank, explanation and coding; **partial credit** is given.
+  - **5 main questions, each multi-part, about 10 points each**, ordered by topic — the same shape as the sample (Big-O, loop counting, a linked-list method, a structure built from another structure, sorting).
+  - **One coding problem, one code-review problem ([§2.7](#27-the-code-review-question)), and many conceptual questions.** Expect to analyze functions: runtime, efficiency and edge cases.
+  - **Runtime** of recursive code may be classified with the **Master theorem or a recursion-tree diagram** — either is accepted ([§4.3](#43-recurrences-that-could-replace-mystery4)).
+  - **Extra-credit problems** are deliberately long and difficult: leave them until the main questions are done.
 - **Reviewed in class.** The Lecture 14 review (11/10) walked through exactly two sample questions: Q3, `removeLast` on a circular SLL ([§6.2](#62-sample-q3-solved-removelast-on-a-circular-sll-with-only-tail)), and Q4, a stack from one queue ([§7.2](#72-sample-q4-solved-a-stack-with-one-queue)). Know both, and their variants, cold.
 - **The sample is the blueprint.** Expect the same five questions with details changed — a different method (`removeFirst` instead of `removeLast`), a different pointer (head instead of tail), a different input (reverse-sorted instead of sorted). Each section below solves the sample question and then the variants most likely to replace it.
 
@@ -100,11 +105,129 @@ Before you write any linked-structure or array method, go down this list and han
 ### 2.6 Time
 
 - The paper is long. Do the question types you have drilled first (Big-O table, loop counts, sort table), then the code.
+- Skip the extra-credit problems on the first pass; come back to them only when every main question has an answer.
 - Expect one harder design-style question ([§14](#14-the-design-question)). Budget for it, and if you are stuck write the idea, the invariant and the complexity you are aiming for — that alone is worth points.
 - Listen for corrections announced during the exam.
 - Recent material shows up: make sure trees, heaps and BSTs ([§9](#9-trees-binary-trees-and-traversals)–[§11](#11-binary-search-trees)) are solid, not just the early lectures.
 
 Prof. Yeh's own prep advice (Ed): be able to do **every lecture activity and homework question and their variations**, and review the labs; the assessments test depth of understanding.
+
+### 2.7 The code-review question
+
+You are given code (usually a method of a structure from the course) and asked what is wrong with it or how good it is. Go down the same list every time and write one line per finding — what breaks, on which input, and the fix:
+
+| Check | What to look for |
+|---|---|
+| Correctness | wrong loop bound (off by one), wrong order of pointer updates, shifting in the wrong direction, `%` on a negative number |
+| Edge cases | empty structure, one element, operation at the front / back, full array, wrap-around ([§2.5](#25-the-special-case-checklist)) |
+| Memory | `delete` missing (leak), using a node after `delete` (dangling), reading the item after freeing it |
+| Runtime and efficiency | an O(n) call inside a loop (O(n²) overall), a resize by a constant amount, work redone on every call |
+| Contract | does it keep the invariant (BST order, heap order, `count`, `tail`)? does it return the right value? |
+
+Practice: each snippet has at least one bug.
+
+**(a)** ArrayList `add(index, item)`:
+
+```cpp
+for (size_t i = index; i < n_; ++i)
+    data_[i + 1] = data_[i];
+data_[index] = item;
+++n_;
+```
+
+<details>
+<summary>Solution</summary>
+
+It shifts from the front, so `data_[index]` is copied into every later slot and all the other items are overwritten. Shift from the end: `for (size_t i = n_; i > index; --i) data_[i] = data_[i - 1];`. It also never checks `n_ == capacity_` before writing `data_[n_]` (call `expand()` first) or `index <= n_`.
+
+</details>
+
+**(b)** `removeLast` on an SLL with `head` and `tail`:
+
+```cpp
+T removeLast() {
+    Node* p = head;
+    while (p->next != tail) p = p->next;
+    T item = tail->item;
+    delete tail;
+    tail = p;
+    return item;
+}
+```
+
+<details>
+<summary>Solution</summary>
+
+Three bugs. (1) Empty list: `p` is `nullptr`, so `p->next` crashes — throw first. (2) One node: `head == tail`, the loop runs off the end (`p->next` is `nullptr`, never `tail`) — set both `head` and `tail` to `nullptr` instead. (3) The new tail still points at the deleted node: add `p->next = nullptr;`. It is also O(n) by design; only a DLL makes it O(1).
+
+</details>
+
+**(c)** Two-stack queue `dequeue`:
+
+```cpp
+T dequeue() {
+    while (!stackIn.isEmpty())
+        stackOut.push(stackIn.pop());
+    return stackOut.pop();
+}
+```
+
+<details>
+<summary>Solution</summary>
+
+It transfers even when `stackOut` still holds items, so newer items land on top of older ones and FIFO order breaks (enqueue 1, 2; dequeue → 1; enqueue 3; dequeue → 3, but should be 2). Transfer only `if (stackOut.isEmpty())`, and throw when both stacks are empty.
+
+</details>
+
+**(d)** Deque on a circular array, push at the front (`front`, `count` and `capacity` are `int`):
+
+```cpp
+void pushFront(const T& x) {
+    front = (front - 1) % capacity;
+    data[front] = x;
+    count++;
+}
+```
+
+<details>
+<summary>Solution</summary>
+
+When `front` is 0, `(0 - 1) % capacity` is −1 in C++ (`%` keeps the sign), so it writes `data[-1]`. Use `(front - 1 + capacity) % capacity`. It also never checks `count == capacity` (resize first, unrolling from `front`).
+
+</details>
+
+**(e)** BST insert:
+
+```cpp
+void put(Node* x, const Key& key, const Value& val) {
+    if (x == nullptr) { x = new Node(key, val, 1); return; }
+    if (key < x->key) put(x->left, key, val);
+    else if (key > x->key) put(x->right, key, val);
+    else x->val = val;
+}
+```
+
+<details>
+<summary>Solution</summary>
+
+`x` is a copy of the pointer, so the new node is assigned to a local variable and never linked into the tree (and leaks). Either return the subtree root and reassign — `x->left = put(x->left, key, val);` as in the slide code ([§11](#11-binary-search-trees)) — or take `Node*& x`. The `size` fields are also never updated.
+
+</details>
+
+**(f)** Summing a linked list (efficiency):
+
+```cpp
+int sum = 0;
+for (size_t i = 0; i < list.size(); i++)
+    sum += list.get(i);
+```
+
+<details>
+<summary>Solution</summary>
+
+Correct, but `get(i)` on a linked list walks i nodes, so the loop costs 0 + 1 + ⋯ + (n − 1) = O(n²). Walk the nodes once (`for (Node* p = head; p != nullptr; p = p->next) sum += p->item;`, or an iterator) for O(n). On an ArrayList the same loop is O(n).
+
+</details>
 
 ---
 
@@ -209,6 +332,18 @@ Counts measured for n = 1024:
 | T(n) = T(n/2) + n | halve and scan | O(n) |
 
 **Master theorem** for T(n) = aT(n/b) + O(nᵈ): compare a with bᵈ — equal → O(nᵈ log n); a < bᵈ → O(nᵈ); a > bᵈ → O(n^(log_b a)). It does **not** apply to T(n − 1) recurrences; draw the recursion tree for those ([Lec 6](lec-06.en-US.md#7-method-b-the-master-theorem)).
+
+**Recursion tree** (accepted on the exam instead of the Master theorem): draw one node per call with the work done *outside* the recursive calls, add up each level, then add the levels.
+
+| Recurrence | Level k | Number of levels | Total |
+|---|---|---|---|
+| 2T(n/2) + n (merge sort) | 2ᵏ calls × n/2ᵏ = n | log₂ n | n log n |
+| T(n/2) + n | 1 call × n/2ᵏ | log₂ n | n + n/2 + ⋯ ≤ 2n = O(n) |
+| 2T(n/2) + 1 | 2ᵏ calls × 1 | log₂ n | 1 + 2 + ⋯ + n ≈ 2n = O(n) |
+| T(n − 1) + n | 1 call × (n − k) | n | n + (n − 1) + ⋯ + 1 = O(n²) |
+| 2T(n − 1) + 1 | 2ᵏ calls × 1 | n | 1 + 2 + ⋯ + 2ⁿ⁻¹ = 2ⁿ − 1 = O(2ⁿ) |
+
+Write the per-level sum and the number of levels in your answer — that is the reasoning partial credit is given for.
 
 ---
 
