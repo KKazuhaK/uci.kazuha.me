@@ -30,9 +30,9 @@ git -C "$here" pull -q --ff-only 2>/dev/null || info "note: $here not fast-forwa
 repo="$(git -C "$here" remote get-url origin)"
 if [ ! -d "$dist/.git" ]; then
   info "first run: cloning $DEPLOY_BRANCH into $dist"
-  git clone -q --depth 1 --branch "$DEPLOY_BRANCH" "$repo" "$dist"
+  git_progress clone --depth 1 --branch "$DEPLOY_BRANCH" "$repo" "$dist"
 else
-  git -C "$dist" fetch -q --depth 1 origin "$DEPLOY_BRANCH"
+  git_progress -C "$dist" fetch --depth 1 origin "$DEPLOY_BRANCH"
   if [ "$(git -C "$dist" rev-parse HEAD)" != "$(git -C "$dist" rev-parse FETCH_HEAD)" ]; then
     git -C "$dist" reset -q --hard FETCH_HEAD
     git -C "$dist" gc -q --prune=now
@@ -63,6 +63,26 @@ if [ -n "$built_base" ] && [ "${built_base%/}/" != "$SITE_BASE" ]; then
   fail "not deployed: $DEPLOY_BRANCH was built for base $built_base, deploy.env says $SITE_BASE"
   exit 1
 fi
-summary="$(SRC="$dist" "$here/scripts/deploy.sh" prod | sed -n 's/^Changes: //p')"
+# deploy.sh's progress lines become a bar; its stderr is held back until the bar is
+# cleared, so a warning or error doesn't land on the bar's line.
+out="$(mktemp)" err="$(mktemp)"
+set +e
+SRC="$dist" SYNC_PROGRESS=1 "$here/scripts/deploy.sh" prod 2>"$err" | while IFS= read -r line; do
+  case "$line" in
+    "Progress: "*)
+      read -r _ n total <<<"$line"
+      if [ "$total" -gt 0 ]; then
+        live "$((n * 10 / total))" "$(bar $((n * 100 / total))) · $n/$total changed paths synced"
+      fi ;;
+    "Changes: "*) echo "${line#Changes: }" >"$out" ;;
+  esac
+done
+rc=$?
+set -e
+live_clear
+cat "$err" >&2
+summary="$(cat "$out")"
+rm -f "$out" "$err"
+[ "$rc" -eq 0 ] || exit "$rc"
 echo "$head" > "$marker"
 ok "deployed${summary:+: $summary}"

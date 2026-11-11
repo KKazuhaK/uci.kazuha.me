@@ -35,14 +35,31 @@ for inside in "$PWD" "$(readlink -f "$DIST_DIR" 2>/dev/null || echo "$DIST_DIR")
   case "$inside/" in "$real"/*) echo "refusing to deploy into $web: it contains $inside; check WEB_ROOT in deploy.env" >&2; exit 1 ;; esac
 done
 
-# sync_count <dest> <rsync options…>: sync $src into <dest>, print a "Changes:" line
+# sync_count <dest> <rsync options…>: sync $src into <dest> and print a "Changes:" line.
+# With SYNC_PROGRESS=1 (scripts/pull-deploy.sh sets it, and turns these into a bar) a
+# dry run first counts the paths that will change, and each one synced prints
+# "Progress: <n> <total>".
 sync_count() {
-  local dest=$1 changes updated deleted
+  local dest=$1 total=0 planned progress="${SYNC_PROGRESS:-0}"
   shift
-  changes="$(rsync -a --delete --chmod=D755,F644 --itemize-changes "$@" "$src/" "$dest")"
-  updated="$(grep -c '^>f' <<<"$changes" || true)"
-  deleted="$(grep -c '^\*deleting .*[^/]$' <<<"$changes" || true)"  # files, not dirs
-  echo "Changes: $updated files updated, $deleted removed"
+  local opts=(-a --delete "--chmod=D755,F644" --itemize-changes "$@" "$src/" "$dest")
+  if [ "$progress" = 1 ]; then
+    planned="$(rsync --dry-run "${opts[@]}")"
+    total="$(grep -c . <<<"$planned" || true)"
+    echo "Progress: 0 $total"
+  fi
+  rsync "${opts[@]}" | {
+    local line n=0 updated=0 deleted=0
+    while IFS= read -r line; do
+      n=$((n + 1))
+      case "$line" in
+        ">f"*) updated=$((updated + 1)) ;;
+        "*deleting "*[!/]) deleted=$((deleted + 1)) ;;  # files, not dirs
+      esac
+      [ "$progress" = 1 ] && echo "Progress: $n $total"
+    done
+    echo "Changes: $updated files updated, $deleted removed"
+  }
 }
 
 case "$target" in
