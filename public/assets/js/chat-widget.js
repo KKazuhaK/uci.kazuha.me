@@ -116,18 +116,21 @@
 
     /* --- Header --- */
     "#cw-header {",
-    "  padding:14px 18px; display:flex; justify-content:space-between; align-items:center;",
+    "  padding:12px 12px 12px 18px; display:flex; justify-content:space-between; align-items:center; gap:10px;",
     "  border-bottom:1px solid rgba(88,166,255,.08);",
     "  background:linear-gradient(180deg, rgba(88,166,255,.04) 0%, transparent 100%);",
     "}",
-    "#cw-header span {",
+    "#cw-header .cw-title {",
     "  color:#c8d6e0; font-size:13.5px; font-weight:600; letter-spacing:.3px;",
     "}",
+    "#cw-header .cw-title { display:flex; align-items:center; min-width:0; white-space:nowrap; }",
+    "#cw-header .cw-title-text { overflow:hidden; text-overflow:ellipsis; }",
+    "#cw-header .cw-actions { display:flex; gap:4px; align-items:center; flex:none; }",
     "#cw-header .cw-badge {",
     "  font-size:9px; color:#0f172a; font-weight:600;",
     "  margin-left:8px; letter-spacing:.5px; text-transform:uppercase;",
     "  background:rgba(255,255,255,.85); padding:2px 6px; border-radius:4px;",
-    "  vertical-align:middle;",
+    "  flex:none;",
     "}",
     "#cw-close, #cw-expand {",
     "  all:unset; box-sizing:border-box; width:28px; height:28px; border-radius:6px; cursor:pointer;",
@@ -146,14 +149,19 @@
     "#cw-panel.cw-expanded #cw-messages { min-height:0; max-height:none; padding:18px 24px; }",
     "#cw-panel.cw-expanded .cw-msg { font-size:14.5px; }",
     "#cw-new {",
-    "  all:unset; box-sizing:border-box; cursor:pointer; display:inline-flex; align-items:center;",
-    "  font-size:12.5px; font-weight:600; line-height:1; letter-spacing:.3px;",
-    "  color:#58a6ff; background:rgba(88,166,255,.18);",
-    "  border:1px solid rgba(88,166,255,.4); border-radius:6px;",
-    "  padding:6px 12px; transition:all .15s; white-space:nowrap;",
+    "  all:unset; box-sizing:border-box; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;",
+    "  height:28px; min-width:28px; padding:0 6px; border-radius:6px;",
+    "  font-size:12.5px; font-weight:600; line-height:1; letter-spacing:.3px; white-space:nowrap;",
+    "  color:#58a6ff; transition:color .15s, background .15s;",
     "}",
-    "#cw-new svg { display:block; flex:none; }",
-    "#cw-new:hover { color:#79c0ff; background:rgba(88,166,255,.28); border-color:rgba(88,166,255,.6); }",
+    "#cw-new svg { display:block; flex:none; font-size:16px; }",
+    "#cw-new .cw-new-label { display:none; margin-left:.4em; }",
+    "#cw-new:hover { color:#79c0ff; background:rgba(88,166,255,.1); }",
+    "#cw-panel.cw-expanded #cw-new { padding:0 10px; background:rgba(88,166,255,.14); border:1px solid rgba(88,166,255,.35); }",
+    "#cw-panel.cw-expanded #cw-new .cw-new-label { display:inline; }",
+    "html[data-theme=\"light\"] #cw-new { color:#0064A4; }",
+    "html[data-theme=\"light\"] #cw-new:hover { background:rgba(0,100,164,.08); }",
+    "html[data-theme=\"light\"] #cw-panel.cw-expanded #cw-new { background:rgba(0,100,164,.08); border-color:rgba(0,100,164,.3); }",
 
     /* --- Messages --- */
     "#cw-messages {",
@@ -298,17 +306,11 @@
     "  border-bottom:1px solid rgba(15,23,42,.06);",
     "  background:linear-gradient(180deg, rgba(0,100,164,.03) 0%, transparent 100%);",
     "}",
-    "html[data-theme=\"light\"] #cw-header span { color:#1e2136; }",
+    "html[data-theme=\"light\"] #cw-header .cw-title { color:#1e2136; }",
     "html[data-theme=\"light\"] #cw-header .cw-badge { color:#fff; background:#1e2136; }",
     "html[data-theme=\"light\"] #cw-close, html[data-theme=\"light\"] #cw-expand { color:rgba(15,23,42,.45); }",
     "html[data-theme=\"light\"] #cw-close:hover, html[data-theme=\"light\"] #cw-expand:hover { color:#0064A4; background:rgba(0,100,164,.08); }",
     "html[data-theme=\"light\"] #cw-backdrop { background:rgba(15,23,42,.28); }",
-    "html[data-theme=\"light\"] #cw-new {",
-    "  color:#004577; background:rgba(0,100,164,.12); border:1px solid rgba(0,100,164,.28);",
-    "}",
-    "html[data-theme=\"light\"] #cw-new:hover {",
-    "  color:#003355; background:rgba(0,100,164,.2); border-color:rgba(0,100,164,.45);",
-    "}",
     "html[data-theme=\"light\"] #cw-messages::-webkit-scrollbar-thumb { background:rgba(15,23,42,.15); }",
     "html[data-theme=\"light\"] .cw-msg.user {",
     "  background:rgba(0,100,164,.08); color:#1e2136; border:1px solid rgba(0,100,164,.15);",
@@ -377,7 +379,26 @@
     "  #cw-bubble { bottom:1rem; right:1rem; font-size:13px !important; padding:8px 14px 8px 10px !important; }",
     "  #cw-btn-group { bottom:1rem !important; right:1rem !important; gap:8px !important; }",
     "  #cw-btn-group > * { font-size:13px !important; padding:8px 14px 8px 10px !important; }",
-    "  #cw-panel { right:10px; left:10px; bottom:calc(1rem + 46px); width:auto; max-height:65vh; }",
+    /* Phones: a full-screen sheet. Height follows the visual viewport (set in JS) so the
+       input stays above the on-screen keyboard; 16px text keeps iOS from zooming on focus. */
+    "  #cw-panel, #cw-panel.cw-expanded {",
+    "    top:0; left:0; right:0; bottom:auto; transform:none; width:100%; height:100dvh; max-height:none;",
+    "    border:none; border-radius:0; animation:cw-slideUp .2s ease; background:#14181f;",
+    "  }",
+    "  html[data-theme=\"light\"] #cw-panel { background:#fff; border:none; }",
+    "  #cw-header { padding:10px 8px 10px 16px; }",
+    "  #cw-header .cw-title { font-size:15px; }",
+    "  #cw-expand { display:none !important; }",
+    "  #cw-new, #cw-close { height:40px; min-width:40px; font-size:18px; }",
+    "  #cw-new svg { font-size:18px; }",
+    "  #cw-messages { min-height:0; max-height:none; padding:14px 12px; }",
+    "  .cw-msg { max-width:88%; font-size:15px; }",
+    "  #cw-input-row { padding:10px 12px; }",
+    "  #cw-input { font-size:16px; height:44px !important; }",
+    "  #cw-send, #cw-file-upload { width:44px; height:44px; min-width:44px; min-height:44px; }",
+    "  html.cw-sheet-open, html.cw-sheet-open body { overflow:hidden; }",
+    "  html.cw-sheet-open #cw-btn-group, html.cw-sheet-open #cw-bubble { display:none !important; }",
+    "  #cw-backdrop { display:none !important; }",
     "}"
   ].join("\n");
   document.head.appendChild(css);
@@ -484,9 +505,9 @@
   panel.id = "cw-panel";
   panel.innerHTML =
     '<div id="cw-header">' +
-      '<span>Ask about this page<span class="cw-badge">Beta</span></span>' +
-      '<div style="display:flex;gap:8px;align-items:center;">' +
-        '<button id="cw-new" title="New chat"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:0.3em;"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>New Chat</button>' +
+      '<span class="cw-title"><span class="cw-title-text">Ask about this page</span><span class="cw-badge">Beta</span></span>' +
+      '<div class="cw-actions">' +
+        '<button id="cw-new" title="New chat" aria-label="New chat"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg><span class="cw-new-label">New Chat</span></button>' +
         '<button id="cw-expand" title="Expand" aria-label="Expand"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg></button>' +
         '<button id="cw-close" title="Close" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>' +
       '</div>' +
@@ -543,11 +564,44 @@
   if (hintEl) { getPageContext(); hintEl.outerHTML = getHintHtml(); }
 
   /* ---------- toggle ---------- */
-  bubble.addEventListener("click", function () {
-    var open = panel.classList.toggle("open");
+  var phoneMq = window.matchMedia("(max-width:768px)");
+  // On a phone the panel is a full-screen sheet: lock the page behind it and keep it
+  // the size of the visual viewport, so the on-screen keyboard doesn't cover the input.
+  function fitSheet() {
+    var vv = window.visualViewport;
+    if (!panel.classList.contains("open") || !phoneMq.matches || !vv) {
+      panel.style.height = ""; panel.style.top = "";
+      return;
+    }
+    // Keep the newest message in view when the keyboard shrinks the sheet, unless
+    // the reader has scrolled up to an older one.
+    var atBottom = messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 40;
+    panel.style.height = vv.height + "px";
+    panel.style.top = vv.offsetTop + "px";
+    if (atBottom) messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+  // The expanded modal is a desktop view: leave it when the window becomes phone-sized.
+  function onPhoneChange() {
+    if (phoneMq.matches && panel.classList.contains("cw-expanded")) setExpanded(false);
+    fitSheet();
+  }
+  if (phoneMq.addEventListener) phoneMq.addEventListener("change", onPhoneChange);
+  else if (phoneMq.addListener) phoneMq.addListener(onPhoneChange);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", fitSheet);
+    window.visualViewport.addEventListener("scroll", fitSheet);
+  }
+  function setOpen(open) {
+    panel.classList.toggle("open", open);
     bubble.classList.toggle("open", open);
+    document.documentElement.classList.toggle("cw-sheet-open", open);
     if (!open) setExpanded(false);
-    if (open) inputEl.focus();
+    fitSheet();
+    // Phones: don't pop the keyboard up over the sheet the moment it opens.
+    if (open && !phoneMq.matches) inputEl.focus();
+  }
+  bubble.addEventListener("click", function () {
+    setOpen(!panel.classList.contains("open"));
   });
   function setExpanded(on) {
     panel.classList.toggle("cw-expanded", on);
@@ -562,13 +616,11 @@
   });
   backdrop.addEventListener("click", function () { setExpanded(false); });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && panel.classList.contains("cw-expanded")) setExpanded(false);
+    if (e.key !== "Escape") return;
+    if (panel.classList.contains("cw-expanded")) setExpanded(false);
+    else if (panel.classList.contains("open") && phoneMq.matches) setOpen(false);
   });
-  closeBtn.addEventListener("click", function () {
-    setExpanded(false);
-    panel.classList.remove("open");
-    bubble.classList.remove("open");
-  });
+  closeBtn.addEventListener("click", function () { setOpen(false); });
   newBtn.addEventListener("click", function () {
     chatHistory = [];
     cwClearFile();
