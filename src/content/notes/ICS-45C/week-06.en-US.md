@@ -1644,9 +1644,14 @@ int main()
 }
 ```
 
+<details>
+<summary>Answer</summary>
+
 **Answer: B**
 
 > 💡 Resolution: rBase is an A reference pointing to a C object. The most-derived getName between A and C is `B::getName()` (because C doesn't define one). **D won't be called**, because the object is C, not D.
+
+</details>
 
 #### Quiz 1c (the most commonly forgotten trap)
 
@@ -1663,9 +1668,14 @@ int main()
 }
 ```
 
+<details>
+<summary>Answer</summary>
+
 **Answer: A**
 
 > ⚠️ **Trap**: A isn't virtual, **and B and C declaring virtual won't save it**. The base must be marked virtual first.
+
+</details>
 
 #### Quiz 1d (implicit virtual)
 
@@ -1682,9 +1692,14 @@ int main()
 }
 ```
 
+<details>
+<summary>Answer</summary>
+
 **Answer: C**
 
 > 💡 A is virtual → B, C are implicitly virtual too. rBase is a B reference; the most-derived between B and C is C::getName() → "C".
+
+</details>
 
 #### Quiz 1e (const inconsistency)
 
@@ -1702,9 +1717,14 @@ int main()
 }
 ```
 
+<details>
+<summary>Answer</summary>
+
 **Answer: A**
 
 > ⚠️ **Trap**: B, C, D's getName() **are not const** — so they **don't count as overrides**! They are new "virtual functions" that don't match A's getName. So rBase.getName() looks for the most-derived version between A and C with A::getName()'s signature — only A itself.
+
+</details>
 
 #### Quiz 1f (calling virtual functions in constructors)
 
@@ -1724,11 +1744,16 @@ int main()
 }
 ```
 
+<details>
+<summary>Answer</summary>
+
 **Answer: A**
 
 > ⚠️ **Critically important trap**: when constructing C, the A part is built first. Inside A's constructor, calling the virtual getName() — at this moment **the B and C parts have not yet been constructed** — so it resolves to `A::getName()`.
 >
 > This is why LearnCpp introduces the **Best Practice: never call virtual functions from constructors or destructors!**
+
+</details>
 
 ### 11.11 ⚠️ Best Practice: Don't Call Virtual Functions in Constructors/Destructors
 

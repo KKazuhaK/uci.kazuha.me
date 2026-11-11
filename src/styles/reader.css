@@ -481,6 +481,70 @@ a.course-chip:focus {
 .markdown-body blockquote > :first-child { margin-top: 0; }
 .markdown-body blockquote > :last-child { margin-bottom: 0; }
 
+/* <details> blocks: worked answers (scripts/reader/details.ts) */
+.markdown-body details {
+	margin: 0 0 0.65rem;
+	padding: 0 0.95rem;
+	border: 1px solid var(--notes-teal-border);
+	border-radius: 0.9rem;
+	background: var(--notes-teal-bg);
+}
+
+.markdown-body details[open] {
+	padding-bottom: 0.75rem;
+	background: var(--notes-viewer-bg);
+}
+
+.markdown-body details > summary {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	margin: 0 -0.95rem;
+	padding: 0.55rem 0.95rem;
+	color: var(--notes-teal);
+	font-weight: 600;
+	font-size: 0.92rem;
+	cursor: pointer;
+	list-style: none;
+	user-select: none;
+	border-radius: 0.9rem;
+}
+
+.markdown-body details[open] > summary {
+	margin-bottom: 0.6rem;
+	background: var(--notes-teal-bg);
+	border-bottom: 1px solid var(--notes-teal-border);
+	border-radius: 0.9rem 0.9rem 0 0;
+}
+
+.markdown-body details > summary::-webkit-details-marker { display: none; }
+
+.markdown-body details > summary::before {
+	content: "";
+	flex: none;
+	width: 0.45rem;
+	height: 0.45rem;
+	border-right: 2px solid currentColor;
+	border-bottom: 2px solid currentColor;
+	transform: rotate(-45deg);
+	transition: transform 0.15s ease;
+}
+
+.markdown-body details[open] > summary::before { transform: rotate(45deg); }
+.markdown-body details > summary:hover { background: var(--notes-teal-bg-strong); }
+.markdown-body details > summary:focus-visible { outline: 2px solid var(--notes-teal); outline-offset: 2px; }
+.markdown-body details > :last-child { margin-bottom: 0; }
+
+/* Print every block's content: note pages also open them (details.ts), and
+   ::details-content shows a closed block's content where the browser supports it
+   (md-viewer has no script for this). */
+@media print {
+	.markdown-body details, .markdown-body details[open] { padding: 0; border: 0; background: none; }
+	.markdown-body details > summary, .markdown-body details[open] > summary { margin: 0 0 0.3rem; padding: 0; background: none; border: 0; border-radius: 0; }
+	.markdown-body details > summary::before { display: none; }
+	.markdown-body details::details-content { content-visibility: visible; }
+}
+
 .markdown-body .sr-only {
 	position: absolute;
 	width: 1px;

@@ -527,17 +527,21 @@ $I_t$ 是词项 $t$ 的行，$\wedge$ 是按位 AND，$\neg$ 把每一位取反�
 
 对 cats、lakes、wiis、centuries、is 使用 suffix-s 词干提取器（去掉结尾的 "s"，假定是复数）。哪些结果是假阴性，哪些是假阳性？
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** cats → cat、lakes → lake、wiis → wii 都是对的。centuries → **centurie**，而不是 century：两个相关的词没能合并，这是**假阴性**。is → **i**：两个不相关的词被合并了，这是**假阳性**。返回[第 5 节](#5-词干提取)。
+cats → cat、lakes → lake、wiis → wii 都是对的。centuries → **centurie**，而不是 century：两个相关的词没能合并，这是**假阴性**。is → **i**：两个不相关的词被合并了，这是**假阳性**。
+
+</details>
+
+返回[第 5 节](#5-词干提取)。
 
 ### 15.2 手算 Porter 第 1 步（L13 p22）
 
 只按幻灯片上的 Step 1a 和 Step 1b，依次对下面的词提取词干：stresses、gaps、gas、ties、cries、agreed、feed、fished、pirating、falling、dripping、hoping。
 
-> ✍️ **先自己试一试。**
-
-**解答。**
+<details>
+<summary>解答</summary>
 
 | 词 | 触发的规则 | 结果 |
 |---|---|---|
@@ -556,29 +560,46 @@ $I_t$ 是词项 $t$ 的行，$\wedge$ 是按位 AND，$\neg$ 把每一位取反�
 
 [第 6 节](#6-porter-词干提取器)中的演示正是按这些规则运行的，12 个结果完全相同。
 
+</details>
+
 ### 15.3 1,000 词的文档里有多少个 n-gram？（L14 p14–15）
 
 一篇文档有 1,000 个词。使用重叠窗口时，它包含多少个 2 ≤ n ≤ 5 的词 n-gram 实例？
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** n 个词的窗口可以放在 $1000 - n + 1$ 个位置：999 个 bigram、998 个 trigram、997 个 fourgram、996 个 fivegram。合计 $999 + 998 + 997 + 996 = 3{,}990$——是文档长度的四倍。这就是为 n-gram 建索引的存储代价。返回[第 10 节](#10-词-n-gram)。
+n 个词的窗口可以放在 $1000 - n + 1$ 个位置：999 个 bigram、998 个 trigram、997 个 fourgram、996 个 fivegram。合计 $999 + 998 + 997 + 996 = 3{,}990$——是文档长度的四倍。这就是为 n-gram 建索引的存储代价。
+
+</details>
+
+返回[第 10 节](#10-词-n-gram)。
 
 ### 15.4 Brutus AND Caesar AND NOT Calpurnia（L14 p33–38）
 
 使用第 13 节的关联矩阵，哪些剧本满足 *Brutus AND Caesar AND NOT Calpurnia*？
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** Brutus = 110100，Caesar = 110111，Calpurnia = 010000 → NOT Calpurnia = 101111。110100 AND 110111 = 110100；再 AND 101111 = **100100**。第 1 列和第 4 列：**Antony and Cleopatra** 和 **Hamlet**。Julius Caesar 两个名字都有，但也有 Calpurnia，所以被 NOT 排除了。返回[第 13 节](#13-词项-文档关联矩阵)。
+Brutus = 110100，Caesar = 110111，Calpurnia = 010000 → NOT Calpurnia = 101111。110100 AND 110111 = 110100；再 AND 101111 = **100100**。第 1 列和第 4 列：**Antony and Cleopatra** 和 **Hamlet**。Julius Caesar 两个名字都有，但也有 Calpurnia，所以被 NOT 排除了。
+
+</details>
+
+返回[第 13 节](#13-词项-文档关联矩阵)。
 
 ### 15.5 关联矩阵有多大？（L14 p40–43）
 
 $N = 10^6$ 篇文档，每篇约 $10^3$ 个词，每词约 6 字节，$M = 500\text{K}$ 个不同词项。文本有多少？矩阵有多少个格子？最多有多少个 1？
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** 文本：$10^6 \times 10^3 \times 6$ 字节 $= 6 \times 10^9$ 字节 ≈ **6 GB**。矩阵：$5 \times 10^5 \times 10^6 = 5 \times 10^{11}$ 个格子，即**五千亿**个。1 的个数：每个词的出现最多贡献一个，所以最多 $10^6 \times 10^3 = 10^9$ 个，即**十亿**个。最多只有 $10^9 / (5 \times 10^{11}) = 0.2\%$ 的格子是 1（这是我们用幻灯片数字算出的比例），所以只存 1 的位置。返回[第 14 节](#14-为什么这个矩阵无法扩展)。
+文本：$10^6 \times 10^3 \times 6$ 字节 $= 6 \times 10^9$ 字节 ≈ **6 GB**。矩阵：$5 \times 10^5 \times 10^6 = 5 \times 10^{11}$ 个格子，即**五千亿**个。1 的个数：每个词的出现最多贡献一个，所以最多 $10^6 \times 10^3 = 10^9$ 个，即**十亿**个。最多只有 $10^9 / (5 \times 10^{11}) = 0.2\%$ 的格子是 1（这是我们用幻灯片数字算出的比例），所以只存 1 的位置。
+
+</details>
+
+返回[第 14 节](#14-为什么这个矩阵无法扩展)。
 
 ---
 

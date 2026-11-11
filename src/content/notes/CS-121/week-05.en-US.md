@@ -525,17 +525,21 @@ The term-document matrix is then $500\text{K} \times 1\text{M}$: **half a trilli
 
 Apply the suffix-s stemmer (remove an "s" ending, assuming a plural) to cats, lakes, wiis, centuries, is. Which results are false negatives and which are false positives?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** cats → cat, lakes → lake and wiis → wii are correct. centuries → **centurie**, not century: it fails to conflate two related words, so it's a **false negative**. is → **i**: it conflates two unrelated words, so it's a **false positive**. Back to [§5](#5-stemming).
+cats → cat, lakes → lake and wiis → wii are correct. centuries → **centurie**, not century: it fails to conflate two related words, so it's a **false negative**. is → **i**: it conflates two unrelated words, so it's a **false positive**.
+
+</details>
+
+Back to [§5](#5-stemming).
 
 ### 15.2 Porter Step 1 by hand (L13 p22)
 
 Using only Step 1a then Step 1b as the slide states them, stem: stresses, gaps, gas, ties, cries, agreed, feed, fished, pirating, falling, dripping, hoping.
 
-> ✍️ **Try it first.**
-
-**Solution.**
+<details>
+<summary>Solution</summary>
 
 | Word | Rule that fires | Result |
 |---|---|---|
@@ -554,29 +558,46 @@ Using only Step 1a then Step 1b as the slide states them, stem: stresses, gaps, 
 
 The demo in [§6](#6-the-porter-stemmer) runs exactly these rules and gives the same twelve results.
 
+</details>
+
 ### 15.3 How many n-grams in a 1,000-word document? (L14 p14–15)
 
 A document has 1,000 words. How many word n-gram instances does it contain for 2 ≤ n ≤ 5, with an overlapping window?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** A window of n words fits in $1000 - n + 1$ positions: 999 bigrams, 998 trigrams, 997 fourgrams and 996 fivegrams. That's $999 + 998 + 997 + 996 = 3{,}990$ — four times the document's length. That's the storage cost of indexing n-grams. Back to [§10](#10-word-n-grams).
+A window of n words fits in $1000 - n + 1$ positions: 999 bigrams, 998 trigrams, 997 fourgrams and 996 fivegrams. That's $999 + 998 + 997 + 996 = 3{,}990$ — four times the document's length. That's the storage cost of indexing n-grams.
+
+</details>
+
+Back to [§10](#10-word-n-grams).
 
 ### 15.4 Brutus AND Caesar AND NOT Calpurnia (L14 p33–38)
 
 Using the incidence matrix in §13, which plays match *Brutus AND Caesar AND NOT Calpurnia*?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** Brutus = 110100, Caesar = 110111, Calpurnia = 010000 → NOT Calpurnia = 101111. 110100 AND 110111 = 110100; AND 101111 = **100100**. Columns 1 and 4: **Antony and Cleopatra** and **Hamlet**. Julius Caesar has both names but also Calpurnia, so the NOT removes it. Back to [§13](#13-the-term-document-incidence-matrix).
+Brutus = 110100, Caesar = 110111, Calpurnia = 010000 → NOT Calpurnia = 101111. 110100 AND 110111 = 110100; AND 101111 = **100100**. Columns 1 and 4: **Antony and Cleopatra** and **Hamlet**. Julius Caesar has both names but also Calpurnia, so the NOT removes it.
+
+</details>
+
+Back to [§13](#13-the-term-document-incidence-matrix).
 
 ### 15.5 How big is the incidence matrix? (L14 p40–43)
 
 $N = 10^6$ documents of about $10^3$ words, about 6 bytes per word, $M = 500\text{K}$ distinct terms. How much text is that, how many cells does the matrix have, and at most how many 1s?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** Text: $10^6 \times 10^3 \times 6$ bytes $= 6 \times 10^9$ bytes ≈ **6 GB**. Matrix: $5 \times 10^5 \times 10^6 = 5 \times 10^{11}$ cells, **half a trillion**. 1s: each word occurrence can add at most one, so at most $10^6 \times 10^3 = 10^9$, **one billion**. At most $10^9 / (5 \times 10^{11}) = 0.2\%$ of the cells are 1 (our division of the slide's numbers), so store only the 1 positions. Back to [§14](#14-why-the-matrix-doesnt-scale).
+Text: $10^6 \times 10^3 \times 6$ bytes $= 6 \times 10^9$ bytes ≈ **6 GB**. Matrix: $5 \times 10^5 \times 10^6 = 5 \times 10^{11}$ cells, **half a trillion**. 1s: each word occurrence can add at most one, so at most $10^6 \times 10^3 = 10^9$, **one billion**. At most $10^9 / (5 \times 10^{11}) = 0.2\%$ of the cells are 1 (our division of the slide's numbers), so store only the 1 positions.
+
+</details>
+
+Back to [§14](#14-why-the-matrix-doesnt-scale).
 
 ---
 

@@ -360,13 +360,18 @@ E. ~ n to 2n
 
 Provide a best case example and a worst case example (use 3 elements in each sorted subarray).
 
-> ✍️ **Try it first.** Hint: every comparison places exactly one item; no comparisons happen once a half runs out.
+> Hint: every comparison places exactly one item; no comparisons happen once a half runs out.
+
+<details>
+<summary>Solution</summary>
 
 **Solution: C.** Best case: one half runs out after n/2 comparisons, e.g. `1 2 3 | 4 5 6` → 3 comparisons (1, 2, 3 each beat 4; then 4 5 6 are copied). Worst case: the halves interleave so neither runs out until the end, e.g. `1 3 5 | 2 4 6` → 5 = n − 1 comparisons. So between ~n/2 and ~n. Check the worst case:
 
 ```viz merge-sort
 {"title": "Activity 1 worst case: 1 3 5 | 2 4 6", "items": "1, 3, 5, 2, 4, 6", "mode": "merge", "mid": 2}
 ```
+
+</details>
 
 Back to [Merging Two Sorted Halves](#2-merging-two-sorted-halves).
 
@@ -380,9 +385,14 @@ C. { 1, 2, 5, 10 }
 D. { 1, 2, 3, 4, 5, 10 }
 E. { 1, 2, 3, 5, 10 }
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution: E.** A length-n range splits into ⌈n/2⌉ (left, it gets `mid`) and ⌊n/2⌋: 10 → 5 + 5, 5 → 3 + 2, 3 → 2 + 1, 2 → 1 + 1. Lengths: 10, 5, 3, 2, 1. A has 7, B and D have even lengths that never appear (and B lacks 1, which every recursion reaches), C misses 3. Back to [the trace](#4-tracing-merge-sort-on-m-e-r-g-e-s-r-t).
+**Solution: E.** A length-n range splits into ⌈n/2⌉ (left, it gets `mid`) and ⌊n/2⌋: 10 → 5 + 5, 5 → 3 + 2, 3 → 2 + 1, 2 → 1 + 1. Lengths: 10, 5, 3, 2, 1. A has 7, B and D have even lengths that never appear (and B lacks 1, which every recursion reaches), C misses 3.
+
+</details>
+
+Back to [the trace](#4-tracing-merge-sort-on-m-e-r-g-e-s-r-t).
 
 ### 9.3 Activity 3: worst-case analysis (slide 44)
 
@@ -390,9 +400,14 @@ E. { 1, 2, 3, 5, 10 }
 **(b)** Write the recurrence to describe worst-case time complexity.
 **(c)** Use recursion tree or master theorem to solve the recurrence.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** **(a)** All comparisons happen in `merge`; merging n items takes at most n − 1. **(b)** $C(n) = 2C(n/2) + (n - 1)$, $C(1) = 0$; as growth order $T(n) = 2T(n/2) + n$. **(c)** Tree: log₂ n levels × n per level = n log₂ n (exactly n log₂ n − n + 1). Master theorem: a = 2, b = 2, d = 1, a = bᵈ → Θ(n log n). Back to [Analysis of Merge Sort](#5-analysis-of-merge-sort).
+**(a)** All comparisons happen in `merge`; merging n items takes at most n − 1. **(b)** $C(n) = 2C(n/2) + (n - 1)$, $C(1) = 0$; as growth order $T(n) = 2T(n/2) + n$. **(c)** Tree: log₂ n levels × n per level = n log₂ n (exactly n log₂ n − n + 1). Master theorem: a = 2, b = 2, d = 1, a = bᵈ → Θ(n log n).
+
+</details>
+
+Back to [Analysis of Merge Sort](#5-analysis-of-merge-sort).
 
 ## 10. Quick Reference & Top 5 Things to Remember
 

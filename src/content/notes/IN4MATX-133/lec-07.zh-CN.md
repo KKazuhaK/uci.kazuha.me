@@ -673,13 +673,16 @@ function pythagorean(a, b) {
 - **D** 1 和 2
 - **E** 1、2 和 3
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案：E**（幻灯片 16 公布）。
 
 - 类型会被**擦除**：文件 1 和 2 的 `:number` 都会消失（用 tsc 转译仓库里 `q1.ts` 的各个版本可以确认）。
 - 文件 3 是纯 JS，而 TS 是超集，所以它转译后还是它自己。
 - 陷阱：严格模式会对文件 3 报错（`implicitly has an 'any' type`），但**仍然会输出同样的 JS**。
+
+</details>
 
 > 🧪 **演示文件**：[q1.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/q1/q1.ts) · [q1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/q1/q1.js)
 
@@ -701,9 +704,10 @@ function pythagorean(a, b) {
 //console.log(joinNTimes(['two', 'too', 'to'], 2, 4))
 ```
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
-**答案。**纯 JS（仓库里的 `setup1.js`）：
+纯 JS（仓库里的 `setup1.js`）：
 
 ```js
 function joinNTimes(arrOfStr, joinStr, n) {
@@ -755,6 +759,8 @@ function joinNTimes(arrOfStr:string[], joinStr:string, n:number):string {
 
 `solution1.js` 只保留了第一个调用。（仓库里的小怪癖：`solution1.ts` 整个都在 `/* … */` 里。）
 
+</details>
+
 > 🧪 **演示文件**：[setup1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/setup/setup1.html) · [setup1.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/setup/setup1.ts) · [setup1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/setup/setup1.js) · [solution1.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/solution/solution1.ts) · [solution1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/solution/solution1.js)
 
 返回 [2. 类型](#2-类型)。
@@ -769,13 +775,16 @@ function joinNTimes(arrOfStr:string[], joinStr:string, n:number):string {
 - **D** Photoshop：低天花板、低门槛；Paint：高天花板、高门槛
 - **E** 我很困惑，只是点一下拿参与分
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案：A**（幻灯片 40 公布）。
 
 - **天花板**：Photoshop 能做的事多得多（图层、滤镜、照片编辑），因此排除 C 和 D。
 - **门槛**：Paint 很容易上手；Photoshop 需要学习（所以它提供教程，幻灯片 41），因此排除 B。
 - 两个术语都是相对的。
+
+</details>
 
 返回 [7. 评估工具](#7-评估工具门槛与天花板)。
 
@@ -805,7 +814,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
 按原样运行会失败：`Invalid specification … includes at least one of … "mark", "layer", …`。
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案**（`solution2.js` 用来替换那行注释的部分）：
 
@@ -834,6 +844,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
 ```viz web-demo
 {"title": "Demo 2 · solution2.js with inline rows (DOMContentLoaded wrapper dropped; the demo runs after the page)", "libs": ["vega-lite"], "html": "<h1>U.S. age distribution in 2000</h1>\n<div id=\"plot\">\n</div>", "js": "// population.json, year 2000 rows for ages 0,10,...,90 (+ one 1990 row the filter drops)\nvar population = [\n  {\"year\": 2000, \"age\": 0, \"sex\": 1, \"people\": 9735380},\n  {\"year\": 2000, \"age\": 0, \"sex\": 2, \"people\": 9310714},\n  {\"year\": 2000, \"age\": 10, \"sex\": 1, \"people\": 10563233},\n  {\"year\": 2000, \"age\": 10, \"sex\": 2, \"people\": 10022524},\n  {\"year\": 2000, \"age\": 20, \"sex\": 1, \"people\": 9731315},\n  {\"year\": 2000, \"age\": 20, \"sex\": 2, \"people\": 9324244},\n  {\"year\": 2000, \"age\": 30, \"sex\": 1, \"people\": 10205879},\n  {\"year\": 2000, \"age\": 30, \"sex\": 2, \"people\": 10119296},\n  {\"year\": 2000, \"age\": 40, \"sex\": 1, \"people\": 11320252},\n  {\"year\": 2000, \"age\": 40, \"sex\": 2, \"people\": 11488578},\n  {\"year\": 2000, \"age\": 50, \"sex\": 1, \"people\": 8507934},\n  {\"year\": 2000, \"age\": 50, \"sex\": 2, \"people\": 8911133},\n  {\"year\": 2000, \"age\": 60, \"sex\": 1, \"people\": 5123399},\n  {\"year\": 2000, \"age\": 60, \"sex\": 2, \"people\": 5668961},\n  {\"year\": 2000, \"age\": 70, \"sex\": 1, \"people\": 3792145},\n  {\"year\": 2000, \"age\": 70, \"sex\": 2, \"people\": 5184855},\n  {\"year\": 2000, \"age\": 80, \"sex\": 1, \"people\": 1902638},\n  {\"year\": 2000, \"age\": 80, \"sex\": 2, \"people\": 3221898},\n  {\"year\": 2000, \"age\": 90, \"sex\": 1, \"people\": 336303},\n  {\"year\": 2000, \"age\": 90, \"sex\": 2, \"people\": 1064581},\n  {\"year\": 1990, \"age\": 0, \"sex\": 1, \"people\": 9307465},\n  {\"year\": 1990, \"age\": 0, \"sex\": 2, \"people\": 8894007}\n];\n\nvar schema = {\n    \"data\": { \"values\": population },\n    \"transform\": [{\"filter\": \"datum.year == 2000\"}], /*Only select population data from 2000*/\n    \"mark\": \"bar\",\n    \"encoding\": {\n        \"y\": {\n          \"field\": \"age\", \"type\": \"ordinal\"\n        },\n        \"x\": {\n          \"aggregate\": \"sum\", \"field\": \"people\", \"type\": \"quantitative\",\n          \"axis\": {\"title\": \"population\"}\n        }\n    }\n}\nvegaEmbed('#plot', schema, {actions:false});", "height": 340, "tab": "js"}
 ```
+
+</details>
 
 > 🧪 **演示文件**：[setup2.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/setup/setup2.html) · [setup2.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/setup/setup2.js) · [solution2.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/solution/solution2.html) · [solution2.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/solution/solution2.js) · [population.json](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/setup/population.json)
 
@@ -891,7 +903,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
 （选项字母以公布答案的幻灯片 66 为准；题目幻灯片上的顺序不同。A 和 E 保留了幻灯片中的弯引号 `“`。）
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案：B**（幻灯片 66 公布）。
 
@@ -902,6 +915,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
 ```viz web-demo
 {"title": "Question 3 · option B (nominal color), then option D (ordinal color)", "libs": ["vega-lite"], "html": "<div id=\"vis\"></div>", "js": "// three made-up rows, just to compare B (nominal) with D (ordinal)\nvar cars = [\n  {\"Horsepower\": 130, \"MPG\": 18, \"Origin\": \"USA\"},\n  {\"Horsepower\": 95, \"MPG\": 24, \"Origin\": \"Japan\"},\n  {\"Horsepower\": 46, \"MPG\": 26, \"Origin\": \"Europe\"}\n];\nfunction show(colorType) {\n  vegaEmbed(\"#vis\", {\n    data: {values: cars},\n    mark: \"point\",\n    encoding: {\n      x: {field: \"Horsepower\", type: \"quantitative\"},\n      y: {field: \"MPG\", type: \"quantitative\"},\n      color: {field: \"Origin\", type: colorType}\n    }\n  }, {actions: false});\n}\nshow(\"nominal\"); // option B", "height": 240, "tab": "js", "steps": [{"note": "Option D: ordinal color turns the three origins into shades of one hue, unlike the slide's chart.", "js": "show(\"ordinal\"); // option D"}]}
 ```
+
+</details>
 
 返回 [11. 合理的默认值](#11-合理的默认值及其覆盖)。
 

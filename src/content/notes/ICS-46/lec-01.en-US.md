@@ -557,7 +557,10 @@ Practical example: tree nodes hold `shared_ptr` to their **children** and `weak_
 
 Update `random_test.cpp` (class Google folder) to (1) print random numbers from a **PRNG seeded with 46**, (2) using a **normal distribution** with mean **4.0** and stddev **0.6**. The given code uses `engine{device}` and `uniform_int_distribution<int> distribution{1, 6}`.
 
-**Solution** — change the two lines (no `random_device` needed for a fixed seed):
+<details>
+<summary>Solution</summary>
+
+Change the two lines (no `random_device` needed for a fixed seed):
 
 ```cpp
 const unsigned int SEED = 46;
@@ -572,6 +575,8 @@ First 10 values (g++ 13 / libstdc++), identical on every run:
 ```
 
 1000 samples have mean 4.007 and about 68% fall in 3.4–4.6 (within one sd). If you keep the device instead, fix `engine{device}` → `engine{device()}`.
+
+</details>
 
 ### 5.2 Activity 1a: Visualize Pointers and References (slide 21)
 
@@ -599,18 +604,26 @@ std::cout << *a << std::endl;
 delete a; delete b;
 ```
 
-**Solution** — prints **`3`** then **`9`**; clean under ASan.
+<details>
+<summary>Solution</summary>
+
+Prints **`3`** then **`9`**; clean under ASan.
 
 - `*a = *b` copies the **value** 3; `a` and `b` still point at two different ints.
 - `c` names `b`'s int, so `c = 6` leaves `a`'s int at 3 → prints 3.
 - `d` is another name for the pointer `a`, so `*d = 9` writes `a`'s int → prints 9.
 - Final picture: `a` → int 9, `b` → int 6, `c` dashed to the 6, `d` dashed to `a`. Two objects, each deleted once.
 
+</details>
+
 ### 5.3 Activity 1b: Pointers & References (slide 22)
 
 Same code, but `*a = *b;` becomes `a = b; // change from 1a`.
 
-**Solution** — prints **`6`** then **`9`**, then crashes:
+<details>
+<summary>Solution</summary>
+
+Prints **`6`** then **`9`**, then crashes:
 
 - `a = b` copies the **address**: both point at the int holding 3. The int holding 2 has no pointer left → **leak**.
 - `c = 6` and `*d = 9` both write that one shared int → 6, then 9.
@@ -624,14 +637,20 @@ Same code, but `*a = *b;` becomes `a = b; // change from 1a`.
 
 `*a = *b` copies what's pointed to; `a = b` copies the pointer — the aliasing smart pointers exist to prevent.
 
+</details>
+
 ### 5.4 Activity 2: Shared Ownership (slide 30)
 
 For the `Parent`/`Child` program in [§4.6](#46-the-cycle-problem-and-stdweak_ptr): (a) what happens to the parent and child at the end of `main`? (b) why? (c) what's the fix?
 
-**Solution.**
+<details>
+<summary>Solution</summary>
+
 (a) Neither is destroyed — no destructor output; both objects leak.
 (b) Each has two owners (a local + the other object). When `p` and `c` die, each count drops to 1, not 0: a **reference cycle**, which `shared_ptr` can't detect.
 (c) Change `Child`'s member to `std::weak_ptr<Parent> parent;`. Parent's count stays 1, so both are destroyed (`Parent destroyed`, `Child destroyed`). Use `lock()` to reach the parent.
+
+</details>
 
 ---
 

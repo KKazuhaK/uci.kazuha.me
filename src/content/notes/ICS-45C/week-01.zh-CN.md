@@ -1005,7 +1005,8 @@ int main() {
 
 **题目：** 给出 C++ 中对象生命周期每一步的具体术语。
 
-**答案：**
+<details>
+<summary>答案</summary>
 
 ```
 1) Birth（诞生）
@@ -1018,6 +1019,8 @@ int main() {
 ```
 
 > ⚠️ 是 **Destruction**，不是 ~~Deconstruction~~。写错扣 5 分。
+
+</details>
 
 ### 10.5 这题在考什么
 

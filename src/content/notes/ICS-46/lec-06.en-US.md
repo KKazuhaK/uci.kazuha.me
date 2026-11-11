@@ -269,9 +269,14 @@ T(1) = c, where c is a constant
 
 How many levels and leaves are there?
 
-> ✍️ **Try it first.** Hint: how many times can you halve n before reaching 1?
+> Hint: how many times can you halve n before reaching 1?
 
-**Solution.** The input size halves at each level, reaching 1 after log₂ n halvings. So the tree has height log₂ n, which gives **log₂ n + 1 levels** if you count both the root level 0 and the leaf level (slide p12 marks the height as log₂ n). The number of nodes doubles each level, so the leaf level has 2^(log₂ n) = **n leaves**. Each non-leaf level costs n and the leaves cost c·n, so T(n) = n log₂ n + cn = O(n log n). See [section 6](#6-recursion-tree-for-a-divide-in-half-recurrence).
+<details>
+<summary>Solution</summary>
+
+The input size halves at each level, reaching 1 after log₂ n halvings. So the tree has height log₂ n, which gives **log₂ n + 1 levels** if you count both the root level 0 and the leaf level (slide p12 marks the height as log₂ n). The number of nodes doubles each level, so the leaf level has 2^(log₂ n) = **n leaves**. Each non-leaf level costs n and the leaves cost c·n, so T(n) = n log₂ n + cn = O(n log n). See [section 6](#6-recursion-tree-for-a-divide-in-half-recurrence).
+
+</details>
 
 ### 8.2 Activity 1: Recursion tree method (slide 13)
 
@@ -290,7 +295,8 @@ T(n) = 2T(n/2) + c
 
 (The slide labels both parts "a)".)
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
 **Solution (a): O(log n).** Each call makes **one** recursive call on half the range and does constant work c (compute `mid`, one comparison). The "tree" is a chain with one node per level. There are log₂ n + 1 levels, each costing c, so T(n) = c(log₂ n + 1) = **O(log n)**. A recursive binary search with exactly this shape:
 
@@ -308,11 +314,18 @@ bool binarySearch(const int* arr, int lo, int hi, int target)
 
 Searching a 16-element array for a value that isn't there (the worst case) makes 6 calls: ranges of size 16, 8, 4, 2, 1 and then the empty range. That is log₂ 16 + 1 = 5 levels plus the empty-range call this version uses as its base case.
 
+</details>
+
+<details>
+<summary>Solution</summary>
+
 **Solution (b): O(n).** Level i has 2^i nodes, each costing c, so the level totals are c, 2c, 4c, …, n·c (the n leaves). This geometric sum is c(2n − 1) = **O(n)**. The work doubles every level, so the leaves dominate. The two recurrences differ only in "T" vs "2T", and that alone takes the answer from log n to n. Check the sum below (n = 16: 31c = c(2·16 − 1)):
 
 ```viz recursion-tree
 {"title": "Activity 1(b): T(n) = 2T(n/2) + c, drawn for n = 16", "recurrence": "T(n) = 2T(n/2) + c", "n": 16}
 ```
+
+</details>
 
 ### 8.3 Activity 2: Master Theorem (slide 17)
 
@@ -334,9 +347,10 @@ Solve with the master theorem, $T(n) = a \cdot T(n/b) + O(n^d)$:
 
 **(h)** T(n) = 3T(2n/3) + n
 
-> ✍️ **Try it first.** For each one write a, b, d, then compare a with b^d.
+> For each one write a, b, d, then compare a with b^d.
 
-**Solution.**
+<details>
+<summary>Solution</summary>
 
 | | Recurrence | a | b | d | b^d | Case | T(n) |
 |---|---|---|---|---|---|---|---|
@@ -355,6 +369,8 @@ Key traps:
 - (c) and the recursion tree of [Activity 1(b)](#82-activity-1-recursion-tree-method-slide-13) agree: O(n).
 - (e)–(g) keep a = 4, b = 2 and change only d, which walks through all three cases: leaves, balanced, root.
 - (h): the size shrinks *to* 2n/3, so the shrink factor is b = n ÷ (2n/3) = **3/2**, not 2/3 or 3. Then log_{3/2} 3 = ln 3 / ln 1.5 ≈ 1.0986 / 0.4055 ≈ 2.71.
+
+</details>
 
 Back to [section 7](#7-method-b-the-master-theorem).
 

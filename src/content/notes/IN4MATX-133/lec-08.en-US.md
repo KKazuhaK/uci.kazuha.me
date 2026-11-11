@@ -571,14 +571,19 @@ bulbasaur charmander
 - D. `HTTP POST https://pokeapi.co/api/v2/pokemon/mr. mime`
 - E. `HTTP POST https://pokeapi.co/api/v2/pokemon/mr%2E%20mime`
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: C.** Two decisions: the verb and the encoding.
 
 - *Reading* a resource is **GET**; POST adds a new resource → D and E are out.
 - "If we did need to encode": the space becomes `%20` and the period `%2E` → C. A leaves a raw space in the URL; B drops characters, which is what PokeAPI does for Farfetch'd but not "encoding".
 
-(Outside the hypothetical: PokeAPI's actual name for this Pokémon is `mr-mime`; `/pokemon/mrmime` returns 404.) Back to [Section 4](#4-escaping-characters-in-urls).
+(Outside the hypothetical: PokeAPI's actual name for this Pokémon is `mr-mime`; `/pokemon/mrmime` returns 404.)
+
+</details>
+
+Back to [Section 4](#4-escaping-characters-in-urls).
 
 ### 14.2 Question 2: Which can make an HTTP request to the Spotify API? (slides 48–50)
 
@@ -595,7 +600,8 @@ bulbasaur charmander
 - D. 1, 3, 4
 - E. 1, 2, 3, 4
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: B (1, 4).** The slides don't reveal the poll result; this is the answer that follows from slides 43–47.
 
@@ -604,13 +610,16 @@ bulbasaur charmander
 - (3) ❌ The trap: server-side JavaScript doesn't run *in* a browser (it runs in the command line, e.g. Node). "A browser with server-side JS" is still a browser bound by the policy.
 - (4) ✅ A server has no same-origin restrictions (and it's in Spotify's domain anyway).
 
+</details>
+
 Back to [Section 11](#11-client-side-vs-server-side-js-and-the-same-origin-policy).
 
 ### 14.3 Demo 1: Hello from the future (slide 36 · setup1 → solution1)
 
 Task (`setup1.js` is only this comment): *Use a promise to print "Hello from the future!" 5 seconds after the JavaScript loads by sending the string back as the result of a promise. No `fetch()` here — just `.then()` after a Promise completes.*
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer** (`solution1.js`):
 
@@ -628,7 +637,11 @@ hello.then((text) => {
 });
 ```
 
-Output: `Hello from the present!` immediately, `Hello from the future!` 5 s later. Key point: the `.then` is registered right away, but its callback only runs once `resolve` is called; meanwhile the rest of the script keeps going. Back to [Section 9.1](#91-making-your-own-promise-demo-1).
+Output: `Hello from the present!` immediately, `Hello from the future!` 5 s later. Key point: the `.then` is registered right away, but its callback only runs once `resolve` is called; meanwhile the rest of the script keeps going.
+
+</details>
+
+Back to [Section 9.1](#91-making-your-own-promise-demo-1).
 
 ### 14.4 Demo 2: First 25 Pokemon, in order (slide 41 · setup2 → solution2)
 
@@ -650,7 +663,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 ```
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer** (`solution2.js`):
 
@@ -667,7 +681,11 @@ function getPokemon(pokedexNumber) {
 }
 ```
 
-and the `DOMContentLoaded` handler calls just `getPokemon(1)`. The fields used: `id`, `name`, `sprites.front_default` (the sprite image URL). Why the recursion: with the loop, all 25 requests are in flight at once and arrive out of order; requesting #n+1 inside #n's callback **serializes** them, so the list is always 1 → 25 (at the cost of being slower — one request at a time). Back to [Section 10.4](#104-getting-pokemon-demo-2).
+and the `DOMContentLoaded` handler calls just `getPokemon(1)`. The fields used: `id`, `name`, `sprites.front_default` (the sprite image URL). Why the recursion: with the loop, all 25 requests are in flight at once and arrive out of order; requesting #n+1 inside #n's callback **serializes** them, so the list is always 1 → 25 (at the cost of being slower — one request at a time).
+
+</details>
+
+Back to [Section 10.4](#104-getting-pokemon-demo-2).
 
 ## 15. Quick Reference & Top 5 Things to Remember
 

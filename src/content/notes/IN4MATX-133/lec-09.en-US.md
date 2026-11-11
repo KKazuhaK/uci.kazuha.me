@@ -627,9 +627,14 @@ Which of these is an example of "good" two-factor authentication?
 - D. Two of the above
 - E. All of the above
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
-**Answer: B.** Good 2FA mixes a factor you *have* with one you *know*. A is two things you have (two documents); C is two things you know — the "two passwords ≠ 2FA" case. Only B pairs a card (have) with a PIN (know), so D and E are out. (The slides don't show the revealed poll results; this follows directly from slide 25.) Back to [section 6](#6-authentication-vs-authorization).
+**Answer: B.** Good 2FA mixes a factor you *have* with one you *know*. A is two things you have (two documents); C is two things you know — the "two passwords ≠ 2FA" case. Only B pairs a card (have) with a PIN (know), so D and E are out. (The slides don't show the revealed poll results; this follows directly from slide 25.)
+
+</details>
+
+Back to [section 6](#6-authentication-vs-authorization).
 
 ### 12.2 Demo 1: serve the student list from a JSON file (slides 14–15 · setup1 → solution1)
 
@@ -656,7 +661,8 @@ var server = http.createServer((req, res) => {
 server.listen(8080);
 ```
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer** (`solution1.js`): read the file inside the handler, parse it, `join` the array:
 
@@ -682,7 +688,11 @@ server.listen(8080);
 Alice, Bob, Chester, Deepali, Eduardo, Francisco
 ```
 
-Key points: `res.end` goes **inside** the callback (outside, it would respond before the file is read); `join(', ')` is Python's `', '.join(...)`. Run from another directory, it returns 404 `ENOENT` — use `__dirname`. Back to [section 3](#3-reading-files-with-node).
+Key points: `res.end` goes **inside** the callback (outside, it would respond before the file is read); `join(', ')` is Python's `', '.join(...)`. Run from another directory, it returns 404 `ENOENT` — use `__dirname`.
+
+</details>
+
+Back to [section 3](#3-reading-files-with-node).
 
 > 🧪 **Demo files**: [setup1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W4_L2_Oct22_ServerAuth/setup1.js) · [solution1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W4_L2_Oct22_ServerAuth/solution1.js)
 
@@ -701,7 +711,8 @@ Which can make an HTTP request to the Spotify API? (Assume the browser uses defa
 - D. 1, 3, 4
 - E. 1, 2, 3, 4
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: D (1, 3, 4)** — the answer the lecture's model gives; the slides don't show the revealed results.
 
@@ -710,7 +721,11 @@ Which can make an HTTP request to the Spotify API? (Assume the browser uses defa
 - (3) ✅ the browser asks *your* server, and the server makes the request — servers aren't bound by the policy ([the A3 architecture](#91-the-architecture)).
 - (4) ✅ a server, in the same domain anyway.
 
-The trap is (2) vs (3): same port, different sender. (A server can opt in to other origins with CORS headers, slide 79; the question assumes it doesn't.) Back to [section 10](#10-same-origin-policy).
+The trap is (2) vs (3): same port, different sender. (A server can opt in to other origins with CORS headers, slide 79; the question assumes it doesn't.)
+
+</details>
+
+Back to [section 10](#10-same-origin-policy).
 
 ## 13. Quick Reference & Top 5 Things to Remember
 

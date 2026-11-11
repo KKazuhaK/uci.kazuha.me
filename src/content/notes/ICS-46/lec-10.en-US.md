@@ -545,9 +545,10 @@ List the nodes in pre-order, in-order, post-order, and level order:
 
 (Root 8; 5 has children 9 and 7; 7 has children 1 and 12; 12 has a left child 2; 4 has only a right child 11; 11 has a left child 3.)
 
-> ✍️ **Try it first.** Hint: 4 has no left child and 11 has no right child — when the recursion reaches them, the missing side returns immediately.
+> Hint: 4 has no left child and 11 has no right child — when the recursion reaches them, the missing side returns immediately.
 
-**Solution**
+<details>
+<summary>Solution</summary>
 
 | Order | Sequence |
 |---|---|
@@ -562,6 +563,8 @@ Checks: pre-order starts with the root 8, post-order ends with it; in-order puts
 {"title": "Activity 1 check: post-order", "tree": "8, 5, 4, 9, 7, -, 11, -, -, 1, 12, -, -, 3, -, -, -, -, -, -, -, 2", "order": "post"}
 ```
 
+</details>
+
 Back to [§8 Depth-first traversals](#8-depth-first-pre--in--and-post-order).
 
 ### 15.2 Practice Time: Full or complete? (slides 16–17)
@@ -570,9 +573,8 @@ Back to [§8 Depth-first traversals](#8-depth-first-pre--in--and-post-order).
 
 **(b)** A root with a single child, on its **right**. Same choices.
 
-> ✍️ **Try it first.**
-
-**Solution**
+<details>
+<summary>Solution</summary>
 
 **(a) B: Complete.** Levels 0 and 1 are full and the last level (three leaves) is packed to the left. Not full: the root's right child has exactly one child.
 
@@ -581,6 +583,8 @@ Back to [§8 Depth-first traversals](#8-depth-first-pre--in--and-post-order).
 ```viz binary-tree
 {"title": "Practice check: (a) and (b)", "tree": "(a) = A, B, C, D, E, F | (b) = A, -, B", "views": "full; complete"}
 ```
+
+</details>
 
 Back to [§4 Full and complete](#4-full-and-complete-binary-trees).
 

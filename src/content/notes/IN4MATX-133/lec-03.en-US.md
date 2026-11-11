@@ -676,7 +676,8 @@ as the screenshot: one line, **white "ZOT! ZOT!" on a UCI-blue bar**, and the la
   }
   ```
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: C** (revealed on slide 27; the repo's `q1answer.css` is option C).
 
@@ -704,6 +705,8 @@ Each option's computed styles (text colour on background, italic, weight):
 {"title": "Question 1 check · q1answer.html + q1answer.css (option C)", "html": "    <p class=\"para\">ZOT! ZOT! <em id=\"zot\">ZOT!</em></p>", "css": ".para {\n    font-family: Verdana;\n    background-color: #0064a4;\n    color: white;\n}\n\nem {\n    color: #ffd200;\n    font-weight: 700;\n}", "js": "const s = el => { const c = getComputedStyle(el); return c.color + ' on ' + c.backgroundColor + ', ' + c.fontStyle + ', weight ' + c.fontWeight; };\nconsole.log('p:  ' + s(document.querySelector('p')));\nconsole.log('em: ' + s(document.querySelector('em')));", "height": 80}
 ```
 
+</details>
+
 > 🧪 **Demo files**: [q1answer.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W1_L2_Oct1_CSS/q1answer.html) · [q1answer.css](https://github.com/travislindenreid/INF33-Demos/blob/main/W1_L2_Oct1_CSS/q1answer.css)
 
 Back to [§3 Element, class, and ID selectors](#3-element-class-and-id-selectors).
@@ -720,7 +723,8 @@ Task (the TODO list in `setup1.css`), for the table in `setup1.html`:
 
 The markup that matters: header cells are `<th>`, the boxes are `<div class="discussion">`, `<div class="lecture">`, and `<div id="a1">`.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer** (`solution1.css`):
 
@@ -746,6 +750,8 @@ th {
 
 Pick the selector by what the HTML gives you: a tag (`th`) for every header cell, a class (`.lecture`) for the repeated boxes, an id (`#a1`) for the one assignment. Result: bigger day names, green Discussion boxes, blue Lecture boxes with white text, a brown "Assignment due" box with white text. Step-by-step demo in [§4](#4-common-properties-styling-a-class-schedule).
 
+</details>
+
 ### 12.3 Demo 2: Borders, padding, and margins (slide 38 · setup2 → solution2)
 
 `setup2.css` starts with the Demo 1 solution. Task:
@@ -754,9 +760,10 @@ Pick the selector by what the HTML gives you: a tag (`th`) for every header cell
 - Add 5 pixels of padding to the header cells
 - Add 5 pixels of margin to all of the discussions, lectures, and assignments
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
-**Answer** — the lines `solution2.css` adds:
+The lines `solution2.css` adds:
 
 ```css
 td, th {
@@ -774,6 +781,8 @@ th {
 ```
 
 "All cells" means both `td` and `th`, so one rule with a selector list. Padding goes inside the header's border; margin goes outside each coloured box, which pushes it 5px away from the cell edges — the boxes no longer touch the borders. Step-by-step demo in [§6.2](#62-the-box-model).
+
+</details>
 
 ## 13. Quick Reference & Top 5 Things to Remember
 

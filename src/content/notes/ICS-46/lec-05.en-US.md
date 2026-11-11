@@ -465,43 +465,55 @@ Implementing Stacks using
 
 (a) Where should the top of the stack be? (b) How do we implement Pop, Push, and Peek with the linked list? (c) What is the worst-case big-O runtime for Pop, Push, and Peek? (d) What is the worst-case big-O if you implement the top of stack in the reverse direction?
 
-**Solution**
+<details>
+<summary>Solution</summary>
 
 - **(a)** SLL: at the **head**. DLL with head and tail: either end.
 - **(b)** push = insert at head; pop = save `head`, advance it, copy the item, delete the old node; peek = `head->item` (empty checks on pop/peek). Code in [§1.1](#11-top-of-the-stack--head-of-the-list).
 - **(c)** All **O(1) worst case**.
 - **(d)** Top at the tail: SLL head-only → all O(n); SLL head + tail → push/peek O(1) but **pop O(n)**; DLL → all O(1) via `tail->prev`.
 
+</details>
+
 ### 7.2 Activity 1: Implementing Queues with an ArrayList (slide 9)
 
 Implementing queue with **ArrayList**: Where should we enqueue and dequeue items? Implement enqueue and dequeue operations. What are the worst-case (or amortized) run-times? What if we reverse the direction of enqueue and dequeue?
 
-**Solution**
+<details>
+<summary>Solution</summary>
 
 - Enqueue at the end with `list.add(item)`, dequeue at index 0 with `list.remove(0)`.
 - Enqueue **O(1) amortized**; dequeue **O(n)** (everything shifts left).
 - Reversed (`add(0, item)` / `remove()`): enqueue **O(n)**, dequeue O(1).
 - Either way one operation is O(n), because the ArrayList pins item 0 to cell 0 ([§3.2](#32-circular-array) for the fix).
 
+</details>
+
 ### 7.3 Activity 2: Implementing Queues with a Singly Linked List (slide 10)
 
 Implementing queue with **singly linked list**: Where should we enqueue and dequeue items? Implement enqueue and dequeue operations. What are the worst-case run-times? What if we reverse the direction of enqueue and dequeue? What modification allows us to get O(1) for both ops?
 
-**Solution**
+<details>
+<summary>Solution</summary>
 
 - Dequeue at the head, enqueue at the last node.
 - Head only: dequeue O(1), enqueue **O(n)**. Reversed: enqueue O(1), dequeue **O(n)**.
 - Modification: a **tail pointer**, with front = head and rear = tail → both O(1) ([§3.3](#33-sll-add-a-tail-pointer-slide-10)).
 - Trap: the reversed direction with a tail pointer is still O(n) for dequeue.
 
+</details>
+
 ### 7.4 Implementing Queues with a Doubly Linked List (slide 11)
 
 Implementing queue with **doubly linked list**: Where should we enqueue and dequeue items? Implement enqueue and dequeue operations. What are the worst-case run-times? What if we reverse the direction of enqueue and dequeue?
 
-**Solution**
+<details>
+<summary>Solution</summary>
 
 - Enqueue at the tail (`newNode->prev = tail; tail->next = newNode; tail = newNode;`, or set `head` if empty), dequeue at the head (`head = head->next; head->prev = nullptr;`, or `tail = nullptr` if it becomes empty).
 - Both **O(1)** worst case, and still O(1) reversed. Price: the extra `prev` pointer.
+
+</details>
 
 ### 7.5 Activity 3: expression evaluation (slide 18)
 
@@ -509,7 +521,8 @@ Implementing queue with **doubly linked list**: Where should we enqueue and dequ
 - Use a stack to evaluate **postfix** expression: `5 1 2 + 4 * + 3 -`
 - Convert the above expression back to infix
 
-**Solution**
+<details>
+<summary>Solution</summary>
 
 **(a)** = **100**. Values/operators (bottom → top): after `( ( 2 + 3 )` → 5 / empty; after `* ( 4 * 5 )` → 5 20 / `*`; final `)` → 5 × 20 = 100.
 
@@ -534,6 +547,8 @@ Check (a) and (b) step by step:
 ```
 
 **(c)** Push expressions instead of numbers: `((5 + ((1 + 2) * 4)) - 3)`, i.e. 5 + (1 + 2) × 4 − 3 = 14. Operand order 5, 1, 2, 4, 3 is unchanged.
+
+</details>
 
 ---
 

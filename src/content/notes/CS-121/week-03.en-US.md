@@ -540,25 +540,36 @@ if __name__ == "__main__":
 
 One page fetch takes 500 ms. How long does it take to crawl 1 million pages one at a time? What changes with threads?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** $10^6 \times 0.5\ \text{s} = 500{,}000\ \text{s}$ ≈ 138.9 h ≈ **5.8 days** — worse in practice (unresponsive servers), and almost all of it waiting on the network. With $k$ threads in parallel (on different servers, to stay polite) the ideal is $500{,}000 / k$ s: 10 threads ≈ 13.9 h, 100 ≈ 1.4 h, 500 ≈ 17 min. Back to [section 5](#52-performance-the-crawler-mostly-waits).
+$10^6 \times 0.5\ \text{s} = 500{,}000\ \text{s}$ ≈ 138.9 h ≈ **5.8 days** — worse in practice (unresponsive servers), and almost all of it waiting on the network. With $k$ threads in parallel (on different servers, to stay polite) the ideal is $500{,}000 / k$ s: 10 threads ≈ 13.9 h, 100 ≈ 1.4 h, 500 ≈ 17 min.
+
+</details>
+
+Back to [section 5](#52-performance-the-crawler-mostly-waits).
 
 ### 15.2 DNS lookups at 800 ms (L7 p37)
 
 One DNS lookup takes 800 ms, and common resolvers are blocking (one request at a time). How long would it take to "look up the entire Web"?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** No host count is given, so per million names: $10^6 \times 0.8\ \text{s} = 800{,}000\ \text{s} \approx 9.3$ days; at 2 s, ≈ 23 days. Fixes: **cache** (one lookup serves all of a host's URLs) and don't block — resolve concurrently. Back to [section 5.3](#53-dns-lookups).
+No host count is given, so per million names: $10^6 \times 0.8\ \text{s} = 800{,}000\ \text{s} \approx 9.3$ days; at 2 s, ≈ 23 days. Fixes: **cache** (one lookup serves all of a host's URLs) and don't block — resolve concurrently.
+
+</details>
+
+Back to [section 5.3](#53-dns-lookups).
 
 ### 15.3 Which robots.txt rule applies? (L7 p18 · L6.5 p16–21)
 
 For each file in the L7 p18 table, may `BadBot`, `Google` and `MyCrawler` fetch `/`, `/tmp/a.html` and `/index.html`?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** First pick the group (a group naming the bot wins over `*`), then match the paths. These results were checked with Python's `urllib.robotparser`:
+First pick the group (a group naming the bot wins over `*`), then match the paths. These results were checked with Python's `urllib.robotparser`:
 
 | File | BadBot | Google | MyCrawler |
 |---|---|---|---|
@@ -574,15 +585,20 @@ The last row is the precedence rule: Google's own group allows everything, and t
 {"title": "Allow a single robot + the precedence rule (L7 p18 · L6.5 p21)", "robots": "User-agent: Google\nDisallow:\n\nUser-agent: *\nDisallow: /", "urls": "/index.html, /tmp/a.html", "agent": "Google"}
 ```
 
-(robotparser matches the group name as a substring, so `Googlebot/2.1` also gets the `Google` group; RFC 9309 wants the exact token.) Back to [section 2](#2-permission-to-crawl-robotstxt).
+(robotparser matches the group name as a substring, so `Googlebot/2.1` also gets the `Google` group; RFC 9309 wants the exact token.)
+
+</details>
+
+Back to [section 2](#2-permission-to-crawl-robotstxt).
 
 ### 15.4 Allow inside a Disallowed folder (L7 p24)
 
 With CNN's rules `Allow: /audio/podcasts/`, `Allow: /partners/ipad/live-video.json`, `Disallow: /audio/` and `Disallow: /partners/`, decide `/audio/podcasts/ep1.mp3`, `/audio/live.html`, `/partners/ipad/live-video.json` and `/partners/ipad/x.json`.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** Find every rule whose path is a prefix of the URL path, and let the longest one win:
+Find every rule whose path is a prefix of the URL path, and let the longest one win:
 
 | Path | Matching rules | Winner | Verdict |
 |---|---|---|---|
@@ -591,15 +607,20 @@ With CNN's rules `Allow: /audio/podcasts/`, `Allow: /partners/ipad/live-video.js
 | `/partners/ipad/live-video.json` | `Allow: …/live-video.json` (30), `Disallow: /partners/` (10) | Allow | **allowed** |
 | `/partners/ipad/x.json` | `Disallow: /partners/` | Disallow | disallowed |
 
-The folder is closed except for the resource the site wants crawled. First-match gives the same answers only because CNN lists its `Allow` lines first. Back to [section 2](#2-permission-to-crawl-robotstxt).
+The folder is closed except for the resource the site wants crawled. First-match gives the same answers only because CNN lists its `Allow` lines first.
+
+</details>
+
+Back to [section 2](#2-permission-to-crawl-robotstxt).
 
 ### 15.5 Reading an Apache log line (L8 p17)
 
 Split `80.165.186.186 - - [25/Jan/2012:01:21:24 -0800] "GET /events-dataset-api/ HTTP/1.1" 200 3214 "http://www.kdnuggets.com/datasets/index.html" "Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1"` into fields. Is it a bot?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** Parsed with a combined-log-format regex:
+Parsed with a combined-log-format regex:
 
 | Field | Value |
 |---|---|
@@ -612,21 +633,30 @@ Split `80.165.186.186 - - [25/Jan/2012:01:21:24 -0800] "GET /events-dataset-api/
 | Referrer | `http://www.kdnuggets.com/datasets/index.html` |
 | User agent | Firefox 9.0.1 on Windows NT 5.1 |
 
-A person, not a bot: a browser user agent, arriving from a KDnuggets link (the referrer). Compare the `Python-urllib/2.4` line: no referrer, a bare library user agent — a script that doesn't say who runs it. Back to [section 12](#12-privacy-what-your-crawler-leaves-behind).
+A person, not a bot: a browser user agent, arriving from a KDnuggets link (the referrer). Compare the `Python-urllib/2.4` line: no referrer, a bare library user agent — a script that doesn't say who runs it.
+
+</details>
+
+Back to [section 12](#12-privacy-what-your-crawler-leaves-behind).
 
 ### 15.6 Expected age for one change per week (L9 p18–21)
 
 With $\lambda = 1/7$ changes per day, what is the expected age of a page 2, 4, 6 and 7 days after it was crawled?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** Integrating $\lambda e^{-\lambda x}(t - x)$ from 0 to $t$ gives $\text{Age}(\lambda, t) = t - (1 - e^{-\lambda t})/\lambda$:
+Integrating $\lambda e^{-\lambda x}(t - x)$ from 0 to $t$ gives $\text{Age}(\lambda, t) = t - (1 - e^{-\lambda t})/\lambda$:
 
 | $t$ (days) | 1 | 2 | 4 | 6 | 7 |
 |---|---|---|---|---|---|
 | Expected age (days) | 0.07 | 0.26 | 0.95 | 1.97 | 2.58 |
 
-This matches the L9 p21 curve (≈ 2.5 at the right edge, bending upward); at $t = 7$ the age is exactly $7e^{-1}$. Days 4→6 add ≈ 1 day of expected age; days 0→2 added only ≈ 0.26. Back to [section 8](#83-expected-age).
+This matches the L9 p21 curve (≈ 2.5 at the right edge, bending upward); at $t = 7$ the age is exactly $7e^{-1}$. Days 4→6 add ≈ 1 day of expected age; days 0→2 added only ≈ 0.26.
+
+</details>
+
+Back to [section 8](#83-expected-age).
 
 ---
 

@@ -465,43 +465,55 @@ left in queue (2): front = that
 
 (a) 栈顶应该放在哪里？(b) 如何用链表实现 Pop、Push 和 Peek？(c) Pop、Push 和 Peek 的最坏情况 Big-O 运行时间是多少？(d) 如果把栈顶放在相反的方向，最坏情况 Big-O 是多少？
 
-**解答**
+<details>
+<summary>解答</summary>
 
 - **(a)** SLL：放在**头部**。带 head 和 tail 的 DLL：任一端。
 - **(b)** push = 在头部插入；pop = 保存 `head`，把它前移，复制出元素，删除旧节点；peek = `head->item`（pop/peek 要做空检查）。代码见 [§1.1](#11-栈顶即链表头)。
 - **(c)** 全部都是**最坏情况 O(1)**。
 - **(d)** 栈顶在尾部：只有 head 的 SLL → 全部 O(n)；head + tail 的 SLL → push/peek O(1)，但 **pop O(n)**；DLL → 借助 `tail->prev`，全部 O(1)。
 
+</details>
+
 ### 7.2 活动 1：用 ArrayList 实现队列（幻灯片 9）
 
 用 **ArrayList** 实现队列：应该在哪里入队和出队？实现 enqueue 和 dequeue 操作。最坏情况（或摊还）运行时间是多少？如果把入队和出队的方向反过来呢？
 
-**解答**
+<details>
+<summary>解答</summary>
 
 - 用 `list.add(item)` 在末尾入队，用 `list.remove(0)` 在下标 0 处出队。
 - 入队**摊还 O(1)**；出队 **O(n)**（所有元素左移）。
 - 反向（`add(0, item)` / `remove()`）：入队 **O(n)**，出队 O(1)。
 - 不管哪个方向，总有一个操作是 O(n)，因为 ArrayList 把第 0 个元素固定在 0 号格子里（修正办法见 [§3.2](#32-循环数组)）。
 
+</details>
+
 ### 7.3 活动 2：用单向链表实现队列（幻灯片 10）
 
 用**单向链表**实现队列：应该在哪里入队和出队？实现 enqueue 和 dequeue 操作。最坏情况运行时间是多少？如果把入队和出队的方向反过来呢？做什么改动能让两个操作都达到 O(1)？
 
-**解答**
+<details>
+<summary>解答</summary>
 
 - 在头部出队，在最后一个节点之后入队。
 - 只有 head：dequeue O(1)，enqueue **O(n)**。反向：enqueue O(1)，dequeue **O(n)**。
 - 改动：增加一个 **tail 指针**，队首 = head，队尾 = tail → 两者都是 O(1)（[§3.3](#33-sll增加-tail-指针幻灯片-10)）。
 - 陷阱：反向放置时，即使有 tail 指针，dequeue 仍然是 O(n)。
 
+</details>
+
 ### 7.4 用双向链表实现队列（幻灯片 11）
 
 用**双向链表**实现队列：应该在哪里入队和出队？实现 enqueue 和 dequeue 操作。最坏情况运行时间是多少？如果把入队和出队的方向反过来呢？
 
-**解答**
+<details>
+<summary>解答</summary>
 
 - 在尾部入队（`newNode->prev = tail; tail->next = newNode; tail = newNode;`，若队列为空则同时设置 `head`），在头部出队（`head = head->next; head->prev = nullptr;`，若变空则 `tail = nullptr`）。
 - 两者都是**最坏情况 O(1)**，反向后仍然是 O(1)。代价：多出的 `prev` 指针。
+
+</details>
 
 ### 7.5 活动 3：表达式求值（幻灯片 18）
 
@@ -509,7 +521,8 @@ left in queue (2): front = that
 - 用一个栈对**后缀**表达式求值：`5 1 2 + 4 * + 3 -`
 - 把上面的表达式转换回中缀
 
-**解答**
+<details>
+<summary>解答</summary>
 
 **(a)** = **100**。值栈/运算符栈（底 → 顶）：`( ( 2 + 3 )` 之后 → 5 / 空；`* ( 4 * 5 )` 之后 → 5 20 / `*`；最后一个 `)` → 5 × 20 = 100。
 
@@ -534,6 +547,8 @@ left in queue (2): front = that
 ```
 
 **(c)** 压入表达式而不是数字：`((5 + ((1 + 2) * 4)) - 3)`，即 5 + (1 + 2) × 4 − 3 = 14。操作数顺序 5, 1, 2, 4, 3 保持不变。
+
+</details>
 
 ---
 

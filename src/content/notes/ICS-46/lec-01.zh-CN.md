@@ -557,7 +557,10 @@ Child destroyed
 
 修改 `random_test.cpp`（课程 Google 文件夹中）：（1）用**以 46 为种子的 PRNG** 打印随机数，（2）使用均值为 **4.0**、标准差为 **0.6** 的**正态分布**。给出的代码使用 `engine{device}` 和 `uniform_int_distribution<int> distribution{1, 6}`。
 
-**解答**——修改这两行（固定种子不需要 `random_device`）：
+<details>
+<summary>解答</summary>
+
+修改这两行（固定种子不需要 `random_device`）：
 
 ```cpp
 const unsigned int SEED = 46;
@@ -572,6 +575,8 @@ std::normal_distribution<double> distribution{4.0, 0.6};    // 2) normal(4.0, 0.
 ```
 
 1000 个样本的均值为 4.007，约 68% 落在 3.4–4.6 之间（在一个标准差以内）。如果保留 device，请把 `engine{device}` 改成 `engine{device()}`。
+
+</details>
 
 ### 5.2 活动 1a：可视化指针与引用（幻灯片 21）
 
@@ -599,18 +604,26 @@ std::cout << *a << std::endl;
 delete a; delete b;
 ```
 
-**解答**——先打印 **`3`**，再打印 **`9`**；ASan 下没有报错。
+<details>
+<summary>解答</summary>
+
+先打印 **`3`**，再打印 **`9`**；ASan 下没有报错。
 
 - `*a = *b` 复制的是**值** 3；`a` 和 `b` 仍然指向两个不同的 int。
 - `c` 是 `b` 所指 int 的名字，所以 `c = 6` 不会改变 `a` 的 int（仍是 3）→ 打印 3。
 - `d` 是指针 `a` 的另一个名字，所以 `*d = 9` 写入的是 `a` 的 int → 打印 9。
 - 最终的图：`a` → int 9，`b` → int 6，`c` 用虚线指向 6，`d` 用虚线指向 `a`。两个对象，各被删除一次。
 
+</details>
+
 ### 5.3 活动 1b：指针与引用（幻灯片 22）
 
 代码相同，只是 `*a = *b;` 改成了 `a = b; // change from 1a`。
 
-**解答**——先打印 **`6`**，再打印 **`9`**，然后崩溃：
+<details>
+<summary>解答</summary>
+
+先打印 **`6`**，再打印 **`9`**，然后崩溃：
 
 - `a = b` 复制的是**地址**：两者都指向保存 3 的那个 int。保存 2 的那个 int 没有任何指针指向它了 → **泄漏**。
 - `c = 6` 和 `*d = 9` 都是写入这同一个共享的 int → 先 6，再 9。
@@ -624,14 +637,20 @@ delete a; delete b;
 
 `*a = *b` 复制的是所指向的内容；`a = b` 复制的是指针——智能指针就是为了防止这种别名问题而存在的。
 
+</details>
+
 ### 5.4 活动 2：共享所有权（幻灯片 30）
 
 对于 [§4.6](#46-循环引用问题与-stdweak_ptr) 中的 `Parent`/`Child` 程序：（a）`main` 结束时 parent 和 child 会怎样？（b）为什么？（c）如何修复？
 
-**解答。**
+<details>
+<summary>解答</summary>
+
 （a）两者都不会被销毁——没有任何析构函数输出；两个对象都泄漏了。
 （b）每个对象都有两个所有者（一个局部变量 + 另一个对象）。`p` 和 `c` 消亡时，每个计数降到 1，而不是 0：这是**循环引用**，`shared_ptr` 无法检测到。
 （c）把 `Child` 的成员改成 `std::weak_ptr<Parent> parent;`。Parent 的计数保持为 1，所以两者都会被销毁（`Parent destroyed`、`Child destroyed`）。用 `lock()` 来访问 parent。
+
+</details>
 
 ---
 

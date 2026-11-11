@@ -347,7 +347,8 @@ The poll slides show only the prompts (no options and no results), so the answer
 
 Context: `setup1` already has `DieComponent` (`selector: 'app-die'`, with `@Input() value:number = 0;`), and `AppComponent` has two fields, `die1` and `die2`. `app.component.html` has `TODO 1: add two die apps`.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer** (TODO 1 in `solution1/src/app/app.component.html`):
 
@@ -360,11 +361,14 @@ Context: `setup1` already has `DieComponent` (`selector: 'app-die'`, with `@Inpu
 
 Two things make it work: the `app-die` selector placed twice in the parent's template, and `DieComponent` listed in `AppComponent`'s `imports: [DieComponent]` ([Section 3](#3-standalone-components-and-the-root-component)). `[value]="die1"` is a property binding into the child's `@Input()` — brackets because `die1` is an expression (a field of the parent), not the literal text "die1" ([Lecture 10](lec-10.en-US.md#102-inputs)).
 
+</details>
+
 ### 9.2 Question 2: How will we embed a button that activates rollDice()? (slide 23)
 
 *L11-Q2: How will we embed a button that activates the `rollDice()` function?*
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer** (TODO 3 in `app.component.html`):
 
@@ -372,7 +376,11 @@ Two things make it work: the `app-die` selector placed twice in the parent's tem
 <button (click)="rollDice()">Roll dice</button>
 ```
 
-An **event binding**: `(click)` sends the click to the component, running `rollDice()` in `AppComponent`. It must be `(click)`, not `[click]` (that would be a property binding), and the statement must call the method — `rollDice()` with parentheses. Back to [Section 3](#3-standalone-components-and-the-root-component).
+An **event binding**: `(click)` sends the click to the component, running `rollDice()` in `AppComponent`. It must be `(click)`, not `[click]` (that would be a property binding), and the statement must call the method — `rollDice()` with parentheses.
+
+</details>
+
+Back to [Section 3](#3-standalone-components-and-the-root-component).
 
 ### 9.3 Demo 1: Rolling Dice with a service (slide 21 · setup1 → solution1)
 
@@ -409,9 +417,10 @@ export class AppComponent {
 
 `app.component.html` has TODO 1 (two dice), TODO 3 (button, and print the total); `die.component.html` has TODO 2 (`<img src="1.png">` → use the `value` input).
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
-**Solution.** TODO 1 and the button are Questions 1–2 above. TODO 2, the die's view — show the image whose name is the value, and nothing before the first roll:
+TODO 1 and the button are Questions 1–2 above. TODO 2, the die's view — show the image whose name is the value, and nothing before the first roll:
 
 ```html
 @if(value != 0) {
@@ -500,6 +509,8 @@ The finished app, re-created in plain JS (the JSON data inlined, the dice images
 The rolls come out `5 + 2 = 7`, `4 + 3 = 7`, `6 + 1 = 7`, … — **every pair in `rigged_rolls.json` adds up to 7**, so the faces look random but the total never changes. That's the "rigging".
 
 > ⚠️ **Pitfall**: The JSON loads asynchronously. If `rollDice()` ran before the `.then` filled the arrays, `this.die1.length` is 0, `index % 0` is `NaN`, and `rollDie1()` returns `undefined`; `undefined != 0` is `true`, so the die would try to show `undefined.png` and the total would read `NaN`. A real click comes long after the tiny file has loaded, but code that rolls on start-up would hit this.
+
+</details>
 
 > 🧪 **Demo files**: [rig-dice.service.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W6_L1_AngularServices/solution1/src/app/rig-dice.service.ts) · [app.component.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W6_L1_AngularServices/solution1/src/app/app.component.ts) · [app.component.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W6_L1_AngularServices/solution1/src/app/app.component.html) · [die.component.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W6_L1_AngularServices/solution1/src/app/die/die.component.html) · [rigged_rolls.json](https://github.com/travislindenreid/INF33-Demos/blob/main/W6_L1_AngularServices/solution1/public/rigged_rolls.json) · [setup1 app.component.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W6_L1_AngularServices/setup1/src/app/app.component.ts)
 

@@ -347,7 +347,8 @@ Angular 项目会生成*大量*文件——A3 的初始代码中约有 75 个—
 
 背景：`setup1` 已经有了 `DieComponent`（`selector: 'app-die'`，带有 `@Input() value:number = 0;`），而 `AppComponent` 有两个字段 `die1` 和 `die2`。`app.component.html` 中有 `TODO 1: add two die apps`。
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案**（`solution1/src/app/app.component.html` 中的 TODO 1）：
 
@@ -360,11 +361,14 @@ Angular 项目会生成*大量*文件——A3 的初始代码中约有 75 个—
 
 让它生效的有两点：在父组件模板中放两次 `app-die` 选择器，并且在 `AppComponent` 的 `imports: [DieComponent]` 中列出 `DieComponent`（[第 3 节](#3-独立组件与根组件)）。`[value]="die1"` 是对子组件 `@Input()` 的属性绑定——使用方括号是因为 `die1` 是一个表达式（父组件的一个字段），而不是字面文本 "die1"（[Lecture 10](lec-10.zh-CN.md#102-输入)）。
 
+</details>
+
 ### 9.2 问题 2：如何嵌入一个调用 rollDice() 的按钮？（幻灯片 23）
 
 *L11-Q2: How will we embed a button that activates the `rollDice()` function?*
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案**（`app.component.html` 中的 TODO 3）：
 
@@ -372,7 +376,11 @@ Angular 项目会生成*大量*文件——A3 的初始代码中约有 75 个—
 <button (click)="rollDice()">Roll dice</button>
 ```
 
-这是一个**事件绑定**：`(click)` 把点击发送给组件，运行 `AppComponent` 中的 `rollDice()`。必须使用 `(click)`，而不是 `[click]`（那会是属性绑定）；语句必须调用该方法——即带括号的 `rollDice()`。返回 [第 3 节](#3-独立组件与根组件)。
+这是一个**事件绑定**：`(click)` 把点击发送给组件，运行 `AppComponent` 中的 `rollDice()`。必须使用 `(click)`，而不是 `[click]`（那会是属性绑定）；语句必须调用该方法——即带括号的 `rollDice()`。
+
+</details>
+
+返回 [第 3 节](#3-独立组件与根组件)。
 
 ### 9.3 演示 1：使用服务掷骰子（幻灯片 21 · setup1 → solution1）
 
@@ -409,9 +417,10 @@ export class AppComponent {
 
 `app.component.html` 中有 TODO 1（两个骰子）和 TODO 3（按钮，以及显示总和）；`die.component.html` 中有 TODO 2（`<img src="1.png">` → 使用 `value` 输入）。
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
-**解答**。TODO 1 和按钮即上面的问题 1–2。TODO 2 是骰子的视图——显示名称为其数值的图片，并且在第一次掷骰之前什么都不显示：
+TODO 1 和按钮即上面的问题 1–2。TODO 2 是骰子的视图——显示名称为其数值的图片，并且在第一次掷骰之前什么都不显示：
 
 ```html
 @if(value != 0) {
@@ -500,6 +509,8 @@ import { RigDiceService } from './rig-dice.service';      // TODO 4
 结果是 `5 + 2 = 7`、`4 + 3 = 7`、`6 + 1 = 7`，……——**`rigged_rolls.json` 中的每一对点数之和都是 7**，因此骰子的点数看起来是随机的，但总和永远不变。这就是“作弊”（rigging）。
 
 > ⚠️ **易错点**：JSON 是异步加载的。如果 `rollDice()` 在 `.then` 填充数组之前运行，那么 `this.die1.length` 为 0，`index % 0` 得到 `NaN`，`rollDie1()` 返回 `undefined`；而 `undefined != 0` 为 `true`，因此骰子会尝试显示 `undefined.png`，总和则会显示 `NaN`。真正的点击发生在那个很小的文件加载完成之后很久，但在应用启动时就掷骰子的代码会遇到这个问题。
+
+</details>
 
 > 🧪 **演示文件**：[rig-dice.service.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W6_L1_AngularServices/solution1/src/app/rig-dice.service.ts) · [app.component.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W6_L1_AngularServices/solution1/src/app/app.component.ts) · [app.component.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W6_L1_AngularServices/solution1/src/app/app.component.html) · [die.component.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W6_L1_AngularServices/solution1/src/app/die/die.component.html) · [rigged_rolls.json](https://github.com/travislindenreid/INF33-Demos/blob/main/W6_L1_AngularServices/solution1/public/rigged_rolls.json) · [setup1 app.component.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W6_L1_AngularServices/setup1/src/app/app.component.ts)
 

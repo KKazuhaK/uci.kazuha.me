@@ -539,25 +539,36 @@ if __name__ == "__main__":
 
 获取一个页面需要 500 毫秒。一次一个地爬取 100万个页面需要多长时间？使用线程后会有什么变化？
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** $10^6 \times 0.5\ \text{s} = 500{,}000\ \text{s}$ ≈ 138.9 小时 ≈ **5.8 天**，实际上更糟（服务器无响应），而且几乎全部时间都在等待网络。若使用 $k$ 个线程并行（分布在不同服务器上以保持礼貌），理想时间为 $500{,}000 / k$ 秒：10 个线程约 13.9 小时，100 个约 1.4 小时，500 个约 17 分钟。返回 [第 5.2 节](#52-性能爬虫大部分时间在等待)。
+$10^6 \times 0.5\ \text{s} = 500{,}000\ \text{s}$ ≈ 138.9 小时 ≈ **5.8 天**，实际上更糟（服务器无响应），而且几乎全部时间都在等待网络。若使用 $k$ 个线程并行（分布在不同服务器上以保持礼貌），理想时间为 $500{,}000 / k$ 秒：10 个线程约 13.9 小时，100 个约 1.4 小时，500 个约 17 分钟。
+
+</details>
+
+返回 [第 5.2 节](#52-性能爬虫大部分时间在等待)。
 
 ### 15.2 DNS 查询耗时800毫秒（L7 p37）
 
 一次 DNS 查询需要 800 毫秒，常见的解析器是阻塞式的（一次只处理一个请求）。“查询整个 Web”需要多长时间？
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** 没有给出主机数量，因此按每 100万个域名计算：$10^6 \times 0.8\ \text{s} = 800{,}000\ \text{s} \approx 9.3$ 天；若每次 2 秒，约为 23 天。解决办法：**缓存**（一次查询可以服务于某个主机的所有 URL），并且不要阻塞，即并发地解析。返回 [第 5.3 节](#53-dns-查询)。
+没有给出主机数量，因此按每 100万个域名计算：$10^6 \times 0.8\ \text{s} = 800{,}000\ \text{s} \approx 9.3$ 天；若每次 2 秒，约为 23 天。解决办法：**缓存**（一次查询可以服务于某个主机的所有 URL），并且不要阻塞，即并发地解析。
+
+</details>
+
+返回 [第 5.3 节](#53-dns-查询)。
 
 ### 15.3 哪条 robots.txt 规则适用？（L7 p18 · L6.5 p16–21）
 
 对 L7 p18 表格中的每个文件，`BadBot`、`Google` 和 `MyCrawler` 是否可以获取 `/`、`/tmp/a.html` 和 `/index.html`？
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** 首先选择分组（指名该机器人的分组优先于 `*`），然后匹配路径。这些结果已用 Python 的 `urllib.robotparser` 验证：
+首先选择分组（指名该机器人的分组优先于 `*`），然后匹配路径。这些结果已用 Python 的 `urllib.robotparser` 验证：
 
 | 文件 | BadBot | Google | MyCrawler |
 |---|---|---|---|
@@ -573,15 +584,20 @@ if __name__ == "__main__":
 {"title": "允许单个机器人 + 优先级规则（L7 p18 · L6.5 p21）", "robots": "User-agent: Google\nDisallow:\n\nUser-agent: *\nDisallow: /", "urls": "/index.html, /tmp/a.html", "agent": "Google"}
 ```
 
-（robotparser 会把分组名作为子串匹配，因此 `Googlebot/2.1` 也会匹配 `Google` 分组；RFC 9309 要求精确匹配令牌。）返回 [第 2 节](#2-爬取许可robotstxt)。
+（robotparser 会把分组名作为子串匹配，因此 `Googlebot/2.1` 也会匹配 `Google` 分组；RFC 9309 要求精确匹配令牌。）
+
+</details>
+
+返回 [第 2 节](#2-爬取许可robotstxt)。
 
 ### 15.4 允许规则位于被禁止的文件夹内（L7 p24）
 
 CNN 的规则为 `Allow: /audio/podcasts/`、`Allow: /partners/ipad/live-video.json`、`Disallow: /audio/` 和 `Disallow: /partners/`。判断 `/audio/podcasts/ep1.mp3`、`/audio/live.html`、`/partners/ipad/live-video.json` 和 `/partners/ipad/x.json` 是否允许访问。
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** 找出路径是 URL 路径前缀的每一条规则，让最长的那条获胜：
+找出路径是 URL 路径前缀的每一条规则，让最长的那条获胜：
 
 | 路径 | 匹配的规则 | 胜出者 | 结论 |
 |---|---|---|---|
@@ -590,15 +606,20 @@ CNN 的规则为 `Allow: /audio/podcasts/`、`Allow: /partners/ipad/live-video.j
 | `/partners/ipad/live-video.json` | `Allow: …/live-video.json`（30）、`Disallow: /partners/`（10） | Allow | **允许** |
 | `/partners/ipad/x.json` | `Disallow: /partners/` | Disallow | 禁止 |
 
-被禁止的文件夹是关闭的，只有网站希望被爬取的资源例外。只有因为 CNN 把 `Allow` 行放在最前面，“先匹配者胜出”的规则才会得出相同的答案。返回 [第 2 节](#2-爬取许可robotstxt)。
+被禁止的文件夹是关闭的，只有网站希望被爬取的资源例外。只有因为 CNN 把 `Allow` 行放在最前面，“先匹配者胜出”的规则才会得出相同的答案。
+
+</details>
+
+返回 [第 2 节](#2-爬取许可robotstxt)。
 
 ### 15.5 阅读 Apache 日志行（L8 p17）
 
 将 `80.165.186.186 - - [25/Jan/2012:01:21:24 -0800] "GET /events-dataset-api/ HTTP/1.1" 200 3214 "http://www.kdnuggets.com/datasets/index.html" "Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1"` 拆分为各个字段。它是机器人吗？
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** 使用 combined log format 的正则表达式解析：
+使用 combined log format 的正则表达式解析：
 
 | 字段 | 值 |
 |---|---|
@@ -611,21 +632,30 @@ CNN 的规则为 `Allow: /audio/podcasts/`、`Allow: /partners/ipad/live-video.j
 | 来源页 | `http://www.kdnuggets.com/datasets/index.html` |
 | 用户代理 | Windows NT 5.1 上的 Firefox 9.0.1 |
 
-这是一个人，而不是机器人：使用的是浏览器用户代理，并且来自 KDnuggets 的链接（来源页）。对比 `Python-urllib/2.4` 那一行：没有来源页，只有一个库的用户代理，是一个不说明运行者是谁的脚本。返回 [第 12 节](#12-隐私你的爬虫留下了什么)。
+这是一个人，而不是机器人：使用的是浏览器用户代理，并且来自 KDnuggets 的链接（来源页）。对比 `Python-urllib/2.4` 那一行：没有来源页，只有一个库的用户代理，是一个不说明运行者是谁的脚本。
+
+</details>
+
+返回 [第 12 节](#12-隐私你的爬虫留下了什么)。
 
 ### 15.6 每周变化一次时的期望年龄（L9 p18–21）
 
 若 $\lambda = 1/7$（每天的变化次数），页面在爬取后 2、4、6 和 7 天的期望年龄分别是多少？
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** 对 $\lambda e^{-\lambda x}(t - x)$ 从 0 积分到 $t$，得到 $\text{Age}(\lambda, t) = t - (1 - e^{-\lambda t})/\lambda$：
+对 $\lambda e^{-\lambda x}(t - x)$ 从 0 积分到 $t$，得到 $\text{Age}(\lambda, t) = t - (1 - e^{-\lambda t})/\lambda$：
 
 | $t$（天） | 1 | 2 | 4 | 6 | 7 |
 |---|---|---|---|---|---|
 | 期望年龄（天） | 0.07 | 0.26 | 0.95 | 1.97 | 2.58 |
 
-这与 L9 p21 的曲线相符（右端约 2.5，向上弯曲）；在 $t = 7$ 时，年龄恰好为 $7e^{-1}$。从第 4 天到第 6 天增加了约 1 天的期望年龄，从第 0 天到第 2 天只增加了约 0.26。返回 [第 8 节](#83-期望年龄)。
+这与 L9 p21 的曲线相符（右端约 2.5，向上弯曲）；在 $t = 7$ 时，年龄恰好为 $7e^{-1}$。从第 4 天到第 6 天增加了约 1 天的期望年龄，从第 0 天到第 2 天只增加了约 0.26。
+
+</details>
+
+返回 [第 8 节](#83-期望年龄)。
 
 ---
 

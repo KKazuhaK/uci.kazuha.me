@@ -1648,9 +1648,14 @@ int main()
 }
 ```
 
+<details>
+<summary>答案</summary>
+
 **答案：B**
 
 > 💡 解析：rBase 是 A 引用指向 C 对象。从 A 到 C 之间最派生的 getName 是 `B::getName()`（因为 C 没定义）。**不会调用 D**，因为对象是 C 不是 D。
+
+</details>
 
 #### Quiz 1c（最常忘的陷阱）
 
@@ -1667,9 +1672,14 @@ int main()
 }
 ```
 
+<details>
+<summary>答案</summary>
+
 **答案：A**
 
 > ⚠️ **陷阱**：A 不是 virtual，**B、C 标 virtual 也救不了**。基类必须先标 virtual。
+
+</details>
 
 #### Quiz 1d（隐式 virtual）
 
@@ -1686,9 +1696,14 @@ int main()
 }
 ```
 
+<details>
+<summary>答案</summary>
+
 **答案：C**
 
 > 💡 A 是 virtual → B、C 隐式也是 virtual。rBase 是 B 引用，B 到 C 之间最派生的是 C::getName() → "C"。
+
+</details>
 
 #### Quiz 1e（const 不一致）
 
@@ -1706,9 +1721,14 @@ int main()
 }
 ```
 
+<details>
+<summary>答案</summary>
+
 **答案：A**
 
 > ⚠️ **陷阱**：B、C、D 的 getName() **都不是 const**——所以**不算 override**！它们是新的"虚函数"，但与 A 的 getName 不匹配。所以 rBase.getName() 找的是 A 到 C 之间和 A::getName() 签名匹配的最派生版本——只有 A 自己。
+
+</details>
 
 #### Quiz 1f（构造函数中调用虚函数）
 
@@ -1728,11 +1748,16 @@ int main()
 }
 ```
 
+<details>
+<summary>答案</summary>
+
 **答案：A**
 
 > ⚠️ **极其重要的陷阱**：构造 C 时，先构造 A 部分。在 A 构造函数内调用虚函数 getName()，此时 **B 和 C 部分还没有被构造**——所以解析到 `A::getName()`。
 >
 > 这就是为什么 LearnCpp 提出 **Best Practice：永远不要在构造函数或析构函数里调用虚函数！**
+
+</details>
 
 ### 11.11 ⚠️ Best Practice：不要在构造/析构函数中调用虚函数
 

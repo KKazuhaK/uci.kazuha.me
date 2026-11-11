@@ -2,6 +2,7 @@
 //   [ / ]  previous / next note      L  switch language
 // Shown (and kept) once the intro card has scrolled away; its middle button
 // scrolls back to the top.
+import { detailsCount, openDetailsAt, openDetailsIndexes } from "./details";
 import { HEADING_SELECTOR } from "./toc";
 
 const RESUME_KEY = "kzh-lang-switch-resume";
@@ -15,6 +16,9 @@ interface Resume {
   within: number;
   /** Fallback: overall scroll fraction. */
   ratio: number;
+  /** <details> blocks (answers) the reader had opened; translations have the same ones in the same order. */
+  openDetails?: number[];
+  detailsCount?: number;
 }
 
 function headingsOf(content: HTMLElement): HTMLElement[] {
@@ -43,7 +47,8 @@ function captureResume(content: HTMLElement, to: string): Resume {
     const end = hs[idx + 1] ? docTop(hs[idx + 1]!) : docTop(content) + content.offsetHeight;
     within = Math.min(1, Math.max(0, (y - start) / Math.max(1, end - start)));
   }
-  return { to, heading: idx, headingCount: hs.length, within, ratio: window.scrollY / scrollable() };
+  return { to, heading: idx, headingCount: hs.length, within, ratio: window.scrollY / scrollable(), openDetails: openDetailsIndexes(content),
+    detailsCount: detailsCount(content) };
 }
 
 /** Restore the reading position saved by the page we came from (other language). */
@@ -55,6 +60,8 @@ export function restoreAfterLangSwitch(content: HTMLElement): void {
   } catch {}
   if (!resume || resume.to !== location.pathname || location.hash) return;
   const r = resume;
+  // Only when both pages have the same answers, so the wrong one is never revealed.
+  if (Array.isArray(r.openDetails) && r.detailsCount === detailsCount(content)) openDetailsAt(content, r.openDetails);
   const apply = () => {
     const hs = headingsOf(content);
     // Translations share heading structure; if the count differs, fall back to scroll fraction.

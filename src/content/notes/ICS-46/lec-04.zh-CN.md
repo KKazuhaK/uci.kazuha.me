@@ -692,7 +692,8 @@ T remove(int index) {
 }
 ```
 
-**解答：**
+<details>
+<summary>解答</summary>
 
 ```cpp
         Node* previous = nullptr;
@@ -707,28 +708,44 @@ T remove(int index) {
 
 只有要删除节点*之前*那个节点的 `next` 会改变，所以需要 `previous`；索引 0 单独处理，因为此时要改的指针是 `head`。
 
+</details>
+
 ### 8.2 活动 2：单向链表操作的时间复杂度（幻灯片 37）
 
 填写最坏情况：`add(E item)`——在头部插入 O(1)，在尾部插入 O( )；`get(int index)`——O( )；`add(int index, T item)`——O( )；`remove()`——从头部 O( )，从尾部 O( )；`remove(int index)`——O( )。
 
-**解答：**在尾部 add 为 **O(n)**（有尾指针时为 O(1)）；`get` 为 **O(n)**；`add(index)` 为 **O(n)**；从头部 remove 为 **O(1)**，从尾部为 **O(n)**（即使有尾指针——也无法回到倒数第二个节点）；`remove(index)` 为 **O(n)**。
+<details>
+<summary>解答</summary>
+
+在尾部 add 为 **O(n)**（有尾指针时为 O(1)）；`get` 为 **O(n)**；`add(index)` 为 **O(n)**；从头部 remove 为 **O(1)**，从尾部为 **O(n)**（即使有尾指针——也无法回到倒数第二个节点）；`remove(index)` 为 **O(n)**。
+
+</details>
 
 ### 8.3 活动 3：双向链表的时间复杂度分析（幻灯片 45）
 
 对双向链表填同样的表。
 
-**解答：**在头部插入 **O(1)**，在尾部插入 **O(1)**；`get` 为 **O(n)**；`add(index)` 为 **O(n)**；从头部删除 **O(1)**，从尾部删除 **O(1)**；`remove(index)` 为 **O(n)**。只有与尾部相关的行发生变化：`tail->prev` 一步就能到达倒数第二个节点。
+<details>
+<summary>解答</summary>
+
+在头部插入 **O(1)**，在尾部插入 **O(1)**；`get` 为 **O(n)**；`add(index)` 为 **O(n)**；从头部删除 **O(1)**，从尾部删除 **O(1)**；`remove(index)` 为 **O(n)**。只有与尾部相关的行发生变化：`tail->prev` 一步就能到达倒数第二个节点。
+
+</details>
 
 ### 8.4 活动 4：实现栈（幻灯片 49）
 
 用 **ArrayList**（操作 `add(Item item)`、`add(int index, Item item)`、`remove()`）实现一个栈。(a) 栈顶应该放在哪一端（前端还是后端）？(b) 如何实现 Pop、Push 和 Peek？(c) Pop 和 Push 的**摊还（amortized）**大 O 是多少？(d) Peek 的**最坏情况**大 O 是多少？(e) 如果栈顶放在相反的方向，**最坏情况**大 O 是多少？
 
-**解答：**
+<details>
+<summary>解答</summary>
+
 (a) **后端**（End/Rear）——在那里添加/删除不需要移动任何元素。
 (b) push = `add(item)`，pop = `remove()`，peek = `at(size() - 1)`。
 (c) 两者都是 **O(1) 摊还**（数组翻倍或在 ¼ 满时缩小，偶尔会是 O(n)）。
 (d) **O(1)**。
 (e) 栈顶在前端：push = `add(0, item)`、pop = `remove(0)` 要移动所有元素 → **O(n)**；peek = `at(0)` 仍是 O(1)。
+
+</details>
 
 ---
 

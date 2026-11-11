@@ -382,17 +382,27 @@ Which of these statements is true? *(2 min think to yourself; 5 min to discuss w
 - D. Adaptive performs better and is easier to develop
 - E. There are no differences (this answer is incorrect)
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
-**Answer: C** (marked on slide 16). Adaptive sends each device only the code made for it, so it loads less; responsive downloads the entire stylesheet everywhere. But responsive is one codebase, while adaptive means maintaining several. A and B get performance backwards; D ignores the cost of separate codebases. Back to [section 2](#2-adaptive-vs-responsive-design).
+**Answer: C** (marked on slide 16). Adaptive sends each device only the code made for it, so it loads less; responsive downloads the entire stylesheet everywhere. But responsive is one codebase, while adaptive means maintaining several. A and B get performance backwards; D ignores the cost of separate codebases.
+
+</details>
+
+Back to [section 2](#2-adaptive-vs-responsive-design).
 
 ### 16.2 Question 2: Hearthstone, responsive or adaptive? (slide 18)
 
 Imagine you are building Hearthstone, a video game, which can be played on mobile (left) or desktop (right). The tool you build this game in can easily export a single game project to executables that can run on mobile phones or PCs. Are you going to apply responsive or adaptive design? Why? *(2 min think to yourself; 5 min to discuss with peers.)*
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
-**Answer** (discussion question; slide 19 gives the takeaway): for different **platforms** (phone vs. PC) games usually **redesign the interface — adaptive** — because touch on a small screen and mouse on a large one need different layouts (the two screenshots show different boards and controls). Within one platform, **responsive** design handles the many resolutions. But not always: games exported for web and desktop are often responsive only. Back to [section 2](#2-adaptive-vs-responsive-design).
+**Answer** (discussion question; slide 19 gives the takeaway): for different **platforms** (phone vs. PC) games usually **redesign the interface — adaptive** — because touch on a small screen and mouse on a large one need different layouts (the two screenshots show different boards and controls). Within one platform, **responsive** design handles the many resolutions. But not always: games exported for web and desktop are often responsive only.
+
+</details>
+
+Back to [section 2](#2-adaptive-vs-responsive-design).
 
 ### 16.3 Demo 1: Responsive class schedule (slide 44 · setup1 → solution1)
 
@@ -404,7 +414,8 @@ The slide shows "My 133 Schedule" as a table on desktop and as a stack of cells 
 
 The starter is a plain `<table>` (Monday–Friday header row, then two rows of cells holding Discussion / Lecture / Assignment due `<div>`s) with Bootstrap 5.1.3 linked from a CDN before `setup1.css`.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer** (`solution1.html`; the CSS is unchanged). Only classes are added:
 
@@ -435,6 +446,8 @@ At 375px the cells stack one per line with no header; at 1000px the header row i
 ```viz web-demo
 {"title": "Slide 44 · Demo 1 solution1.html (Bootstrap 5.3 here; the repo loads 5.1.3)", "libs": ["bootstrap"], "html": "<div>\n   <h1>My 133 Schedule</h1>\n   <table class=\"container\">\n      <tr class=\"row\">\n         <th class=\"d-none d-md-block col-md-2\">Monday</th>\n         <th class=\"d-none d-md-block col-md-2\">Tuesday</th>\n         <th class=\"d-none d-md-block col-md-2\">Wednesday</th>\n         <th class=\"d-none d-md-block col-md-2\">Thursday</th>\n         <th class=\"d-none d-md-block col-md-2\">Friday</th>\n      </tr>\n      <tr class=\"row\">\n         <td class=\"col-md-2\">\n            <div class=\"discussion\">Discussion</div>\n         </td>\n         <td class=\"col-md-2\">\n            <div class=\"lecture\">Lecture</div>\n         </td>\n         <td class=\"col-md-2\">\n\n         </td>\n         <td class=\"col-md-2\">\n            <div class=\"lecture\">Lecture</div>\n         </td>\n         <td class=\"col-md-2\">\n         </td>\n      </tr>\n      <tr class=\"row\">\n         <td class=\"col-md-2\">\n            <div class=\"discussion\">Discussion</div>\n            <div id=\"a1\">Assignment due</div>\n         </td>\n         <td class=\"col-md-2\">\n            <div class=\"lecture\">Lecture</div>\n         </td>\n         <td class=\"col-md-2\">\n\n         </td>\n         <td class=\"col-md-2\">\n            <div class=\"lecture\">Lecture</div>\n         </td>\n         <td class=\"col-md-2\">\n         </td>\n      </tr>\n   </table>\n</div>\n", "css": "td, th {\n\tborder-width: 1px;\n\tborder-style: solid;\n}\n\nth {\n\tfont-size: 150%;\n\tpadding: 5px;\n}\n\n.discussion {\n\tbackground-color: limegreen;\n\tmargin: 5px;\n}\n\n.lecture {\n\tbackground-color: royalblue;\n\tcolor: white;\n\tmargin: 5px;\n}\n\n#a1 {\n\tbackground-color: saddlebrown;\n\tcolor: white;\n\tmargin: 5px;\n}\n", "width": 375, "height": 330, "steps": [{"note": "md and up (1000px): header row visible, every cell is col-md-2.", "width": 1000}]}
 ```
+
+</details>
 
 > 🧪 **Demo files**: [setup1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L1_Oct6_Bootstrap/setup1.html) · [setup1.css](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L1_Oct6_Bootstrap/setup1.css) · [solution1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L1_Oct6_Bootstrap/solution1.html) · [solution1.css](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L1_Oct6_Bootstrap/solution1.css)
 
@@ -484,7 +497,8 @@ C.
 - D. A and B
 - E. B and C
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: B** (marked on slide 48; confirmed by rendering the repo's `q2.html`, which has the three options with straight quotes).
 
@@ -501,6 +515,8 @@ So D (A and B) and E (B and C) are wrong too. The key rule: a class with no size
 ```
 
 > ⚠️ **Pitfall**: the slide versions contain curly quotes (`col-sm-12”`, `“col-sm-6`) — copied literally, they break the markup (an element loses its class, or its class value runs on into the next tag). The repo's `q2.html` fixes them.
+
+</details>
 
 > 🧪 **Demo files**: [q2.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L1_Oct6_Bootstrap/q2.html) · [q2.css](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L1_Oct6_Bootstrap/q2.css)
 

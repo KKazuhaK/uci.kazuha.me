@@ -531,7 +531,8 @@ int main() {
 **(c)** Fix any necessary smart pointer types to ensure no memory leaks.
 **(d)** Convert to using only `unique_ptr` and raw ptrs for performance.
 
-**Solution.**
+<details>
+<summary>Solution</summary>
 
 **(a)** Make every `Node*` (members and locals) a `std::unique_ptr<Node>` and drop the `delete`s.
 
@@ -550,13 +551,16 @@ root->right->parent = root.get();
 
 Faster (no reference counts) and safe because the parent always outlives its children.
 
+</details>
+
 ### 7.2 Activity 1 (slide 20)
 
 `int a[3][2][4];`
 **(a)** Draw the 1D continuous memory layout of this 3d array.
 **(b)** What is the pointer arithmetic formula for accessing `a[i][j][k]`?
 
-**Solution.**
+<details>
+<summary>Solution</summary>
 
 **(a)** 24 ints in one block; `k` varies fastest, then `j`, then `i`. Each `a[i]` is 8 ints, each `a[i][j]` is 4:
 
@@ -565,6 +569,8 @@ Faster (no reference counts) and safe because the parent always outlives its chi
 | Elements | `a[0][0][0..3]` | `a[0][1][0..3]` | `a[1][0][0..3]` | `a[1][1][0..3]` | `a[2][0][0..3]` | `a[2][1][0..3]` |
 
 **(b)** `&a[i][j][k] == (int*)a + (i * 2 * 4 + j * 4 + k)`, so `a[i][j][k] == *((int*)a + (i * 8 + j * 4 + k))` (also `*(*(*(a + i) + j) + k)`); byte address `Base + (i × 8 + j × 4 + k) × sizeof(int)`. Only the inner sizes 2 and 4 appear. Checked for all 24 cells: `correct for all 24 cells? 1`.
+
+</details>
 
 ### 7.3 Activity 2 (slide 28)
 
@@ -576,6 +582,9 @@ A. n²  B. 6 × 10⁻⁴ n  C. 5 × 10⁻⁹ n²  D. 7 × 10⁻⁹ n²
 |---|---|---|---|---|---|---|
 | Time | 0 | 0.0 | 0.1 | 0.3 | 1.3 | 5.1 |
 
+<details>
+<summary>Solution</summary>
+
 **Solution: C.**
 
 1. b from the two largest sizes: 5.1 / 1.3 ≈ 3.9 ≈ 2² → **b ≈ 2**. Rules out B (linear).
@@ -583,6 +592,8 @@ A. n²  B. 6 × 10⁻⁴ n  C. 5 × 10⁻⁹ n²  D. 7 × 10⁻⁹ n²
 3. Check: A predicts ~10⁹ s; D predicts 7.2 s at 32000. C predicts 5.1 s and 1.28 s at 16000. ✓
 
 Ignore the small sizes: 0.3 / 0.1 = 3 is mostly rounding.
+
+</details>
 
 ---
 

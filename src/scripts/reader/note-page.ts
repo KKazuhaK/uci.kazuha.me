@@ -1,5 +1,6 @@
 // Entry point for note pages (components/NoteReader.astro).
 import { isLang } from "../../lib/i18n";
+import { setupDetails } from "./details";
 import { setLangPref } from "../lang-pref";
 import { bindCodeUi } from "./code-ui";
 import { setupGoto } from "./goto";
@@ -19,6 +20,7 @@ export function initNoteReader(): void {
   setLangPref(lang);
 
   const goto = setupGoto(content, [document.querySelector<HTMLButtonElement>("#goto-heading-viewer")]);
+  setupDetails(content, goto.refresh);
   bindCodeUi(content, lang, goto.refresh);
   buildToc(content);
   restoreAfterLangSwitch(content);

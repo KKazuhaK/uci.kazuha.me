@@ -673,13 +673,16 @@ function pythagorean(a, b) {
 - **D** 1 and 2
 - **E** 1, 2, and 3
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: E** (revealed on slide 16).
 
 - Types are **erased**: files 1 and 2 lose their `:number`s (tsc on the repo's `q1.ts` versions confirms).
 - File 3 is plain JS, and TS is a superset, so it transpiles to itself.
 - Trap: strict mode flags file 3 (`implicitly has an 'any' type`) **but still emits the same JS**.
+
+</details>
 
 > 🧪 **Demo files**: [q1.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/q1/q1.ts) · [q1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/q1/q1.js)
 
@@ -701,9 +704,10 @@ The three calls to try (commented out in the starter):
 //console.log(joinNTimes(['two', 'too', 'to'], 2, 4))
 ```
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
-**Answer.** Plain JS (the repo's `setup1.js`):
+Plain JS (the repo's `setup1.js`):
 
 ```js
 function joinNTimes(arrOfStr, joinStr, n) {
@@ -755,6 +759,8 @@ Now **only the first call is legal**:
 
 `solution1.js` keeps only the first call. (Repo quirk: `solution1.ts` is all inside `/* … */`.)
 
+</details>
+
 > 🧪 **Demo files**: [setup1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/setup/setup1.html) · [setup1.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/setup/setup1.ts) · [setup1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/setup/setup1.js) · [solution1.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/solution/solution1.ts) · [solution1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/solution/solution1.js)
 
 Back to [2. Types](#2-types).
@@ -769,13 +775,16 @@ Relative to each other, what are the *threshold* and *ceiling* of Adobe Photosho
 - **D** Photoshop: low ceiling, low threshold; Paint: high ceiling, high threshold
 - **E** I'm confused, just clicking in to get participation credit
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: A** (revealed on slide 40).
 
 - **Ceiling**: Photoshop does far more (layers, filters, photo editing), which rules out C and D.
 - **Threshold**: Paint is easy; Photoshop takes learning (hence its tutorials, slide 41), which rules out B.
 - Both terms are relative.
+
+</details>
 
 Back to [7. Evaluating tools](#7-evaluating-tools-threshold-and-ceiling).
 
@@ -805,7 +814,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
 As given it fails: `Invalid specification … includes at least one of … "mark", "layer", …`.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer** (the part `solution2.js` adds in place of the comment):
 
@@ -834,6 +844,8 @@ Demo: year-2000 rows for ages 0, 10, … 90, plus a 1990 row the filter drops:
 ```viz web-demo
 {"title": "Demo 2 · solution2.js with inline rows (DOMContentLoaded wrapper dropped; the demo runs after the page)", "libs": ["vega-lite"], "html": "<h1>U.S. age distribution in 2000</h1>\n<div id=\"plot\">\n</div>", "js": "// population.json, year 2000 rows for ages 0,10,...,90 (+ one 1990 row the filter drops)\nvar population = [\n  {\"year\": 2000, \"age\": 0, \"sex\": 1, \"people\": 9735380},\n  {\"year\": 2000, \"age\": 0, \"sex\": 2, \"people\": 9310714},\n  {\"year\": 2000, \"age\": 10, \"sex\": 1, \"people\": 10563233},\n  {\"year\": 2000, \"age\": 10, \"sex\": 2, \"people\": 10022524},\n  {\"year\": 2000, \"age\": 20, \"sex\": 1, \"people\": 9731315},\n  {\"year\": 2000, \"age\": 20, \"sex\": 2, \"people\": 9324244},\n  {\"year\": 2000, \"age\": 30, \"sex\": 1, \"people\": 10205879},\n  {\"year\": 2000, \"age\": 30, \"sex\": 2, \"people\": 10119296},\n  {\"year\": 2000, \"age\": 40, \"sex\": 1, \"people\": 11320252},\n  {\"year\": 2000, \"age\": 40, \"sex\": 2, \"people\": 11488578},\n  {\"year\": 2000, \"age\": 50, \"sex\": 1, \"people\": 8507934},\n  {\"year\": 2000, \"age\": 50, \"sex\": 2, \"people\": 8911133},\n  {\"year\": 2000, \"age\": 60, \"sex\": 1, \"people\": 5123399},\n  {\"year\": 2000, \"age\": 60, \"sex\": 2, \"people\": 5668961},\n  {\"year\": 2000, \"age\": 70, \"sex\": 1, \"people\": 3792145},\n  {\"year\": 2000, \"age\": 70, \"sex\": 2, \"people\": 5184855},\n  {\"year\": 2000, \"age\": 80, \"sex\": 1, \"people\": 1902638},\n  {\"year\": 2000, \"age\": 80, \"sex\": 2, \"people\": 3221898},\n  {\"year\": 2000, \"age\": 90, \"sex\": 1, \"people\": 336303},\n  {\"year\": 2000, \"age\": 90, \"sex\": 2, \"people\": 1064581},\n  {\"year\": 1990, \"age\": 0, \"sex\": 1, \"people\": 9307465},\n  {\"year\": 1990, \"age\": 0, \"sex\": 2, \"people\": 8894007}\n];\n\nvar schema = {\n    \"data\": { \"values\": population },\n    \"transform\": [{\"filter\": \"datum.year == 2000\"}], /*Only select population data from 2000*/\n    \"mark\": \"bar\",\n    \"encoding\": {\n        \"y\": {\n          \"field\": \"age\", \"type\": \"ordinal\"\n        },\n        \"x\": {\n          \"aggregate\": \"sum\", \"field\": \"people\", \"type\": \"quantitative\",\n          \"axis\": {\"title\": \"population\"}\n        }\n    }\n}\nvegaEmbed('#plot', schema, {actions:false});", "height": 340, "tab": "js"}
 ```
+
+</details>
 
 > 🧪 **Demo files**: [setup2.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/setup/setup2.html) · [setup2.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/setup/setup2.js) · [solution2.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/solution/solution2.html) · [solution2.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/solution/solution2.js) · [population.json](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L2_Oct15_TypeScript_VegaLite/demos/setup/population.json)
 
@@ -891,7 +903,8 @@ How would this visualization be specified in Vega-Lite? (Assume field names are 
 
 (Letters as on reveal slide 66; the slide text orders them differently. A and E keep the slide's curly `“`.)
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: B** (revealed on slide 66).
 
@@ -902,6 +915,8 @@ How would this visualization be specified in Vega-Lite? (Assume field names are 
 ```viz web-demo
 {"title": "Question 3 · option B (nominal color), then option D (ordinal color)", "libs": ["vega-lite"], "html": "<div id=\"vis\"></div>", "js": "// three made-up rows, just to compare B (nominal) with D (ordinal)\nvar cars = [\n  {\"Horsepower\": 130, \"MPG\": 18, \"Origin\": \"USA\"},\n  {\"Horsepower\": 95, \"MPG\": 24, \"Origin\": \"Japan\"},\n  {\"Horsepower\": 46, \"MPG\": 26, \"Origin\": \"Europe\"}\n];\nfunction show(colorType) {\n  vegaEmbed(\"#vis\", {\n    data: {values: cars},\n    mark: \"point\",\n    encoding: {\n      x: {field: \"Horsepower\", type: \"quantitative\"},\n      y: {field: \"MPG\", type: \"quantitative\"},\n      color: {field: \"Origin\", type: colorType}\n    }\n  }, {actions: false});\n}\nshow(\"nominal\"); // option B", "height": 240, "tab": "js", "steps": [{"note": "Option D: ordinal color turns the three origins into shades of one hue, unlike the slide's chart.", "js": "show(\"ordinal\"); // option D"}]}
 ```
+
+</details>
 
 Back to [11. Sensible defaults](#11-sensible-defaults-and-overriding-them).
 

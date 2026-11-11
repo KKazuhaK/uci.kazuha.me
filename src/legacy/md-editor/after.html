@@ -776,6 +776,8 @@
 						stage.className = 'me-pdf-stage';
 
 						var container = rendered;
+						// A PDF can't be clicked: print folded answers (<details>) open.
+						container.querySelectorAll('details').forEach(function(d) { d.open = true; });
 						container.className = 'me-pdf-render';
 						container.setAttribute('data-theme', 'light');
 						stage.appendChild(container);

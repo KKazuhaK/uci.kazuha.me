@@ -609,17 +609,19 @@ So back to the indexer's `I ← HashTable()`: **could this be a file, directly?*
 
 Caesar's postings are stored in a fixed-size array `1 2 4 5 6 16 57 132`. Then *Caesar* is added to document 14. What happens?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** The list must stay sorted by docID, so 14 belongs between 6 and 16: `1 2 4 5 6 14 16 57 132`. In a fixed-size array that means **shifting** 16, 57 and 132 one slot right — and if the array is full (Caesar's has 8 slots and 8 entries), you need a **bigger array**. Lists grow and shrink by term, so fixed-size arrays don't work: we need **variable-size postings lists** (L15 p14) — a continuous run on disk, and linked lists / variable-length arrays / associative arrays in memory, trading size against ease of insertion.
+The list must stay sorted by docID, so 14 belongs between 6 and 16: `1 2 4 5 6 14 16 57 132`. In a fixed-size array that means **shifting** 16, 57 and 132 one slot right — and if the array is full (Caesar's has 8 slots and 8 entries), you need a **bigger array**. Lists grow and shrink by term, so fixed-size arrays don't work: we need **variable-size postings lists** (L15 p14) — a continuous run on disk, and linked lists / variable-length arrays / associative arrays in memory, trading size against ease of insertion.
+
+</details>
 
 ### 12.2 Index Doc 1 and Doc 2 (L15 p21–23)
 
 Doc 1: *I did enact Julius Caesar I was killed i' the Capitol; Brutus killed me.* Doc 2: *So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious*. Build the dictionary (with doc. frequency) and postings.
 
-> ✍️ **Try it first.**
-
-**Solution.**
+<details>
+<summary>Solution</summary>
 
 1. Token sequence: 29 (term, docID) pairs, 14 from Doc 1 and 15 from Doc 2 (`I` counted twice, `killed` twice, `caesar` twice in Doc 2).
 2. Sort by term, then docID.
@@ -642,21 +644,27 @@ it         1   2            you        1   2
 
 22 terms. `killed` occurs twice in Doc 1 but has df = 1 and one posting — merging is per document. (The slide's sorted table shows `hath | 1`; it's 2.)
 
+</details>
+
 ### 12.3 How big is the index? (L15 p26)
 
 Vocabulary 50,000 tokens, average postings list size 20, docID = URL of about 50 characters ≈ 100 bytes in Python. How much memory do the postings take?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** Postings: 50,000 × 20 = 1,000,000. Bytes: 1,000,000 × 100 = 100,000,000 ≈ **100 MB** — before any payload (tf-idf, 4 bytes each, adds more). That's for 10⁶ postings; the web has far more than 10⁶ documents, so the index usually **does not fit in memory all at once**.
+Postings: 50,000 × 20 = 1,000,000. Bytes: 1,000,000 × 100 = 100,000,000 ≈ **100 MB** — before any payload (tf-idf, 4 bytes each, adds more). That's for 10⁶ postings; the web has far more than 10⁶ documents, so the index usually **does not fit in memory all at once**.
+
+</details>
 
 ### 12.4 Brutus AND Caesar by merging (L15 p30–32)
 
 Brutus → `2 4 8 16 32 64 128`, Caesar → `1 2 3 5 8 13 21 34`. Run INTERSECT.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** Pointer pairs (Brutus, Caesar):
+Pointer pairs (Brutus, Caesar):
 
 | Step | Compare | Action |
 |---|---|---|
@@ -674,13 +682,16 @@ Brutus → `2 4 8 16 32 64 128`, Caesar → `1 2 3 5 8 13 21 34`. Run INTERSECT.
 
 Answer **[2, 8]** after 11 comparisons, within the $x + y = 7 + 8 = 15$ bound. 128 is never looked at.
 
+</details>
+
 ### 12.5 The document score 303.01 (L15 p45 · L16 p8)
 
 Use $R(Q,D) = \sum_i g_i(Q) f_i(D)$ with the table in [§7](#7-indexes-and-ranking-the-abstract-model).
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** Only features with both an $f_i$ and a $g_i$ count (seaweed and surfboards have no query weight; chichlids and barbs aren't in the document):
+Only features with both an $f_i$ and a $g_i$ count (seaweed and surfboards have no query weight; chichlids and barbs aren't in the document):
 
 | Feature | $g_i(Q) \cdot f_i(D)$ |
 |---|---|
@@ -692,13 +703,16 @@ Use $R(Q,D) = \sum_i g_i(Q) f_i(D)$ with the table in [§7](#7-indexes-and-ranki
 
 $R = 50.44 + 14.28 + 218.79 + 16.80 + 2.70 = \mathbf{303.01}$, the slide's document score. The phrase feature *tropical fish* contributes most of it.
 
+</details>
+
 ### 12.6 Find the phrase "tropical fish" (L16 p11–13)
 
 tropical → `1,1 1,7 2,6 2,17 3,1`; fish → `1,2 1,4 2,7 2,18 2,23 3,2 3,6 4,3 4,13`. Where does the phrase occur?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** A phrase match needs `fish` at position $p+1$ in the same document as `tropical` at $p$:
+A phrase match needs `fish` at position $p+1$ in the same document as `tropical` at $p$:
 
 | tropical | needs fish at | found? |
 |---|---|---|
@@ -710,13 +724,18 @@ tropical → `1,1 1,7 2,6 2,17 3,1`; fish → `1,2 1,4 2,7 2,18 2,23 3,2 3,6 4,3
 
 The phrase occurs **4 times**, in **documents 1, 2 and 3**. Document 4 contains *fish* but not *tropical*, so a document-only index (`tropical 1 2 3`, `fish 1 2 3 4`) can't tell the phrase from the two words appearing anywhere — that's what positions buy.
 
+</details>
+
 ### 12.7 DocIDs as URLs vs integers (L16 p23–27)
 
 10,000 index terms, ~20 postings per term, average URL 51 characters (~100 bytes in Python 3), Python int 28 bytes. Compare the postings size.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** URLs: 10,000 × 20 × 100 = 20,000,000 bytes ≈ **20 MB**. Integers: 10,000 × 20 × 28 = 5,600,000 bytes ≈ **5.6 MB** — 28% of the URL version, so roughly 4× (100 / 28 ≈ 3.6) more postings fit in the same memory, and integers are much faster to sort and compare. The price: an auxiliary docID → URL map, saved to a file, to show results.
+URLs: 10,000 × 20 × 100 = 20,000,000 bytes ≈ **20 MB**. Integers: 10,000 × 20 × 28 = 5,600,000 bytes ≈ **5.6 MB** — 28% of the URL version, so roughly 4× (100 / 28 ≈ 3.6) more postings fit in the same memory, and integers are much faster to sort and compare. The price: an auxiliary docID → URL map, saved to a file, to show results.
+
+</details>
 
 ---
 

@@ -626,17 +626,21 @@ Apply the early methodology (tokens = runs of 3 or more alphanumeric characters;
 
 `Bigcorp's 2007 bi-annual report showed profits rose 10%.`
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** Split at every non-alphanumeric character (`'`, spaces, `-`, `%`, `.`) and lower-case: `bigcorp`, `s`, `2007`, `bi`, `annual`, `report`, `showed`, `profits`, `rose`, `10`. Drop the runs shorter than 3 — `s`, `bi`, `10`. Result: `bigcorp 2007 annual report showed profits rose`, 7 tokens, the slide's answer. Lost: the "bi" that changes "annual" and the 10% that was the news — "too generic". Back to [section 2](#2-tokenization).
+Split at every non-alphanumeric character (`'`, spaces, `-`, `%`, `.`) and lower-case: `bigcorp`, `s`, `2007`, `bi`, `annual`, `report`, `showed`, `profits`, `rose`, `10`. Drop the runs shorter than 3 — `s`, `bi`, `10`. Result: `bigcorp 2007 annual report showed profits rose`, 7 tokens, the slide's answer. Lost: the "bi" that changes "annual" and the 10% that was the news — "too generic".
+
+</details>
+
+Back to [section 2](#2-tokenization).
 
 ### 16.2 What happens to the tricky tokens? (L4 p11–12)
 
 Run each of the slide's examples through (a) "split on whitespace, then throw away punctuation" and (b) the early methodology. Which ones go wrong, and how?
 
-> ✍️ **Try it first.**
-
-**Solution.**
+<details>
+<summary>Solution</summary>
 
 | Input | (a) whitespace + drop punctuation | (b) early methodology (3+ alnum) |
 |---|---|---|
@@ -657,15 +661,22 @@ Rule (a) makes clear-headed match clearheaded but glues e-mails, URLs and IPs in
 {"title": "Tricky tokens under the early method (L4 p11)", "text": "O'Neill aren't clear-headed mother-in-law"}
 ```
 
+</details>
+
 Back to [section 2](#2-tokenization).
 
 ### 16.3 Precision or recall? (L5 p6–11 · L3.5 p7–14)
 
 The class poll: which is more important for a web search engine, precision (how relevant are the first few hits?) or recall (how many relevant hits are presented?). And when is recall the one that matters?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** **Precision**, for web search: users read in an F-shape and mostly stop at the first screen (85% look at one result screen; 41.2% give up by the end of page 1 in the iProspect survey), so the *top* hits decide quality. **Recall** matters **when completeness is required** — motivated users, trusted sources, the commitment pattern: search engines for **law** and the **sciences**. Back to [section 6](#61-precision-vs-recall).
+**Precision**, for web search: users read in an F-shape and mostly stop at the first screen (85% look at one result screen; 41.2% give up by the end of page 1 in the iProspect survey), so the *top* hits decide quality. **Recall** matters **when completeness is required** — motivated users, trusted sources, the commitment pattern: search engines for **law** and the **sciences**.
+
+</details>
+
+Back to [section 6](#61-precision-vs-recall).
 
 ### 16.4 Take the slide's URLs apart (L6 p25–28)
 
@@ -674,9 +685,8 @@ Using `scheme://domain:port/path?query_string#fragment_id`, give every part of
 (b) `http://calendar.ics.uci.edu/calendar.php?type=month&calendar=1&category=&month=02&year=2013`.
 What is the domain name in (b)? Which parts are mandatory?
 
-> ✍️ **Try it first.**
-
-**Solution.**
+<details>
+<summary>Solution</summary>
 
 | Part | (a) | (b) |
 |---|---|---|
@@ -689,13 +699,20 @@ What is the domain name in (b)? Which parts are mandatory?
 
 Domain name in (b): `uci.edu` (`ics`, `calendar` are subdomains). Only `scheme://domain` is mandatory. Same values as `urlsplit` and the demo in [section 12](#122-anatomy-of-a-url).
 
+</details>
+
 ### 16.5 URI, URL or URN? (L6 p23–24 · L3.5 p27–28)
 
 Classify `http://www.ics.uci.edu`, ISBN 0-486-27777-3 and `ftp://ftp.ics.uci.edu`.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** All three are **URIs**. `http://www.ics.uci.edu` and `ftp://ftp.ics.uci.edu` are **URLs** — they say **where** the resource is. The ISBN is a **URN** — it names **what** the book is, not where a copy is. Back to [section 12](#121-definitions).
+All three are **URIs**. `http://www.ics.uci.edu` and `ftp://ftp.ics.uci.edu` are **URLs** — they say **where** the resource is. The ISBN is a **URN** — it names **what** the book is, not where a copy is.
+
+</details>
+
+Back to [section 12](#121-definitions).
 
 ---
 

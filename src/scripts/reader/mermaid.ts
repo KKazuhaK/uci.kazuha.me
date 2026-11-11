@@ -198,8 +198,16 @@ function attachMermaidPanZoom(wrapper: HTMLElement, svg: SVGSVGElement, lang: La
   resizeHandle.addEventListener("pointerup", endResize);
   resizeHandle.addEventListener("pointercancel", endResize);
 
+  // A diagram inside a closed <details> (scripts/reader/details.ts) has no size
+  // yet: lay it out the first time it gets one.
   if (stage.clientWidth > 0 && stage.clientHeight > 0) initView();
-  else requestAnimationFrame(initView);
+  else if (typeof ResizeObserver === "undefined") requestAnimationFrame(initView);
+  else {
+    const ro = new ResizeObserver(() => {
+      if (stage.clientWidth > 0 && stage.clientHeight > 0) { ro.disconnect(); initView(); }
+    });
+    ro.observe(stage);
+  }
 }
 
 export async function applyMermaidRendering(container: HTMLElement, lang: Lang): Promise<void> {

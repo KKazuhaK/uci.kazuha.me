@@ -575,7 +575,8 @@ Slide bug: the statement must call the function, `(myClick)="clickMessage()"`. W
 - D. A and B
 - E. A and C
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: E (A and C).** The slides don't show the poll result; this was checked by compiling the three links (with straight quotes) in Angular 22 with `url = "https://example.com/page"`:
 
@@ -585,15 +586,24 @@ Slide bug: the statement must call the function, `(myClick)="clickMessage()"`. W
 | B `(href)="url"` | none ❌ — this is an *event* binding listening for an event called "href"; it never sets anything |
 | C `[href]="url"` | `https://example.com/page` ✅ — property binding |
 
-So D is wrong because of B. The repo's `app.html` uses form C for its link pills: `[href]="item.link"`. (Curly quotes on the slide would make the browser treat `“` as part of the value — always type straight quotes.) Back to [Section 7](#7-one-way-binding-interpolation-property-event).
+So D is wrong because of B. The repo's `app.html` uses form C for its link pills: `[href]="item.link"`. (Curly quotes on the slide would make the browser treat `“` as part of the value — always type straight quotes.)
+
+</details>
+
+Back to [Section 7](#7-one-way-binding-interpolation-property-event).
 
 ### 11.2 Question 2: Improving your portfolio with components (slides 45–47)
 
 *With a partner, discuss an idea for how you could improve your portfolio website with Angular components.*
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
-**The slide's example answer**: an old course website (linked below) where the entire site is inside an Angular component, and the header, body and footer are their own components — which makes re-using the header and footer content easy. For an A1-style portfolio, the same idea applies to anything repeated: a header/nav and footer used on every page, or a project card component with inputs (title, image, link) rendered once per project with `@for`. Back to [Section 10](#10-using-components-nesting-inputs-and-outputs).
+**The slide's example answer**: an old course website (linked below) where the entire site is inside an Angular component, and the header, body and footer are their own components — which makes re-using the header and footer content easy. For an A1-style portfolio, the same idea applies to anything repeated: a header/nav and footer used on every page, or a project card component with inputs (title, image, link) rendered once per project with `@for`.
+
+</details>
+
+Back to [Section 10](#10-using-components-nesting-inputs-and-outputs).
 
 > 🔗 **Go deeper**: [Example: an earlier IN4MATX 133 course website built with Angular](https://inf133-wi26.depstein.net/)
 
@@ -621,7 +631,8 @@ export class Dice {
 
 The app already places it: `app.html` has `<app-dice></app-dice>`, and `app.ts` imports `Dice`. The images `dice_1.png` … `dice_6.png` are in the project's `public/` folder.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Solution** (from `diceFinished.txt`). Model + controller, `dice.ts`:
 
@@ -665,6 +676,8 @@ The same component by hand in plain JS — press Next to roll:
 ```viz web-demo
 {"title": "Slide 48 · the finished Dice component (diceFinished.txt), by hand in plain JS", "html": "<p>Hello!</p>\n<button id=\"roll\">Click to roll the dice!</button>\n<p><img id=\"d1\" width=\"100\"><img id=\"d2\" width=\"100\"></p>\n<p id=\"total\"></p>", "css": "body { font-family: system-ui, sans-serif; }", "js": "const IMG = \"https://raw.githubusercontent.com/travislindenreid/INF33-Demos/main/W5_L2_Oct29_AngularComponents/w5l2-example/public/\";  // the repo's public/ folder\n// model (fields of class Dice)\nlet diceUrl1 = \"dice_1.png\";\nlet diceUrl2 = \"dice_1.png\";\nlet total = 2;\n\n// view: [src]=\"diceUrl1\", [src]=\"diceUrl2\", Total: {{total}}\nfunction render() {\n  document.getElementById(\"d1\").src = IMG + diceUrl1;\n  document.getElementById(\"d2\").src = IMG + diceUrl2;\n  document.getElementById(\"total\").textContent = \"Total: \" + total;\n}\n\n// controller: (click)=\"rollDice()\"\nfunction rollDice() {\n  var random = Math.floor(Math.random() * 6 + 1);\n  diceUrl1 = `dice_${random}.png`;\n  var random2 = Math.floor(Math.random() * 6 + 1);\n  diceUrl2 = `dice_${random2}.png`;\n  total = random + random2;\n  console.log(diceUrl1);\n  console.log(diceUrl2);\n  console.log(total);\n  render();  // Angular re-renders for you; by hand we must call it\n}\ndocument.getElementById(\"roll\").addEventListener(\"click\", rollDice);\nrender();\n", "steps": [{"note": "Click the button: rollDice() picks two random faces, updates the model, the view follows.", "js": "document.getElementById(\"roll\").click();"}], "height": 230, "interactive": true}
 ```
+
+</details>
 
 > 🧪 **Demo files**: [dice.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W5_L2_Oct29_AngularComponents/w5l2-example/src/app/dice/dice.ts) · [dice.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W5_L2_Oct29_AngularComponents/w5l2-example/src/app/dice/dice.html) · [diceFinished.txt](https://github.com/travislindenreid/INF33-Demos/blob/main/W5_L2_Oct29_AngularComponents/w5l2-example/src/app/dice/diceFinished.txt)
 

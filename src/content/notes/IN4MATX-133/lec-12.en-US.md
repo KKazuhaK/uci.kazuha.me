@@ -308,9 +308,14 @@ This lecture has no coding demos ("No code today!"). Slide 28 shows 0% on every 
 
 *Question: why might a business want a mobile app over a mobile website?* (open discussion, no answer options)
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
-**Answer** (from the deck's later slides): an app — a native one especially — gets what a website in the phone's browser can't: **device capabilities** (storage, camera, sensors through the SDK; even hybrid apps get "access to some device capabilities", slide 35), and, for native apps, **native UI elements** like the iOS context menu, an experience **congruent with the platform**, and the best performance (slides 11, 37, 39). The price is cost: separate development, tools and languages per platform (slide 38). That's why many businesses start with a mobile-friendly website and build a dedicated app later (slide 4). Back to [Section 1](#1-mobile-first-design).
+**Answer** (from the deck's later slides): an app — a native one especially — gets what a website in the phone's browser can't: **device capabilities** (storage, camera, sensors through the SDK; even hybrid apps get "access to some device capabilities", slide 35), and, for native apps, **native UI elements** like the iOS context menu, an experience **congruent with the platform**, and the best performance (slides 11, 37, 39). The price is cost: separate development, tools and languages per platform (slide 38). That's why many businesses start with a mobile-friendly website and build a dedicated app later (slide 4).
+
+</details>
+
+Back to [Section 1](#1-mobile-first-design).
 
 ### 12.2 Question 2: Best and worst performance (slides 27–29)
 
@@ -322,13 +327,16 @@ This lecture has no coding demos ("No code today!"). Slide 28 shows 0% on every 
 - D. Native will perform best, Compiled hybrid will perform worst
 - E. Native will perform best, WebView will perform worst
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: E.** Native is built for the specific hardware with the platform's own tools, and the deck recommends native "when performance … [is a] major concern" (slide 39). A compiled hybrid app also ends up as native code for each platform (slide 23), so it sits in between. A WebView app is a website running inside the phone's browser, and "performance issues" is the first weakness of hybrid apps (slide 36) — so it's the slowest.
 
 - A is wrong: compiled hybrid compiles *to* native code; it doesn't beat writing native directly.
 - B and C put WebView first, but WebView adds a browser layer between your code and the device.
 - D is the trap: compiled hybrid is the *middle* option, not the worst — it's the WebView app that doesn't become native code at all.
+
+</details>
 
 Back to [Section 6](#6-compiled-hybrid-apps).
 
@@ -338,9 +346,12 @@ Back to [Section 6](#6-compiled-hybrid-apps).
 
 *L12, Q2: If A5 was an open-ended web or app dev project, what would you build?* Assume you'd use Angular or Ionic + Angular to build a website or app.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
-**Answer**: an opinion poll — there is no correct answer. To decide between a website (Angular) and an app (Ionic + Angular), use the considerations in [Section 7](#7-choosing-a-development-approach) and the trade-offs in [Section 8](#8-pros-and-cons-hybrid-vs-native): does the idea need device capabilities (camera, geolocation — Capacitor plugins) or a mobile-app feel, or is a responsive website enough?
+An opinion poll — there is no correct answer. To decide between a website (Angular) and an app (Ionic + Angular), use the considerations in [Section 7](#7-choosing-a-development-approach) and the trade-offs in [Section 8](#8-pros-and-cons-hybrid-vs-native): does the idea need device capabilities (camera, geolocation — Capacitor plugins) or a mobile-app feel, or is a responsive website enough?
+
+</details>
 
 ## 13. Quick Reference & Top 5 Things to Remember
 

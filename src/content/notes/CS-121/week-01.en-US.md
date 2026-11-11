@@ -306,17 +306,27 @@ For each request, decide whether it's a database query or a search-engine query,
 3. "Find how to merge two lists in Python"
 4. "Find the graph of y=log(x)"
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** (1) is a **database** query: the data is structured (an accounts table with a numeric balance), the condition is formal logic (`balance > 100`), and the semantics are well-defined — every matching row is correct, none is missing. (2)–(4) are **search** queries: they are informal and ad hoc, and the engine must infer what they mean. Does "Canvas UCI" want the login page or the help pages? Which programming idiom counts as "merge"? A page *about* log(x), or a plot? There is no single correct answer set, only a ranking by relevance. Back to [section 5](#5-database-engines-vs-search-engines).
+(1) is a **database** query: the data is structured (an accounts table with a numeric balance), the condition is formal logic (`balance > 100`), and the semantics are well-defined — every matching row is correct, none is missing. (2)–(4) are **search** queries: they are informal and ad hoc, and the engine must infer what they mean. Does "Canvas UCI" want the login page or the help pages? Which programming idiom counts as "merge"? A page *about* log(x), or a plot? There is no single correct answer set, only a ranking by relevance.
+
+</details>
+
+Back to [section 5](#5-database-engines-vs-search-engines).
 
 ### 12.2 Which classic IR assumption breaks? (L3 p4–6)
 
 Classic IR maximizes $R(Q, D)$ over a fixed corpus, ignoring context and the user. For each fact about the Web, name the assumption it breaks: (a) the Web can't fit in any centralized memory; (b) pages change all the time; (c) some pages are written to game the ranking; (d) one search box serves everyone.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** (a) The corpus is centralized → **not centralized**. (b) The corpus is static → **not static**: the engine must update constantly. (c) Context is ignored → it **can't be**: this is *adversarial IR*, with information to avoid. (d) The user is ignored → it **can't be**: hugely divergent needs share one interface. Back to [section 7](#7-classic-ir-vs-web-ir).
+(a) The corpus is centralized → **not centralized**. (b) The corpus is static → **not static**: the engine must update constantly. (c) Context is ignored → it **can't be**: this is *adversarial IR*, with information to avoid. (d) The user is ignored → it **can't be**: hugely divergent needs share one interface.
+
+</details>
+
+Back to [section 7](#7-classic-ir-vs-web-ir).
 
 ---
 

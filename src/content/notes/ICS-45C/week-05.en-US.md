@@ -600,15 +600,30 @@ cppds leaves several exercises:
 
 **Q2 (Self Check Part I):** implement append (add to end). What's the complexity?
 
-A: naive implementation = O(n) — must traverse to the end.
+<details>
+<summary>Answer</summary>
+
+Naive implementation = O(n) — must traverse to the end.
+
+</details>
 
 **Q3 (Self Check Part II):** how do you make append O(1)?
 
-A: keep an extra `tail` pointer in the UnorderedList class; each append simply attaches after tail. But be careful: add (head insertion) must also be modified, because when inserting the first element into an empty list, both head and tail need to be updated.
+<details>
+<summary>Answer</summary>
+
+Keep an extra `tail` pointer in the UnorderedList class; each append simply attaches after tail. But be careful: add (head insertion) must also be modified, because when inserting the first element into an empty list, both head and tail need to be updated.
+
+</details>
 
 **Q4: what does an UnorderedList object contain?**
 
+<details>
+<summary>Answer</summary>
+
 ✅ **Correct answer**: an UnorderedList object **holds only one pointer to the first Node**. The Nodes themselves are individually allocated on the heap and can be scattered anywhere in memory.
+
+</details>
 
 ### 5.9 Complexity Summary
 
@@ -1473,6 +1488,9 @@ This is the **definition** of recursion. It sounds circular: "I want to write a 
 
 #### Q1: How many **recursive** calls are needed to sum vector `{2, 4, 6, 8, 10}`?
 
+<details>
+<summary>Answer</summary>
+
 ✅ **Correct answer: 4**
 
 Detailed explanation:
@@ -1490,6 +1508,8 @@ Wrong-option analysis:
 - **3**: misses one — the base-case call is also a call
 
 > 💡 **Key**: number of recursive calls = vector size − 1 (i.e., 5 − 1 = 4)
+
+</details>
 
 #### Q2: Write a recursive factorial function `fact(n)` returning n × (n−1) × ... × 1, with fact(0) = 1. **Which is the most appropriate base case**?
 

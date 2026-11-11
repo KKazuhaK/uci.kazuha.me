@@ -387,7 +387,8 @@ flowchart TB
 - D. `<div><p>I <strong>love</strong> HTML!</p></div>`
 - E. `<div><p>I </p><strong>love</strong><p> HTML!</p></div>`
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案：D**（幻灯片 20 公布）。每个标签都关闭了，且关闭顺序与打开顺序相反：`strong` 在 `p` 里，`p` 在 `div` 里。
 
@@ -404,6 +405,8 @@ flowchart TB
 {"title": "问题 1 · 先是选项 D，然后依次是 A、B、C、E（E 是 q1demo.html）", "html": "<div><p>I <strong>love</strong> HTML!</p></div>", "js": "console.log(document.body.innerHTML.split('<script')[0].trim());", "steps": [{"note": "选项 A。", "html": "<div><p>I <strong>love HTML!"}, {"note": "选项 B。", "html": "<div><p>I <strong>love</strong> HTML!</p>"}, {"note": "选项 C。", "html": "<div><p>I <strong>love<strong> HTML!<p><div>"}, {"note": "选项 E。", "html": "<div><p>I </p><strong>love</strong><p> HTML!</p></div>"}], "height": 120, "tab": "html"}
 ```
 
+</details>
+
 > 🧪 **Demo 文件**：[q1demo.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W1_L1_Sep29/q1demo.html)
 
 回到 [3.1 标签里套标签](#31-标签里套标签)。
@@ -418,7 +421,8 @@ flowchart TB
 - D. `<img src="vannevar.jpg" alt="">`
 - E. `<img src="vannevar.jpg" alt="A picture of Vannevar Bush, writer of 'As We May Think'">`
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案：A**（幻灯片 48 公布，并附注 “Depends on the context, really”）。运用 [8.2](#82-alt-文本准则) 中的准则：
 
@@ -427,6 +431,8 @@ flowchart TB
 - **C** 描述的是图片本身，而不是信息。
 - **D** — 空 alt 用于装饰性图片；这张照片承载着信息。
 - **E** — 开头多余，而且太长；如果 “writer of…” 这部分重要，应该放在周围的正文里。语境也可能改变结论：如果页面上这张图片*就是*该事实的唯一来源，那么多给一些细节可能是对的。
+
+</details>
 
 回到 [8.2 alt 文本准则](#82-alt-文本准则)。
 
@@ -445,7 +451,8 @@ Blackberries
 Red grapes
 ```
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **解答**（仓库里的 `shoppingList_complete.html`，与提交的版本完全一致）：
 
@@ -465,6 +472,8 @@ Red grapes
 ```
 
 它会渲染成预期的两层列表。要得到**合法**的版本，请像幻灯片 23 那样把内层 `<ul>` 移到水果的 `<li>` 里面（见 [3.2](#32-嵌套列表购物清单-demo) 中的易错点）；那里的 demo 会从 starter 一步步走到解答。
+
+</details>
 
 ## 11. 速查与必记的 5 个要点
 

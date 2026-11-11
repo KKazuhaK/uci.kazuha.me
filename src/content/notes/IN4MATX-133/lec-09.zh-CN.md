@@ -627,9 +627,14 @@ app.use(function(req, res, next) {
 - D. 以上两项
 - E. 以上全部
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
-**答案：B。**好的双因素身份验证会混合你*拥有*的因素和你*知道*的因素。A 是两样你拥有的东西（两份证件）；C 是两样你知道的东西——即“两个密码 ≠ 双因素身份验证”的情形。只有 B 将卡片（拥有）与 PIN（知道）配对，因此 D 和 E 都排除。（幻灯片没有显示公布的投票结果；这直接由幻灯片 25 推出。）返回[第 6 节](#6-身份验证与授权)。
+**答案：B。**好的双因素身份验证会混合你*拥有*的因素和你*知道*的因素。A 是两样你拥有的东西（两份证件）；C 是两样你知道的东西——即“两个密码 ≠ 双因素身份验证”的情形。只有 B 将卡片（拥有）与 PIN（知道）配对，因此 D 和 E 都排除。（幻灯片没有显示公布的投票结果；这直接由幻灯片 25 推出。）
+
+</details>
+
+返回[第 6 节](#6-身份验证与授权)。
 
 ### 12.2 演示 1：从 JSON 文件提供学生名单（幻灯片 14–15 · setup1 → solution1）
 
@@ -656,7 +661,8 @@ var server = http.createServer((req, res) => {
 server.listen(8080);
 ```
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案**（`solution1.js`）：在处理函数中读取文件、解析，然后用 `join` 连接数组：
 
@@ -682,7 +688,11 @@ server.listen(8080);
 Alice, Bob, Chester, Deepali, Eduardo, Francisco
 ```
 
-要点：`res.end` 必须放在回调**内部**（放在外部的话，会在文件被读取之前就已响应）；`join(', ')` 相当于 Python 的 `', '.join(...)`。从其他目录运行时会返回 404 `ENOENT`——请使用 `__dirname`。返回[第 3 节](#3-使用-node-读取文件)。
+要点：`res.end` 必须放在回调**内部**（放在外部的话，会在文件被读取之前就已响应）；`join(', ')` 相当于 Python 的 `', '.join(...)`。从其他目录运行时会返回 404 `ENOENT`——请使用 `__dirname`。
+
+</details>
+
+返回[第 3 节](#3-使用-node-读取文件)。
 
 > 🧪 **演示文件**：[setup1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W4_L2_Oct22_ServerAuth/setup1.js) · [solution1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W4_L2_Oct22_ServerAuth/solution1.js)
 
@@ -701,7 +711,8 @@ Alice, Bob, Chester, Deepali, Eduardo, Francisco
 - D. 1、3、4
 - E. 1、2、3、4
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案：D（1、3、4）**——这是讲座模型给出的答案；幻灯片没有显示公布的结果。
 
@@ -710,7 +721,11 @@ Alice, Bob, Chester, Deepali, Eduardo, Francisco
 - （3）✅ 浏览器请求的是*你的*服务器，由服务器发起请求——服务器不受该策略约束（[A3 架构](#91-架构)）。
 - （4）✅ 一个服务器，无论如何都与其在同一域中。
 
-陷阱在于 (2) 与 (3)：端口相同，但发起者不同。（服务器可以通过 CORS 头选择允许其他源，见幻灯片 79；此题假设它没有这样做。）返回[第 10 节](#10-同源策略)。
+陷阱在于 (2) 与 (3)：端口相同，但发起者不同。（服务器可以通过 CORS 头选择允许其他源，见幻灯片 79；此题假设它没有这样做。）
+
+</details>
+
+返回[第 10 节](#10-同源策略)。
 
 ## 13. 速查与必记的 5 个要点
 

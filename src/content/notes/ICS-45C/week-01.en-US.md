@@ -1000,7 +1000,8 @@ int main() {
 
 **Question:** Give the specific word describing each step in the lifetime of an object in C++.
 
-**Answer:**
+<details>
+<summary>Answer</summary>
 
 ```
 1) Birth
@@ -1013,6 +1014,8 @@ int main() {
 ```
 
 > ⚠️ It's **Destruction**, NOT ~~Deconstruction~~. -5 pts if you write "con".
+
+</details>
 
 ### 10.5 What This Quiz Tests
 

@@ -387,7 +387,8 @@ How would you specify a `<div>` with the `<p>` (paragraph) "I **love** HTML!"?
 - D. `<div><p>I <strong>love</strong> HTML!</p></div>`
 - E. `<div><p>I </p><strong>love</strong><p> HTML!</p></div>`
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: D** (revealed on slide 20). Every tag is closed, in reverse order of opening: `strong` inside `p` inside `div`.
 
@@ -404,6 +405,8 @@ Step through all five as the browser renders them; the console shows the parsed 
 {"title": "Question 1 · option D first, then A, B, C, E (E is q1demo.html)", "html": "<div><p>I <strong>love</strong> HTML!</p></div>", "js": "console.log(document.body.innerHTML.split('<script')[0].trim());", "steps": [{"note": "Option A.", "html": "<div><p>I <strong>love HTML!"}, {"note": "Option B.", "html": "<div><p>I <strong>love</strong> HTML!</p>"}, {"note": "Option C.", "html": "<div><p>I <strong>love<strong> HTML!<p><div>"}, {"note": "Option E.", "html": "<div><p>I </p><strong>love</strong><p> HTML!</p></div>"}], "height": 120, "tab": "html"}
 ```
 
+</details>
+
 > 🧪 **Demo files**: [q1demo.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W1_L1_Sep29/q1demo.html)
 
 Back to [3.1 Tags inside tags](#31-tags-inside-tags).
@@ -418,7 +421,8 @@ The slide shows a black-and-white portrait photo of Vannevar Bush. Which `alt` t
 - D. `<img src="vannevar.jpg" alt="">`
 - E. `<img src="vannevar.jpg" alt="A picture of Vannevar Bush, writer of 'As We May Think'">`
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: A** (revealed on slide 48, with the note "Depends on the context, really"). Applying the guidelines from [8.2](#82-alt-text-guidelines):
 
@@ -427,6 +431,8 @@ The slide shows a black-and-white portrait photo of Vannevar Bush. Which `alt` t
 - **C** describes the picture, not the information.
 - **D** — empty alt is for decorative images; this photo carries information.
 - **E** — redundant opener and too long; the "writer of…" part belongs in the surrounding text if it matters. Context could change this: on a page where the image *is* the only source of that fact, more detail may be right.
+
+</details>
 
 Back to [8.2 Alt text guidelines](#82-alt-text-guidelines).
 
@@ -445,7 +451,8 @@ Blackberries
 Red grapes
 ```
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Solution** (the repo's `shoppingList_complete.html`, exactly as committed):
 
@@ -465,6 +472,8 @@ Red grapes
 ```
 
 It renders as the intended two-level list. For a **valid** version, move the inner `<ul>` inside the fruits `<li>` as on slide 23 (see the pitfall in [3.2](#32-nested-lists-the-shopping-list-demo)); the demo there steps from starter to solution.
+
+</details>
 
 ## 11. Quick Reference & Top 5 Things to Remember
 

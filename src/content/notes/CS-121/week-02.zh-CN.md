@@ -626,17 +626,21 @@ print(urljoin(page, "somesite.html"))
 
 `Bigcorp's 2007 bi-annual report showed profits rose 10%.`
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** 在每个非字母数字字符处切分（`'`、空格、`-`、`%`、`.`），并转为小写：`bigcorp`、`s`、`2007`、`bi`、`annual`、`report`、`showed`、`profits`、`rose`、`10`。丢弃长度小于 3 的部分：`s`、`bi`、`10`。结果：`bigcorp 2007 annual report showed profits rose`，共 7 个词元，与幻灯片的答案一致。丢失的有：修饰 "annual" 的 "bi"，以及作为这条消息核心的 10%，即 "too generic"（过于粗糙）。返回[第 2 节](#2-分词)。
+在每个非字母数字字符处切分（`'`、空格、`-`、`%`、`.`），并转为小写：`bigcorp`、`s`、`2007`、`bi`、`annual`、`report`、`showed`、`profits`、`rose`、`10`。丢弃长度小于 3 的部分：`s`、`bi`、`10`。结果：`bigcorp 2007 annual report showed profits rose`，共 7 个词元，与幻灯片的答案一致。丢失的有：修饰 "annual" 的 "bi"，以及作为这条消息核心的 10%，即 "too generic"（过于粗糙）。
+
+</details>
+
+返回[第 2 节](#2-分词)。
 
 ### 16.2 棘手的词元会怎样（L4 p11–12）
 
 把幻灯片中的每个例子分别用 (a) "按空白切分，再丢掉标点" 和 (b) 早期方法处理。哪些会出错？错在哪里？
 
-> ✍️ **先自己试一试。**
-
-**解答。**
+<details>
+<summary>解答</summary>
 
 | 输入 | (a) 按空白切分 + 丢弃标点 | (b) 早期方法（3 个以上字母数字） |
 |---|---|---|
@@ -657,23 +661,29 @@ print(urljoin(page, "somesite.html"))
 {"title": "棘手词元在早期方法下的表现（L4 p11）", "text": "O'Neill aren't clear-headed mother-in-law"}
 ```
 
+</details>
+
 返回[第 2 节](#2-分词)。
 
 ### 16.3 精确率还是召回率？（L5 p6–11 · L3.5 p7–14）
 
 课堂投票：对于网页搜索引擎，哪个更重要，精确率（前几条结果的相关程度如何？）还是召回率（展示了多少相关结果？）？以及什么时候召回率才是重要的？
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** 对于网页搜索，是**精确率**：用户以 F 形阅读，并且大多数人只看第一屏（85% 的人只看一屏结果；在 iProspect 调查中，41.2% 的人在第一页结束时放弃），因此*最靠前的*结果决定质量。**召回率**在**需要完整性时**重要：动机强的用户、可信的信源、承诺式阅读模式，即**法律**和**科学**领域的搜索引擎。返回[第 6 节](#61-精确率与召回率)。
+对于网页搜索，是**精确率**：用户以 F 形阅读，并且大多数人只看第一屏（85% 的人只看一屏结果；在 iProspect 调查中，41.2% 的人在第一页结束时放弃），因此*最靠前的*结果决定质量。**召回率**在**需要完整性时**重要：动机强的用户、可信的信源、承诺式阅读模式，即**法律**和**科学**领域的搜索引擎。
+
+</details>
+
+返回[第 6 节](#61-精确率与召回率)。
 
 ### 16.4 拆解幻灯片中的 URL（L6 p25–28）
 
 使用 `scheme://domain:port/path?query_string#fragment_id` 的结构，给出以下每个 URL 的各个部分：（a）`http://www.ics.uci.edu/~lopes` 和（b）`http://calendar.ics.uci.edu/calendar.php?type=month&calendar=1&category=&month=02&year=2013`。（b）中的域名是什么？哪些部分是必需的？
 
-> ✍️ **先自己试一试。**
-
-**解答。**
+<details>
+<summary>解答</summary>
 
 | 组成部分 | (a) | (b) |
 |---|---|---|
@@ -686,13 +696,20 @@ print(urljoin(page, "somesite.html"))
 
 （b）中的域名：`uci.edu`（`ics`、`calendar` 是子域名）。只有 `scheme://domain` 是必需的。结果与 `urlsplit` 的输出以及[第 12.2 节](#122-url-的组成)中的演示相同。
 
+</details>
+
 ### 16.5 URI、URL 还是 URN？（L6 p23–24 · L3.5 p27–28）
 
 判断 `http://www.ics.uci.edu`、ISBN 0-486-27777-3 和 `ftp://ftp.ics.uci.edu` 分别是哪一类。
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>解答</summary>
 
-**解答。** 三者都是 **URI**。`http://www.ics.uci.edu` 和 `ftp://ftp.ics.uci.edu` 是 **URL**，它们说明资源**在哪里**。ISBN 是 **URN**，它命名的是这本书**是什么**，而不是某一本副本在哪里。返回[第 12.1 节](#121-定义)。
+三者都是 **URI**。`http://www.ics.uci.edu` 和 `ftp://ftp.ics.uci.edu` 是 **URL**，它们说明资源**在哪里**。ISBN 是 **URN**，它命名的是这本书**是什么**，而不是某一本副本在哪里。
+
+</details>
+
+返回[第 12.1 节](#121-定义)。
 
 ---
 

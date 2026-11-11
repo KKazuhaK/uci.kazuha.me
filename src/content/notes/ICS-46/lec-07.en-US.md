@@ -296,9 +296,12 @@ Implement the following methods of a deque on a circular array and update the fr
 
 **Challenge question:** how do we update the deque when dynamically resizing the circular array? (Adding to a full deque requires expanding capacity.)
 
-> ✍️ **Try it first.** Hint: keep `front` and the size `n`; then the back element is at `(front + n − 1) % capacity`.
+> Hint: keep `front` and the size `n`; then the back element is at `(front + n − 1) % capacity`.
 
-**Solution.** Track `front` and `n` (option 2 of [section 1.3](#13-full-vs-empty)). The rear slot is `(front + n) % capacity`.
+<details>
+<summary>Solution</summary>
+
+Track `front` and `n` (option 2 of [section 1.3](#13-full-vs-empty)). The rear slot is `(front + n) % capacity`.
 
 ```cpp
 void enqueueFront(const T& val) {
@@ -351,6 +354,8 @@ With doubling, each enqueue is **amortized O(1)** (the same argument as the Arra
 deque size=5 capacity=8 : -1 3 0 1 2
 ```
 
+</details>
+
 ### 8.2 Activity 2: Selection Sort (slide 21)
 
 **(a)** Using selection sort, sort the array with elements [12, 10, 16, 11, 9, 7]. Visualize your work for every iteration of the algorithm.
@@ -364,7 +369,8 @@ deque size=5 capacity=8 : -1 3 0 1 2
 
 (Lecture 6's Activities 3 and 4 ask the same questions.)
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
 **Solution (a).** After each iteration i (the sorted prefix is `arr[0…i]`):
 
@@ -383,12 +389,19 @@ That is 15 comparisons (5 + 4 + 3 + 2 + 1 = 6·5/2) and 5 swaps. Check it below:
 {"title": "Activity 2(a): selection sort on [12, 10, 16, 11, 9, 7]", "array": [12, 10, 16, 11, 9, 7]}
 ```
 
+</details>
+
+<details>
+<summary>Solution</summary>
+
 **Solution (b).**
 
 - Worst case **O(n²)**: n(n−1)/2 comparisons, n − 1 exchanges (O(n)).
 - Already sorted: **no help**, still n(n−1)/2 comparisons, O(n²). The scan for the minimum always runs to the end.
 - **In place:** yes. O(1) extra memory (`i`, `j`, `min`).
 - **Not stable:** swapping `arr[i]` with a far-away minimum can jump `arr[i]` over an equal key (`5♥ 5♠ 2♥` → `2♥ 5♠ 5♥`). See [section 5](#5-selection-sort).
+
+</details>
 
 ### 8.3 Activity 3: Insertion Sort (slide 27)
 
@@ -401,7 +414,8 @@ That is 15 comparisons (5 + 4 + 3 + 2 + 1 = 6·5/2) and 5 swaps. Check it below:
 
 (Lecture 6's Activities 5 and 6 ask the same questions.)
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
 **Solution (a).** After each pass i (the sorted prefix is `arr[0…i]`, the inserted element in bold):
 
@@ -420,11 +434,18 @@ Total: 14 comparisons, 12 swaps. 12 is the number of inversions in the input. Ch
 {"title": "Activity 3(a): insertion sort on [12, 10, 16, 11, 9, 7]", "array": [12, 10, 16, 11, 9, 7]}
 ```
 
+</details>
+
+<details>
+<summary>Solution</summary>
+
 **Solution (b).**
 
 - **Worst case O(n²)**, when the input is **reverse sorted**: element i is swapped all the way to the front, so n(n−1)/2 comparisons and n(n−1)/2 exchanges.
 - **Best case O(n)**, when the input is **already sorted**: each pass does one comparison, then `break`. That is n − 1 comparisons and 0 exchanges.
 - The trap: selection sort's best case is still O(n²). Insertion sort's `break` is what makes its best case linear.
+
+</details>
 
 ---
 

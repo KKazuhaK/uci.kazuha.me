@@ -425,7 +425,12 @@ private:
 
 Given n distinct numbers, how many unordered duplets sum to 0? How many of each type of operation (variable declaration, assignment, less than, equal to, array access, increment) as a function of **n**? (Code as in [§1](#1-the-2-sum-problem-counting-operations).)
 
-**Solution.** Declarations $n+2$, assignments $n+2$, `<` $(n+1)(n+2)/2$, `==` $n(n-1)/2$, array accesses $n(n-1)$, increments $n(n+1)/2$ to $n^2$. Key reason: the inner body runs once per pair, $n(n-1)/2$ times, and each loop test runs once more than its body. Tilde: $\sim n^2$ array accesses.
+<details>
+<summary>Solution</summary>
+
+Declarations $n+2$, assignments $n+2$, `<` $(n+1)(n+2)/2$, `==` $n(n-1)/2$, array accesses $n(n-1)$, increments $n(n+1)/2$ to $n^2$. Key reason: the inner body runs once per pair, $n(n-1)/2$ times, and each loop test runs once more than its body. Tilde: $\sim n^2$ array accesses.
+
+</details>
 
 ### 9.2 Slide questions: reading bounds off a graph (slides 8, 11, 12)
 
@@ -433,13 +438,19 @@ Given n distinct numbers, how many unordered duplets sum to 0? How many of each 
 **(b)** (slide 11) Big-Omega of $f_1(n)$ and $f_2(n)$?
 **(c)** (slide 12) Big-Theta of $f_1(n)$ and $f_2(n)$?
 
-**Solution.** (a) Only $n^2$ — no constant multiple of a line stays above a curve that grows faster; $n$ and $4n$ are the same class anyway. (b) $f_1 = \Omega(1)$ (infinitely many tiny values), $f_2 = \Omega(n)$. (c) $f_1$: O(n) but Ω(1), so **Θ undefined**; $f_2 = \Theta(n)$.
+<details>
+<summary>Solution</summary>
+
+(a) Only $n^2$ — no constant multiple of a line stays above a curve that grows faster; $n$ and $4n$ are the same class anyway. (b) $f_1 = \Omega(1)$ (infinitely many tiny values), $f_2 = \Omega(n)$. (c) $f_1$: O(n) but Ω(1), so **Θ undefined**; $f_2 = \Theta(n)$.
+
+</details>
 
 ### 9.3 Activity 1: Big-O, Big-Omega, Big-Theta (slide 14)
 
 Given an array of n 3-digit integers in random order, describe the time complexity in terms of Big-O, Big-Omega, Big-Theta for: (a) 1. print all elements to std::out; 2. search the (unsorted) array for a number. (b) Big-O of: 1. T(n) = 7n − 2000; 2. T(n) = n³ + 46n² + 10000; 3. T(n) = 3 log n + 5n.
 
-**Solution.**
+<details>
+<summary>Solution</summary>
 
 | Task | O | Ω | Θ |
 |---|---|---|---|
@@ -448,17 +459,29 @@ Given an array of n 3-digit integers in random order, describe the time complexi
 
 (b) 1. O(n) (−2000 only matters for small n). 2. O(n³). 3. O(n) (log n grows slower than n).
 
+</details>
+
 ### 9.4 ArrayList trace: "What should happen?" (slides 27–35)
 
 Starting from `ArrayList a1;`, predict contents, size and capacity after: `add("ICS46")`, `add("Rocks")`, `add("!")`, `add(1, "Throws")`, `add(3, "?")`, then three `remove()`s.
 
-**Solution.** 1/2 → 2/2 (full) → `!` triggers doubling: 3/4 → Throws shifts Rocks, ! right: 4/4 → `?` triggers doubling to 8, `!` shifts: [ICS46, Throws, Rocks, ?, !] 5/8 → removes return `!`, `?`, `Rocks`; at 2/8 = ¼ capacity halves: [ICS46, Throws] 2/4. Table: [§6.3](#63-trace-slides-2735).
+<details>
+<summary>Solution</summary>
+
+1/2 → 2/2 (full) → `!` triggers doubling: 3/4 → Throws shifts Rocks, ! right: 4/4 → `?` triggers doubling to 8, `!` shifts: [ICS46, Throws, Rocks, ?, !] 5/8 → removes return `!`, `?`, `Rocks`; at 2/8 = ¼ capacity halves: [ICS46, Throws] 2/4. Table: [§6.3](#63-trace-slides-2735).
+
+</details>
 
 ### 9.5 Activity 2: Amortized Analysis - increase by 1 (slide 44)
 
 What is the amortized time complexity of ArrayList's `add()` if we only add 1 additional element when it's full?
 
-**Solution.** **Θ(n) per add.** The array is full before every add, so the (k+1)-th add copies k elements: total $n + n(n-1)/2 = \Theta(n^2)$, divided by n. Doubling gives ≤ 3n total, O(1) amortized.
+<details>
+<summary>Solution</summary>
+
+**Θ(n) per add.** The array is full before every add, so the (k+1)-th add copies k elements: total $n + n(n-1)/2 = \Theta(n^2)$, divided by n. Doubling gives ≤ 3n total, O(1) amortized.
+
+</details>
 
 ---
 

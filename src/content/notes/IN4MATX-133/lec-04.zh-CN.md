@@ -382,17 +382,27 @@ img {
 - D. 自适应性能更好，也更容易开发
 - E. 没有区别（这个答案是错的）
 
-> ✍️ **先自己试试。**
+<details>
+<summary>答案</summary>
 
-**答案：C**（幻灯片 16 上有标注）。自适应只给每台设备发送为它专门做的代码，所以加载量更小；响应式则要在所有设备上下载整个样式表。但响应式只有一套代码库，而自适应意味着要维护多套。A 和 B 把性能说反了；D 忽略了维护多套代码库的成本。回到[第 2 节](#2-自适应设计与响应式设计)。
+**答案：C**（幻灯片 16 上有标注）。自适应只给每台设备发送为它专门做的代码，所以加载量更小；响应式则要在所有设备上下载整个样式表。但响应式只有一套代码库，而自适应意味着要维护多套。A 和 B 把性能说反了；D 忽略了维护多套代码库的成本。
+
+</details>
+
+回到[第 2 节](#2-自适应设计与响应式设计)。
 
 ### 16.2 问题 2：炉石传说用响应式还是自适应？（幻灯片 18）
 
 假设你在开发《炉石传说》（Hearthstone）这款电子游戏，它既可以在手机上玩（左图），也可以在桌面上玩（右图）。你用来制作这款游戏的工具可以轻松地把同一个游戏项目导出为能在手机或 PC 上运行的可执行文件。你会采用响应式还是自适应设计？为什么？*（2 分钟自己思考；5 分钟与同学讨论。）*
 
-> ✍️ **先自己试试。**
+<details>
+<summary>答案</summary>
 
-**答案**（讨论题；幻灯片 19 给出了要点）：对于不同的**平台**（手机与 PC），游戏通常会**重新设计界面——即自适应**——因为小屏幕上的触摸操作和大屏幕上的鼠标操作需要不同的布局（两张截图展示了不同的牌桌和操作控件）。而在同一个平台内，**响应式**设计负责处理众多分辨率。但也不绝对：导出为网页版和桌面版的游戏往往只做响应式。回到[第 2 节](#2-自适应设计与响应式设计)。
+**答案**（讨论题；幻灯片 19 给出了要点）：对于不同的**平台**（手机与 PC），游戏通常会**重新设计界面——即自适应**——因为小屏幕上的触摸操作和大屏幕上的鼠标操作需要不同的布局（两张截图展示了不同的牌桌和操作控件）。而在同一个平台内，**响应式**设计负责处理众多分辨率。但也不绝对：导出为网页版和桌面版的游戏往往只做响应式。
+
+</details>
+
+回到[第 2 节](#2-自适应设计与响应式设计)。
 
 ### 16.3 演示 1：响应式课程表（幻灯片 44 · setup1 → solution1）
 
@@ -404,7 +414,8 @@ img {
 
 起始代码是一个普通的 `<table>`（周一到周五的表头行，然后是两行单元格，里面是 Discussion / Lecture / Assignment due 的 `<div>`），并在 `setup1.css` 之前从 CDN 链接了 Bootstrap 5.1.3。
 
-> ✍️ **先自己试试。**
+<details>
+<summary>答案</summary>
 
 **答案**（`solution1.html`；CSS 不变）。只添加了类：
 
@@ -435,6 +446,8 @@ img {
 ```viz web-demo
 {"title": "Slide 44 · Demo 1 solution1.html (Bootstrap 5.3 here; the repo loads 5.1.3)", "libs": ["bootstrap"], "html": "<div>\n   <h1>My 133 Schedule</h1>\n   <table class=\"container\">\n      <tr class=\"row\">\n         <th class=\"d-none d-md-block col-md-2\">Monday</th>\n         <th class=\"d-none d-md-block col-md-2\">Tuesday</th>\n         <th class=\"d-none d-md-block col-md-2\">Wednesday</th>\n         <th class=\"d-none d-md-block col-md-2\">Thursday</th>\n         <th class=\"d-none d-md-block col-md-2\">Friday</th>\n      </tr>\n      <tr class=\"row\">\n         <td class=\"col-md-2\">\n            <div class=\"discussion\">Discussion</div>\n         </td>\n         <td class=\"col-md-2\">\n            <div class=\"lecture\">Lecture</div>\n         </td>\n         <td class=\"col-md-2\">\n\n         </td>\n         <td class=\"col-md-2\">\n            <div class=\"lecture\">Lecture</div>\n         </td>\n         <td class=\"col-md-2\">\n         </td>\n      </tr>\n      <tr class=\"row\">\n         <td class=\"col-md-2\">\n            <div class=\"discussion\">Discussion</div>\n            <div id=\"a1\">Assignment due</div>\n         </td>\n         <td class=\"col-md-2\">\n            <div class=\"lecture\">Lecture</div>\n         </td>\n         <td class=\"col-md-2\">\n\n         </td>\n         <td class=\"col-md-2\">\n            <div class=\"lecture\">Lecture</div>\n         </td>\n         <td class=\"col-md-2\">\n         </td>\n      </tr>\n   </table>\n</div>\n", "css": "td, th {\n\tborder-width: 1px;\n\tborder-style: solid;\n}\n\nth {\n\tfont-size: 150%;\n\tpadding: 5px;\n}\n\n.discussion {\n\tbackground-color: limegreen;\n\tmargin: 5px;\n}\n\n.lecture {\n\tbackground-color: royalblue;\n\tcolor: white;\n\tmargin: 5px;\n}\n\n#a1 {\n\tbackground-color: saddlebrown;\n\tcolor: white;\n\tmargin: 5px;\n}\n", "width": 375, "height": 330, "steps": [{"note": "md and up (1000px): header row visible, every cell is col-md-2.", "width": 1000}]}
 ```
+
+</details>
 
 > 🧪 **演示文件**：[setup1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L1_Oct6_Bootstrap/setup1.html) · [setup1.css](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L1_Oct6_Bootstrap/setup1.css) · [solution1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L1_Oct6_Bootstrap/solution1.html) · [solution1.css](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L1_Oct6_Bootstrap/solution1.css)
 
@@ -484,7 +497,8 @@ C.
 - D. A 和 B
 - E. B 和 C
 
-> ✍️ **先自己试试。**
+<details>
+<summary>答案</summary>
 
 **答案：B**（幻灯片 48 上有标注；已通过渲染仓库中的 `q2.html` 验证，该文件包含这三个选项，且使用的是直引号）。
 
@@ -501,6 +515,8 @@ C.
 ```
 
 > ⚠️ **易错点**：幻灯片版本里含有弯引号（`col-sm-12”`、`“col-sm-6`）——照抄的话会破坏标记（元素丢失类，或者类的值一直延伸到下一个标签里）。仓库中的 `q2.html` 已经修正了它们。
+
+</details>
 
 > 🧪 **演示文件**：[q2.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L1_Oct6_Bootstrap/q2.html) · [q2.css](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L1_Oct6_Bootstrap/q2.css)
 

@@ -571,14 +571,19 @@ bulbasaur charmander
 - D. `HTTP POST https://pokeapi.co/api/v2/pokemon/mr. mime`
 - E. `HTTP POST https://pokeapi.co/api/v2/pokemon/mr%2E%20mime`
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案：C。** 有两个决定：动词和编码。
 
 - *读取*资源用 **GET**；POST 用于添加新资源 → D 和 E 排除。
 - “如果我们确实需要编码”：空格变为 `%20`，句点变为 `%2E` → C。A 中留下了未经转义的空格；B 去掉了字符，这正是 PokeAPI 对 Farfetch'd 的做法，但那不是“编码”。
 
-（脱离假设：PokeAPI 中这只宝可梦的实际名称是 `mr-mime`；`/pokemon/mrmime` 会返回 404。）返回 [第 4 节](#4-url-中的字符转义)。
+（脱离假设：PokeAPI 中这只宝可梦的实际名称是 `mr-mime`；`/pokemon/mrmime` 会返回 404。）
+
+</details>
+
+返回 [第 4 节](#4-url-中的字符转义)。
 
 ### 14.2 问题 2：哪些主体可以向 Spotify API 发出 HTTP 请求？（幻灯片 48–50）
 
@@ -595,7 +600,8 @@ bulbasaur charmander
 - D. 1, 3, 4
 - E. 1, 2, 3, 4
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案：B（1, 4）。** 幻灯片并未显示投票结果；这是根据幻灯片 43–47 推导出的答案。
 
@@ -604,13 +610,16 @@ bulbasaur charmander
 - (3) ❌ 陷阱：服务端 JavaScript 并不在浏览器*中*运行（它运行在命令行中，例如 Node）。“带有服务端 JS 的浏览器”仍然受该策略约束。
 - (4) ✅ 服务器不受同源限制（而且它本身就在 Spotify 的域名下）。
 
+</details>
+
 返回 [第 11 节](#11-客户端与服务端-js以及同源策略)。
 
 ### 14.3 演示 1：来自未来的问候（幻灯片 36 · setup1 → solution1）
 
 任务（`setup1.js` 只有这一行注释）：*使用一个 Promise，在 JavaScript 加载 5 秒后，通过将字符串作为 Promise 的结果返回，打印 “Hello from the future!”。这里不使用 `fetch()`——只在 Promise 完成后使用 `.then()`。*
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案**（`solution1.js`）：
 
@@ -628,7 +637,11 @@ hello.then((text) => {
 });
 ```
 
-输出：`Hello from the present!` 立即出现，`Hello from the future!` 在 5 秒后出现。关键点：`.then` 会立即注册，但其回调只有在调用 `resolve` 之后才会运行；与此同时，脚本的其余部分会继续执行。返回 [第 9.1 节](#91-自己写一个-promise演示-1)。
+输出：`Hello from the present!` 立即出现，`Hello from the future!` 在 5 秒后出现。关键点：`.then` 会立即注册，但其回调只有在调用 `resolve` 之后才会运行；与此同时，脚本的其余部分会继续执行。
+
+</details>
+
+返回 [第 9.1 节](#91-自己写一个-promise演示-1)。
 
 ### 14.4 演示 2：按顺序获取前 25 只宝可梦（幻灯片 41 · setup2 → solution2）
 
@@ -650,7 +663,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 ```
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案**（`solution2.js`）：
 
@@ -667,7 +681,11 @@ function getPokemon(pokedexNumber) {
 }
 ```
 
-而 `DOMContentLoaded` 处理函数只调用 `getPokemon(1)`。用到的字段：`id`、`name`、`sprites.front_default`（图片 URL）。为什么要用递归：如果用循环，全部 25 个请求会同时在途，并且乱序到达；而在第 n 个的回调中请求第 n+1 个，就把它们**串行化**了，因此列表始终是 1 → 25（代价是更慢——一次只有一个请求）。返回 [第 10.4 节](#104-获取宝可梦演示-2)。
+而 `DOMContentLoaded` 处理函数只调用 `getPokemon(1)`。用到的字段：`id`、`name`、`sprites.front_default`（图片 URL）。为什么要用递归：如果用循环，全部 25 个请求会同时在途，并且乱序到达；而在第 n 个的回调中请求第 n+1 个，就把它们**串行化**了，因此列表始终是 1 → 25（代价是更慢——一次只有一个请求）。
+
+</details>
+
+返回 [第 10.4 节](#104-获取宝可梦演示-2)。
 
 ## 15. 速查与必记的 5 个要点
 

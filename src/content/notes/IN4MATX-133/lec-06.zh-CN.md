@@ -525,7 +525,8 @@ npm install -g packagename
 - **D** 以上有两个
 - **E** 以上全部
 
-> ✍️ **先自己试试。**
+<details>
+<summary>答案</summary>
 
 **答案：D**（A 和 C；幻灯片 25 的揭晓页高亮了 A、C 和 D）。
 
@@ -538,6 +539,8 @@ npm install -g packagename
 ```viz web-demo
 {"title": "Question 1 · each option run on a fresh copy of the p (q1.js)", "html": "<p class=\"para\" id=\"intro\">1, 2, 3</p>", "js": "var p = document.getElementById(\"intro\");\n\n// A\ndocument.getElementById(\"intro\").append(\", 4, 5\");\nconsole.log(\"A:\", p.innerHTML);\np.innerHTML = \"1, 2, 3\"; // reset\n\n// B\ndocument.getElementsByClassName(\"para\").innerHTML = \"1, 2, 3, 4, 5\";\nconsole.log(\"B:\", p.innerHTML);\np.innerHTML = \"1, 2, 3\"; // reset\n\n// C\ndocument.getElementsByTagName(\"p\")[0].innerHTML = \"1, 2, 3, 4, 5\";\nconsole.log(\"C:\", p.innerHTML);", "height": 60}
 ```
+
+</details>
 
 > 🧪 **示例文件**：[q1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/q1/q1.html) · [q1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/q1/q1.js)
 
@@ -568,7 +571,8 @@ function addNewParagraph () {
 }
 ```
 
-> ✍️ **先自己试试。**
+<details>
+<summary>答案</summary>
 
 **答案**（来自 `solution1.js`）：
 
@@ -614,6 +618,8 @@ function addNewParagraph () {
 {"title": "Demo 1 · solution1.js (runJS() called directly instead of body onload)", "css": ".title {\n    font-style: italic;\n}\n\n#body {\n    font-family: 'Arial';\n}", "html": "<h1>Hello, IN4MATX 133!</h1>\n<div id=\"body\">\n    <p id=\"first\">Fill in this paragraph and add another one.</p>\n</div>", "js": "\nfunction runJS() {\n    setTimeout(makeTitleBlue, 1000);\n\n    setTimeout(addLoremIpsum, 2000);\n\n    setTimeout(addNewParagraph, 3000);\n}\n\nfunction makeTitleBlue () {\n    var h1Tags = document.getElementsByTagName('h1');\n    // interesting note: HTMLCollection, which getElementsByTagName returns, does NOT have a foreach() method\n    // but NodeList, which querySelector returns, does\n    for(var i = 0; i< h1Tags.length; i++) {\n        h1Tags[i].classList.add('title');\n        h1Tags[i].style.color = 'blue';\n    }\n}\n\nfunction addLoremIpsum () {\n    var firstTag = document.getElementById('first');\n    firstTag.textContent = 'Lorem ipsum';\n}\n\nfunction addNewParagraph () {\n    var div = document.getElementById('body');\n    var newEl = document.createElement('p');\n    newEl.textContent = 'A new paragraph';\n    newEl.classList.add('title');\n    div.appendChild(newEl);\n}\n\nrunJS(); // in the repo: <body onload=\"runJS()\">", "height": 160}
 ```
 
+</details>
+
 > 🧪 **示例文件**：[setup1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/demo1/setup1.html) · [setup1.css](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/demo1/setup1.css) · [setup1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/demo1/setup1.js) · [solution1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/demo1/solution1.html) · [solution1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/demo1/solution1.js)
 
 回到 [6. 修改 DOM 树](#6-修改-dom-树)。
@@ -635,12 +641,15 @@ function addNewParagraph () {
 | D | 1, 2, 3 | 2, 3, 4 |
 | E | 1 | 1, 4 |
 
-> ✍️ **先自己试试。**
+<details>
+<summary>答案</summary>
 
 **答案：B**（幻灯片 51 揭晓）。
 
 - **本地安装**会改动项目：下载到 `node_modules/`（1），在 `package.json` 中记录该包（2），并在 `package-lock.json` 中锁定它的依赖（3）。我测试 `npm install moment` 时这三件事都发生了。
 - **全局安装**是“只是你电脑上的软件”：它给你一个命令行程序（4），并且**不会改动**项目的任何文件。这就排除了 A 和 E（全局安装不使用项目的 `node_modules`）以及 D（全局安装不会编辑 `package.json` 或 lock 文件）。C 没有考虑到本地安装还会更新那两个 JSON 文件。
+
+</details>
 
 回到 [11. npm](#11-npm)。
 

@@ -602,15 +602,30 @@ cppds 留了几个练习题：
 
 **Q2 (Self Check Part I)：**实现 append（添加到末尾）。复杂度是多少？
 
-答：朴素实现 = O(n)，因为必须 traverse 到末尾。
+<details>
+<summary>答案</summary>
+
+朴素实现 = O(n)，因为必须 traverse 到末尾。
+
+</details>
 
 **Q3 (Self Check Part II)：**如何让 append 变成 O(1)？
 
-答：在 UnorderedList 类里**额外保存一个 `tail` 指针**，每次 append 直接挂到 tail 后面。但这样要小心：add（头插）也要相应修改，因为初始空表插入第一个元素时 head 和 tail 都要更新。
+<details>
+<summary>答案</summary>
+
+在 UnorderedList 类里**额外保存一个 `tail` 指针**，每次 append 直接挂到 tail 后面。但这样要小心：add（头插）也要相应修改，因为初始空表插入第一个元素时 head 和 tail 都要更新。
+
+</details>
 
 **Q4：UnorderedList 对象包含什么？**
 
+<details>
+<summary>答案</summary>
+
 ✅ **正确答案**：UnorderedList 对象**只持有一个指向第一个 Node 的指针**。Node 本身在堆上各自分配，可以散落在内存任何位置。
+
+</details>
 
 ### 5.9 复杂度小结
 
@@ -1477,6 +1492,9 @@ base case 是**让递归停下来**的条件，通常是问题小到可以**直�
 
 #### Q1：计算 vector `{2, 4, 6, 8, 10}` 之和需要多少次**递归**调用？
 
+<details>
+<summary>答案</summary>
+
 ✅ **正确答案：4 次**
 
 详细解释：
@@ -1494,6 +1512,8 @@ vectsum({2,4,6,8,10})       ← 初始调用，不计入递归
 - **3**：少算了一次——base case 那次也是一次调用
 
 > 💡 **要点**：递归调用数 = vector 大小 - 1（即 5 - 1 = 4）
+
+</details>
 
 #### Q2：写一个递归求阶乘的函数 `fact(n)`，返回 n × (n-1) × ... × 1，且 fact(0) = 1。**最合适的 base case** 是哪个？
 

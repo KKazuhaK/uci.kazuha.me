@@ -268,9 +268,14 @@ Slack extra credit is evaluated holistically at the end of the quarter: you must
 
 Slide 6: *"There are lot of languages and development frameworks. Why do most people use web tools?"* — asked again as a Think & Share on slide 38: *"Why are web tools now the standard for interface development?"* (open discussion, no answer options).
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
-**Answer** (the slides' own, p39–42): **ubiquitous computing**. One person now uses many devices synced over the cloud. Every platform needs to talk to the cloud (HTTP requests, which JavaScript gave early tools for) and most have a browser; HTML renders the data and CSS styles it. A shared language and environment lets developers write once, deploy to many platforms, and customize per device. Back to [section 6](#6-why-web-tools-are-the-standard).
+**Answer** (the slides' own, p39–42): **ubiquitous computing**. One person now uses many devices synced over the cloud. Every platform needs to talk to the cloud (HTTP requests, which JavaScript gave early tools for) and most have a browser; HTML renders the data and CSS styles it. A shared language and environment lets developers write once, deploy to many platforms, and customize per device.
+
+</details>
+
+Back to [section 6](#6-why-web-tools-are-the-standard).
 
 ## 10. Quick Reference & Top 5 Things to Remember
 

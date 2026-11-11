@@ -676,7 +676,8 @@ ZOT!
   }
   ```
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案：C**（在幻灯片 27 公布；仓库里的 `q1answer.css` 就是选项 C）。
 
@@ -704,6 +705,8 @@ ZOT!
 {"title": "Question 1 check · q1answer.html + q1answer.css (option C)", "html": "    <p class=\"para\">ZOT! ZOT! <em id=\"zot\">ZOT!</em></p>", "css": ".para {\n    font-family: Verdana;\n    background-color: #0064a4;\n    color: white;\n}\n\nem {\n    color: #ffd200;\n    font-weight: 700;\n}", "js": "const s = el => { const c = getComputedStyle(el); return c.color + ' on ' + c.backgroundColor + ', ' + c.fontStyle + ', weight ' + c.fontWeight; };\nconsole.log('p:  ' + s(document.querySelector('p')));\nconsole.log('em: ' + s(document.querySelector('em')));", "height": 80}
 ```
 
+</details>
+
 > 🧪 **Demo 文件**：[q1answer.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W1_L2_Oct1_CSS/q1answer.html) · [q1answer.css](https://github.com/travislindenreid/INF33-Demos/blob/main/W1_L2_Oct1_CSS/q1answer.css)
 
 返回 [§3 元素、类与 ID 选择器](#3-元素类与-id-选择器)。
@@ -720,7 +723,8 @@ ZOT!
 
 关键的标记：表头单元格是 `<th>`，方块是 `<div class="discussion">`、`<div class="lecture">` 和 `<div id="a1">`。
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案**（`solution1.css`）：
 
@@ -746,6 +750,8 @@ th {
 
 根据 HTML 提供的信息选择选择器：每个表头单元格用标签（`th`），重复出现的方块用 class（`.lecture`），唯一的作业用 id（`#a1`）。结果：更大的星期名称、绿色的 Discussion 方块、带白字的蓝色 Lecture 方块、带白字的棕色“Assignment due”方块。逐步 demo 见 [§4](#4-常用属性给课程表设置样式)。
 
+</details>
+
 ### 12.3 Demo 2：边框、padding 与 margin（幻灯片 38 · setup2 → solution2）
 
 `setup2.css` 以 Demo 1 的解答为起点。任务：
@@ -754,9 +760,10 @@ th {
 - 给表头单元格加 5 像素的 padding
 - 给所有 discussion、lecture 和 assignment 加 5 像素的 margin
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
-**答案**——`solution2.css` 新增的行：
+`solution2.css` 新增的行：
 
 ```css
 td, th {
@@ -774,6 +781,8 @@ th {
 ```
 
 “所有单元格”指 `td` 和 `th` 两者，所以用一条带选择器列表的规则。padding 在表头的边框内部；margin 在每个彩色方块的外部，把它从单元格边缘推开 5px——方块不再贴着边框。逐步 demo 见 [§6.2](#62-盒模型box-model)。
+
+</details>
 
 ## 13. 速查与必记的 5 个要点
 

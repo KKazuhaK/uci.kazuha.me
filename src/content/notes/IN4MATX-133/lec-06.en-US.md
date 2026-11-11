@@ -526,7 +526,8 @@ Which snippet would edit the `p` to display "1, 2, 3, 4, 5"?
 - **D** Two of the above
 - **E** All of the above
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: D** (A and C; the slide 25 reveal highlights A, C and D).
 
@@ -539,6 +540,8 @@ Which snippet would edit the `p` to display "1, 2, 3, 4, 5"?
 ```viz web-demo
 {"title": "Question 1 · each option run on a fresh copy of the p (q1.js)", "html": "<p class=\"para\" id=\"intro\">1, 2, 3</p>", "js": "var p = document.getElementById(\"intro\");\n\n// A\ndocument.getElementById(\"intro\").append(\", 4, 5\");\nconsole.log(\"A:\", p.innerHTML);\np.innerHTML = \"1, 2, 3\"; // reset\n\n// B\ndocument.getElementsByClassName(\"para\").innerHTML = \"1, 2, 3, 4, 5\";\nconsole.log(\"B:\", p.innerHTML);\np.innerHTML = \"1, 2, 3\"; // reset\n\n// C\ndocument.getElementsByTagName(\"p\")[0].innerHTML = \"1, 2, 3, 4, 5\";\nconsole.log(\"C:\", p.innerHTML);", "height": 60}
 ```
+
+</details>
 
 > 🧪 **Demo files**: [q1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/q1/q1.html) · [q1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/q1/q1.js)
 
@@ -569,7 +572,8 @@ function addNewParagraph () {
 }
 ```
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer** (from `solution1.js`):
 
@@ -615,6 +619,8 @@ After 3.5 s the page shows a blue "Hello, IN4MATX 133!", "Lorem ipsum", and "A n
 {"title": "Demo 1 · solution1.js (runJS() called directly instead of body onload)", "css": ".title {\n    font-style: italic;\n}\n\n#body {\n    font-family: 'Arial';\n}", "html": "<h1>Hello, IN4MATX 133!</h1>\n<div id=\"body\">\n    <p id=\"first\">Fill in this paragraph and add another one.</p>\n</div>", "js": "\nfunction runJS() {\n    setTimeout(makeTitleBlue, 1000);\n\n    setTimeout(addLoremIpsum, 2000);\n\n    setTimeout(addNewParagraph, 3000);\n}\n\nfunction makeTitleBlue () {\n    var h1Tags = document.getElementsByTagName('h1');\n    // interesting note: HTMLCollection, which getElementsByTagName returns, does NOT have a foreach() method\n    // but NodeList, which querySelector returns, does\n    for(var i = 0; i< h1Tags.length; i++) {\n        h1Tags[i].classList.add('title');\n        h1Tags[i].style.color = 'blue';\n    }\n}\n\nfunction addLoremIpsum () {\n    var firstTag = document.getElementById('first');\n    firstTag.textContent = 'Lorem ipsum';\n}\n\nfunction addNewParagraph () {\n    var div = document.getElementById('body');\n    var newEl = document.createElement('p');\n    newEl.textContent = 'A new paragraph';\n    newEl.classList.add('title');\n    div.appendChild(newEl);\n}\n\nrunJS(); // in the repo: <body onload=\"runJS()\">", "height": 160}
 ```
 
+</details>
+
 > 🧪 **Demo files**: [setup1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/demo1/setup1.html) · [setup1.css](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/demo1/setup1.css) · [setup1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/demo1/setup1.js) · [solution1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/demo1/solution1.html) · [solution1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W3_L1_Oct13_DOM/demo1/solution1.js)
 
 Back to [6. Changing the DOM tree](#6-changing-the-dom-tree).
@@ -636,12 +642,15 @@ Which is correct? The four effects:
 | D | 1, 2, 3 | 2, 3, 4 |
 | E | 1 | 1, 4 |
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: B** (revealed on slide 51).
 
 - **Local install** changes the project: it downloads into `node_modules/` (1), records the package in `package.json` (2), and pins its dependencies in `package-lock.json` (3). My `npm install moment` test did all three.
 - **Global install** is "just software on your computer": it gives you a command-line program (4) and touches **none** of the project's files. That rules out A and E (global doesn't use the project's `node_modules`) and D (global doesn't edit `package.json` or the lock file). C misses that a local install also updates the two JSON files.
+
+</details>
 
 Back to [11. npm](#11-npm).
 

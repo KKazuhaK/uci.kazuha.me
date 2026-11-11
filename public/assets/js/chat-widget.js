@@ -20,7 +20,12 @@
       document.getElementById("main") ||
       document.querySelector("main") ||
       document.body;
+    // Closed <details> (answers on note pages) are not rendered, so innerText
+    // would skip them: open them for the read and close them before the next paint.
+    var closed = Array.prototype.slice.call(el.querySelectorAll("details:not([open])"));
+    closed.forEach(function (d) { d.open = true; });
     var text = (el.innerText || el.textContent || "").trim();
+    closed.forEach(function (d) { d.open = false; });
     text = text.replace(/\n{3,}/g, "\n\n").replace(/[ \t]{2,}/g, " ");
     pageContextTruncated = text.length > 32000;
     return text.slice(0, 32000);

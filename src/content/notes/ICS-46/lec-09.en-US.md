@@ -320,9 +320,12 @@ note: assume use of lo for pivot
 
 (Slide note: Visualgo's quicksort implementation is different from what's presented.)
 
-> ✍️ **Try it first.** Hint: no shuffle; run `partition` exactly as coded — `i` stops on ≥ pivot, `j` stops on ≤ pivot.
+> Hint: no shuffle; run `partition` exactly as coded — `i` stops on ≥ pivot, `j` stops on ≤ pivot.
 
-**Solution.** First partition, `lo = 0, hi = 8`, `v = 3`:
+<details>
+<summary>Solution</summary>
+
+First partition, `lo = 0, hi = 8`, `v = 3`:
 
 | round | `i` stops | `j` stops | action | array |
 |---|---|---|---|---|
@@ -349,6 +352,8 @@ The trap is the call on `5 8 7 9 5 4` (`v = 5`): `j` stops on the second `5` bec
 {"title": "Activity 1 check (slide 38)", "items": "3, 7, 8, 5, 2, 1, 9, 5, 4", "mode": "sort"}
 ```
 
+</details>
+
 Back to [§4 Full Sort Trace](#4-full-sort-trace).
 
 ### 9.2 Activity 2: Quick Sort Analysis (slide 39)
@@ -363,9 +368,8 @@ Back to [§4 Full Sort Trace](#4-full-sort-trace).
 
 **(e)** What reduces the likelihood of the worst case happening?
 
-> ✍️ **Try it first.**
-
-**Solution.**
+<details>
+<summary>Solution</summary>
 
 **(a)** Every pivot is the smallest (or largest) key of its subarray, so each partition peels off just one element: one side is empty, the other has n − 1. With pivot = `a[lo]` and no shuffle, an already-sorted (or reverse-sorted) array does this.
 
@@ -376,6 +380,8 @@ Back to [§4 Full Sort Trace](#4-full-sort-trace).
 **(d)** T(n) = 2T(n/2) + n — the merge sort recurrence: lg n levels, n work per level → **O(n log n)**.
 
 **(e)** The **random shuffle** before sorting (or a random / median-of-sample pivot): the worst case then needs extremely unlucky random choices instead of a common input like a sorted array.
+
+</details>
 
 Back to [§5 Analysis](#5-analysis-worst-best-average).
 

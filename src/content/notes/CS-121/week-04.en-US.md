@@ -450,61 +450,84 @@ AP89's most frequent words ($P_r$ in %):
 
 π is Unicode code point 960. What bytes does UTF-8 store? How many bytes in UTF-32?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** 960 = `0x3C0` = `00000011 11000000`. It's in 128–2047, so the template is `110xxxxx 10xxxxxx`, with 5 + 6 = 11 payload bits: 960 in 11 bits is `01111000000`. High 5 bits `01111` → `110`+`01111` = `11001111`; next 6 bits `000000` → `10`+`000000` = `10000000`. Result **`CF 80`**, 2 bytes. UTF-32 always uses 4: `00 00 03 C0`. Back to [§3](#3-unicode-and-utf-8).
+960 = `0x3C0` = `00000011 11000000`. It's in 128–2047, so the template is `110xxxxx 10xxxxxx`, with 5 + 6 = 11 payload bits: 960 in 11 bits is `01111000000`. High 5 bits `01111` → `110`+`01111` = `11001111`; next 6 bits `000000` → `10`+`000000` = `10000000`. Result **`CF 80`**, 2 bytes. UTF-32 always uses 4: `00 00 03 C0`.
+
+</details>
+
+Back to [§3](#3-unicode-and-utf-8).
 
 ### 12.2 A byte-sum checksum (L11 p24)
 
 Sum the bytes of "Tropical fish". Is a byte sum a safe way to detect exact duplicates?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** In hex, 54 + 72 + 6F + 70 + 69 + 63 + 61 + 6C + 20 + 66 + 69 + 73 + 68 = **508 hex = 1,288**. It's not safe: the sum ignores order, so "Tropical fihs" also sums to 1,288. A CRC weighs bytes by position: CRC-32 gives `0x18f14f94` vs `0x3ba24de2`. Back to [§7](#7-exact-duplicates-checksums-and-crcs).
+In hex, 54 + 72 + 6F + 70 + 69 + 63 + 61 + 6C + 20 + 66 + 69 + 73 + 68 = **508 hex = 1,288**. It's not safe: the sum ignores order, so "Tropical fihs" also sums to 1,288. A CRC weighs bytes by position: CRC-32 gives `0x18f14f94` vs `0x3ba24de2`.
+
+</details>
+
+Back to [§7](#7-exact-duplicates-checksums-and-crcs).
 
 ### 12.3 The tropical fish fingerprint (L11 p31–34)
 
 With the slide's 3-grams and hash values, which values does "0 mod 4" select?
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** 18 words → 18 − 3 + 1 = 16 3-grams. Remainders mod 4:
+18 words → 18 − 3 + 1 = 16 3-grams. Remainders mod 4:
 
 | Hash | 938 | 664 | 463 | 822 | 492 | 798 | 78 | 969 | 143 | 236 | 913 | 908 | 694 | 553 | 870 | 779 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | mod 4 | 2 | **0** | 3 | 2 | **0** | 2 | 2 | 1 | 3 | **0** | 1 | **0** | 2 | 1 | 2 | 3 |
 
-$F$ = {664, 492, 236, 908}: 4 of 16 values, from "fish include fish", "found in tropical", "the world including" and "including both freshwater". Comparing it with another document's fingerprint uses $|F_A \cap F_B| / |F_A \cup F_B| \ge \tau$. Back to [§8](#8-near-duplicates-and-n-gram-fingerprints).
+$F$ = {664, 492, 236, 908}: 4 of 16 values, from "fish include fish", "found in tropical", "the world including" and "including both freshwater". Comparing it with another document's fingerprint uses $|F_A \cap F_B| / |F_A \cup F_B| \ge \tau$.
+
+</details>
+
+Back to [§8](#8-near-duplicates-and-n-gram-fingerprints).
 
 ### 12.4 Simhash of the tropical fish text (L12 p11–15)
 
 Using the slide's weights and 8-bit hashes, compute $V$ and the fingerprint.
 
-> ✍️ **Try it first.**
+<details>
+<summary>Solution</summary>
 
-**Solution.** Each word adds +weight for a 1 bit and −weight for a 0 bit. Column by column:
+Each word adds +weight for a 1 bit and −weight for a 0 bit. Column by column:
 
 | Bit | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
 |---|---|---|---|---|---|---|---|---|
 | $V$ | 1 | −5 | 9 | −9 | 3 | 1 | 3 | 3 |
 | Fingerprint | 1 | 0 | 1 | 0 | 1 | 1 | 1 | 1 |
 
-Bit 8, as on L12 p14: tropical +2, fish +2, include −1, found −1, environments +1, around +1, world −1, including −1, both −1, freshwater +1, salt +1, water +1, species −1 → 3 > 0 → 1. Fingerprint **10101111**, matching the slide. Two documents with simhashes $H_A, H_B$ are compared by the fraction of the 8 bits that agree, against $\tau$. Back to [§9](#9-simhash).
+Bit 8, as on L12 p14: tropical +2, fish +2, include −1, found −1, environments +1, around +1, world −1, including −1, both −1, freshwater +1, salt +1, water +1, species −1 → 3 > 0 → 1. Fingerprint **10101111**, matching the slide. Two documents with simhashes $H_A, H_B$ are compared by the fraction of the 8 bits that agree, against $\tau$.
+
+</details>
+
+Back to [§9](#9-simhash).
 
 ### 12.5 Checking Zipf's law on AP89 (L12 p35–39)
 
 From the AP89 tables: how much of the text are "the" and "of"? Does $r \cdot P_r$ stay near 0.1? What fraction of the vocabulary are hapax legomena?
 
-> ✍️ **Try it first.**
-
-**Solution.**
+<details>
+<summary>Solution</summary>
 
 - "the" + "of": slide $P_r$ 6.49% + 2.80% = **9.29%** — the "about 10%". From the frequencies and the 39,749,179 total, it's 3,466,511 / 39,749,179 = **8.7%**.
 - $r \cdot P_r$: rank 1 gives 0.065, rank 2 0.056, rank 6 0.140 (biggest swings); ranks 11–50 stay in **0.081–0.096**. Recomputing $r \times P_r$ from the slide's own rounded $P_r$ gives 0.116 for "and" (slide 0.120) and 0.136 for "in" (slide 0.140) — rounding.
 - With the left table's total, $r \cdot P_r$ is lower, e.g. "the" 2,420,778 / 39,749,179 = 0.061, "people" 50 × 68,988 / 39,749,179 = 0.087; the slide's column implies a total of ≈ 37.3M (see the pitfall in §11).
 - Hapax legomena: 70,064 / 198,763 = **35%** of the vocabulary occurs exactly once; only 4,169 words (2.1%) occur more than 1,000 times.
 
-Zipf holds roughly in the middle and breaks at both ends — the problems at high and low frequencies of L12 p39. Back to [§11](#11-text-statistics-and-zipfs-law).
+Zipf holds roughly in the middle and breaks at both ends — the problems at high and low frequencies of L12 p39.
+
+</details>
+
+Back to [§11](#11-text-statistics-and-zipfs-law).
 
 ---
 

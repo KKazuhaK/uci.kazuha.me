@@ -361,9 +361,10 @@ Insert 47 in this binary heap.
 - **Task 2:** Show the array representation of the resulting binary heap
 - **Task 3:** What is the worst-case time complexity of insert?
 
-> ✍️ **Try it first.** Hint: the new key goes into index 10 — whose child is that?
+> Hint: the new key goes into index 10 — whose child is that?
 
-**Solution**
+<details>
+<summary>Solution</summary>
 
 **Task 1:** 47 goes to `pq[10]`, the **left** child of index 5 (key 3), since 2·5 = 10. Swim: 47 > 3 → exchange (47 now at 5); 47 > 19 → exchange (47 now at 2); 47 < 100 → stop.
 
@@ -375,6 +376,8 @@ Insert 47 in this binary heap.
 {"title": "Exercise check: insert(47)", "heap": "100, 19, 36, 17, 3, 25, 1, 2, 7", "ops": "insert(47)"}
 ```
 
+</details>
+
 Back to [§1 Recap](#1-recap-insert-and-sink).
 
 ### 10.2 Exercise: Heap Sink (slide 6)
@@ -385,9 +388,8 @@ Sink 7 to its appropriate place in this binary heap: `– 19 7 36 17 3 25 1 2` (
 - **Task 2:** Show the array representation of the resulting binary heap
 - **Task 3:** What is the worst-case time complexity of sink?
 
-> ✍️ **Try it first.**
-
-**Solution**
+<details>
+<summary>Solution</summary>
 
 **Task 1:** 7's children are 17 (index 4) and 3 (index 5); the larger is 17, and 7 < 17 → exchange (7 now at 4). Its only child is 2 (index 8); 7 > 2 → stop.
 
@@ -398,6 +400,8 @@ Sink 7 to its appropriate place in this binary heap: `– 19 7 36 17 3 25 1 2` (
 ```viz binary-heap
 {"title": "Exercise check: sink(2)", "heap": "19, 7, 36, 17, 3, 25, 1, 2", "ops": "sink(2)"}
 ```
+
+</details>
 
 Back to [§1 Recap](#1-recap-insert-and-sink).
 
@@ -411,9 +415,10 @@ Initial max-heap: the table above.
 
 **(03) Array Trace** — call delete max 9 times on the original heap and show the values in the array.
 
-> ✍️ **Try it first.** Hint: after the exchange, sink always moves toward the *larger* child.
+> Hint: after the exchange, sink always moves toward the *larger* child.
 
-**Solution**
+<details>
+<summary>Solution</summary>
 
 **(01)** Exchange 100 with the last key 7 and remove 100. Sink 7: children 19 and 36 → exchange with 36 (7 at index 3); children 25 and 1 → exchange with 25 (7 at index 6); index 6 has no children → stop. Heap: `– 36 19 25 17 3 7 1 2`, returns 100.
 
@@ -441,6 +446,8 @@ The demo below drops each removed key from the drawing instead of parking it, so
 {"title": "Activity 1 check: nine delMax() calls", "heap": "100, 19, 36, 17, 3, 25, 1, 2, 7", "ops": "delMax(); delMax(); delMax(); delMax(); delMax(); delMax(); delMax(); delMax(); delMax()"}
 ```
 
+</details>
+
 Back to [§2 Delete the maximum](#2-delete-the-maximum).
 
 ### 10.4 Activity 2: Assume Min-Heap (slide 14)
@@ -453,7 +460,10 @@ Perform the following operations in a PQ based on a heap (note: draw the content
 | 2. Insert Q | 5. Insert X | 8. Delete min | 11. Insert E |
 | 3. Insert E | 6. Insert A | 9. Insert P | 12. Delete min |
 
-> ✍️ **Try it first.** Hint: in a min-heap a key swims up while it is *smaller* than its parent.
+> Hint: in a min-heap a key swims up while it is *smaller* than its parent.
+
+<details>
+<summary>Solution</summary>
 
 **Solution** (heap array in level order after each step)
 
@@ -473,6 +483,8 @@ Perform the following operations in a PQ based on a heap (note: draw the content
 | 12 | delete min | E | L P M Q P X |
 
 Key steps: in step 6, A swims from index 4 past Q and P to the root; in step 10, L swims past X and M to the root; in step 12, the last key M moves to the root and sinks to index 3. The demo in [§6](#6-min-heaps-and-delmin) steps through all twelve operations.
+
+</details>
 
 ## 11. Quick Reference & Top 5 Things to Remember
 

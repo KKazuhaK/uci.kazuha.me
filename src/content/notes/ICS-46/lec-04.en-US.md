@@ -692,7 +692,8 @@ T remove(int index) {
 }
 ```
 
-**Solution:**
+<details>
+<summary>Solution</summary>
 
 ```cpp
         Node* previous = nullptr;
@@ -707,28 +708,44 @@ T remove(int index) {
 
 Only the `next` of the node *before* the victim changes, so you need `previous`; index 0 is separate because there the pointer to change is `head`.
 
+</details>
+
 ### 8.2 Activity 2: Time Complexity of Singly Linked List operations (slide 37)
 
 Fill in the worst case: `add(E item)` — O(1) insert at head, O( ) insert at tail; `get(int index)` — O( ); `add(int index, T item)` — O( ); `remove()` — O( ) from the head, O( ) from the tail; `remove(int index)` — O( ).
 
-**Solution:** add at tail **O(n)** (O(1) with a tail pointer); `get` **O(n)**; `add(index)` **O(n)**; remove from head **O(1)**, from tail **O(n)** (even with a tail pointer — no way back to the second-to-last node); `remove(index)` **O(n)**.
+<details>
+<summary>Solution</summary>
+
+Add at tail **O(n)** (O(1) with a tail pointer); `get` **O(n)**; `add(index)` **O(n)**; remove from head **O(1)**, from tail **O(n)** (even with a tail pointer — no way back to the second-to-last node); `remove(index)` **O(n)**.
+
+</details>
 
 ### 8.3 Activity 3: Time Complexity Analysis for DLL (slide 45)
 
 Same table for a doubly linked list.
 
-**Solution:** insert at head **O(1)**, at tail **O(1)**; `get` **O(n)**; `add(index)` **O(n)**; remove from head **O(1)**, from tail **O(1)**; `remove(index)` **O(n)**. Only the tail rows change: `tail->prev` reaches the second-to-last node in one step.
+<details>
+<summary>Solution</summary>
+
+Insert at head **O(1)**, at tail **O(1)**; `get` **O(n)**; `add(index)` **O(n)**; remove from head **O(1)**, from tail **O(1)**; `remove(index)` **O(n)**. Only the tail rows change: `tail->prev` reaches the second-to-last node in one step.
+
+</details>
 
 ### 8.4 Activity 4: Implementing Stacks (slide 49)
 
 Implement a stack using an **ArrayList** (operations `add(Item item)`, `add(int index, Item item)`, `remove()`). (a) Where should the top be (front or back)? (b) How do we implement Pop, Push and Peek? (c) **Amortized** big-O for Pop and Push? (d) **Worst-case** big-O for Peek? (e) **Worst-case** big-O if the top is in the reverse direction?
 
-**Solution:**
+<details>
+<summary>Solution</summary>
+
 (a) The **back** (End/Rear) — adding/removing there shifts nothing.
 (b) push = `add(item)`, pop = `remove()`, peek = `at(size() - 1)`.
 (c) Both **O(1) amortized** (occasionally O(n) when the array doubles or shrinks at ¼ full).
 (d) **O(1)**.
 (e) Top at the front: push = `add(0, item)`, pop = `remove(0)` shift everything → **O(n)**; peek = `at(0)` stays O(1).
+
+</details>
 
 ---
 

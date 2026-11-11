@@ -57,6 +57,7 @@ npx tsx scripts/migrate/parity.ts   # renderer vs legacy md-viewer on every note
 ├── .github/workflows/site.yml    # CI: check + build every push; main → deploy branch (ICS) and cf-deploy (Cloudflare)
 ├── deploy/targets.json           # build targets (ICS server branch, Cloudflare Worker)
 ├── deploy/cloudflare/worker.js   # Worker script for uci.kazuha.me (speedtest download/upload only)
+├── docs/notes-authoring.md       # how a note is written; the spec every notes skill follows
 ├── scripts/deploy.sh             # staging / prod rsync with guards (SRC=<dir> for another build)
 ├── scripts/pull-deploy.sh        # deploy branch → web root (run by update_site.sh)
 ├── scripts/migrate/              # one-off migration scripts (kept for reference) + parity.ts
@@ -104,6 +105,8 @@ npx tsx scripts/migrate/parity.ts   # renderer vs legacy md-viewer on every note
 
 ## Notes System
 
+**`docs/notes-authoring.md` is the authoring spec** (file layout, structure, links, figures, answer folds, translations, checks, and a block to paste into a new notes skill). The notes skills on claude.ai follow it; when it changes, update them too.
+
 ### Adding a note
 
 Create `src/content/notes/<COURSE>/<slug>.<lang>.md`:
@@ -124,6 +127,18 @@ summary: "Hoare partitioning, full traces, worst/best/average analysis, …"
 - **Links between notes** are relative links to the source file: `[Lecture 4](lec-04.en-US.md#2-the-stack-adt)`, other course `[Week 1](../CS-121/week-01.en-US.md)`. They render as note URLs. A link to a note that doesn't exist yet renders as plain text with a build warning and becomes a link once the note exists. Don't write `?kind=course_notes…` links (legacy).
 - Images: only slide figures hosted in the `KKazuhaK/assets` repo via jsDelivr, `![alt](https://cdn.jsdelivr.net/gh/KKazuhaK/assets@main/ics.uci.edu/<course>/<slug>/<name>.png)`; the notes skills' `check_md.py` rejects any other image source. Otherwise draw it (viz, Mermaid, table).
 - "Last edited" = last git commit touching the file (follows renames, skips `.lastmod-ignore-revs`), uncommitted files use mtime. Irvine time zone.
+- **Worked answers** are folded with a plain `<details>` block (the browser folds it natively; `scripts/reader/details.ts` opens it for a linked hash and for printing, and keeps opened ones across the language switch):
+
+  ```markdown
+  <details>
+  <summary>Solution</summary>
+
+  …the answer: text, tables, code, viz…
+
+  </details>
+  ```
+
+  Summary text `Solution` / `Answer` (en-US), `解答` / `答案` (zh-CN). Blank lines after `<summary>` and before and after `</details>` (an HTML block runs to the next blank line). Only the answer goes inside: the question, headings, and "Back to […]" / 🧪 / 🔗 lines stay outside. Both languages must have the same `<details>` in the same order. Fold only answers and long, non-essential content, not as a blanket rule.
 - Chinese note headings use Arabic numerals (`## 1.`), same numbering as the English version — language switching keeps the reader's position by heading index, and falls back to scroll fraction when counts differ.
 
 ### Adding a course

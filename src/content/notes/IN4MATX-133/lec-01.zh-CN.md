@@ -268,9 +268,14 @@ Slack 加分在学期末综合评估：你必须**回答**问题，而不只是�
 
 幻灯片 6：*“There are lot of languages and development frameworks. Why do most people use web tools?”*（语言和开发框架有那么多，为什么大多数人都用 Web 工具？）——在幻灯片 38 以 Think & Share 的形式再次提出：*“Why are web tools now the standard for interface development?”*（开放式讨论，没有选项）。
 
-> ✍️ **先自己试试。**
+<details>
+<summary>答案</summary>
 
-**答案**（幻灯片自己给出的，p39–42）：**普适计算**。现在一个人使用多台通过云同步的设备。每个平台都需要和云通信（HTTP 请求，JavaScript 很早就提供了相关工具），而且大多数平台都有浏览器；HTML 渲染数据，CSS 给数据设置样式。共用的语言和环境让开发者可以一次编写、部署到多个平台，并针对每种设备做定制。回到[第 6 节](#6-为什么-web-工具成为标准)。
+**答案**（幻灯片自己给出的，p39–42）：**普适计算**。现在一个人使用多台通过云同步的设备。每个平台都需要和云通信（HTTP 请求，JavaScript 很早就提供了相关工具），而且大多数平台都有浏览器；HTML 渲染数据，CSS 给数据设置样式。共用的语言和环境让开发者可以一次编写、部署到多个平台，并针对每种设备做定制。
+
+</details>
+
+回到[第 6 节](#6-为什么-web-工具成为标准)。
 
 ## 10. 速查与必记的 5 个要点
 

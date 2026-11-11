@@ -575,7 +575,8 @@ clickMessage() {
 - D. A 和 B
 - E. A 和 C
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **答案：E（A 和 C）。** 幻灯片没有显示投票结果；这是通过在 Angular 22 中、用 `url = "https://example.com/page"` 编译这三个链接（使用直引号）验证的：
 
@@ -585,15 +586,24 @@ clickMessage() {
 | B `(href)="url"` | 无 ❌ —— 这是一个*事件*绑定，监听名为 href 的事件；它从不设置任何东西 |
 | C `[href]="url"` | `https://example.com/page` ✅ —— 属性绑定 |
 
-所以 D 因为 B 而错误。仓库的 `app.html` 在链接胶囊中使用的是写法 C：`[href]="item.link"`。（幻灯片上的弯引号会让浏览器把 `“` 当作值的一部分——务必输入直引号。）返回 [第 7 节](#7-单向绑定插值属性事件)。
+所以 D 因为 B 而错误。仓库的 `app.html` 在链接胶囊中使用的是写法 C：`[href]="item.link"`。（幻灯片上的弯引号会让浏览器把 `“` 当作值的一部分——务必输入直引号。）
+
+</details>
+
+返回 [第 7 节](#7-单向绑定插值属性事件)。
 
 ### 11.2 问题 2：用组件改进你的作品集（幻灯片 45–47）
 
 *与搭档一起讨论一个想法：如何用 Angular 组件改进你的作品集网站。*
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
-**幻灯片给出的示例答案**：一个旧的课程网站（链接见下），其整个站点都在一个 Angular 组件中，而页眉、正文和页脚各自是独立的组件——这使得复用页眉和页脚内容变得很容易。对于 A1 风格的作品集，同样的思路适用于任何重复出现的内容：每个页面都使用的页眉/导航和页脚，或是带有输入（标题、图片、链接）的项目卡片组件，并用 `@for` 为每个项目渲染一次。返回 [第 10 节](#10-使用组件嵌套输入与输出)。
+**幻灯片给出的示例答案**：一个旧的课程网站（链接见下），其整个站点都在一个 Angular 组件中，而页眉、正文和页脚各自是独立的组件——这使得复用页眉和页脚内容变得很容易。对于 A1 风格的作品集，同样的思路适用于任何重复出现的内容：每个页面都使用的页眉/导航和页脚，或是带有输入（标题、图片、链接）的项目卡片组件，并用 `@for` 为每个项目渲染一次。
+
+</details>
+
+返回 [第 10 节](#10-使用组件嵌套输入与输出)。
 
 > 🔗 **延伸阅读**：[Example: an earlier IN4MATX 133 course website built with Angular](https://inf133-wi26.depstein.net/)
 
@@ -621,7 +631,8 @@ export class Dice {
 
 应用已经放置了它：`app.html` 中有 `<app-dice></app-dice>`，且 `app.ts` 导入了 `Dice`。图片 `dice_1.png` … `dice_6.png` 位于项目的 `public/` 文件夹中。
 
-> ✍️ **先自己试一试。**
+<details>
+<summary>答案</summary>
 
 **解答**（来自 `diceFinished.txt`）。模型 + 控制器，即 `dice.ts`：
 
@@ -665,6 +676,8 @@ export class Dice {
 ```viz web-demo
 {"title": "幻灯片 48 · 完成的 Dice 组件（diceFinished.txt），用纯 JavaScript 手动实现", "html": "<p>Hello!</p>\n<button id=\"roll\">Click to roll the dice!</button>\n<p><img id=\"d1\" width=\"100\"><img id=\"d2\" width=\"100\"></p>\n<p id=\"total\"></p>", "css": "body { font-family: system-ui, sans-serif; }", "js": "const IMG = \"https://raw.githubusercontent.com/travislindenreid/INF33-Demos/main/W5_L2_Oct29_AngularComponents/w5l2-example/public/\";  // the repo's public/ folder\n// model (fields of class Dice)\nlet diceUrl1 = \"dice_1.png\";\nlet diceUrl2 = \"dice_1.png\";\nlet total = 2;\n\n// view: [src]=\"diceUrl1\", [src]=\"diceUrl2\", Total: {{total}}\nfunction render() {\n  document.getElementById(\"d1\").src = IMG + diceUrl1;\n  document.getElementById(\"d2\").src = IMG + diceUrl2;\n  document.getElementById(\"total\").textContent = \"Total: \" + total;\n}\n\n// controller: (click)=\"rollDice()\"\nfunction rollDice() {\n  var random = Math.floor(Math.random() * 6 + 1);\n  diceUrl1 = `dice_${random}.png`;\n  var random2 = Math.floor(Math.random() * 6 + 1);\n  diceUrl2 = `dice_${random2}.png`;\n  total = random + random2;\n  console.log(diceUrl1);\n  console.log(diceUrl2);\n  console.log(total);\n  render();  // Angular re-renders for you; by hand we must call it\n}\ndocument.getElementById(\"roll\").addEventListener(\"click\", rollDice);\nrender();\n", "steps": [{"note": "点击按钮：rollDice() 随机选取两个点数并更新模型，视图随之变化。", "js": "document.getElementById(\"roll\").click();"}], "height": 230, "interactive": true}
 ```
+
+</details>
 
 > 🧪 **演示文件**：[dice.ts](https://github.com/travislindenreid/INF33-Demos/blob/main/W5_L2_Oct29_AngularComponents/w5l2-example/src/app/dice/dice.ts) · [dice.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W5_L2_Oct29_AngularComponents/w5l2-example/src/app/dice/dice.html) · [diceFinished.txt](https://github.com/travislindenreid/INF33-Demos/blob/main/W5_L2_Oct29_AngularComponents/w5l2-example/src/app/dice/diceFinished.txt)
 

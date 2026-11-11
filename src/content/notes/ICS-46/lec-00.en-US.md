@@ -872,7 +872,10 @@ Zot! Anteater
 - Are there any constraints on the type of inputs?
 - Implement a main function to test `myMin` with ints then strings.
 
-> ✍️ **Try it first.** Hint: list every operation the body performs on a `T`, including the `return`.
+> Hint: list every operation the body performs on a `T`, including the `return`.
+
+<details>
+<summary>Solution</summary>
 
 **Solution** (slide 32's solution, compiled — output `3` then `apple`):
 
@@ -903,13 +906,18 @@ Why `std::string("apple")` and not just `"apple"`? Traps worth knowing:
 
 ↩ Concepts: [§5.1 deduction](#51-when-deduction-fails), [§7 implicit constraints](#7-implicit-constraints-on-type-parameters).
 
+</details>
+
 ### 11.2 Activity 2: Class Template (slides 38, 39)
 
 Implement a `Pair` class template that stores 2 items of the same type T.
 
 What are some restrictions on the type T?
 
-> ✍️ **Try it first.** Hint: do it the way §9 analyses `Box`.
+> Hint: do it the way §9 analyses `Box`.
+
+<details>
+<summary>Solution</summary>
 
 **Solution** (slide 39; the slide's two setter lines run off the right edge, completed here as `first_ = value;` / `second_ = value;`, and the closing `};` is cut off at the bottom):
 
@@ -944,6 +952,8 @@ Why two versions of each getter? The non-`const` one returns `T&` so you can mod
 (As §9.1 showed, copy-assignable only matters if you actually call a setter.)
 
 ↩ Concepts: [§8 class templates](#8-class-templates), [§9 Box](#9-a-class-template-example-box).
+
+</details>
 
 ---
 

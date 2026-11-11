@@ -714,7 +714,8 @@ array.push('4'); // what's wrong with this...?
 console.log(array);
 ```
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer** (`solution1.js`): what's wrong is that `'4'` is a **string**. Push the number, then two loops:
 
@@ -754,6 +755,8 @@ With the setup's `push('4')`, the sum loop reaches `27 + '4'` and turns into str
 {"title": "Demo 1 · solution1.js (plus the setup's push('4') bug)", "html": "<p>See the console.</p>", "height": 60, "js": "var array = [6, 2, 8, 1, 2, 5, 3];\nconsole.log('Array is ' + array);\n\n/*TODO:\n- add a 4 to the end of the list and print it again\n- calculate and print out the sum of all of the numbers in the array\n- count how many even numbers are in the array\n*/\n\narray.push(4);\nconsole.log('Array is now ' + array);\n\nvar sum = 0;\n\nfor(var i=0; i<array.length; i++) {\n\tsum += array[i];\n}\n\nconsole.log('Sum is ' + sum);\n\nevens = 0;\nfor(var i=0;i<array.length; i++) {\n\tif(array[i] % 2 == 0) {\n\t\tevens += 1;\n\t}\n}\nconsole.log('There are ' + evens + ' even numbers in the array.');\n\n\n\n// The setup's version: push a STRING '4'\nvar bad = [6, 2, 8, 1, 2, 5, 3];\nbad.push('4');\nvar badSum = 0;\nfor(var i=0; i<bad.length; i++) { badSum += bad[i]; }\nconsole.log('Sum with push(\\'4\\') is ' + badSum);"}
 ```
 
+</details>
+
 > 🧪 **Demo files**: [setup1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L2_Oct8_JavaScript/demo1/setup1.js) · [solution1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L2_Oct8_JavaScript/demo1/solution1.js) · [setup1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L2_Oct8_JavaScript/demo1/setup1.html) · [solution1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L2_Oct8_JavaScript/demo1/solution1.html)
 
 Back to [5. Arrays](#5-arrays).
@@ -776,7 +779,8 @@ console.log(array.join('*'));
 - **D** `undefined*fish*2*undefined*dog*2`
 - **E** `number*fish*-2*blue*3*dog*2`
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: E** (highlighted on slide 26) — `number*fish*-2*blue*3*dog*2`.
 
@@ -793,6 +797,8 @@ Traps: B and D (identical on the slide) assume `undefined` everywhere; C treats 
 ```viz web-demo
 {"title": "Question 1 · q1.js (logs the array after every line)", "html": "<p>See the console.</p>", "height": 60, "source": "none", "js": "var array = ['1', 'fish', 2, 'blue'];\n\narray[5] = 'dog';\nconsole.log(array);\n\narray.push('2');\nconsole.log(array);\n\narray[2] = array[array.length - 1] - 4;\nconsole.log(array);\n\narray[0] = typeof array[2];\nconsole.log(array);\n\narray[4] = array.indexOf('blue');\nconsole.log(array);\n\nconsole.log(array.join('*'));"}
 ```
+
+</details>
 
 > 🧪 **Demo files**: [q1.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L2_Oct8_JavaScript/q1/q1.html) · [q1.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L2_Oct8_JavaScript/q1/q1.js)
 
@@ -813,7 +819,8 @@ function helloFromTheFuture() {
 }
 ```
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer** (`solution2.js`):
 
@@ -847,6 +854,8 @@ At 5 s the hello timer and the third `tick` are both due; hello was scheduled fi
 ```viz web-demo
 {"title": "Demo 2 · solution2.js (wait ~5 s for the future)", "html": "<p>See the console.</p>", "height": 60, "js": "/*TODO:\n- use setTimeout() to print \"Hello from the future!\" 5 seconds after the page is loaded\n- alternate logging \"ticks\" and \"tocks\" every one second, creating a named function for tick and an anonymous function for tock\nsetTimeout takes two arguments: a callback function, time in MS until function should be called\nhttps://www.w3schools.com/jsref/met_win_settimeout.asp\n*/\n\nfunction helloFromTheFuture() {\n\tconsole.log(\"Hello from the future!\");\n}\n\nsetTimeout(helloFromTheFuture, 5000);\n\nfunction tick() {\n\tconsole.log('tick');\n\tsetTimeout(() => {\n\t\tconsole.log('tock');\n\t\tsetTimeout(tick, 1000);\n\t}, 1000);\n}\n\nsetTimeout(tick, 1000);"}
 ```
+
+</details>
 
 > 🧪 **Demo files**: [setup2.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L2_Oct8_JavaScript/demo2/setup2.js) · [solution2.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L2_Oct8_JavaScript/demo2/solution2.js) · [setup2.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L2_Oct8_JavaScript/demo2/setup2.html) · [solution2.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L2_Oct8_JavaScript/demo2/solution2.html)
 
@@ -894,7 +903,8 @@ for(var i=0;i < numbers.length; i++) {
 - **D** Two of the above
 - **E** All of the above
 
-> ✍️ **Try it first.**
+<details>
+<summary>Answer</summary>
 
 **Answer: D** (highlighted on slide 50) — A and B work; C doesn't.
 
@@ -907,6 +917,8 @@ With `q2.js`'s `numbers = [1, 5, 10, 30, 6, 500]` the output is `A: 500`, `B: 50
 ```viz web-demo
 {"title": "Question 2 · q2.js (C throws)", "html": "<p>See the console.</p>", "height": 60, "source": "none", "js": "var numbers = [1, 5, 10, 30, 6, 500];\n\n// ----- A ------\nvar max = Number.NEGATIVE_INFINITY;\n\nnumbers.forEach(function(num) {\n\tif(num > max) {\n\t\tmax = num;\n\t}\n});\n\nconsole.log(`A: ${max}`);\n\n\n// ----- B ------\nvar max = numbers.reduce(function(max, num) {\n\tif(num > max) {\n\t\tmax = num;\n\t}\n\treturn max;\n}, Number.NEGATIVE_INFINITY);\n\nconsole.log(`B: ${max}`);\n\n\n// ----- C ------\nvar max = Number.NEGATIVE_INFINITY;\n\nfor(var i=0;i < numbers.length; i++) {\n\tif(num > max) {\n\t\tmax = num;\n\t}\n}\n\nconsole.log(`C: ${max}`);"}
 ```
+
+</details>
 
 > 🧪 **Demo files**: [q2.html](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L2_Oct8_JavaScript/q2/q2.html) · [q2.js](https://github.com/travislindenreid/INF33-Demos/blob/main/W2_L2_Oct8_JavaScript/q2/q2.js)
 
