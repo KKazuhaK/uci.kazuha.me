@@ -1,6 +1,6 @@
 # Check and build every push. Targets live in deploy/targets.json:
 #   kind "branch" -> on main, each build is force-pushed to its branch; a server
-#                    pulls it with ./update_site.sh (ICS: `deploy`; the `ics-deploy`
+#                    pulls it with ./update_site.sh (ICS: `deploy`; the `uci-ics-deploy`
 #                    job runs it over SSH, and it can still be run by hand)
 #   kind "cloudflare" -> on main, the `cloudflare` jobs build it and push it to its
 #                    branch (cf-deploy); Cloudflare Workers Builds deploys that branch
@@ -97,7 +97,7 @@ jobs:
   # commit's scripts to publish its build (see update_site.sh). The runner itself
   # checks out nothing. The key is in the `ics` environment (main only). Turn it off
   # with the repo variable ICS_AUTO_DEPLOY=false.
-  ics-deploy:
+  uci-ics-deploy:
     needs: publish
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.ICS_AUTO_DEPLOY != 'false'
     runs-on: ubuntu-latest
@@ -107,7 +107,7 @@ jobs:
       url: https://ics.uci.edu/~kazuhak/
     # One at a time; a newer push waits rather than cancelling a sync half-way.
     concurrency:
-      group: ics-deploy
+      group: uci-ics-deploy
       cancel-in-progress: false
     timeout-minutes: 20
     steps:
