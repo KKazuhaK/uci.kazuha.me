@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
-# Bring the live site up to date with GitHub main (run by hand; there is no cron).
+# Bring the live site up to date with GitHub main.
 # Settings: deploy.env in this directory (copy deploy.env.example and set every value).
 #   ./update_site.sh           wait for CI on the latest main commit, then publish its build
 #   ./update_site.sh --force   republish the current build even if nothing changed
+#   ./update_site.sh --ci      unattended (the `ics-deploy` job in site.yml runs this over
+#                              SSH; its key's forced command is exactly this). Nothing is
+#                              skipped: the pull must leave a clean checkout of main, and that
+#                              commit's `build` and `publish` jobs must have passed, before any
+#                              pulled script runs. A commit still in CI is left to its own
+#                              run's ics-deploy (exit 0, nothing published).
 # Prints each stage as it runs: 1 source checkout, 2 CI, 3 fetch the build, 4 publish
 # (3 and 4 are scripts/pull-deploy.sh).
 set -euo pipefail
-case "${1:-}" in ""|--force) ;; *) echo "usage: ./update_site.sh [--force]" >&2; exit 2 ;; esac
-[ $# -le 1 ] || { echo "usage: ./update_site.sh [--force]" >&2; exit 2; }
+usage="usage: ./update_site.sh [--force | --ci]"
+ci=0 deploy_args=()
+case "${1:-}" in "") ;; --force) deploy_args=(--force) ;; --ci) ci=1 ;; *) echo "$usage" >&2; exit 2 ;; esac
+[ $# -le 1 ] || { echo "$usage" >&2; exit 2; }
 cd "$(dirname "$(readlink -f "$0")")"
 . scripts/deploy-env.sh
 export STAGE_TOTAL=4
@@ -15,20 +23,33 @@ export STAGE_TOTAL=4
 repo="$GH_REPO"
 t_start=$SECONDS
 
-echo "update_site · $(date '+%Y-%m-%d %H:%M %Z') · $PWD"
+echo "update_site$( [ "$ci" = 1 ] && echo " --ci") · $(date '+%Y-%m-%d %H:%M %Z') · $PWD"
+# --ci: a check that can't run stops the publish instead of being skipped.
+skip_or_fail() {
+  if [ "$ci" = 1 ]; then fail "$1; not publishing unattended (run ./update_site.sh by hand to override)"; exit 1; fi
+  skip "$1"
+}
 
 stage "Updating the source checkout"
 if git_progress pull --ff-only; then
   head="$(git rev-parse origin/main)"
+  # --ci runs scripts from this checkout after checking CI for origin/main: they must
+  # be the same commit, with no local commits or edits.
+  if [ "$ci" = 1 ]; then
+    if [ "$(git symbolic-ref -q --short HEAD)" != "main" ] || [ "$(git rev-parse HEAD)" != "$head" ] \
+        || [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+      skip_or_fail "$PWD is not a clean checkout of origin/main (other branch, local commits or edits)"
+    fi
+  fi
   ok "main is at $(git log -1 --format='%h %s' "$head")"
 else
   head="$(git rev-parse origin/main)"
-  skip "git pull failed (local commits or edits, or no network; see above); checking CI for origin/main as last fetched: $(git log -1 --format='%h %s' "$head")"
+  skip_or_fail "git pull failed (local commits or edits, or no network; see above); origin/main as last fetched: $(git log -1 --format='%h %s' "$head")"
 fi
 
 stage "Waiting for CI"
 if ! command -v gh >/dev/null 2>&1; then
-  skip "gh is not installed, so CI was not checked"
+  skip_or_fail "gh is not installed, so CI was not checked"
 else
   # A commit pushed a few seconds ago may not have a run yet: give GitHub a minute.
   # Only push runs on main publish a build (a PR or branch run of the same commit doesn't).
@@ -46,9 +67,9 @@ else
   rm -f "$gh_log"
 
   if [ -n "$gh_err" ]; then
-    skip "could not ask GitHub about CI ($gh_err)"
+    skip_or_fail "could not ask GitHub about CI ($gh_err)"
   elif [ -z "$run" ]; then
-    skip "still no CI run for ${head:0:7}; publishing the latest finished build"
+    skip_or_fail "no CI run for ${head:0:7} (a push made by a token starts none)"
   else
     id="$run"
     info "run https://github.com/$repo/actions/runs/$id"
@@ -113,6 +134,26 @@ else
     IFS='|' read -r status conclusion job_s <<<"${snap%%$'\n'*}"
     # Already finished before this run: no need to list its steps.
     [ "$status" = "completed" ] && shown=999
+    # --ci runs as a job after `build` of its own commit. If main has moved on, that
+    # newer commit's run (queued behind this one, so it can't start yet) publishes it.
+    if [ "$ci" = 1 ] && [ "$status" = "gh-error" ]; then
+      skip_or_fail "could not read the CI status of ${head:0:7}"
+    fi
+    # No build job listed: a run held back by the workflow's concurrency (fine, it will
+    # start later), or one that ended without jobs (a broken site.yml, cancelled while
+    # pending), which would publish nothing.
+    if [ "$ci" = 1 ] && [ -z "$status" ]; then
+      run_state="$(gh run view "$id" --repo "$repo" --json status,conclusion --jq '"\(.status)|\(.conclusion // "")"' 2>/dev/null || echo "gh-error|")"
+      case "$run_state" in
+        completed\|*) skip_or_fail "CI run $id for ${head:0:7} ended (${run_state#completed|}) without a build job" ;;
+        gh-error\|*) skip_or_fail "could not read the CI status of ${head:0:7}" ;;
+      esac
+    fi
+    if [ "$ci" = 1 ] && [ "$status" != "completed" ]; then
+      ok "main moved on to ${head:0:7}, still in CI; its own ics-deploy job will publish it"
+      echo "✓ Nothing to do · $(dur $((SECONDS - t_start)))"
+      exit 0
+    fi
     deadline=$((SECONDS + 900))  # give up after 15 minutes
     while [ "$SECONDS" -lt "$deadline" ]; do
       steps="$(tail -n +2 <<<"$snap")"
@@ -146,11 +187,40 @@ else
         "         https://github.com/$repo/actions/runs/$id"
       exit 1
     fi
-    ok "build passed$( [ "$shown" = 999 ] && echo "; CI took $(dur "${job_s:-0}")")"
+    # The `publish` job pushes the build to the deploy branch once `build` passes.
+    # (Runs from before that job existed have none: nothing to wait for.)
+    publish_job() {
+      gh run view "$id" --repo "$repo" --json jobs \
+        --jq '[.jobs[] | select(.name == "publish") | "\(.status)|\(.conclusion // "")"][0] // "none"' \
+        2>/dev/null || echo "gh-error"
+    }
+    # A job waiting on `needs` may not be listed for a few seconds after `build` ends:
+    # only take "none" (a run from before the publish job existed) after a minute.
+    IFS='|' read -r pstatus pconclusion <<<"$(publish_job)"
+    none_until=$((SECONDS + 60))
+    while [ "$pstatus" != "completed" ] && { [ "$pstatus" != "none" ] || [ "$SECONDS" -lt "$none_until" ]; } \
+        && [ "$SECONDS" -lt "$deadline" ]; do
+      case "$pstatus" in none) pword="not listed yet" ;; gh-error) pword="status unknown, retrying" ;; *) pword="$pstatus" ;; esac
+      live "publish-$pstatus" "build passed; publish job $pword · $(dur $((SECONDS - _stage_t0)))"
+      sleep 5
+      IFS='|' read -r pstatus pconclusion <<<"$(publish_job)"
+    done
+    live_clear
+    if [ "$pstatus" != "completed" ] && [ "$pstatus" != "none" ]; then
+      fail "the publish job did not finish within 15 minutes, so nothing was published" \
+        "https://github.com/$repo/actions/runs/$id"
+      exit 1
+    fi
+    if [ "$pstatus" = "completed" ] && [ "$pconclusion" != "success" ]; then
+      fail "the publish job ${pconclusion:-failed}, so the build never reached the $DEPLOY_BRANCH branch" \
+        "https://github.com/$repo/actions/runs/$id"
+      exit 1
+    fi
+    ok "build passed$( [ "$pstatus" = completed ] && echo " and was published to $DEPLOY_BRANCH")$( [ "$shown" = 999 ] && echo "; CI took $(dur "${job_s:-0}")")"
   fi
 fi
 
 # Stages 3 and 4; pull-deploy.sh reports its own failures.
 _stage_open=0
-EXPECT_SOURCE="$head" STAGE_FIRST=3 scripts/pull-deploy.sh "$@"
+EXPECT_SOURCE="$head" CI_MODE="$ci" STAGE_FIRST=3 scripts/pull-deploy.sh ${deploy_args[@]+"${deploy_args[@]}"}
 echo "✓ Done in $(dur $((SECONDS - t_start))) · $PUBLIC_URL"

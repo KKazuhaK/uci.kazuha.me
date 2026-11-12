@@ -17,15 +17,28 @@ dist="$DIST_DIR"
 state="$STATE_DIR"
 mkdir -p "$state"
 exec 9>"$state/site-pull-deploy.lock"
-if ! flock -n 9; then
+# Unattended (CI_MODE=1): wait for a run by hand to finish instead of failing.
+if [ "${CI_MODE:-0}" = 1 ]; then lock_wait=(-w 600); else lock_wait=(-n); fi
+if ! flock "${lock_wait[@]}" 9; then
   echo "  ✗ another publish is running (lock $state/site-pull-deploy.lock); try again when it is done" >&2
   exit 1
+fi
+
+# CI_MODE: a run by hand may have pulled a newer commit while this one waited for the
+# lock; its scripts (deploy.sh below) were not CI-checked by this run, so leave it.
+if [ "${CI_MODE:-0}" = 1 ] && [ "$(git -C "$here" rev-parse HEAD)" != "${EXPECT_SOURCE:-}" ]; then
+  echo "  ✓ $here moved to $(git -C "$here" rev-parse --short HEAD) while waiting for the lock (a run by hand); leaving the publish to it"
+  exit 0
 fi
 
 stage "Fetching the build ($DEPLOY_BRANCH)"
 # Keep the source checkout current too (fast-forward only; never touches local edits).
 # update_site.sh has just done this; it matters when this script is run on its own.
-git -C "$here" pull -q --ff-only 2>/dev/null || info "note: $here not fast-forwarded (local commits or conflicts)"
+# Not in CI_MODE: update_site.sh checked CI for the commit it pulled, and a newer one
+# pulled here would run its scripts unchecked.
+if [ "${CI_MODE:-0}" != 1 ]; then
+  git -C "$here" pull -q --ff-only 2>/dev/null || info "note: $here not fast-forwarded (local commits or conflicts)"
+fi
 
 repo="$(git -C "$here" remote get-url origin)"
 if [ ! -d "$dist/.git" ]; then
@@ -46,7 +59,15 @@ built_base="$(sed -n 's/^Site-Base: //p' <<<"$msg" | tail -1)"
 built_at="$(git -C "$dist" log -1 --format=%cd --date=format-local:'%Y-%m-%d %H:%M')"
 if [ -n "$source_commit" ]; then ok "build of ${source_commit:0:7}, made $built_at"
 else ok "$(git -C "$dist" log -1 --format=%s), made $built_at"; fi
-if [ -n "${EXPECT_SOURCE:-}" ] && [ -n "$source_commit" ] && [ "$source_commit" != "$EXPECT_SOURCE" ]; then
+if [ -n "${EXPECT_SOURCE:-}" ] && [ "$source_commit" != "$EXPECT_SOURCE" ]; then
+  # Unattended, publish only main's own build: an older one (a re-run CI job pushed
+  # it) would roll the site back, and a newer one is published by its own run.
+  if [ "${CI_MODE:-0}" = 1 ]; then
+    stage "Publishing to $WEB_ROOT"
+    held="${source_commit:0:7}"
+    ok "skipped: $DEPLOY_BRANCH holds the build of ${held:-an unknown commit}, not of main's ${EXPECT_SOURCE:0:7}; left as it is"
+    exit 0
+  fi
   info "note: this is not the build of main (${EXPECT_SOURCE:0:7}); a newer push may have replaced it"
 fi
 

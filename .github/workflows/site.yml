@@ -1,6 +1,7 @@
 # Check and build every push. Targets live in deploy/targets.json:
 #   kind "branch" -> on main, each build is force-pushed to its branch; a server
-#                    pulls it with ./update_site.sh (ICS: `deploy`, run by hand)
+#                    pulls it with ./update_site.sh (ICS: `deploy`; the `ics-deploy`
+#                    job runs it over SSH, and it can still be run by hand)
 #   kind "cloudflare" -> on main, the `cloudflare` jobs build it and push it to its
 #                    branch (cf-deploy); Cloudflare Workers Builds deploys that branch
 name: site
@@ -15,15 +16,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Runs third-party code (npm ci, astro): read-only token. The `publish` job pushes.
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v7
         with:
           # Full history: note "last edited" dates come from git log.
           fetch-depth: 0
+          persist-credentials: false
 
       - uses: actions/setup-node@v7
         with:
@@ -48,8 +51,34 @@ jobs:
             scripts/build-targets.sh build "$t" "out/$t"
           done
 
-      - name: Publish each server target to its branch
+      - uses: actions/upload-artifact@v7
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        with:
+          name: server-targets
+          path: out
+          include-hidden-files: true
+          retention-days: 1
+
+  # Pushes each server target's build to its branch (ICS: `deploy`). Kept apart from
+  # `build` so that npm code never runs in a job holding a write token: that token
+  # decides what every server publishes. Installs and runs nothing from npm.
+  publish:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: server-targets
+          path: ${{ runner.temp }}/out
+
+      - name: Publish each server target to its branch
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MSG: ${{ github.event.head_commit.message }}
@@ -58,8 +87,43 @@ jobs:
           targets="$(scripts/build-targets.sh list branch)"
           [ -n "$targets" ] || { echo "no branch targets in deploy/targets.json"; exit 1; }
           for t in $targets; do
-            scripts/build-targets.sh push "$t" "out/$t"
+            scripts/build-targets.sh push "$t" "$RUNNER_TEMP/out/$t"
           done
+
+  # ics.uci.edu: once `publish` has pushed the `deploy` branch, log in to openlab with
+  # a key whose authorized_keys line is `restrict,command="…/update_site.sh --ci"`: no
+  # shell or forwarding, only that script. It pulls ~/site and, only if that leaves a
+  # clean checkout of a main commit whose `build` and `publish` jobs passed, runs that
+  # commit's scripts to publish its build (see update_site.sh). The runner itself
+  # checks out nothing. The key is in the `ics` environment (main only). Turn it off
+  # with the repo variable ICS_AUTO_DEPLOY=false.
+  ics-deploy:
+    needs: publish
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.ICS_AUTO_DEPLOY != 'false'
+    runs-on: ubuntu-latest
+    permissions: {}
+    environment:
+      name: ics
+      url: https://ics.uci.edu/~kazuhak/
+    # One at a time; a newer push waits rather than cancelling a sync half-way.
+    concurrency:
+      group: ics-deploy
+      cancel-in-progress: false
+    timeout-minutes: 20
+    steps:
+      - name: Run update_site.sh on openlab.ics.uci.edu
+        env:
+          SSH_KEY: ${{ secrets.ICS_SSH_KEY }}
+          KNOWN_HOSTS: ${{ vars.ICS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/ics
+          chmod 600 ~/.ssh/ics
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # The server ignores the command sent; the forced command runs update_site.sh.
+          ssh -T -i ~/.ssh/ics -o IdentitiesOnly=yes -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes -o ConnectTimeout=30 -o ServerAliveInterval=30 \
+            kazuhak@openlab.ics.uci.edu
 
   # uci.kazuha.me (`cloudflare` target): build here, push the result to its branch
   # (cf-deploy); Cloudflare Workers Builds watches that branch and only runs
@@ -107,7 +171,7 @@ jobs:
           include-hidden-files: true
           retention-days: 1
 
-  # Only this job can write to the repo, and it installs and runs nothing from npm.
+  # Writes to the repo (cf-deploy only); like `publish`, installs and runs nothing from npm.
   cloudflare-publish:
     needs: cloudflare
     runs-on: ubuntu-latest

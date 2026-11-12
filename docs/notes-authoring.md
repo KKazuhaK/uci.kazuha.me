@@ -16,7 +16,7 @@ Section 9 is a block to paste into a new skill as-is.
   - `<COURSE>`: the folder of an existing `src/content/courses/<COURSE>.json` (`ICS-46`, `CS-121`, …).
   - `<slug>`: `lec-NN` or `week-NN` (two digits), or a special such as `final-review`.
   - `<lang>`: `en-US` or `zh-CN`. The other language is optional.
-- URL: `/notes/<course>/<slug>/<lang>/` (lowercase course). A push to `main` builds it; the Cloudflare mirror (`uci.kazuha.me`) updates on its own, while `ics.uci.edu/~kazuhak/` updates only when `~/update_site.sh` is run on the ICS server (CLAUDE.md, Workflow).
+- URL: `/notes/<course>/<slug>/<lang>/` (lowercase course). A push to `main` builds it and publishes it to the Cloudflare mirror `uci.kazuha.me` and, through the `ics-deploy` job, to `ics.uci.edu/~kazuhak/`; if that job is off or fails, run `~/update_site.sh` on the ICS server (CLAUDE.md, Workflow).
 - One note is one self-contained `.md` file. No local images or extra files (section 5).
 
 ## 2. Frontmatter
