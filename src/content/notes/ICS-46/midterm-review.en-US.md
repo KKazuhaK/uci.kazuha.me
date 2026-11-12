@@ -54,6 +54,7 @@ Study materials named on the same slide: the sample midterm, quizzes, lecture ac
   - **Runtime** of recursive code may be classified with the **Master theorem or a recursion-tree diagram** — either is accepted ([§4.3](#43-recurrences-that-could-replace-mystery4)).
   - **Extra-credit problems** are deliberately long and difficult: leave them until the main questions are done.
 - **Reviewed in class.** The Lecture 14 review (11/10) walked through exactly two sample questions: Q3, `removeLast` on a circular SLL ([§6.2](#62-sample-q3-solved-removelast-on-a-circular-sll-with-only-tail)), and Q4, a stack from one queue ([§7.2](#72-sample-q4-solved-a-stack-with-one-queue)). Know both, and their variants, cold.
+- **The full sample questions are on this page**, each at the top of its solution section (§3.1, §4.1, §6.2, §7.2, §8.3–8.4), with the wording unchanged.
 - **The sample is the blueprint.** Expect the same five questions with details changed — a different method (`removeFirst` instead of `removeLast`), a different pointer (head instead of tail), a different input (reverse-sorted instead of sorted). Each section below solves the sample question and then the variants most likely to replace it.
 
 ---
@@ -239,6 +240,25 @@ Correct, but `get(i)` on a linked list walks i nodes, so the loop costs 0 + 1 + 
 
 ### 3.1 Sample Q1 solved
 
+**The question** (sample midterm Q1, 10 pts):
+
+*a.* For each function f(n) in the table below, please write down O(f(n)) in the simplest possible form. For example, if f(n) was 2n, then O(f(n)) would be written as n (or O(n), if you like).
+
+| Function | Big-O |
+|---|---|
+| 2ⁿ | |
+| n²/2 + 1000 n log n | |
+| 50 n log n + n! | |
+| 30n | |
+| 3 n log n + 1000n | |
+| n³ + 50n² + 1000 | |
+| 2 log n + 47 | |
+| 2¹² | |
+
+*b.* Please order *the answers* given in part a so that they are in increasing order of rate of growth. I.e., write the slowest growing function on the left and the fastest growing on the right with the others between in order of growth for large values of n.
+
+**Worked through:**
+
 | f(n) | Big-O |
 |---|---|
 | 2ⁿ | O(2ⁿ) |
@@ -290,6 +310,43 @@ Empirically ([Lec 2](lec-02.en-US.md#53-the-doubling-hypothesis)): ratio ≈ 2�
 **Method.** For a loop, count the iterations from the loop variable's start, step and stop. For nested loops, add up the inner count for each outer value (it may depend on the outer variable). For recursion, write T(n) = (recursive calls) + (work outside them) and solve ([Lec 6](lec-06.en-US.md)).
 
 ### 4.1 Sample Q2 solved
+
+**The question** (sample midterm Q2, 10 pts):
+
+For each of the following five mystery methods, calculate the number of invocations of `method()` as a function of n. Use Big-O notation to simplify your answer. For your convenience, here are some useful approximations you might need to use: 1 + 1/2 + 1/3 + 1/4 + ⋯ + 1/n ~ O(log n); 1 + 2 + 3 + ⋯ + n ~ O(n²).
+
+```cpp
+void mystery1(int n) {
+    for (int i=0; i < 2*n; i++) {
+        method();
+    }
+}
+
+void mystery2(int n) {
+    for (int i=1; i < n; i = i*2) {
+        method();
+    }
+}
+
+void mystery3(int n) {
+    int i = 1;
+    while (i < n*n) {
+        method();
+        i++;
+    }
+}
+
+void mystery4(int n) {
+    if (n == 0)
+        Return 1;
+    else
+        Return n * mystery4(n-1);
+}
+```
+
+(As in the original: it says "five" but shows four, and `mystery4` is declared `void` yet returns a value.)
+
+**Worked through:**
 
 | Method | Exact number of `method()` calls | Big-O | Measured (n = 1000) |
 |---|---|---|---|
@@ -407,6 +464,38 @@ for (size_t i = index; i + 1 < n_; ++i) data_[i] = data_[i + 1];  // remove: shi
 
 ### 6.2 Sample Q3 solved: `removeLast` on a circular SLL with only `tail`
 
+**The question** (sample midterm Q3, 10 pts):
+
+A circular singly-linked list holding elements of type `T` has instance variables `Node tail;` and `int count;`. A circular singly-linked list is represented as in the picture below, where `tail` would refer to the last node in the list, and the `next` field of the last node refers to the first element.
+
+```text
+                             tail
+                              │
+                              ▼
+  ┌────┬───┐   ┌────┬───┐   ┌────┬───┐
+┌▶│ 12 │ ●─┼──▶│ 99 │ ●─┼──▶│ 37 │ ● │
+│ └────┴───┘   └────┴───┘   └────┴─┼─┘
+└──────────────────────────────────┘
+```
+
+In this problem, you will implement a method in the `CircularLinkedList<Item>` class to delete and return the Item of the last (right-most) node in the list. In the example, 37 would be returned. The header of the method is below:
+
+```cpp
+// post: The last elt has been deleted from the list.
+// The rest of the list is unchanged
+// @returns value held in removed node before deletion
+Template <typename T>
+T SinglyLinkedList<T>::removeLast() {
+```
+
+*a.* What special case(s) must you consider when writing this method?
+
+*b.* Please write the C++ code for this method (including special cases). Recall that a `Node` holds an `T item` and a `Node* next` to a `Node`.
+
+*c.* What is the big-O complexity of your method above and what would it be if we only have the head pointer to the beginning of the list. I.e., we had a head pointer instead of a tail pointer.
+
+**Worked through:**
+
 The list `12 → 99 → 37 → (back to 12)`, `tail` on 37; `tail->next` is the first node.
 
 **(a) Special cases.**
@@ -517,6 +606,30 @@ Output on the HW input: `200 forks / 150 cups / 200 spoons / 100 plates` (revers
 | Deque on a linked list | **DLL**: removal at both ends needs `prev` |
 
 ### 7.2 Sample Q4 solved: a stack with one queue
+
+**The question** (sample midterm Q4, 10 pts):
+
+Implement a Stack using one Queue. You can use the methods available to the Queue class (`enqueue`, `dequeue`, `isEmpty`, `peek`).
+
+```cpp
+Template <typename T>
+class Stack<T> {
+Public:
+    Stack() = default:
+    boolean isEmpty() { }
+    void push(T item) { }
+    T pop() { }
+    T peek() { }
+Private:
+    Queue<T> q;
+}
+```
+
+*a.* What is the worst-case Big-O time complexity of the push operation for this stack? Explain why.
+
+*b.* What is the worst-case Big-O time complexity of the pop operation for this stack? Explain why.
+
+**Worked through:**
 
 Keep the queue's **front = the stack's top**. On `push`, enqueue the new item and then rotate the n older items behind it.
 
@@ -682,6 +795,22 @@ Code for all of them: [selection and insertion](lec-07.en-US.md#5-selection-sort
 
 ### 8.3 Sample Q5(a) solved
 
+**The question** (sample midterm Q5 "Sorting (ignore Heapsort)", part a, 10 pts):
+
+In the table below, the first row (last column is 0) contains an array of 18 unsorted numbers between 1 and 50. The last row (last column is 6) contains the same numbers in sorted order. The other rows show the array in **some intermediate** state during one of these five sorting algorithms: 1) Selection sort, 2) Insertion sort, 3) Mergesort, 4) Quicksort (no initial shuffling), 5) Heapsort. Match each algorithm with the right row by writing its number (1-5) in the last column. Please keep in mind that for some algorithms, more than one rows might satisfy an intermediate state. Place extra credit answer to the right of the table.
+
+| | | | | | | | | | | | | | | | | | | |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 12 | 11 | 35 | 46 | 20 | 43 | 42 | 47 | 44 | 32 | 16 | 10 | 40 | 18 | 41 | 21 | 28 | 15 | **0** |
+| 11 | 10 | 12 | 15 | 16 | 18 | 20 | 21 | 28 | 32 | 35 | 40 | 41 | 42 | 43 | 44 | 46 | 47 | |
+| 11 | 12 | 20 | 35 | 42 | 43 | 46 | 47 | 44 | 32 | 16 | 10 | 40 | 18 | 41 | 21 | 28 | 15 | |
+| 11 | 12 | 20 | 35 | 46 | 43 | 42 | 47 | 44 | 32 | 16 | 10 | 40 | 18 | 41 | 21 | 28 | 15 | |
+| 10 | 11 | 12 | 46 | 20 | 43 | 42 | 47 | 44 | 32 | 16 | 35 | 40 | 18 | 41 | 21 | 28 | 15 | |
+| 10 | 11 | 12 | 15 | 16 | 43 | 42 | 47 | 44 | 32 | 20 | 35 | 40 | 18 | 41 | 21 | 28 | 46 | |
+| 10 | 11 | 12 | 15 | 16 | 18 | 20 | 21 | 28 | 32 | 35 | 40 | 41 | 42 | 43 | 44 | 46 | 47 | **6** |
+
+**Worked through:**
+
 Rows are numbered by the table's last column (row 0 = input, row 6 = sorted). I simulated the five algorithms with the course code on the row-0 array and checked every snapshot:
 
 | Row | Array | Algorithm | Why |
@@ -695,6 +824,18 @@ Rows are numbered by the table's last column (row 0 = input, row 6 = sorted). I 
 **Extra credit (more than one row fits):** row 3 is also insertion sort after 5 passes, and row 4 is also selection sort after 3 passes. The unique matching above comes from rows 2 and 5, which only one algorithm can produce.
 
 ### 8.4 Sample Q5(b) and its variants: number of compares
+
+**The question** (sample midterm Q5, part b, 8 pts): For the following algorithms, assume they are given an array with n elements *that are already sorted*. Choose among O(1), O(log n), O(n), O(n log n), O(n²).
+
+i. How many compares does selection sort take?
+
+ii. How many compares does insertion sort take?
+
+iii. How many compares does mergesort take?
+
+iv. How many compares does quicksort take when the first element is chosen as pivot?
+
+**Worked through:**
 
 Measured with the course code (counting every key comparison), n = 1000 → n = 2000:
 
