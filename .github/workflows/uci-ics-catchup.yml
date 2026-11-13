@@ -1,0 +1,65 @@
+# Hourly safety net for ics.uci.edu: if a push's uci-ics-deploy failed (openlab
+# down, a node without home directories, …), publish once it's reachable again.
+# The check itself makes no SSH connection: it compares the commit the live site
+# was built from (its /site-build.txt) with the deploy branch's Source-Commit, and
+# only calls uci-ics-deploy.yml when main's build is on the deploy branch but not
+# live. Kept out of site.yml: that workflow's concurrency group holds one pending run,
+# and an hourly run there could cancel a push's pending build.
+# Off with the repo variable ICS_AUTO_DEPLOY=false, like the push deploy.
+name: uci-ics-catchup
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+# Never cancel a run: it may be mid-sync. A queued check costs nothing.
+concurrency:
+  group: uci-ics-catchup
+  cancel-in-progress: false
+
+jobs:
+  check:
+    if: github.ref == 'refs/heads/main' && vars.ICS_AUTO_DEPLOY != 'false'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      behind: ${{ steps.compare.outputs.behind }}
+    steps:
+      - name: Is ics.uci.edu serving main's build?
+        id: compare
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          MAIN: ${{ github.sha }}
+        run: |
+          built="$(gh api "repos/$REPO/commits/deploy" --jq .commit.message | sed -n 's/^Source-Commit: //p' | tail -1)"
+          live="$(curl -fsS --max-time 30 "https://ics.uci.edu/~kazuhak/site-build.txt?t=$(date +%s)" 2>/dev/null | head -c 100 | tr -d '[:space:]' || true)"
+          echo "main: $MAIN"
+          echo "deploy branch holds the build of: ${built:-?}"
+          echo "ics.uci.edu serves the build of: ${live:-? (could not fetch site-build.txt)}"
+          behind=false
+          if [ -z "$built" ]; then
+            # Every build from scripts/build-targets.sh carries this trailer.
+            echo "::error::the deploy branch's commit has no Source-Commit trailer"
+            exit 1
+          elif [ -z "$live" ]; then
+            # Not "behind": without the live stamp this would log in to openlab every hour.
+            echo "::warning::could not read https://ics.uci.edu/~kazuhak/site-build.txt; not deploying blind"
+          elif [ "$built" != "$MAIN" ]; then
+            echo "main's build isn't on the deploy branch (still in CI, or CI failed): nothing to publish"
+          elif [ "$live" = "$built" ]; then
+            echo "ics.uci.edu is up to date"
+          else
+            echo "::notice::ics.uci.edu is behind main; publishing"
+            behind=true
+          fi
+          echo "behind=$behind" >> "$GITHUB_OUTPUT"
+
+  uci-ics-deploy:
+    needs: check
+    if: needs.check.outputs.behind == 'true'
+    permissions: {}
+    uses: ./.github/workflows/uci-ics-deploy.yml
+    secrets: inherit

@@ -1,0 +1,64 @@
+# Publish main's build on ics.uci.edu: log in to openlab with a key whose
+# authorized_keys line is `restrict,command="…/update_site.sh --ci"`: no shell or
+# forwarding, only that script. It pulls ~/site and, only if that leaves a clean
+# checkout of a main commit whose `build` and `publish` jobs passed, runs that
+# commit's scripts to publish its build (see update_site.sh). The runner itself
+# checks out nothing. The key is in the `ics` environment (main only).
+#
+# Called by site.yml after each push to main (job `uci-ics-deploy`) and by
+# uci-ics-catchup.yml when the hourly check finds ics.uci.edu behind.
+name: uci-ics-deploy
+
+on:
+  workflow_call:
+
+jobs:
+  deploy:
+    name: update_site.sh --ci
+    runs-on: ubuntu-latest
+    permissions: {}
+    environment:
+      name: ics
+      url: https://ics.uci.edu/~kazuhak/
+    # One at a time across both callers; a newer run waits rather than cancelling a
+    # sync half-way.
+    concurrency:
+      group: uci-ics-deploy
+      cancel-in-progress: false
+    # Four failed connections take about 12 minutes; one that gets in may then wait up
+    # to 10 for a run by hand to release the lock.
+    timeout-minutes: 30
+    steps:
+      - name: Run update_site.sh on openlab.ics.uci.edu
+        env:
+          SSH_KEY: ${{ secrets.ICS_SSH_KEY }}
+          KNOWN_HOSTS: ${{ vars.ICS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/ics
+          chmod 600 ~/.ssh/ics
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # The server ignores the command sent; the forced command runs update_site.sh.
+          # openlab hands each login to one of several nodes, and one that is unwell
+          # (e.g. home directories not mounted) times out or refuses the key. Retry with
+          # growing gaps, so attempts land about 0, 1, 4 and 10 minutes in; few
+          # connections, since openlab blocks an address that opens many. Only ssh's own
+          # failures (exit 255) are retried, never a failure reported by update_site.sh.
+          # A connection that drops mid-run is also 255 and is retried too; that is safe,
+          # since update_site.sh takes a lock and only publishes main's verified build.
+          # Longer outages are caught by the hourly uci-ics-catchup.yml.
+          gaps=(60 180 360)
+          for attempt in 1 2 3 4; do
+            rc=0
+            ssh -T -i ~/.ssh/ics -o IdentitiesOnly=yes -o BatchMode=yes \
+              -o StrictHostKeyChecking=yes -o ConnectTimeout=30 -o ServerAliveInterval=30 \
+              kazuhak@openlab.ics.uci.edu || rc=$?
+            [ "$rc" -ne 255 ] && exit "$rc"
+            if [ "$attempt" -lt 4 ]; then
+              gap="${gaps[$((attempt - 1))]}"
+              echo "::warning::could not reach openlab.ics.uci.edu (attempt $attempt of 4); retrying in $((gap / 60)) min"
+              sleep "$gap"
+            fi
+          done
+          echo "::error::could not reach openlab.ics.uci.edu after 4 attempts; the hourly catch-up will try again, or run ~/update_site.sh there by hand"
+          exit 255

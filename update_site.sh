@@ -3,8 +3,9 @@
 # Settings: deploy.env in this directory (copy deploy.env.example and set every value).
 #   ./update_site.sh           wait for CI on the latest main commit, then publish its build
 #   ./update_site.sh --force   republish the current build even if nothing changed
-#   ./update_site.sh --ci      unattended (the `uci-ics-deploy` job in site.yml runs this over
-#                              SSH; its key's forced command is exactly this). Nothing is
+#   ./update_site.sh --ci      unattended (.github/workflows/uci-ics-deploy.yml runs this over
+#                              SSH after each push and from the hourly catch-up; its key's
+#                              forced command is exactly this). Nothing is
 #                              skipped: the pull must leave a clean checkout of main, and that
 #                              commit's `build` and `publish` jobs must have passed, before any
 #                              pulled script runs. A commit still in CI is left to its own
@@ -150,7 +151,7 @@ else
       esac
     fi
     if [ "$ci" = 1 ] && [ "$status" != "completed" ]; then
-      ok "main moved on to ${head:0:7}, still in CI; its own uci-ics-deploy job will publish it"
+      ok "main moved on to ${head:0:7}, still in CI; that commit's own deploy will publish it"
       echo "✓ Nothing to do · $(dur $((SECONDS - t_start)))"
       exit 0
     fi
