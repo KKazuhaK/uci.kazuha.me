@@ -386,6 +386,14 @@ function el(tag, attrs, parent) {
 	return e;
 }
 
+// Line from a to b cut back by r at both ends, so it stops at the circles'
+// edges instead of running under them (node fills are translucent in dark mode).
+function trimmed(a, b, r) {
+	const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+	const ux = dx / len * r, uy = dy / len * r;
+	return { x1: a.x + ux, y1: a.y + uy, x2: b.x - ux, y2: b.y - uy };
+}
+
 export function render(stage, frame) {
 	ensureCss();
 	const colW = 40, rowH = 52, pad = 22, R = 15;
@@ -403,7 +411,7 @@ export function render(stage, frame) {
 	const gE = el("g", {}, svg), gN = el("g", {}, svg);
 	frame.edges.forEach(function(e) {
 		const a = pos[e[0]], b = pos[e[1]];
-		el("line", { "class": "bst-edge", x1: a.x, y1: a.y, x2: b.x, y2: b.y }, gE);
+		el("line", Object.assign({ "class": "bst-edge" }, trimmed(a, b, R)), gE);
 	});
 	frame.nodes.forEach(function(nd) {
 		const g = el("g", { "class": "bst-node " + nd.cls }, gN);

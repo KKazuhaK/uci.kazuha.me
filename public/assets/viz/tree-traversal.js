@@ -296,7 +296,7 @@ function build(stage, pos) {
 	const edges = {}, nodes = {};
 	for (let p = 2; p < pos.length; p++) {
 		if (pos[p] === null) continue;
-		edges[p] = el("line", { "class": "tt-edge", x1: xy[p >> 1].x, y1: xy[p >> 1].y, x2: xy[p].x, y2: xy[p].y }, svg);
+		edges[p] = el("line", Object.assign({ "class": "tt-edge" }, trimmed(xy[p >> 1], xy[p], R)), svg);
 	}
 	for (let p = 1; p < pos.length; p++) {
 		if (pos[p] === null) continue;
@@ -331,6 +331,14 @@ function build(stage, pos) {
 	stage.appendChild(label);
 	stage.appendChild(out);
 	return { key: pos.join(","), xy: xy, edges: edges, nodes: nodes, cursor: cursor, out: out, cells: cells, lastStep: -2, shownOut: -1 };
+}
+
+// Line from a to b cut back by r at both ends, so it stops at the circles'
+// edges instead of running under them (node fills are translucent in dark mode).
+function trimmed(a, b, r) {
+	const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+	const ux = dx / len * r, uy = dy / len * r;
+	return { x1: a.x + ux, y1: a.y + uy, x2: b.x - ux, y2: b.y - uy };
 }
 
 export function render(stage, frame) {

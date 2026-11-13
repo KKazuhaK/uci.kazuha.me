@@ -415,7 +415,7 @@ function build(stage, total) {
 	const edges = [null, null], nodes = [null];
 	const gE = el("g", {}, svg), gN = el("g", {}, svg);
 	for (let i = 2; i <= total; i++) {
-		edges.push(el("line", { "class": "bh-edge", x1: pos[i >> 1].x, y1: pos[i >> 1].y, x2: pos[i].x, y2: pos[i].y }, gE));
+		edges.push(el("line", Object.assign({ "class": "bh-edge" }, trimmed(pos[i >> 1], pos[i], R)), gE));
 	}
 	for (let i = 1; i <= total; i++) {
 		const g = el("g", { "class": "bh-node" }, gN);
@@ -439,6 +439,14 @@ function build(stage, total) {
 	stage.appendChild(wrap);
 	stage.appendChild(row);
 	return { total: total, pos: pos, edges: edges, nodes: nodes, cells: cells, lastStep: -2, lastN: -1 };
+}
+
+// Line from a to b cut back by r at both ends, so it stops at the circles'
+// edges instead of running under them (node fills are translucent in dark mode).
+function trimmed(a, b, r) {
+	const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+	const ux = dx / len * r, uy = dy / len * r;
+	return { x1: a.x + ux, y1: a.y + uy, x2: b.x - ux, y2: b.y - uy };
 }
 
 export function render(stage, frame) {

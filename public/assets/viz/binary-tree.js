@@ -364,7 +364,7 @@ function build(stage, frame) {
 	for (let p = 2; p < pos.length; p++) {
 		if (!has(pos, p)) continue;
 		const a = g.xy(p >> 1), b = g.xy(p);
-		edges[p] = el("line", { "class": "bt-edge", x1: a.x, y1: a.y, x2: b.x, y2: b.y }, gE);
+		edges[p] = el("line", Object.assign({ "class": "bt-edge" }, trimmed(a, b, 15)), gE);
 	}
 	for (let p = 1; p < pos.length; p++) {
 		if (!has(pos, p)) continue;
@@ -377,6 +377,14 @@ function build(stage, frame) {
 	wrap.appendChild(svg);
 	stage.appendChild(wrap);
 	return { key: frame.tree + "|" + frame.gutter + "|" + pos.join(","), g: g, levels: levels, edges: edges, nodes: nodesEl, gX: gX, gB: gB, wrap: wrap };
+}
+
+// Line from a to b cut back by r at both ends, so it stops at the circles'
+// edges instead of running under them (node fills are translucent in dark mode).
+function trimmed(a, b, r) {
+	const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+	const ux = dx / len * r, uy = dy / len * r;
+	return { x1: a.x + ux, y1: a.y + uy, x2: b.x - ux, y2: b.y - uy };
 }
 
 export function render(stage, frame) {
@@ -401,7 +409,7 @@ export function render(stage, frame) {
 	st.gB.textContent = "";
 	frame.ghosts.forEach(function(p) {
 		const a = g.xy(p >> 1), b = g.xy(p);
-		el("line", { "class": "bt-ghostedge", x1: a.x, y1: a.y, x2: b.x, y2: b.y }, st.gX);
+		el("line", Object.assign({ "class": "bt-ghostedge" }, trimmed(a, b, 15)), st.gX);
 		el("circle", { "class": "bt-ghost", cx: b.x, cy: b.y, r: 15 }, st.gX);
 	});
 	if (frame.nulls) {
