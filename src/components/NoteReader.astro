@@ -134,12 +134,30 @@ const S = zh
           var intro = document.getElementById("notes-intro");
           if (!bar || !intro) return;
           bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
           function layout() {
             // Measure the in-card form (the floating pill is wider, and sits elsewhere).
             var wasFloating = bar.classList.contains("is-floating");
-            bar.classList.remove("is-floating");
-            var w = bar.offsetWidth, h = bar.offsetHeight;
-            if (wasFloating) bar.classList.add("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
             var shell = bar.parentElement.getBoundingClientRect();
             var cx = shell.left + shell.width / 2;
             var crumbs = intro.querySelector(".notes-breadcrumb");
@@ -193,7 +211,7 @@ const S = zh
           window.scrollTo({ top: target, behavior: "instant" });
           // Already at the top of the screen: show it as the floating pill from the first
           // paint, as on the page before (reading-bar.ts keeps this up to date).
-          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) bar.classList.add("is-floating");
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
         })();
       </script>
       <span id="rb-dock-ready" hidden></span>
@@ -375,11 +393,14 @@ const S = zh
     background: transparent;
     box-shadow: none;
     overflow: hidden;
-    transition: background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    /* Card ↔ floating: the pill widens from the middle as its background fades in. */
+    transition: width 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.25s ease, box-shadow 0.25s ease, opacity 0.2s ease;
     /* Same element on the next note: the page transition keeps it in place. */
     view-transition-name: reading-bar;
   }
   .reading-bar.rb-ready { position: sticky; top: 12px; }
+  .reading-bar.rb-instant,
+  .reading-bar.rb-instant :global(*) { transition: none !important; }
   /* Fades out as the end of the card scrolls up to it (reading-bar.ts), rather than
      being cut off by the card's edge. */
   .reading-bar.rb-leaving { opacity: 0; pointer-events: none; }
@@ -389,10 +410,31 @@ const S = zh
     box-shadow: 0 6px 24px rgba(15, 23, 42, 0.1), 0 0 0 1px var(--hairline);
   }
   :global(html[data-theme="dark"]) .reading-bar.is-floating { box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--hairline); }
-  /* In the card, only the pager: the breadcrumb row already shows course, unit and language. */
+  /* In the card, only the pager: the breadcrumb row already shows course, unit and
+     language. Title and language collapse to nothing and grow back (no display:none,
+     so the change can animate). */
+  .reading-bar .rb-title,
+  .reading-bar .rb-lang {
+    max-width: 20rem;
+    transition: max-width 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), padding 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 0.2s ease 0.08s, visibility 0s linear 0s, background 0.15s ease, color 0.15s ease;
+  }
   .reading-bar:not(.is-floating) .rb-title,
-  .reading-bar:not(.is-floating) .rb-lang,
-  .reading-bar:not(.is-floating) .rb-progress { display: none; }
+  .reading-bar:not(.is-floating) .rb-lang {
+    max-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: max-width 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), padding 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 0.12s ease, visibility 0s linear 0.32s;
+  }
+  .reading-bar .rb-progress { transition: opacity 0.25s ease; }
+  .reading-bar:not(.is-floating) .rb-progress { opacity: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .reading-bar, .rb-title, .rb-lang, .rb-progress { transition: none !important; }
+  }
   .rb-btn,
   .rb-title {
     display: inline-flex;

@@ -123,9 +123,21 @@ export function setupReadingBar(opts: {
 
   // Floating once sticky has pinned it to the top of the screen (CSS top: 12px).
   const shell = bar.parentElement;
+  const instant = (fn: () => void): void => {
+    const f = (window as { __kzhRbInstant?: (fn: () => void) => void }).__kzhRbInstant;
+    if (typeof f === "function") f(fn); else fn();
+  };
+  // Until the page has settled (load + a moment), state changes come from restoring a
+  // position (reload, language switch), not from the reader scrolling: no animation.
+  let settled = false;
+  window.addEventListener("load", () => setTimeout(() => { settled = true; }, 200));
   const updateFloating = (): void => {
     const r = bar.getBoundingClientRect();
-    bar.classList.toggle("is-floating", window.scrollY > 0 && r.top <= 12.5);
+    const floating = window.scrollY > 0 && r.top <= 12.5;
+    if (floating !== bar.classList.contains("is-floating")) {
+      const apply = (): void => { bar.classList.toggle("is-floating", floating); };
+      if (settled) apply(); else instant(apply);
+    }
     // Its sticky box can outlast the card's end by its own height (negative margin):
     // fade it out once the card's bottom edge reaches it.
     bar.classList.toggle("rb-leaving", !!shell && shell.getBoundingClientRect().bottom < r.bottom + 8);
@@ -133,8 +145,10 @@ export function setupReadingBar(opts: {
   // The layout may change (window resized, fonts loaded): decide again where it fits.
   const relayout = (): void => {
     const f = (window as { __kzhRbLayout?: () => void }).__kzhRbLayout;
-    if (typeof f === "function") f();
-    updateFloating();
+    instant(() => {
+      if (typeof f === "function") f();
+      updateFloating();
+    });
   };
   window.addEventListener("resize", relayout);
   window.addEventListener("load", relayout);
