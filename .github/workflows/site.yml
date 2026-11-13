@@ -121,9 +121,23 @@ jobs:
           chmod 600 ~/.ssh/ics
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
           # The server ignores the command sent; the forced command runs update_site.sh.
-          ssh -T -i ~/.ssh/ics -o IdentitiesOnly=yes -o BatchMode=yes \
-            -o StrictHostKeyChecking=yes -o ConnectTimeout=30 -o ServerAliveInterval=30 \
-            kazuhak@openlab.ics.uci.edu
+          # openlab hands each login to one of several nodes, and one that is unwell
+          # times out or refuses the key: retry a couple of times, a minute apart (few
+          # connections: openlab blocks an address that opens many). Only ssh's own
+          # failures (exit 255) are retried, never a failure reported by update_site.sh.
+          for attempt in 1 2 3; do
+            rc=0
+            ssh -T -i ~/.ssh/ics -o IdentitiesOnly=yes -o BatchMode=yes \
+              -o StrictHostKeyChecking=yes -o ConnectTimeout=30 -o ServerAliveInterval=30 \
+              kazuhak@openlab.ics.uci.edu || rc=$?
+            [ "$rc" -ne 255 ] && exit "$rc"
+            if [ "$attempt" -lt 3 ]; then
+              echo "::warning::could not reach openlab.ics.uci.edu (attempt $attempt of 3); retrying in 60s"
+              sleep 60
+            fi
+          done
+          echo "::error::could not reach openlab.ics.uci.edu after 3 attempts; run ~/update_site.sh there by hand"
+          exit 255
 
   # uci.kazuha.me (`cloudflare` target): build here, push the result to its branch
   # (cf-deploy); Cloudflare Workers Builds watches that branch and only runs
