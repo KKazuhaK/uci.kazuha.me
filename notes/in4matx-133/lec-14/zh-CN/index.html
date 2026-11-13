@@ -1,0 +1,578 @@
+<!DOCTYPE html><html lang="zh-CN"><head><title>IN4MATX 133 移动设计原则 | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="什么是好的用户体验，移动设计的四条原则（有用的初始界面、“哎呀”按钮、错误预防、遵循平台惯例），人机界面指南，iOS 的导航与模态框，品牌、颜色、字体和图标，Google Material Design 与 iOS 的对比（导航栏与滑动手势），以及规划 A4 的页面、组件和服务。"><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-14/zh-CN/"><link rel="icon" href="/~kazuhak/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/~kazuhak/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-14/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-14/zh-CN/"><link rel="stylesheet" href="/~kazuhak/_astro/BaseLayout.D6FvEM2t.css"><link rel="stylesheet" href="/~kazuhak/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/~kazuhak/_astro/katex.D1M0OS0E.css"><link rel="stylesheet" href="/~kazuhak/_astro/index.Yoh2HO3w.css"></head><body data-nav-path="/~kazuhak/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/~kazuhak/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/~kazuhak/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/~kazuhak/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/~kazuhak/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/~kazuhak/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="zh-CN" data-viz-base="/~kazuhak/assets/viz/" data-viz-version="1794551166" data-source-url="/~kazuhak/notes/in4matx-133/lec-14/zh-CN/source.md" data-editor-url="/~kazuhak/tools/md-editor/" data-alt-url="/~kazuhak/notes/in4matx-133/lec-14/en-US/" data-prev-url="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="上一篇 / 下一篇" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/" title="上一篇: Ionic 组件 ([)" aria-label="上一篇: 第 13 讲" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>第 13 讲</span></a><button type="button" class="rb-title" data-scroll-top title="回到顶部" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>IN4MATX 133</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>第 14 讲</span></button><a class="rb-btn rb-lang" href="/~kazuhak/notes/in4matx-133/lec-14/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>EN</span></a><span class="rb-btn rb-disabled rb-side-next" aria-hidden="true" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/~kazuhak/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/~kazuhak/notes/in4matx-133/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>IN4MATX 133</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>第 14 讲</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/~kazuhak/notes/in4matx-133/lec-14/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>English</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>目录</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>在编辑器中打开</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>第 14 讲 · 用户界面软件课程阅读笔记</h2><p id="reader-description" data-astro-cid-gxyjxt6l>这页整理的是 IN4MATX 133 第 14 讲 的课程笔记，适合按讲复习 HTML、CSS、JavaScript、DOM 和 UI 工具，并配有可编辑运行的实时演示。下面这条路径可以带你回到 Notes、Course Notes、课程主页，或定位到当前笔记。将鼠标悬停在右侧的 ≡ 图标上可以打开目录。</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>最后编辑于 2026 年 11 月 12 日</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="in4matx-133-user-interface-software--lecture-14移动设计原则">IN4MATX 133: User Interface Software — Lecture 14：移动设计原则</h1>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#1-%E4%BB%80%E4%B9%88%E6%98%AF%E5%A5%BD%E7%9A%84%E7%94%A8%E6%88%B7%E4%BD%93%E9%AA%8C">1. 什么是好的用户体验？</a></li>
+<li><a href="#2-%E6%9C%89%E7%94%A8%E7%9A%84%E5%88%9D%E5%A7%8B%E7%95%8C%E9%9D%A2">2. 有用的初始界面</a></li>
+<li><a href="#3-%E5%93%8E%E5%91%80%E6%8C%89%E9%92%AE">3. “哎呀”按钮</a></li>
+<li><a href="#4-%E9%94%99%E8%AF%AF%E9%A2%84%E9%98%B2">4. 错误预防</a></li>
+<li><a href="#5-%E9%81%B5%E5%BE%AA%E5%B9%B3%E5%8F%B0%E6%83%AF%E4%BE%8B">5. 遵循平台惯例</a></li>
+<li><a href="#6-%E4%BA%BA%E6%9C%BA%E7%95%8C%E9%9D%A2%E6%8C%87%E5%8D%97">6. 人机界面指南</a></li>
+<li><a href="#7-ios-hig%E5%AF%BC%E8%88%AA%E4%B8%8E%E6%A8%A1%E6%80%81%E6%A1%86">7. iOS HIG：导航与模态框</a></li>
+<li><a href="#8-ios-hig%E5%93%81%E7%89%8C%E9%A2%9C%E8%89%B2%E4%B8%8E%E5%AD%97%E4%BD%93">8. iOS HIG：品牌、颜色与字体</a></li>
+<li><a href="#9-%E7%83%AD%E9%97%A8%E5%BA%94%E7%94%A8%E4%B8%AD%E7%9A%84%E8%AE%BE%E8%AE%A1%E9%80%89%E6%8B%A9">9. 热门应用中的设计选择</a></li>
+<li><a href="#10-%E5%BA%94%E7%94%A8%E5%9B%BE%E6%A0%87%E4%B8%8E%E7%B3%BB%E7%BB%9F%E5%9B%BE%E6%A0%87">10. 应用图标与系统图标</a></li>
+<li><a href="#11-google-material-design-%E4%B8%8E-androidios-%E5%AF%B9%E6%AF%94">11. Google Material Design 与 Android、iOS 对比</a></li>
+<li><a href="#12-%E8%A7%84%E5%88%92-a4%E7%BB%98%E5%88%B6%E9%A1%B5%E9%9D%A2%E5%8B%BE%E5%8B%92%E6%9E%B6%E6%9E%84">12. 规划 A4：绘制页面，勾勒架构</a></li>
+<li><a href="#13-%E8%AF%BE%E5%A0%82%E9%97%AE%E9%A2%98%E4%B8%8E%E6%BC%94%E7%A4%BA%E9%99%84%E8%A7%A3%E7%AD%94">13. 课堂问题与演示（附解答）</a></li>
+<li><a href="#14-%E9%80%9F%E6%9F%A5%E4%B8%8E%E5%BF%85%E8%AE%B0%E7%9A%84-5-%E4%B8%AA%E8%A6%81%E7%82%B9">14. 速查与必记的 5 个要点</a></li>
+</ul>
+<blockquote>
+<p>UCI IN4MATX 133: User Interface Software — Prof. Travis Linden Reid，2026 年秋季学期，周四 11/12（第 7 周）<br>内容整理自 Lecture 14 的幻灯片（共 40 页）。这是一堂设计课：课程仓库中没有它的 demo 文件夹，因此这里的现场演示是根据幻灯片原则手工制作的小示例。内容按概念组织，而不是按来源组织。</p>
+</blockquote>
+<blockquote>
+<p>📅 <strong>课程安排</strong>：A2 成绩已公布。A4 已发布——它较少手把手指导，需要花更多时间研读 Ionic 文档；到本学期的这个阶段，你已经具备所需的全部技能。<strong>A4 的 README 至关重要</strong>，而今天的概念正是写好 README 的关键。<br>第 7–10 周计划：A5 现在是一个<strong>开放式应用开发项目</strong>，而不再是 AI 项目。技术讲座的内容快要讲完了，剩余的是：设备资源、数据库、SASS。第 10 周可能就是开始做期末项目的时间。</p>
+</blockquote>
+<hr>
+<h2 id="1-什么是好的用户体验">1. 什么是好的用户体验？</h2>
+<p>讲义开头提出一个问题（幻灯片 5）：<em>什么是好的用户体验？</em> 幻灯片 6 给出的答案是：<strong>它不只是 UI。</strong> 体验从你第一次启动应用或打开网站时就开始了，它包含几个组成部分：</p>
+<ul>
+<li><strong>初次印象</strong>（从开机到应用启动）</li>
+<li><strong>用户界面</strong></li>
+<li><strong>视觉设计</strong></li>
+<li><strong>信息呈现</strong></li>
+<li><strong>物理设备</strong>，以及用户如何把它与应用配合使用</li>
+</ul>
+<p>接下来是移动设计的四条原则（幻灯片 7）：有用的初始界面、“哎呀”按钮、错误预防，以及遵循平台惯例，分别对应第 2–5 节。</p>
+<h2 id="2-有用的初始界面">2. 有用的初始界面</h2>
+<p>第一屏本身就应该有价值（幻灯片 8）：</p>
+<ul>
+<li><strong>给用户清晰的行动号召。</strong></li>
+<li><strong>在首页放上有用的内容</strong>——例如 Pinterest 的首页一打开就是图片网格；首页不应只放导航按钮。</li>
+<li><strong>让用户很容易回到首页</strong>——通过底部导航栏或侧边导航菜单。</li>
+</ul>
+<p>幻灯片对比了两张截图：Pinterest（搜索栏，然后是图片信息流，底部有导航栏），以及一款焦虑管理应用，它的首页是一排圆形图标按钮，每个按钮都只是跳转到别处——只有导航，没有别的内容。</p>
+<h2 id="3-哎呀按钮">3. “哎呀”按钮</h2>
+<p>功能和按钮经常被误按，因此（幻灯片 9）：</p>
+<ul>
+<li><strong>撤销和重做应该很容易</strong>——Gmail 的“撤销发送”就是例子（截图展示的是写邮件界面）。</li>
+<li><strong>返回上一页应该很容易</strong>——面包屑导航或返回按钮（位于左上角）。</li>
+</ul>
+<p>用 Ionic 的说法，“撤销发送”就是一个带有 <strong>Undo</strong> 按钮的 toast（<a href="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/#8-%E6%A8%A1%E6%80%81%E5%AF%B9%E8%AF%9D%E6%A1%86toastalertaction-sheet">Lecture 13</a> 介绍了 toast）。按下发送后，如果在 4 秒内按下撤销，会得到 <code>Send undone: back to the draft</code>；如果超时，则得到 <code>Message really sent</code>：</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;The “uh-oh” button: an “undo send” toast (slide 9) · hand-made example with an Ionic toast&quot;, &quot;width&quot;: 375, &quot;height&quot;: 300, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script&gt;window.Ionic = { config: { mode: \&quot;ios\&quot; } };&lt;/script&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-header&gt;&lt;ion-toolbar&gt;&lt;ion-title&gt;Compose&lt;/ion-title&gt;&lt;/ion-toolbar&gt;&lt;/ion-header&gt;\n&lt;ion-content class=\&quot;ion-padding\&quot;&gt;\n  &lt;p&gt;Lunch Saturday?&lt;/p&gt;\n  &lt;ion-button id=\&quot;send\&quot;&gt;Send&lt;/ion-button&gt;\n&lt;/ion-content&gt;\n&lt;/ion-app&gt;&quot;, &quot;js&quot;: &quot;document.getElementById(&#39;send&#39;).addEventListener(&#39;click&#39;, () =&gt; {\n  let undone = false;\n  const toast = Object.assign(document.createElement(&#39;ion-toast&#39;), {\n    message: &#39;Message sent.&#39;, duration: 4000,\n    buttons: [{ text: &#39;Undo&#39;, handler: () =&gt; { undone = true; } }]\n  });\n  toast.addEventListener(&#39;didDismiss&#39;, () =&gt; toast.remove());\n  document.body.appendChild(toast);\n  toast.present();\n  toast.onDidDismiss().then(() =&gt; {\n    console.log(undone ? &#39;Send undone: back to the draft&#39; : &#39;Message really sent&#39;);\n  });\n});&quot;}</code></pre><h2 id="4-错误预防">4. 错误预防</h2>
+<p>在小屏幕上输入信息很困难，因此要尽可能多地提供输入辅助（幻灯片 10）：</p>
+<ul>
+<li><strong>添加输入检查</strong>——电话号码有几位数字？信用卡号呢？</li>
+<li><strong>使用合适的控件</strong>——日期／时间滚轮、滑块。</li>
+</ul>
+<p>幻灯片的截图包括一个 Android 活动表单（日期字段显示 “Wed, Sep 19, 2012”，时间被高亮），以及一个 DatePicker 滚轮（Sep/Oct/Nov、03/04/05、2016/2017/2018）——用户不必手动输入日期，而是转动只能产生有效值的滚轮。</p>
+<p>下面是一个同时包含这两种思路的小型预订表单：电话字段在输入时统计数字，除非恰好是 10 位，否则不允许提交；日期使用浏览器的日期选择器，人数使用滑块。这一步会输入一个 7 位数字并点击 Book，日志会输出 <code>Blocked: phone number has 7 digits, needs 10</code>：</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Error prevention (slide 10) · hand-made example: input checks and fitting widgets&quot;, &quot;width&quot;: 375, &quot;height&quot;: 330, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;form id=\&quot;f\&quot;&gt;\n  &lt;label&gt;Phone number&lt;br&gt;\n    &lt;input id=\&quot;phone\&quot; type=\&quot;tel\&quot; inputmode=\&quot;numeric\&quot; placeholder=\&quot;(949) 555-0123\&quot;&gt;\n  &lt;/label&gt;\n  &lt;small id=\&quot;hint\&quot;&gt;10 digits&lt;/small&gt;\n  &lt;label&gt;Date&lt;br&gt;&lt;input type=\&quot;date\&quot; id=\&quot;date\&quot;&gt;&lt;/label&gt;\n  &lt;label&gt;Guests: &lt;output id=\&quot;n\&quot;&gt;2&lt;/output&gt;&lt;br&gt;\n    &lt;input type=\&quot;range\&quot; min=\&quot;1\&quot; max=\&quot;10\&quot; value=\&quot;2\&quot; id=\&quot;guests\&quot;&gt;\n  &lt;/label&gt;\n  &lt;button&gt;Book&lt;/button&gt;\n&lt;/form&gt;&quot;, &quot;css&quot;: &quot;body { font-family: -apple-system, system-ui, sans-serif; margin: 16px; }\nlabel { display: block; margin-top: 12px; }\ninput { font-size: 16px; padding: 6px; width: 100%; box-sizing: border-box; }\nsmall { color: #666; }\nsmall.bad { color: #c00; }\nbutton { margin-top: 14px; font-size: 16px; padding: 8px 16px; }&quot;, &quot;js&quot;: &quot;const phone = document.getElementById(&#39;phone&#39;);\nconst hint = document.getElementById(&#39;hint&#39;);\nphone.addEventListener(&#39;input&#39;, () =&gt; {\n  const digits = phone.value.replace(/\\D/g, &#39;&#39;);        // keep digits only\n  hint.textContent = digits.length + &#39; / 10 digits&#39;;\n  hint.className = digits.length == 10 ? &#39;&#39; : &#39;bad&#39;;\n});\ndocument.getElementById(&#39;guests&#39;).addEventListener(&#39;input&#39;, (e) =&gt; {\n  document.getElementById(&#39;n&#39;).textContent = e.target.value;\n});\ndocument.getElementById(&#39;f&#39;).addEventListener(&#39;submit&#39;, (e) =&gt; {\n  const digits = phone.value.replace(/\\D/g, &#39;&#39;);\n  if (digits.length != 10) {\n    e.preventDefault();\n    console.log(&#39;Blocked: phone number has &#39; + digits.length + &#39; digits, needs 10&#39;);\n  }\n});&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;Type a 7-digit number and press Book (scripted): the check stops it.&quot;, &quot;js&quot;: &quot;phone.value=&#39;555-0123&#39;; phone.dispatchEvent(new Event(&#39;input&#39;)); document.querySelector(&#39;button&#39;).click();&quot;}]}</code></pre><h2 id="5-遵循平台惯例">5. 遵循平台惯例</h2>
+<p>用户不应该需要猜测不同的词语、情境、图标或操作是否意味着同一件事，也不应该需要记住应用特有的导航方式（幻灯片 11）。幻灯片展示了同一款会议应用 “Timetable” 分别在 iOS（浅色，底部标签栏）和 Android（绿色工具栏，Material 风格）上的样子：内容相同，各自遵循本平台的外观。</p>
+<p>这些惯例是如何被成文规定的，就是本讲剩下的内容。</p>
+<h2 id="6-人机界面指南">6. 人机界面指南</h2>
+<p>iOS 和 Android 的平台惯例以<strong>人机界面指南（HIG，human interface guidelines）</strong>的形式发布（幻灯片 12）。它们由 Google、Apple 等平台开发者制定，并且（幻灯片 13）：</p>
+<ul>
+<li>定义视觉设计和风格的规则</li>
+<li>规定交互方式</li>
+<li>确立布局技术</li>
+<li>保证平台内的一致性</li>
+</ul>
+<p>HIG 只是<strong>建议</strong>——你可以选择不遵守。它们的目标是为设备或平台提供最佳体验，而且大多遵循最佳实践（幻灯片 14）。</p>
+<p>以下是 Apple iOS 指南的摘要（幻灯片 15）：</p>
+<ul>
+<li><strong>内容优先于 UI。</strong></li>
+<li><strong>响应用户的显示偏好</strong>（深色模式、横屏／竖屏）。</li>
+<li><strong>充分利用整个屏幕。</strong></li>
+<li><strong>限制屏幕上的控件。</strong></li>
+<li><strong>善用滑动手势。</strong></li>
+<li><strong>利用用户数据减少输入</strong>——例如 Apple Pay、生物识别（人脸或指纹）或设备位置。</li>
+</ul>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://developer.apple.com/design/human-interface-guidelines/designing-for-ios">Apple HIG: Designing for iOS</a></p>
+</blockquote>
+<h2 id="7-ios-hig导航与模态框">7. iOS HIG：导航与模态框</h2>
+<p><strong>导航</strong>（幻灯片 16）：</p>
+<ul>
+<li>使用<strong>标签栏</strong>在应用的<strong>顶层部分</strong>之间导航。它用于<strong>导航，而不是操作</strong>，并且<strong>始终可见</strong>。</li>
+<li>使用<strong>侧边栏</strong>展示<strong>层级内容</strong>：最多 <strong>2 层</strong>层级，并且<strong>可折叠</strong>。</li>
+</ul>
+<p>幻灯片的图示包括一个侧边栏（带有 “Section” 标题和 Item 1–3，其中一项高亮），以及底部带有星形图标标签栏的 iPhone 和 iPad 屏幕。在 Ionic 中，标签栏是 <code>&lt;ion-tabs&gt;</code>，它取代了页脚（<a href="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/#3-%E7%BB%93%E6%9E%84%E7%BB%84%E4%BB%B6%E5%86%85%E5%AE%B9%E9%A1%B5%E7%9C%89%E9%A1%B5%E8%84%9A">Lecture 13</a>）。</p>
+<p><strong>模态框</strong>（幻灯片 17）会独占用户的操作，直到被关闭。它们的用途是吸引注意力，完成<strong>一项小而具体的任务</strong>。因此：</p>
+<ul>
+<li>确保用户可以<strong>退出</strong></li>
+<li>用它们来帮助<strong>避免数据丢失</strong></li>
+<li><strong>少用</strong></li>
+</ul>
+<p>图示包括一个覆盖在地图上的 “Location Services Off” 提醒（带有 <strong>Settings</strong> 和 <strong>OK</strong> 按钮），以及一个邮件撰写面板（“Let&#39;s grab lunch!”），顶部有 <strong>Cancel</strong> 和 <strong>Send</strong>——Cancel 就是退出的方式。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：“确保用户可以退出”是你自己的模态框必须满足的规则。没有 Dismiss／Cancel 按钮的模态页面会把用户困在手机上——仓库中第 13 讲的 <code>solution2</code> 模态框正有这个问题（<a href="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/#113-%E6%BC%94%E7%A4%BA-2%E4%B8%BA%E8%B4%AD%E7%89%A9%E6%B8%85%E5%8D%95%E6%B7%BB%E5%8A%A0%E6%8F%90%E7%A4%BA%E6%A1%86%E4%B8%8E%E6%A8%A1%E6%80%81%E9%A1%B5%E9%9D%A2%E5%B9%BB%E7%81%AF%E7%89%87-46--setup2--solution2">Lecture 13, Demo 2</a>）。</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://developer.apple.com/design/human-interface-guidelines/navigation-and-search">Apple HIG: Navigation and search</a> · <a href="https://developer.apple.com/design/human-interface-guidelines/modality">Apple HIG: Modality</a></p>
+</blockquote>
+<h2 id="8-ios-hig品牌颜色与字体">8. iOS HIG：品牌、颜色与字体</h2>
+<p><strong>品牌</strong>（幻灯片 18）：保持独特很重要，但要注意不要把用户从 iOS 的体验中拉出来。你的应用不必看起来像默认应用，但…… 幻灯片展示了同一个 “Attractions” 页面（凯旋门）两次：一次只有安静的红色强调色，另一次在顶部和底部都有一条大大的红色 “MY LOGO” 横幅——第二个版本用品牌标识盖过了内容。</p>
+<p><strong>颜色</strong>（幻灯片 19–20）：</p>
+<ul>
+<li>使用<strong>主色</strong>来标示<strong>可交互元素</strong>。</li>
+<li><strong>不要用同一种颜色表示不同的含义。</strong></li>
+<li>谨慎地使用颜色来突出特定元素。</li>
+<li>用不同方式区分<strong>“激活”</strong>和<strong>“未激活”</strong>的组件。</li>
+<li>无障碍地使用颜色：要考虑<strong>色盲</strong>和<strong>文化语境</strong>。幻灯片 20 的例子：在 Stocks 股票应用中，英文语境下<strong>绿色</strong>表示上涨趋势，而在中文语境下<strong>红色</strong>表示上涨趋势。</li>
+</ul>
+<p>幻灯片 19 的图示用 ✗ 和 ✓ 标出好坏。工具栏：✗ 把每个按钮（关闭、两个操作、确认）都填成蓝色；✓ 只把确认按钮的 ✓ 保持蓝色，其余保持中性。地图：✗ 是一张灰色地图，其中定位按钮和搜索框都填满了蓝色；✓ 是带蓝色调的地图，控件保持中性——颜色被谨慎使用，而不是用在每一个元素上。</p>
+<p><strong>颜色与字体</strong>（幻灯片 21）：</p>
+<ul>
+<li>颜色很适合吸引注意力，但可能被<strong>过度使用</strong>。</li>
+<li>使用<strong>互补色</strong>——paletton.com 之类的配色工具会有帮助。</li>
+<li>如果可以，使用<strong>单一字体</strong>；系统内置字体完全够用。</li>
+<li>用<strong>字号、颜色和字重</strong>（粗体）来突出信息。</li>
+</ul>
+<p>幻灯片的图示是 Apple 的系统颜色色板（Red、Orange、Yellow、Green、Teal Blue、Blue、Purple、Pink，并附 RGB 值，例如 Blue R 0 G 122 B 255），以及一个字号层级：SF Pro Display（20pt）和 SF Pro Text（19pt）位于从 16pt 到 23pt 的字号列表中。</p>
+<p>演示中，所有可点击元素都使用同一个主蓝色（<code>#007aff</code>），未激活的标签页使用灰色，并且只用一种字体，靠字号和字重来体现层级。该步骤展示的是反面模式：同一种红色同时用于按钮、“3 unread” 文字和激活的标签，于是红色不再只表示一个意思。点击标签页会记录 <code>Tab: Contacts</code> 等日志：</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Key color, active vs inactive, one typeface (slides 16, 19, 21) · hand-made example&quot;, &quot;width&quot;: 375, &quot;height&quot;: 380, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;div class=\&quot;screen\&quot;&gt;\n  &lt;h1&gt;Messages&lt;/h1&gt;\n  &lt;p class=\&quot;sub\&quot;&gt;3 unread&lt;/p&gt;\n  &lt;p&gt;Body text uses the same typeface; size and weight carry the hierarchy.&lt;/p&gt;\n  &lt;button class=\&quot;action\&quot;&gt;New message&lt;/button&gt;\n&lt;/div&gt;\n&lt;nav class=\&quot;tabbar\&quot;&gt;\n  &lt;a class=\&quot;active\&quot;&gt;Chats&lt;/a&gt;&lt;a&gt;Contacts&lt;/a&gt;&lt;a&gt;Settings&lt;/a&gt;\n&lt;/nav&gt;&quot;, &quot;css&quot;: &quot;:root { --key: #007aff; }          /* one key color = \&quot;you can tap this\&quot; */\nbody { margin: 0; font-family: -apple-system, system-ui, sans-serif; }\n.screen { padding: 16px; }\nh1 { font-size: 28px; font-weight: 700; margin: 0; }\n.sub { font-size: 15px; color: #8e8e93; margin: 4px 0 12px; }\n.action { background: var(--key); color: white; border: 0; border-radius: 8px; padding: 10px 14px; font-size: 16px; }\n.tabbar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; border-top: 1px solid #ddd; background: #f9f9f9; }\n.tabbar a { flex: 1; text-align: center; padding: 12px 0; font-size: 13px; color: #8e8e93; }  /* inactive */\n.tabbar a.active { color: var(--key); font-weight: 600; }                                   /* active */&quot;, &quot;js&quot;: &quot;document.querySelectorAll(&#39;.tabbar a&#39;).forEach((tab) =&gt; {\n  tab.addEventListener(&#39;click&#39;, () =&gt; {\n    document.querySelector(&#39;.tabbar a.active&#39;).classList.remove(&#39;active&#39;);\n    tab.classList.add(&#39;active&#39;);\n    console.log(&#39;Tab: &#39; + tab.textContent);\n  });\n});&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;Anti-pattern: the same red for a button AND for &#39;unread&#39; — color no longer has one meaning.&quot;, &quot;css&quot;: &quot;.action { background: #ff3b30; } .sub { color: #ff3b30; } .tabbar a.active { color: #ff3b30; }&quot;}]}</code></pre><blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://developer.apple.com/design/human-interface-guidelines/branding">Apple HIG: Branding</a> · <a href="https://developer.apple.com/design/human-interface-guidelines/color">Apple HIG: Color</a> · <a href="http://paletton.com">Paletton (palette definer)</a></p>
+</blockquote>
+<h2 id="9-热门应用中的设计选择">9. 热门应用中的设计选择</h2>
+<p>幻灯片 22–24 并排展示了三款应用，每款都有其 logo、配色板和两张截图：</p>
+<table>
+<thead>
+<tr>
+<th>应用</th>
+<th>幻灯片上的配色</th>
+<th>展示的界面</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TikTok</td>
+<td>青绿色 <code>#25F4EE</code>、红色 <code>#FE2C55</code>、黑色 <code>#000000</code>、白色 <code>#FFFFFF</code></td>
+<td>全屏视频信息流；“Friends / Now” 信息流——两者底部都有标签栏（Home、Now、<strong>+</strong>、Inbox、Me）</td>
+</tr>
+<tr>
+<td>Instagram</td>
+<td>蓝色 <code>#405DE6</code>、蓝紫色 <code>#5851DB</code>、紫色 <code>#833AB4</code>、紫红色 <code>#C13584</code>、玫瑰色 <code>#E1306C</code>、亮红色 <code>#FD1D1D</code></td>
+<td>带 Stories 栏的首页信息流；带蓝色 “Send Message” 按钮的个人主页——底部为图标标签栏</td>
+</tr>
+<tr>
+<td>Letterboxd</td>
+<td>橙色 <code>#ff8000</code>、绿色 <code>#00e054</code>、蓝色 <code>#40bcf4</code>，以及白色 <code>#ffffff</code></td>
+<td>深色电影页面（“Nomadland”）；导演作品的海报网格</td>
+</tr>
+</tbody></table>
+<p>然后是投票：<em>请告诉我，你觉得这些应用在设计选择上有什么共同点</em>（<a href="#131-%E9%97%AE%E9%A2%98-1%E8%BF%99%E4%BA%9B%E5%BA%94%E7%94%A8%E6%9C%89%E4%BB%80%E4%B9%88%E5%85%B1%E5%90%8C%E7%82%B9%E5%B9%BB%E7%81%AF%E7%89%87-2526">问题 1</a>）。可以留意的要点都来自第 2–8 节：内容优先（照片、视频、海报占满屏幕，即“内容优先于 UI”）；始终存在的底部标签栏；一个小规模的品牌配色，品牌色只出现在少数强调元素上，而不是处处都是；以及一种字体，靠字号和字重体现层级。</p>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#131-%E9%97%AE%E9%A2%98-1%E8%BF%99%E4%BA%9B%E5%BA%94%E7%94%A8%E6%9C%89%E4%BB%80%E4%B9%88%E5%85%B1%E5%90%8C%E7%82%B9%E5%B9%BB%E7%81%AF%E7%89%87-2526">问题 1</a></p>
+</blockquote>
+<h2 id="10-应用图标与系统图标">10. 应用图标与系统图标</h2>
+<p>好的<strong>应用图标</strong>很重要（幻灯片 27）：</p>
+<ul>
+<li>背景保持简洁</li>
+<li>只有在必不可少或属于标志的一部分时才使用文字</li>
+<li><strong>不要把图标放进界面里</strong>（应用图标用于主屏幕，而不是每个页面）</li>
+</ul>
+<p>在界面内部，适当时<strong>使用系统图标</strong>——剪切、复制、粘贴、保存等。幻灯片展示了一排 Apple 应用图标（设置、电话、邮件、播客、照片、地图、时钟），以及一张系统图标表和它们的含义，例如：</p>
+<table>
+<thead>
+<tr>
+<th>图标</th>
+<th>含义（来自幻灯片的表格）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Action（分享）</td>
+<td>显示一个模态视图，包含分享扩展、操作扩展，以及复制、收藏、查找等任务</td>
+</tr>
+<tr>
+<td>Add</td>
+<td>创建新条目</td>
+</tr>
+<tr>
+<td>Bookmarks</td>
+<td>显示应用特有的书签</td>
+</tr>
+<tr>
+<td>Camera</td>
+<td>拍摄照片或视频，或显示照片图库</td>
+</tr>
+<tr>
+<td>Cancel</td>
+<td>关闭当前视图，或在不保存更改的情况下退出编辑模式</td>
+</tr>
+<tr>
+<td>Compose</td>
+<td>打开新视图并进入编辑模式</td>
+</tr>
+<tr>
+<td>Done</td>
+<td>保存状态并关闭当前视图，或退出编辑模式</td>
+</tr>
+<tr>
+<td>Edit</td>
+<td>在当前上下文中进入编辑模式</td>
+</tr>
+<tr>
+<td>Fast Forward</td>
+<td>快进媒体播放或幻灯片</td>
+</tr>
+</tbody></table>
+<p>使用系统图标意味着用户已经知道它的作用——这正是<a href="#5-%E9%81%B5%E5%BE%AA%E5%B9%B3%E5%8F%B0%E6%83%AF%E4%BE%8B">第 5 节</a>中的平台惯例原则。在 Ionic 中，对应的是来自 Ionicons 的 <code>&lt;ion-icon&gt;</code>（<a href="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/#5-%E5%9B%BE%E6%A0%87%E5%BE%BD%E7%AB%A0%E4%B8%8E%E5%A4%B4%E5%83%8F">Lecture 13</a>）。</p>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://developer.apple.com/design/human-interface-guidelines/app-icons">Apple HIG: App icons</a> · <a href="https://developer.apple.com/design/human-interface-guidelines/icons">Apple HIG: Icons</a></p>
+</blockquote>
+<h2 id="11-google-material-design-与-androidios-对比">11. Google Material Design 与 Android、iOS 对比</h2>
+<p>Google 的指南是 <strong>Material Design</strong>（幻灯片 28）。它的理念是：界面应当看起来像<strong>一层层叠放的纸片</strong>，带有 <strong>3D 纵深和动效</strong>。它与 iOS 设计遵循许多相同的交互模式：</p>
+<ul>
+<li>谨慎使用模态框</li>
+<li>用颜色来突出内容</li>
+<li>品牌元素保持低调</li>
+</ul>
+<p>但也有几个关键区别。</p>
+<p><strong>通用导航栏</strong>（幻灯片 29）：Android 在屏幕<strong>底部设有导航栏</strong>——有时是硬件按键，有时是软件实现，但<strong>始终存在</strong>（图示用 ◀ ● ■ 标出了应用级与系统级的 “Navigation bar”）。iOS 则在应用内实现“返回”：应用自己的标签栏属于应用级，系统只添加主屏幕指示条。</p>
+<p><strong>滑动手势</strong>（幻灯片 30）：</p>
+<table>
+<thead>
+<tr>
+<th>手势</th>
+<th>Android</th>
+<th>iOS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>从边缘滑动</td>
+<td><strong>返回</strong>（左边缘或右边缘）</td>
+<td><strong>返回上一屏</strong>（在应用内）</td>
+</tr>
+<tr>
+<td>向上滑动</td>
+<td>主屏幕</td>
+<td>主屏幕</td>
+</tr>
+<tr>
+<td>向上滑动、按住、松开／向上滑动并停留</td>
+<td>应用概览</td>
+<td>多任务</td>
+</tr>
+<tr>
+<td>在应用之间切换</td>
+<td>滑动可以在应用之间切换；始终存在的返回按钮也可以跨应用导航</td>
+<td>在主屏幕指示条上水平滑动；否则只有回到主屏幕后才能切换</td>
+</tr>
+</tbody></table>
+<p>因此，同一个“返回”在两个平台上意味着不同的东西：在 Android 上它是一个系统按钮，甚至能带你回到上一个<em>应用</em>；在 iOS 上，你的应用必须自己提供返回按钮（左上角）和边缘滑动返回。</p>
+<blockquote>
+<p>💡 <strong>关键理解</strong>：Ionic 应用可以同时运行在两个平台上。Ionic 会在 iPhone 上渲染 iOS 风格、在 Android 上渲染 Material 风格（即 &quot;mode&quot;），但<strong>导航</strong>的决定权在你手中——每个页面是否都有返回按钮？标签栏是否始终存在？这些都必须在没有 Android 系统返回键的情况下也能正常工作。</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://m3.material.io/">Material Design 3</a> · <a href="https://www.kickassux.com/ux-library/a-complete-guide-to-navigation-on-ios-android">A complete guide to navigation on iOS &amp; Android</a> · <a href="https://medium.com/@vedantha/interaction-design-patterns-ios-vs-android-111055f8a9b7">Interaction design patterns: iOS vs Android</a></p>
+</blockquote>
+<h2 id="12-规划-a4绘制页面勾勒架构">12. 规划 A4：绘制页面，勾勒架构</h2>
+<p>“转换思路：系统设计”（幻灯片 31）。在一次关于你对开始 A4 准备程度的投票（<a href="#132-%E9%97%AE%E9%A2%98-2%E4%BD%A0%E5%AF%B9%E5%BC%80%E5%A7%8B-a4-%E7%9A%84%E5%87%86%E5%A4%87%E7%A8%8B%E5%BA%A6%E5%A6%82%E4%BD%95%E5%B9%BB%E7%81%AF%E7%89%87-3233">问题 2</a>）之后，全班一起规划 A4。规划并拆分任务，能让解决大问题容易得多：它<strong>更不令人生畏</strong>，也<strong>更容易开始</strong>（幻灯片 34）。规划分两部分：先绘制页面草图，再绘制架构规划图。</p>
+<p><strong>第一部分：绘制页面草图</strong>（幻灯片 35）：</p>
+<ol>
+<li>浏览一遍 A4 的需求。</li>
+<li>用纸和笔、Google Drawings、Figma 或你选择的其他工具，<strong>绘制页面和组件的草图</strong>。</li>
+<li>画完之后，再进行分析。</li>
+</ol>
+<p>示例是一款手绘的聊天应用 <strong>“WeChirp”</strong>：一个 <strong>MessageList</strong> 页面（标题 “We Chirp”，一列会话预览卡片，每张卡片带有用户图标和姓名，底部是搜索框；标注为 “user icon”“convo preview card”），以及一个 <strong>Conversation</strong> 页面（顶部是联系人姓名和图标，中间是消息气泡，底部是 “message…” 输入框；标注为 “message bubble”）。</p>
+<p><strong>第二部分：勾勒架构</strong>（幻灯片 36）。为 A4 写出你需要的<strong>页面</strong>、<strong>组件</strong>和<strong>服务</strong>的大纲：</p>
+<table>
+<thead>
+<tr>
+<th>部分</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>页面</strong></td>
+<td>一个全屏视图</td>
+</tr>
+<tr>
+<td><strong>组件</strong></td>
+<td>一个界面元素（模型／控制器<strong>和视图</strong>）</td>
+</tr>
+<tr>
+<td><strong>服务</strong></td>
+<td>可注入的数据（模型／控制器；<strong>没有视图</strong>）</td>
+</tr>
+</tbody></table>
+<p>WeChirp 的大纲：</p>
+<ul>
+<li>页面：<strong>MessageList</strong><ul>
+<li>组件：<strong>ConversationCard</strong></li>
+<li>组件：<strong>Title</strong>——返回按钮、UserIcon、联系人姓名</li>
+<li>组件：<strong>Search</strong></li>
+</ul>
+</li>
+<li>页面：<strong>Conversation</strong><ul>
+<li>组件：<strong>MessageCard</strong></li>
+<li>组件：<strong>TypeMessage</strong></li>
+</ul>
+</li>
+<li>组件：<strong>UserIcon</strong>（两个页面都使用）</li>
+<li>服务：<strong>AllConversations</strong></li>
+<li>服务：<strong>Conversation</strong></li>
+</ul>
+<p>注意，草图里其实没有画出任何服务（幻灯片 36）——服务保存数据，因此不会出现在图片中；你必须根据页面需要知道的内容来推断它们（所有会话的列表；某一个会话的消息）。这就是<a href="/~kazuhak/notes/in4matx-133/lec-11/zh-CN/#5-angular-%E6%9C%8D%E5%8A%A1">第 11 讲的</a>划分：视图放在组件中，共享数据放在服务中。然后再进行同样的投票（<a href="#133-%E9%97%AE%E9%A2%98-3%E4%BD%A0%E5%AF%B9%E5%BC%80%E5%A7%8B-a4-%E7%9A%84%E5%87%86%E5%A4%87%E7%A8%8B%E5%BA%A6%E5%A6%82%E4%BD%95%E6%B4%BB%E5%8A%A8%E5%90%8E%E5%B9%BB%E7%81%AF%E7%89%87-3738">问题 3</a>）。</p>
+<blockquote>
+<p>💡 <strong>关键理解</strong>：在两个页面上都出现的组件（UserIcon）应放在大纲的顶层，而不是某一个页面之下——这说明它应当是一个独立的可复用组件。</p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#132-%E9%97%AE%E9%A2%98-2%E4%BD%A0%E5%AF%B9%E5%BC%80%E5%A7%8B-a4-%E7%9A%84%E5%87%86%E5%A4%87%E7%A8%8B%E5%BA%A6%E5%A6%82%E4%BD%95%E5%B9%BB%E7%81%AF%E7%89%87-3233">问题 2</a> · <a href="#133-%E9%97%AE%E9%A2%98-3%E4%BD%A0%E5%AF%B9%E5%BC%80%E5%A7%8B-a4-%E7%9A%84%E5%87%86%E5%A4%87%E7%A8%8B%E5%BA%A6%E5%A6%82%E4%BD%95%E6%B4%BB%E5%8A%A8%E5%90%8E%E5%B9%BB%E7%81%AF%E7%89%87-3738">问题 3</a></p>
+</blockquote>
+<h2 id="13-课堂问题与演示附解答">13. 课堂问题与演示（附解答）</h2>
+<p>本讲没有编码演示。投票页面上的每个选项都显示 “Nobody has responded yet” 或 0%，因此没有公布任何结果；下面的答案来自讲义本身的幻灯片。（幻灯片 5 的 “What makes a good user experience?” 是一个讨论提示，答案在幻灯片 6 上——见<a href="#1-%E4%BB%80%E4%B9%88%E6%98%AF%E5%A5%BD%E7%9A%84%E7%94%A8%E6%88%B7%E4%BD%93%E9%AA%8C">第 1 节</a>。）</p>
+<h3 id="131-问题-1这些应用有什么共同点幻灯片-2526">13.1 问题 1：这些应用有什么共同点？（幻灯片 25–26）</h3>
+<p><em>L14-Q1：请告诉我，你觉得这些应用在设计选择上有什么共同点。</em>（TikTok、Instagram、Letterboxd——幻灯片 22–24；开放式回答）</p>
+<details>
+<summary>答案</summary>
+
+<p>这是一个开放性问题，但讲义的原则可以给出几个可靠的答案：</p>
+<ul>
+<li><strong>内容优先于 UI</strong>（幻灯片 15）：视频、照片和海报占满屏幕；UI 外壳很薄。</li>
+<li><strong>底部标签栏，始终存在</strong>（幻灯片 16）：三款应用都通过底部的图标切换顶层部分，而且它用于导航，而非操作（TikTok 的 <strong>+</strong> 是唯一的例外——它是标签栏中的创建操作）。</li>
+<li><strong>少量配色，谨慎使用</strong>（幻灯片 19、21）：每个品牌都有几种标志性颜色，但它们只作为强调出现（发布按钮、一颗心、一个评分），而不是铺满背景——幻灯片 18 提醒要注意不要把用户从 iOS 的体验中拉出来。</li>
+<li><strong>一种字体，靠字号和字重体现层级</strong>（幻灯片 21）：名称和标题加粗且更大；元数据更小，并使用灰色。</li>
+<li><strong>熟悉的系统风格图标</strong>（幻灯片 27）：主页、搜索、心形、分享、个人资料。</li>
+</ul>
+</details>
+
+<p>回到<a href="#9-%E7%83%AD%E9%97%A8%E5%BA%94%E7%94%A8%E4%B8%AD%E7%9A%84%E8%AE%BE%E8%AE%A1%E9%80%89%E6%8B%A9">第 9 节</a>。</p>
+<h3 id="132-问题-2你对开始-a4-的准备程度如何幻灯片-3233">13.2 问题 2：你对开始 A4 的准备程度如何？（幻灯片 32–33）</h3>
+<p><em>L14 Q2：你对开始 A4 的准备程度如何？</em></p>
+<ul>
+<li>1 — 完全没有准备</li>
+<li>2 — 有一点准备</li>
+<li>3 — 中等程度的准备</li>
+<li>4 — 准备得很好</li>
+<li>5 — 非常充分的准备</li>
+</ul>
+<details>
+<summary>答案</summary>
+
+<p>这是一个自我评估的投票——没有标准答案。它在规划活动之前进行是有意为之：活动的主张（幻灯片 34）是，把 A4 拆分为绘制的页面草图，以及页面、组件和服务的大纲，会让它不那么令人生畏，也更容易开始。</p>
+</details>
+
+<p>回到<a href="#12-%E8%A7%84%E5%88%92-a4%E7%BB%98%E5%88%B6%E9%A1%B5%E9%9D%A2%E5%8B%BE%E5%8B%92%E6%9E%B6%E6%9E%84">第 12 节</a>。</p>
+<h3 id="133-问题-3你对开始-a4-的准备程度如何活动后幻灯片-3738">13.3 问题 3：你对开始 A4 的准备程度如何？（活动后，幻灯片 37–38）</h3>
+<p><em>L14 Q3：你对开始 A4 的准备程度如何？（活动后）</em>——与<a href="#132-%E9%97%AE%E9%A2%98-2%E4%BD%A0%E5%AF%B9%E5%BC%80%E5%A7%8B-a4-%E7%9A%84%E5%87%86%E5%A4%87%E7%A8%8B%E5%BA%A6%E5%A6%82%E4%BD%95%E5%B9%BB%E7%81%AF%E7%89%87-3233">问题 2</a>相同的 1–5 量表。</p>
+<details>
+<summary>答案</summary>
+
+<p>同样没有标准答案；把它与问题 2 的答案进行比较。如果分数没有提高，那么需要完成的是大纲：对于你绘制的每一个页面，列出它的组件，然后问每个页面需要哪些数据——这些就是你的服务。</p>
+</details>
+
+<p>回到<a href="#12-%E8%A7%84%E5%88%92-a4%E7%BB%98%E5%88%B6%E9%A1%B5%E9%9D%A2%E5%8B%BE%E5%8B%92%E6%9E%B6%E6%9E%84">第 12 节</a>。</p>
+<h2 id="14-速查与必记的-5-个要点">14. 速查与必记的 5 个要点</h2>
+<p><strong>移动设计的四条原则</strong></p>
+<table>
+<thead>
+<tr>
+<th>原则</th>
+<th>实践中</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>有用的初始界面</td>
+<td>清晰的行动号召，首页有真实内容，回到首页的简便方式（底部导航栏、侧边菜单）</td>
+</tr>
+<tr>
+<td>“哎呀”按钮</td>
+<td>简便的撤销／重做（“撤销发送”），简便的返回（面包屑、左上角返回按钮）</td>
+</tr>
+<tr>
+<td>错误预防</td>
+<td>输入检查（位数）、合适的控件（日期／时间滚轮、滑块）</td>
+</tr>
+<tr>
+<td>平台惯例</td>
+<td>相同的词语、图标、操作含义相同；不需要记住应用特有的导航</td>
+</tr>
+</tbody></table>
+<p><strong>iOS HIG 检查清单</strong></p>
+<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>规则</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>总体</td>
+<td>内容优先于 UI；尊重深色模式和屏幕方向；充分利用整个屏幕；控件要少；善用滑动；复用用户数据（Apple Pay、生物识别、位置）</td>
+</tr>
+<tr>
+<td>导航</td>
+<td>标签栏用于顶层部分——用于导航而非操作，并且始终存在；侧边栏用于最多 2 层的层级，可折叠</td>
+</tr>
+<tr>
+<td>模态框</td>
+<td>只用于完成一项小任务；用户可以退出；防止数据丢失；少用</td>
+</tr>
+<tr>
+<td>品牌</td>
+<td>保持独特，但不要把用户从 iOS 的体验中拉出来</td>
+</tr>
+<tr>
+<td>颜色</td>
+<td>可交互元素使用一种主色；一种颜色只表示一种含义；激活与未激活要区分；考虑色盲与文化</td>
+</tr>
+<tr>
+<td>字体</td>
+<td>一种字体；用字号、颜色和字重来强调</td>
+</tr>
+<tr>
+<td>图标</td>
+<td>简洁的应用图标，只在必要时使用文字，且不放进界面中；标准操作使用系统图标</td>
+</tr>
+</tbody></table>
+<p><strong>iOS 与 Android 对比</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>iOS</th>
+<th>Android（Material）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>外观</td>
+<td>内容优先于 UI</td>
+<td>纸片般的层次，带纵深和动效</td>
+</tr>
+<tr>
+<td>返回</td>
+<td>应用内返回按钮；边缘滑动返回上一屏</td>
+<td>始终存在的系统导航栏；返回可以跨应用</td>
+</tr>
+<tr>
+<td>应用之间</td>
+<td>通过主屏幕</td>
+<td>滑动／返回按钮</td>
+</tr>
+</tbody></table>
+<p><strong>架构大纲</strong></p>
+<table>
+<thead>
+<tr>
+<th>部分</th>
+<th>是否有视图</th>
+<th>示例（WeChirp）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>页面</td>
+<td>有，全屏</td>
+<td>MessageList、Conversation</td>
+</tr>
+<tr>
+<td>组件</td>
+<td>有</td>
+<td>ConversationCard、MessageCard、TypeMessage、UserIcon</td>
+</tr>
+<tr>
+<td>服务</td>
+<td>没有——可注入的数据</td>
+<td>AllConversations、Conversation</td>
+</tr>
+</tbody></table>
+<p><strong>必记的 5 个要点</strong></p>
+<ol>
+<li>好的用户体验不止于 UI：首次启动、视觉设计、信息的呈现方式，以及物理设备都很重要。</li>
+<li>四条原则：有用的初始界面、易于撤销和返回的“哎呀”按钮、带检查和合适控件的错误预防，以及平台惯例。</li>
+<li>HIG 是 Apple 和 Google 给出的建议；在 iOS 上：标签栏用于顶层导航（绝不用于操作），模态框只用于小任务，并且必须能够退出。</li>
+<li>颜色：可交互元素使用一种主色，绝不让一种颜色表达两种含义，并且要考虑色盲和文化（在中国的股票应用中，红色表示上涨）。</li>
+<li>Android 有始终存在的系统返回键，而 iOS 应用必须自己提供返回按钮——因此要在每个 Ionic 页面中规划返回按钮，并在编写 A4 之前先勾勒出页面 → 组件 → 服务的大纲。</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="笔记翻页" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>上一篇 · 第 13 讲</span><span class="pager-title" data-astro-cid-gxyjxt6l>Ionic 组件</span></a><a class="card interactive pager-card pager-next" href="/~kazuhak/notes/in4matx-133/" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>课程主页<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>IN4MATX 133 · User Interface Software</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>快捷键<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> 上一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> 下一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> 切换语言</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="目录" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>顶部</button><script type="module" src="/~kazuhak/_astro/NoteReader.astro_astro_type_script_index_0_lang.DS40VSrb.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/~kazuhak/assets/js/bento.js" defer></script><script src="/~kazuhak/assets/js/chat-widget.js" defer></script></body></html>

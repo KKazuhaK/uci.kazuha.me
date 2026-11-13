@@ -1,0 +1,911 @@
+<!DOCTYPE html><html lang="zh-CN"><head><title>IN4MATX 133 Ionic 组件 | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Ionic 的安装与 ionic serve，导入独立式（standalone）Ionic 组件，结构组件，条目与按钮，图标、徽章与头像，配合 ngModel 的输入，列表与卡片，模态对话框（toast、alert、action sheet），带 componentProps 与 onDidDismiss 的模态页面，以及页面之间的路由。"><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-13/zh-CN/"><link rel="icon" href="/~kazuhak/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/~kazuhak/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-13/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-13/zh-CN/"><link rel="stylesheet" href="/~kazuhak/_astro/BaseLayout.D6FvEM2t.css"><link rel="stylesheet" href="/~kazuhak/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/~kazuhak/_astro/katex.D1M0OS0E.css"><link rel="stylesheet" href="/~kazuhak/_astro/index.Yoh2HO3w.css"></head><body data-nav-path="/~kazuhak/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/~kazuhak/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/~kazuhak/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/~kazuhak/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/~kazuhak/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/~kazuhak/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="zh-CN" data-viz-base="/~kazuhak/assets/viz/" data-viz-version="1794551166" data-source-url="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/source.md" data-editor-url="/~kazuhak/tools/md-editor/" data-alt-url="/~kazuhak/notes/in4matx-133/lec-13/en-US/" data-prev-url="/~kazuhak/notes/in4matx-133/lec-12/zh-CN/" data-next-url="/~kazuhak/notes/in4matx-133/lec-14/zh-CN/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="上一篇 / 下一篇" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/~kazuhak/notes/in4matx-133/lec-12/zh-CN/" title="上一篇: 混合与原生架构 ([)" aria-label="上一篇: 第 12 讲" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>第 12 讲</span></a><button type="button" class="rb-title" data-scroll-top title="回到顶部" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>IN4MATX 133</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>第 13 讲</span></button><a class="rb-btn rb-lang" href="/~kazuhak/notes/in4matx-133/lec-13/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>EN</span></a><a class="rb-btn rb-next rb-side-next" href="/~kazuhak/notes/in4matx-133/lec-14/zh-CN/" title="下一篇: 移动设计原则 (])" aria-label="下一篇: 第 14 讲" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>第 14 讲</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/~kazuhak/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/~kazuhak/notes/in4matx-133/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>IN4MATX 133</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>第 13 讲</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/~kazuhak/notes/in4matx-133/lec-13/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>English</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>目录</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>在编辑器中打开</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>第 13 讲 · 用户界面软件课程阅读笔记</h2><p id="reader-description" data-astro-cid-gxyjxt6l>这页整理的是 IN4MATX 133 第 13 讲 的课程笔记，适合按讲复习 HTML、CSS、JavaScript、DOM 和 UI 工具，并配有可编辑运行的实时演示。下面这条路径可以带你回到 Notes、Course Notes、课程主页，或定位到当前笔记。将鼠标悬停在右侧的 ≡ 图标上可以打开目录。</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>最后编辑于 2026 年 11 月 12 日</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="in4matx-133-user-interface-software--lecture-13ionic-组件">IN4MATX 133: User Interface Software — Lecture 13：Ionic 组件</h1>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#1-%E8%AE%BE%E7%BD%AE%E5%B9%B6%E8%BF%90%E8%A1%8C-ionic-%E5%BA%94%E7%94%A8">1. 设置并运行 Ionic 应用</a></li>
+<li><a href="#2-ionic-%E7%BB%84%E4%BB%B6%E5%8F%8A%E5%85%B6%E5%AF%BC%E5%85%A5%E6%96%B9%E5%BC%8F">2. Ionic 组件及其导入方式</a></li>
+<li><a href="#3-%E7%BB%93%E6%9E%84%E7%BB%84%E4%BB%B6%E5%86%85%E5%AE%B9%E9%A1%B5%E7%9C%89%E9%A1%B5%E8%84%9A">3. 结构组件：内容、页眉、页脚</a></li>
+<li><a href="#4-%E6%9D%A1%E7%9B%AE%E4%B8%8E%E6%8C%89%E9%92%AE">4. 条目与按钮</a></li>
+<li><a href="#5-%E5%9B%BE%E6%A0%87%E5%BE%BD%E7%AB%A0%E4%B8%8E%E5%A4%B4%E5%83%8F">5. 图标、徽章与头像</a></li>
+<li><a href="#6-%E8%BE%93%E5%85%A5">6. 输入</a></li>
+<li><a href="#7-%E5%88%97%E8%A1%A8%E4%B8%8E%E5%8D%A1%E7%89%87">7. 列表与卡片</a></li>
+<li><a href="#8-%E6%A8%A1%E6%80%81%E5%AF%B9%E8%AF%9D%E6%A1%86toastalertaction-sheet">8. 模态对话框：Toast、Alert、Action Sheet</a></li>
+<li><a href="#9-%E6%A8%A1%E6%80%81%E9%A1%B5%E9%9D%A2">9. 模态页面</a></li>
+<li><a href="#10-%E8%B7%AF%E7%94%B1">10. 路由</a></li>
+<li><a href="#11-%E8%AF%BE%E5%A0%82%E9%97%AE%E9%A2%98%E4%B8%8E%E6%BC%94%E7%A4%BA%E9%99%84%E8%A7%A3%E7%AD%94">11. 课堂问题与演示（附解答）</a></li>
+<li><a href="#12-%E9%80%9F%E6%9F%A5%E4%B8%8E%E5%BF%85%E8%AE%B0%E7%9A%84-5-%E4%B8%AA%E8%A6%81%E7%82%B9">12. 速查与必记的 5 个要点</a></li>
+</ul>
+<blockquote>
+<p>UCI IN4MATX 133: User Interface Software — Prof. Travis Linden Reid，2026 年秋季学期，周二 11/10（第 7 周）<br>内容整理自 Lecture 13 的幻灯片（共 54 页），以及课程仓库中的演示文件夹 <code>W7_L1_IonicComponents</code>（<code>setup1</code>/<code>solution1</code>、<code>setup2</code>/<code>solution2</code>、<code>modalExamples</code>）。按概念组织，而不是按来源组织。</p>
+</blockquote>
+<blockquote>
+<p>📅 <strong>课程安排</strong>：A3 截止于 <strong>周三 11/11</strong> 午夜。<br>如果你忘了创建小组，请在今天结束前完成——即使没有搭档，也要把自己加入一个小组（课上 5 分钟即可报名）。</p>
+</blockquote>
+<p>下面的实时演示直接从 CDN 加载 Ionic 的 web 组件，<strong>不使用 Angular</strong>，因此可以直接在页面中运行。Ionic 的组件就是普通的自定义元素，所以 HTML 完全相同；只有 Angular 的部分（<code>(click)</code>、<code>[(ngModel)]</code>、<code>...Controller</code> 服务）被替换为普通 JavaScript，每个演示的标题都会说明这一点。它们也以 iOS 模式运行，以便与幻灯片截图一致。</p>
+<hr>
+<h2 id="1-设置并运行-ionic-应用">1. 设置并运行 Ionic 应用</h2>
+<p>Ionic CLI 是一个 npm 包。你只需全局安装一次，然后用它创建项目、进入项目目录，并生成新的页面、组件或类（幻灯片 5）：</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">npm</span><span style="color:#CE9178"> install</span><span style="color:#569CD6"> -g</span><span style="color:#CE9178"> @ionic/cli</span></span>
+<span class="line"><span style="color:#6A9955"># to install ionic</span></span>
+<span class="line"><span style="color:#DCDCAA">ionic</span><span style="color:#CE9178"> start</span><span style="color:#D4D4D4"> [projectname]</span></span>
+<span class="line"><span style="color:#6A9955"># to create a new project from scratch</span></span>
+<span class="line"><span style="color:#6A9955"># or you can use starter code provided with A3!</span></span>
+<span class="line"><span style="color:#DCDCAA">cd</span><span style="color:#D4D4D4"> [projectname]</span></span>
+<span class="line"><span style="color:#6A9955"># move into a folder</span></span>
+<span class="line"><span style="color:#DCDCAA">ionic</span><span style="color:#CE9178"> generate</span><span style="color:#D4D4D4"> [page/component/class] [filename]</span></span>
+<span class="line"><span style="color:#6A9955"># create a new page, component, or class</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>（幻灯片中的注释写作 <code>//</code>；在终端里则是 <code>#</code>。）</p>
+<p><code>ionic serve</code> 会在浏览器中运行应用，并以浏览器中的样子呈现。然后你可以打开 DevTools 的设备工具栏，选择一部手机（幻灯片显示 &quot;Dimensions: iPhone 12 Pro, 390 × 844&quot;），与测试响应式网站的方式完全一样（幻灯片 6）。</p>
+<p>演示文件夹中的每个项目都是独立式（standalone）组件的 Ionic + Angular 应用（<code>ionic.config.json</code> 中为 <code>&quot;type&quot;: &quot;angular-standalone&quot;</code>）。你要编辑的部分位于 <code>src/app/</code> 中；其余内容（导入 Ionic CSS 的 <code>global.scss</code>、<code>theme/variables.scss</code>、<code>capacitor.config.ts</code>、<code>main.ts</code>、测试配置）都是起始模板的样板代码。<code>main.ts</code> 使用 Ionic 和路由器启动应用：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">bootstrapApplication</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">AppComponent</span><span style="color:#D4D4D4">, {</span></span>
+<span class="line"><span style="color:#9CDCFE">  providers:</span><span style="color:#D4D4D4"> [</span></span>
+<span class="line"><span style="color:#D4D4D4">    { </span><span style="color:#9CDCFE">provide:</span><span style="color:#9CDCFE"> RouteReuseStrategy</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">useClass:</span><span style="color:#9CDCFE"> IonicRouteStrategy</span><span style="color:#D4D4D4"> },</span></span>
+<span class="line"><span style="color:#DCDCAA">    provideIonicAngular</span><span style="color:#D4D4D4">(),</span></span>
+<span class="line"><span style="color:#DCDCAA">    provideRouter</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">routes</span><span style="color:#D4D4D4">, </span><span style="color:#DCDCAA">withPreloading</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">PreloadAllModules</span><span style="color:#D4D4D4">)),</span></span>
+<span class="line"><span style="color:#D4D4D4">  ],</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>根模板只是 <code>&lt;ion-app&gt;&lt;ion-router-outlet&gt;&lt;/ion-router-outlet&gt;&lt;/ion-app&gt;</code>——路由器会把当前页面放进其中。</p>
+<blockquote>
+<p>🧪 <strong>Demo 文件</strong>：<a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/setup1/src/main.ts">setup1/src/main.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/setup1/src/app/app.component.html">setup1/src/app/app.component.html</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/setup1/ionic.config.json">setup1/ionic.config.json</a></p>
+</blockquote>
+<h2 id="2-ionic-组件及其导入方式">2. Ionic 组件及其导入方式</h2>
+<p>Ionic 为移动界面中常见的界面元素提供了 <strong>Angular 风格的组件</strong>：列表、按钮、滑块、标签页、模态对话框、搜索栏等等（幻灯片 7；其截图展示了一个带头像的会话&quot;List&quot;，以及一个&quot;Range&quot;滑块页面）。本课使用的是 Ionic 7 与 Angular——仓库中的项目已经是 Ionic 8（<code>setup</code>/<code>solution</code>）和 Ionic 9（<code>modalExamples</code>），本讲的内容在这些版本中同样适用。</p>
+<p>因为页面都是独立式组件，<strong>你使用的每个 Ionic 组件都必须导入两次</strong>：先从库中导入，再加入组件的 <code>imports</code> 数组（幻灯片 8）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Component</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@angular/core'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">IonHeader</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonContent</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonToolbar</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonTitle</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span></span>
+<span class="line"><span style="color:#CE9178">'@ionic/angular/standalone'</span><span style="color:#D4D4D4">;                              </span><span style="color:#6A9955">// import from library</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">@</span><span style="color:#DCDCAA">Component</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  selector:</span><span style="color:#CE9178"> 'app-home'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  templateUrl:</span><span style="color:#CE9178"> 'home.page.html'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  styleUrls:</span><span style="color:#D4D4D4"> [</span><span style="color:#CE9178">'home.page.scss'</span><span style="color:#D4D4D4">],</span></span>
+<span class="line"><span style="color:#9CDCFE">  imports:</span><span style="color:#D4D4D4"> [</span><span style="color:#9CDCFE">IonHeader</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonContent</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonToolbar</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonTitle</span><span style="color:#D4D4D4">], </span><span style="color:#6A9955">// load import in component</span></span>
+<span class="line"><span style="color:#D4D4D4">})</span></span>
+<span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> class</span><span style="color:#4EC9B0"> HomePage</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">  constructor</span><span style="color:#D4D4D4">() {}</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>类名就是标签名的 PascalCase 形式：<code>&lt;ion-card-title&gt;</code> ↔ <code>IonCardTitle</code>。设置文件甚至会提醒你：<code>//Don&#39;t forget to add imports for the new components!</code>——<code>solution1</code> 最终会导入 14 个东西。</p>
+<p>每个组件都有许多属性和特性，而组件的数量多到一节课讲不完；文档列出了所有选项，学习它们最好的方式是动手尝试（幻灯片 9）。本讲把它们分为六类：<strong>结构、条目、图标、输入、列表、模态</strong>（幻灯片 10、14、24、29、37；幻灯片 20 的列表还多了&quot;菜单（Menus）&quot;一项，但讲义没有涉及）。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：只导入类是不够的。如果把 <code>IonList</code> 从 <code>solution1</code> 的 <code>imports: [...]</code> 数组中去掉（但保留 <code>import</code> 语句），构建就会失败，并报 <code>NG8001: &#39;ion-list&#39; is not a known element</code>。两处都要检查。</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://ionicframework.com/docs/components/">Ionic UI components</a> · <a href="https://ionicframework.com/docs/api/">Ionic API reference</a></p>
+</blockquote>
+<h2 id="3-结构组件内容页眉页脚">3. 结构组件：内容、页眉、页脚</h2>
+<p>Ionic 的文档把这些组件归入&quot;Content&quot;和&quot;Toolbars&quot;两类（幻灯片 11）。结构组件共有三个（幻灯片 12）：</p>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&lt;ion-content&gt;</code></td>
+<td>容纳页面的主要内容（可滚动）</td>
+</tr>
+<tr>
+<td><code>&lt;ion-header&gt;</code></td>
+<td>顶部栏，放置标题内容</td>
+</tr>
+<tr>
+<td><code>&lt;ion-footer&gt;</code></td>
+<td>底部栏，例如菜单内容</td>
+</tr>
+</tbody></table>
+<p>页眉和页脚中可以包含带有文字（<code>&lt;ion-title&gt;</code>）和按钮的 <code>&lt;ion-toolbar&gt;</code>。其他一些组件也可以替代页眉和页脚——例如用 <code>&lt;ion-tabs&gt;</code> 作为页脚，放置通向不同页面的标签页。</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-header</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-toolbar</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-title</span><span style="color:#808080">></span><span style="color:#D4D4D4">My Navigation Bar</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-title</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-toolbar</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-header</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-content</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">  Content here...</span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-content</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-footer</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-toolbar</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-title</span><span style="color:#808080">></span><span style="color:#D4D4D4">Footer</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-title</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-toolbar</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-footer</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>结果是：顶部固定一个标题栏，中间是内容区域，底部固定一个&quot;Footer&quot;栏（幻灯片 13）。试着在下面编辑代码并按 Run：</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Structural components (slide 13) · Ionic web components, no Angular&quot;, &quot;width&quot;: 375, &quot;height&quot;: 320, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script&gt;window.Ionic = { config: { mode: \&quot;ios\&quot; } };&lt;/script&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-header&gt;\n  &lt;ion-toolbar&gt;\n    &lt;ion-title&gt;My Navigation Bar&lt;/ion-title&gt;\n  &lt;/ion-toolbar&gt;\n&lt;/ion-header&gt;\n&lt;ion-content class=\&quot;ion-padding\&quot;&gt;\n  Content here...\n&lt;/ion-content&gt;\n&lt;ion-footer&gt;\n  &lt;ion-toolbar&gt;\n    &lt;ion-title&gt;Footer&lt;/ion-title&gt;\n  &lt;/ion-toolbar&gt;\n&lt;/ion-footer&gt;\n&lt;/ion-app&gt;&quot;}</code></pre><blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://ionicframework.com/docs/api/content">Ionic: ion-content</a></p>
+</blockquote>
+<h2 id="4-条目与按钮">4. 条目与按钮</h2>
+<p><code>&lt;ion-item&gt;</code> 是最基本的组件（幻灯片 15）。它本质上是一个可以容纳文字、图片和其他内容的 HTML <code>&lt;div&gt;</code>，并具有 CSS 的&quot;块&quot;样式，因此每个条目都显示为一行（<strong>row</strong>）。许多其他组件都需要放在 <code>&lt;ion-item&gt;</code> 内部——例如 <code>&lt;ion-label&gt;</code> 把文字放进条目中。</p>
+<p>条目还可以充当按钮或链接，并且可以设置颜色（幻灯片 16–17）：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">&#x3C;!-- Default Item --></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">    Item</span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#6A9955">&#x3C;!-- Item as a Button --></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#9CDCFE"> (click)</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"buttonClick()"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">    Button Item</span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#6A9955">&#x3C;!-- Item as an Anchor --></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#9CDCFE"> href</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"https://www.ionicframework.com"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">    Anchor Item</span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#9CDCFE"> color</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"secondary"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">    Secondary Color Item</span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>插槽（slot）</strong> 决定内容在条目中的位置：<code>slot=&quot;start&quot;</code> 把子元素放在左侧，<code>slot=&quot;end&quot;</code> 放在右侧。幻灯片 18 用它来放置缩略图和一个按钮：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#9CDCFE"> href</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"#"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">    Thumbnail End, Anchor Item</span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-thumbnail</span><span style="color:#9CDCFE"> slot</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"end"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">img</span><span style="color:#9CDCFE"> src</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"assets/icon/favicon.png"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-thumbnail</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-thumbnail</span><span style="color:#9CDCFE"> slot</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"start"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">img</span><span style="color:#9CDCFE"> src</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"assets/icon/favicon.png"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-thumbnail</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">h2</span><span style="color:#808080">></span><span style="color:#D4D4D4">H2 Title Text</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">h2</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">p</span><span style="color:#808080">></span><span style="color:#D4D4D4">Button on right</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">p</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> fill</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"outline"</span><span style="color:#9CDCFE"> slot</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"end"</span><span style="color:#808080">></span><span style="color:#D4D4D4">View</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>&lt;ion-button&gt;</code> 支持 <code>color</code>、<code>shape=&quot;round&quot;</code>、<code>fill=&quot;outline&quot;</code>、<code>expand=&quot;full&quot;</code>，并且可以在自己的 start 插槽中放一个 <code>&lt;ion-icon&gt;</code>（幻灯片 19）：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> color</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"secondary"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Secondary</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> shape</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"round"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Round</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-icon</span><span style="color:#9CDCFE"> slot</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"start"</span><span style="color:#9CDCFE"> name</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"star"</span><span style="color:#808080">>&#x3C;/</span><span style="color:#569CD6">ion-icon</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">    Left Icon</span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>演示展示了这些行：普通条目、按钮条目和链接条目（后两者在 iOS 模式下会有一个 › 箭头），一个填充的 &quot;Secondary Color Item&quot; 行，带有右侧轮廓 <strong>View</strong> 按钮的缩略图行，然后是 secondary、round 和星形图标按钮。点击 &quot;Button Item&quot; 会输出 <code>Button Item clicked</code>（缩略图是一个内联 SVG 圆形，因为 <code>assets/icon/favicon.png</code> 不存在）：</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Items and buttons (slides 17–19) · Ionic web components; (click) becomes addEventListener&quot;, &quot;width&quot;: 375, &quot;height&quot;: 560, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script&gt;window.Ionic = { config: { mode: \&quot;ios\&quot; } };&lt;/script&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-content&gt;\n&lt;!-- Default Item --&gt;\n&lt;ion-item&gt;\n  &lt;ion-label&gt;Item&lt;/ion-label&gt;\n&lt;/ion-item&gt;\n&lt;!-- Item as a Button --&gt;\n&lt;ion-item button id=\&quot;btnItem\&quot;&gt;\n  &lt;ion-label&gt;Button Item&lt;/ion-label&gt;\n&lt;/ion-item&gt;\n&lt;!-- Item as an Anchor --&gt;\n&lt;ion-item href=\&quot;#\&quot;&gt;\n  &lt;ion-label&gt;Anchor Item&lt;/ion-label&gt;\n&lt;/ion-item&gt;\n&lt;ion-item color=\&quot;secondary\&quot;&gt;\n  &lt;ion-label&gt;Secondary Color Item&lt;/ion-label&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-thumbnail slot=\&quot;start\&quot;&gt;\n    &lt;img src=\&quot;data:image/svg+xml,%3Csvg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 40 40&#39;%3E%3Ccircle cx=&#39;20&#39; cy=&#39;20&#39; r=&#39;16&#39; fill=&#39;%233880ff&#39;/%3E%3C/svg%3E\&quot;&gt;\n  &lt;/ion-thumbnail&gt;\n  &lt;ion-label&gt;\n    &lt;h2&gt;H2 Title Text&lt;/h2&gt;\n    &lt;p&gt;Button on right&lt;/p&gt;\n  &lt;/ion-label&gt;\n  &lt;ion-button fill=\&quot;outline\&quot; slot=\&quot;end\&quot;&gt;View&lt;/ion-button&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-button color=\&quot;secondary\&quot;&gt;Secondary&lt;/ion-button&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-button shape=\&quot;round\&quot;&gt;Round&lt;/ion-button&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-button&gt;\n    &lt;ion-icon slot=\&quot;start\&quot; name=\&quot;star\&quot;&gt;&lt;/ion-icon&gt;\n    Left Icon\n  &lt;/ion-button&gt;\n&lt;/ion-item&gt;\n&lt;/ion-content&gt;\n&lt;/ion-app&gt;&quot;, &quot;js&quot;: &quot;// Angular: &lt;ion-item (click)=\&quot;buttonClick()\&quot;&gt;\nfunction buttonClick() {\n  console.log(&#39;Button Item clicked&#39;);\n}\ndocument.getElementById(&#39;btnItem&#39;).addEventListener(&#39;click&#39;, buttonClick);&quot;}</code></pre><blockquote>
+<p>⚠️ <strong>易错点</strong>：<code>slot</code> 应该写在子元素上（<code>&lt;ion-button slot=&quot;end&quot;&gt;</code>），而不是写在条目上；并且插槽名称是 <code>start</code>/<code>end</code>，而不是 left/right。</p>
+</blockquote>
+<h2 id="5-图标徽章与头像">5. 图标、徽章与头像</h2>
+<p>在 Angular 版的 Ionic 应用中，<strong>图标需要先注册</strong>（幻灯片 21）：从 <code>ionicons/icons</code> 导入图标数据，并在构造函数中传给 <code>addIcons()</code>。只有这样，<code>&lt;ion-icon name=&quot;heart&quot;&gt;</code> 才能找到对应的 SVG。</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Component</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@angular/core'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">IonIcon</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonItem</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonBadge</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@ionic/angular/standalone'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">addIcons</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> 'ionicons'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">heart</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">moon</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> 'ionicons/icons'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">@</span><span style="color:#DCDCAA">Component</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  selector:</span><span style="color:#CE9178"> 'app-home'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  templateUrl:</span><span style="color:#CE9178"> 'home.page.html'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  styleUrls:</span><span style="color:#D4D4D4"> [</span><span style="color:#CE9178">'home.page.scss'</span><span style="color:#D4D4D4">],</span></span>
+<span class="line"><span style="color:#9CDCFE">  imports:</span><span style="color:#D4D4D4"> [</span><span style="color:#9CDCFE">IonIcon</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonItem</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonBadge</span><span style="color:#D4D4D4">],</span></span>
+<span class="line"><span style="color:#D4D4D4">})</span></span>
+<span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> class</span><span style="color:#4EC9B0"> HomePage</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">  constructor</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#DCDCAA">    addIcons</span><span style="color:#D4D4D4">({ </span><span style="color:#9CDCFE">heart</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">moon</span><span style="color:#D4D4D4"> });</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>图标名称在 HTML 中是 kebab-case，在 TypeScript 中是 camelCase：<code>solution1</code> 注册了 <code>cartOutline</code>，并使用 <code>name=&quot;cart-outline&quot;</code>。</p>
+<p>徽章和图标可以添加标签或趣味性（幻灯片 22）：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-badge</span><span style="color:#9CDCFE"> color</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"primary"</span><span style="color:#808080">></span><span style="color:#D4D4D4">11</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-badge</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-badge</span><span style="color:#9CDCFE"> color</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"secondary"</span><span style="color:#808080">></span><span style="color:#D4D4D4">22</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-badge</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-icon</span><span style="color:#9CDCFE"> name</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"heart"</span><span style="color:#808080">>&#x3C;/</span><span style="color:#569CD6">ion-icon</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-icon</span><span style="color:#9CDCFE"> name</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"moon"</span><span style="color:#808080">>&#x3C;/</span><span style="color:#569CD6">ion-icon</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-badge</span><span style="color:#9CDCFE"> color</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"secondary"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-icon</span><span style="color:#9CDCFE"> name</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"moon"</span><span style="color:#808080">>&#x3C;/</span><span style="color:#569CD6">ion-icon</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-badge</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>头像（Avatar）</strong> 是包裹图片或图标的圆形组件；放在 <code>&lt;ion-chip&gt;</code> 中时，它们会组成一个带标签的小圆角&quot;chip&quot;（幻灯片 23；幻灯片中的代码片段末尾多了一个多余的 <code>&lt;/ion-content&gt;</code>，来自其周围的页面）：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-avatar</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">img</span><span style="color:#9CDCFE"> src</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"avatar.svg"</span><span style="color:#808080"> /></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-avatar</span><span style="color:#808080">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-chip</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-avatar</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">img</span><span style="color:#9CDCFE"> src</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"avatar.svg"</span><span style="color:#808080"> /></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-avatar</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span><span style="color:#D4D4D4">Chip Avatar</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-chip</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>下面，徽章显示为带数字的小彩色方块，然后是一颗心、一个月亮、放在徽章中的月亮、一个圆形头像，以及 &quot;Chip Avatar&quot; 芯片。（CDN 版本会按名称获取图标，因此这里没有 <code>addIcons</code>——Angular 应用则需要它。）</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Badges, icons, avatars, chips (slides 22–23) · Ionic web components; avatar image replaced by an inline SVG&quot;, &quot;width&quot;: 375, &quot;height&quot;: 430, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script&gt;window.Ionic = { config: { mode: \&quot;ios\&quot; } };&lt;/script&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-content&gt;\n&lt;ion-item&gt;\n  &lt;ion-badge color=\&quot;primary\&quot;&gt;11&lt;/ion-badge&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-badge color=\&quot;secondary\&quot;&gt;22&lt;/ion-badge&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-icon name=\&quot;heart\&quot;&gt;&lt;/ion-icon&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-icon name=\&quot;moon\&quot;&gt;&lt;/ion-icon&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-badge color=\&quot;secondary\&quot;&gt;\n    &lt;ion-icon name=\&quot;moon\&quot;&gt;&lt;/ion-icon&gt;\n  &lt;/ion-badge&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-avatar&gt;\n    &lt;img src=\&quot;data:image/svg+xml,%3Csvg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 40 40&#39;%3E%3Ccircle cx=&#39;20&#39; cy=&#39;20&#39; r=&#39;16&#39; fill=&#39;%233880ff&#39;/%3E%3C/svg%3E\&quot; /&gt;\n  &lt;/ion-avatar&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-chip&gt;\n    &lt;ion-avatar&gt;\n      &lt;img src=\&quot;data:image/svg+xml,%3Csvg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 40 40&#39;%3E%3Ccircle cx=&#39;20&#39; cy=&#39;20&#39; r=&#39;16&#39; fill=&#39;%233880ff&#39;/%3E%3C/svg%3E\&quot; /&gt;\n    &lt;/ion-avatar&gt;\n    &lt;ion-label&gt;Chip Avatar&lt;/ion-label&gt;\n  &lt;/ion-chip&gt;\n&lt;/ion-item&gt;\n&lt;/ion-content&gt;\n&lt;/ion-app&gt;&quot;}</code></pre><blockquote>
+<p>⚠️ <strong>易错点</strong>：在仓库的 <code>modalExamples</code> 中，操作表（action sheet）使用了 <code>icon: &#39;trash&#39;</code> 和 <code>icon: &#39;close&#39;</code>，但从未调用 <code>addIcons</code>——运行时会输出 <code>[Ionicons Warning]: Could not load icon with name &quot;trash&quot;</code>（以及 <code>&quot;close&quot;</code>），并且操作表只显示 <strong>Delete</strong> / <strong>Cancel</strong>，没有图标。你使用的每个图标名称，即使是在控制器的选项中，也都必须注册。</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://ionicframework.com/docs/api/icon">Ionic: ion-icon</a> · <a href="https://ionic.io/ionicons">Ionicons（图标库）</a></p>
+</blockquote>
+<h2 id="6-输入">6. 输入</h2>
+<p>Ionic 提供了许多常见的输入字段——DateTime、Checkbox、Button、文本输入等（幻灯片 25）。大多数情况下，它们都应放在 <code>&lt;ion-item&gt;</code> 中。它们的绑定方式与 Angular 一样：使用 <code>[(ngModel)]</code> 进行双向绑定，它来自 <code>FormsModule</code>（参见 <a href="/~kazuhak/notes/in4matx-133/lec-10/zh-CN/#8-%E4%BD%BF%E7%94%A8-ngmodel-%E7%9A%84%E5%8F%8C%E5%90%91%E7%BB%91%E5%AE%9A">Lecture 10</a>）——因此 <code>FormsModule</code> 也需要加入组件的 <code>imports</code>。</p>
+<p>日期选择器（幻灯片 26）：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span><span style="color:#D4D4D4">Date</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-datetime</span><span style="color:#9CDCFE"> display-format</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"MM/DD/YYYY"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-datetime</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>带占位符的文本输入（幻灯片 27）：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-input</span><span style="color:#9CDCFE"> required</span><span style="color:#9CDCFE"> type</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"text"</span></span>
+<span class="line"><span style="color:#9CDCFE">  placeholder</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"First Name"</span><span style="color:#808080">>&#x3C;/</span><span style="color:#569CD6">ion-input</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>复选框，其中一个被禁用（幻灯片 28）：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span><span style="color:#D4D4D4">Pepperoni</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-checkbox</span><span style="color:#9CDCFE"> [checked]</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"pepperoni"</span><span style="color:#808080">>&#x3C;/</span><span style="color:#569CD6">ion-checkbox</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span><span style="color:#D4D4D4">Sausage</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-checkbox</span><span style="color:#9CDCFE"> [checked]</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"sausage"</span><span style="color:#9CDCFE"> disabled</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"true"</span><span style="color:#808080">>&#x3C;/</span><span style="color:#569CD6">ion-checkbox</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span><span style="color:#D4D4D4">Mushrooms</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-checkbox</span><span style="color:#9CDCFE"> [checked]</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">“mushrooms</span><span style="color:#F44747">"</span><span style="color:#808080">>&#x3C;/</span><span style="color:#569CD6">ion-checkbox</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>幻灯片的错误：最后一行以弯引号开头 <code>“mushrooms&quot;</code>——应为 <code>&quot;mushrooms&quot;</code>。</p>
+<p><code>[checked]=&quot;pepperoni&quot;</code> 是<strong>单向</strong>属性绑定：复选框显示变量的值，但勾选它并不会改变该变量。要读取用户的选择，需要双向绑定：<code>[(ngModel)]=&quot;pepperoni&quot;</code>——这正是下面演示 1 和演示 2 中的修复方法。</p>
+<p>在演示中，复选框把文字放在标签内部（这是当前的 Ionic 写法，仓库也使用这种写法：<code>&lt;ion-checkbox&gt;{{item.item}}&lt;/ion-checkbox&gt;</code>），一段小脚本扮演了 <code>[(ngModel)]</code> 的角色。输入 &quot;Kazuha&quot; 并勾选 Pepperoni，会输出 <code>{ firstName: &#39;Kazuha&#39;, pepperoni: true, mushrooms: true }</code>：</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Inputs (slides 26–28) · Ionic web components; [(ngModel)] replaced by reading ionChange events&quot;, &quot;width&quot;: 375, &quot;height&quot;: 600, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script&gt;window.Ionic = { config: { mode: \&quot;ios\&quot; } };&lt;/script&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-content&gt;\n&lt;ion-item&gt;\n  &lt;ion-input required type=\&quot;text\&quot; placeholder=\&quot;First Name\&quot; id=\&quot;first\&quot;&gt;&lt;/ion-input&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-checkbox id=\&quot;pepperoni\&quot;&gt;Pepperoni&lt;/ion-checkbox&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-checkbox id=\&quot;sausage\&quot; disabled=\&quot;true\&quot;&gt;Sausage&lt;/ion-checkbox&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-checkbox id=\&quot;mushrooms\&quot; checked=\&quot;true\&quot;&gt;Mushrooms&lt;/ion-checkbox&gt;\n&lt;/ion-item&gt;\n&lt;ion-item&gt;\n  &lt;ion-label&gt;Date&lt;/ion-label&gt;\n  &lt;ion-datetime display-format=\&quot;MM/DD/YYYY\&quot; presentation=\&quot;date\&quot;&gt;&lt;/ion-datetime&gt;\n&lt;/ion-item&gt;\n&lt;/ion-content&gt;\n&lt;/ion-app&gt;&quot;, &quot;js&quot;: &quot;// What [(ngModel)] does for you in Angular: keep a variable in sync with the input.\nlet pizza = { firstName: &#39;&#39;, pepperoni: false, mushrooms: true };\ndocument.getElementById(&#39;first&#39;).addEventListener(&#39;ionInput&#39;, (e) =&gt; {\n  pizza.firstName = e.detail.value;\n  console.log(pizza);\n});\n[&#39;pepperoni&#39;, &#39;mushrooms&#39;].forEach((id) =&gt; {\n  document.getElementById(id).addEventListener(&#39;ionChange&#39;, (e) =&gt; {\n    pizza[id] = e.detail.checked;\n    console.log(pizza);\n  });\n});&quot;}</code></pre><blockquote>
+<p>⚠️ <strong>易错点</strong>：<code>display-format</code> 来自较旧的 Ionic。在本仓库使用的 Ionic 版本中，<code>&lt;ion-datetime&gt;</code> 会渲染完整的内联日历（月份、日期网格，以及除非设置 <code>presentation=&quot;date&quot;</code> 否则会有一行 Time），并忽略 <code>display-format</code>——而不是幻灯片截图中那一行单独的 &quot;Date&quot;。</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://angular.dev/api/forms/NgModel">Angular: NgModel</a></p>
+</blockquote>
+<h2 id="7-列表与卡片">7. 列表与卡片</h2>
+<p><code>&lt;ion-list&gt;</code> 用于显示多行信息（幻灯片 30）。它为条目提供了一定的结构，而且对列表本身设置样式（而不是逐个设置条目样式）有时会很方便。</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-list</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-input</span><span style="color:#808080">></span><span style="color:#D4D4D4">Input</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-input</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-toggle</span><span style="color:#9CDCFE"> slot</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"end"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Toggle</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-toggle</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-radio</span><span style="color:#9CDCFE"> slot</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"end"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Radio</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-radio</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-checkbox</span><span style="color:#9CDCFE"> slot</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">“start</span><span style="color:#F44747">"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Checkbox</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-checkbox</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-list</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>（幻灯片 31；同样的弯引号错误：<code>slot=“start&quot;</code> → <code>slot=&quot;start&quot;</code>。）</p>
+<p>列表中可以包含 <code>&lt;ion-item&gt;</code> 之外的标签（幻灯片 32）。<code>&lt;ion-card&gt;</code> 提供一种用于展示信息的&quot;卡片&quot;布局：包括带副标题和标题的页眉，然后是内容——卡片中也可以放一个 <code>&lt;ion-item&gt;</code>（幻灯片 33）：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-list</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-card</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-card-header</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">ion-card-subtitle</span><span style="color:#808080">></span><span style="color:#D4D4D4">Card Subtitle</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-card-subtitle</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">ion-card-title</span><span style="color:#808080">></span><span style="color:#D4D4D4">Card Title</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-card-title</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;/</span><span style="color:#569CD6">ion-card-header</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-card-content</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">      Card content</span></span>
+<span class="line"><span style="color:#808080">    &#x3C;/</span><span style="color:#569CD6">ion-card-content</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-card</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-card</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">ion-icon</span><span style="color:#9CDCFE"> name</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">“logo-ionic”</span><span style="color:#9CDCFE"> slot</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"start"</span><span style="color:#808080">>&#x3C;/</span><span style="color:#569CD6">ion-icon</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span><span style="color:#D4D4D4">ion-item in a card, icon left, button right</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> fill</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"outline"</span><span style="color:#9CDCFE"> slot</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"end"</span><span style="color:#808080">></span><span style="color:#D4D4D4">View</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-card</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-list</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>（又是弯引号：<code>name=“logo-ionic”</code> → <code>name=&quot;logo-ionic&quot;</code>。）</p>
+<p>在演示中，第一行会显示为<strong>空白</strong>：开关、单选和复选框都会显示文字，但 <code>&lt;ion-input&gt;Input&lt;/ion-input&gt;</code> 不会。第 1 步添加 <code>label=&quot;Input&quot;</code>，这一行就会显示 &quot;Input&quot;：</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Lists and cards (slides 31, 33) · Ionic web components&quot;, &quot;width&quot;: 375, &quot;height&quot;: 470, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script&gt;window.Ionic = { config: { mode: \&quot;ios\&quot; } };&lt;/script&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-content&gt;\n&lt;ion-list&gt;\n  &lt;ion-item&gt;\n    &lt;ion-input&gt;Input&lt;/ion-input&gt;\n  &lt;/ion-item&gt;\n  &lt;ion-item&gt;\n    &lt;ion-toggle slot=\&quot;end\&quot;&gt;Toggle&lt;/ion-toggle&gt;\n  &lt;/ion-item&gt;\n  &lt;ion-item&gt;\n    &lt;ion-radio slot=\&quot;end\&quot;&gt;Radio&lt;/ion-radio&gt;\n  &lt;/ion-item&gt;\n  &lt;ion-item&gt;\n    &lt;ion-checkbox slot=\&quot;start\&quot;&gt;Checkbox&lt;/ion-checkbox&gt;\n  &lt;/ion-item&gt;\n&lt;/ion-list&gt;\n&lt;ion-list&gt;\n  &lt;ion-card&gt;\n    &lt;ion-card-header&gt;\n      &lt;ion-card-subtitle&gt;Card Subtitle&lt;/ion-card-subtitle&gt;\n      &lt;ion-card-title&gt;Card Title&lt;/ion-card-title&gt;\n    &lt;/ion-card-header&gt;\n    &lt;ion-card-content&gt;\n      Card content\n    &lt;/ion-card-content&gt;\n  &lt;/ion-card&gt;\n  &lt;ion-card&gt;\n    &lt;ion-item&gt;\n      &lt;ion-icon name=\&quot;logo-ionic\&quot; slot=\&quot;start\&quot;&gt;&lt;/ion-icon&gt;\n      &lt;ion-label&gt;ion-item in a card, icon left, button right&lt;/ion-label&gt;\n      &lt;ion-button fill=\&quot;outline\&quot; slot=\&quot;end\&quot;&gt;View&lt;/ion-button&gt;\n    &lt;/ion-item&gt;\n  &lt;/ion-card&gt;\n&lt;/ion-list&gt;\n&lt;/ion-content&gt;\n&lt;/ion-app&gt;&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;Fix for the first row: in current Ionic the text inside ion-input is not shown — give it a label attribute.&quot;, &quot;js&quot;: &quot;document.querySelector(&#39;ion-input&#39;).setAttribute(&#39;label&#39;, &#39;Input&#39;);&quot;}]}</code></pre><blockquote>
+<p>⚠️ <strong>易错点</strong>：在当前的 Ionic 中，<code>&lt;ion-input&gt;</code> 标签之间的文字不会显示。请使用 <code>&lt;ion-input label=&quot;Input&quot;&gt;</code>（或 <code>placeholder</code>）。开关、单选和复选框则相反：它们的标签就是标签内部的文字。</p>
+</blockquote>
+<p>本讲的第一个编程演示是一个购物清单，由列表、条目、复选框、按钮和卡片组成，紧接在这之后（幻灯片 34）。</p>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#111-%E6%BC%94%E7%A4%BA-1%E8%B4%AD%E7%89%A9%E6%B8%85%E5%8D%95%E5%B9%BB%E7%81%AF%E7%89%87-34--setup1--solution1">演示 1：购物清单</a> · <a href="#112-%E9%97%AE%E9%A2%98-1%E4%BD%A0%E5%AF%B9-ionic-%E7%BB%84%E4%BB%B6%E6%9C%89%E5%A4%9A%E5%A4%A7%E6%8A%8A%E6%8F%A1%E5%B9%BB%E7%81%AF%E7%89%87-3536">问题 1</a></p>
+</blockquote>
+<h2 id="8-模态对话框toastalertaction-sheet">8. 模态对话框：Toast、Alert、Action Sheet</h2>
+<p>模态框适用于<strong>快速输入或提醒</strong>，会覆盖在应用的主要内容之上（幻灯片 38）。模态分为两种风格——<strong>模态对话框</strong>（本节）和<strong>模态页面</strong>（下一节）。模态通常在模型或控制器（<code>.ts</code>）中触发，而不是在视图（<code>.html</code>）中触发。</p>
+<p>每种对话框类型都有一个<strong>控制器</strong>服务：在构造函数中注入它，调用 <code>create({...options})</code>（它返回一个 Promise，解析为对话框），然后调用 <code>present()</code>。Toast 是一条会自行消失的简短消息（幻灯片 39）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">&#x3C;!--</span><span style="color:#4FC1FF">HTML</span><span style="color:#D4D4D4">--></span></span>
+<span class="line"><span style="color:#D4D4D4">&#x3C;</span><span style="color:#9CDCFE">ion</span><span style="color:#D4D4D4">-</span><span style="color:#9CDCFE">button</span><span style="color:#9CDCFE"> expand</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"full"</span><span style="color:#9CDCFE"> color</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"primary"</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">click</span><span style="color:#D4D4D4">)=</span><span style="color:#CE9178">"presentToast()"</span><span style="color:#D4D4D4">></span><span style="color:#9CDCFE">Send</span><span style="color:#9CDCFE"> Toast</span><span style="color:#D4D4D4">&#x3C;/</span><span style="color:#9CDCFE">ion</span><span style="color:#D4D4D4">-</span><span style="color:#9CDCFE">button</span><span style="color:#D4D4D4">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">/*TypeScript*/</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">ToastController</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> ‘@</span><span style="color:#9CDCFE">ionic</span><span style="color:#D4D4D4">/</span><span style="color:#9CDCFE">angular</span><span style="color:#D4D4D4">/</span><span style="color:#9CDCFE">standalone</span><span style="color:#D4D4D4">’;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> class</span><span style="color:#4EC9B0"> HomePage</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#6A9955">  /*Inject ToastController*/</span></span>
+<span class="line"><span style="color:#569CD6">  constructor</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">public</span><span style="color:#9CDCFE"> toastController</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">ToastController</span><span style="color:#D4D4D4">) {}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">  presentToast</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">toastController</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">create</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">      message:</span><span style="color:#CE9178"> 'Hello, world!'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      duration:</span><span style="color:#B5CEA8"> 2000</span></span>
+<span class="line"><span style="color:#D4D4D4">    }).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">toast</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">      toast</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">present</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">    });</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>（导入语句中的弯引号：<code>‘@ionic/angular/standalone’</code> → <code>&#39;@ionic/angular/standalone&#39;</code>。）</p>
+<p>Alert 是一个居中的对话框，包含页眉、副标题、消息和按钮（幻灯片 40）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">presentAlert</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">alertController</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">create</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">    header:</span><span style="color:#CE9178"> 'Alert'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    subHeader:</span><span style="color:#CE9178"> 'Subtitle'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    message:</span><span style="color:#CE9178"> 'This is an alert message.'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    buttons:</span><span style="color:#D4D4D4"> [</span><span style="color:#CE9178">'OK'</span><span style="color:#D4D4D4">]</span></span>
+<span class="line"><span style="color:#D4D4D4">  }).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">alert</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">    alert</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">present</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Action sheet 从底部滑出，列出多个选项。每个按钮都可以有 <code>role</code>（<code>&#39;destructive&#39;</code> 显示为红色，<code>&#39;cancel&#39;</code> 会放在最后）、<code>icon</code>，以及点击时运行的 <code>handler</code>（幻灯片 41）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">presentActionSheet</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">actionSheetController</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">create</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">    header:</span><span style="color:#CE9178"> 'Albums'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    buttons:</span><span style="color:#D4D4D4"> [{</span></span>
+<span class="line"><span style="color:#9CDCFE">      text:</span><span style="color:#CE9178"> 'Delete'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      role:</span><span style="color:#CE9178"> 'destructive'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      icon:</span><span style="color:#CE9178"> 'trash'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#DCDCAA">      handler</span><span style="color:#9CDCFE">:</span><span style="color:#D4D4D4"> () </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">        console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">'Delete clicked'</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">      }</span></span>
+<span class="line"><span style="color:#D4D4D4">    }, {</span></span>
+<span class="line"><span style="color:#9CDCFE">      text:</span><span style="color:#CE9178"> 'Cancel'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      icon:</span><span style="color:#CE9178"> 'close'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      role:</span><span style="color:#CE9178"> 'cancel'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#DCDCAA">      handler</span><span style="color:#9CDCFE">:</span><span style="color:#D4D4D4"> () </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">        console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">'Cancel clicked'</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">      }</span></span>
+<span class="line"><span style="color:#D4D4D4">    }]</span></span>
+<span class="line"><span style="color:#D4D4D4">  }).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">actionSheet</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">    actionSheet</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">present</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>本仓库的 <code>modalExamples</code> 首页正好包含这三者以及模态页面，通过四个全宽按钮（<strong>Send Toast、Send Alert、Send Action Sheet、Show Modal Example</strong>）触发，并注入了全部四个控制器：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">constructor</span><span style="color:#D4D4D4">(</span></span>
+<span class="line"><span style="color:#9CDCFE">  public</span><span style="color:#9CDCFE"> toastController</span><span style="color:#D4D4D4">: </span><span style="color:#9CDCFE">ToastController</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  public</span><span style="color:#9CDCFE"> alertController</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">AlertController</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  public</span><span style="color:#9CDCFE"> actionSheetController</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">ActionSheetController</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  public</span><span style="color:#9CDCFE"> modalController</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">ModalController</span></span>
+<span class="line"><span style="color:#D4D4D4">) {}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>运行效果：Toast 在底部显示 &quot;Hello, world!&quot; 并持续 2 秒；Alert 显示 &quot;Alert / Subtitle / This is an alert message.&quot;，并在变暗的页面上方有一个 <strong>OK</strong> 按钮；在操作表中点击 <strong>Delete</strong> 会输出 <code>Delete clicked</code>，点击 <strong>Cancel</strong> 会输出 <code>Cancel clicked</code>。</p>
+<p>下面试试这三个。步骤会替你打开 alert：</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Toast, alert, action sheet (slides 39–41) · Ionic web components; the controllers&#39; create({...}) options set as element properties&quot;, &quot;width&quot;: 375, &quot;height&quot;: 420, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script&gt;window.Ionic = { config: { mode: \&quot;ios\&quot; } };&lt;/script&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-content&gt;\n&lt;ion-button expand=\&quot;full\&quot; color=\&quot;primary\&quot; id=\&quot;toastBtn\&quot;&gt;Send Toast&lt;/ion-button&gt;\n&lt;ion-button expand=\&quot;full\&quot; color=\&quot;primary\&quot; id=\&quot;alertBtn\&quot;&gt;Send Alert&lt;/ion-button&gt;\n&lt;ion-button expand=\&quot;full\&quot; color=\&quot;primary\&quot; id=\&quot;sheetBtn\&quot;&gt;Send Action Sheet&lt;/ion-button&gt;\n&lt;/ion-content&gt;\n&lt;/ion-app&gt;&quot;, &quot;js&quot;: &quot;// Angular: this.toastController.create({...}).then((toast) =&gt; toast.present());\n// Without Angular: create the element, set the same options, append it, present it.\nfunction create(tag, options) {\n  const el = Object.assign(document.createElement(tag), options);\n  el.addEventListener(&#39;didDismiss&#39;, () =&gt; el.remove());  // controllers clean up for you\n  document.body.appendChild(el);\n  return Promise.resolve(el);\n}\nfunction presentToast() {\n  create(&#39;ion-toast&#39;, { message: &#39;Hello, world!&#39;, duration: 2000 })\n    .then((toast) =&gt; { toast.present(); });\n}\nfunction presentAlert() {\n  create(&#39;ion-alert&#39;, {\n    header: &#39;Alert&#39;, subHeader: &#39;Subtitle&#39;,\n    message: &#39;This is an alert message.&#39;, buttons: [&#39;OK&#39;]\n  }).then((alert) =&gt; { alert.present(); });\n}\nfunction presentActionSheet() {\n  create(&#39;ion-action-sheet&#39;, {\n    header: &#39;Albums&#39;,\n    buttons: [{\n      text: &#39;Delete&#39;, role: &#39;destructive&#39;, icon: &#39;trash&#39;,\n      handler: () =&gt; { console.log(&#39;Delete clicked&#39;); }\n    }, {\n      text: &#39;Cancel&#39;, icon: &#39;close&#39;, role: &#39;cancel&#39;,\n      handler: () =&gt; { console.log(&#39;Cancel clicked&#39;); }\n    }]\n  }).then((actionSheet) =&gt; { actionSheet.present(); });\n}\ndocument.getElementById(&#39;toastBtn&#39;).addEventListener(&#39;click&#39;, presentToast);\ndocument.getElementById(&#39;alertBtn&#39;).addEventListener(&#39;click&#39;, presentAlert);\ndocument.getElementById(&#39;sheetBtn&#39;).addEventListener(&#39;click&#39;, presentActionSheet);&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;Click Send Alert (scripted here).&quot;, &quot;js&quot;: &quot;customElements.whenDefined(&#39;ion-alert&#39;).then(() =&gt; presentAlert());&quot;}]}</code></pre><blockquote>
+<p>🧪 <strong>Demo 文件</strong>：<a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/modalExamples/src/app/home/home.page.ts">modalExamples/src/app/home/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/modalExamples/src/app/home/home.page.html">home.page.html</a></p>
+</blockquote>
+<blockquote>
+<p>💡 <strong>关键理解</strong>：<code>create()</code> 返回 Promise，因为对话框是异步构建的。在你对它解析出的对象调用 <code>present()</code> 之前，什么都不会出现——只调用 <code>create()</code> 不会显示任何内容。</p>
+</blockquote>
+<h2 id="9-模态页面">9. 模态页面</h2>
+<p>模态页面会在<strong>当前页面之上打开一个全新的页面</strong>（幻灯片 42）。所有页面本身都是组件，因此模态页面就是你用 <code>ionic generate page modal</code> 生成的组件。它适合小型输入，并且比对话框更灵活。</p>
+<p>主页使用 <code>ModalController</code> 创建它，指定组件，并通过 <code>componentProps</code> 传入数据（幻灯片 43）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">ModalController</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@ionic/angular'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">ModalExamplePage</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> ‘../</span><span style="color:#9CDCFE">modal</span><span style="color:#D4D4D4">/</span><span style="color:#9CDCFE">modal</span><span style="color:#D4D4D4">-</span><span style="color:#9CDCFE">example</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">page</span><span style="color:#CE9178">'</span><span style="color:#F44747">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> class</span><span style="color:#4EC9B0"> HomePage</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">  constructor</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">public</span><span style="color:#9CDCFE"> modalController</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">ModalController</span><span style="color:#D4D4D4">) {}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">  presentModal</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">modalController</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">create</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">      component:</span><span style="color:#9CDCFE"> ModalExamplePage</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      componentProps:</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">name:</span><span style="color:#CE9178"> "IN4MATX 133"</span><span style="color:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#D4D4D4">    }).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">modal</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">      modal</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">present</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">    });</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>（弯引号：<code>‘../modal/modal-example.page&#39;</code> → <code>&#39;../modal/modal-example.page&#39;</code>。注意这张幻灯片从 <code>&#39;@ionic/angular&#39;</code> 导入，而幻灯片 39 使用 <code>&#39;@ionic/angular/standalone&#39;</code>；像 <code>setup2</code> 这样的独立式项目会从 <code>&#39;@ionic/angular/standalone&#39;</code> 导入控制器。）</p>
+<p><code>componentProps</code> 的每个键都会以同名的形式进入模态页面的 <code>@Input()</code>。模态页面的视图和控制器（幻灯片 44）：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-content</span><span style="color:#9CDCFE"> padding</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">  Hello, {{name}}!</span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> (click)</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"dismiss()"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Dismiss</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-content</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">ModalController</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@ionic/angular'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> class</span><span style="color:#4EC9B0"> ModalPage</span><span style="color:#569CD6"> implements</span><span style="color:#4EC9B0"> OnInit</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#D4D4D4">  @</span><span style="color:#DCDCAA">Input</span><span style="color:#D4D4D4">() </span><span style="color:#9CDCFE">name</span><span style="color:#D4D4D4">:</span><span style="color:#4EC9B0">string</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">  constructor</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">public</span><span style="color:#9CDCFE"> modalController</span><span style="color:#D4D4D4">:</span><span style="color:#4EC9B0">ModalController</span><span style="color:#D4D4D4">) { }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">  dismiss</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">modalController</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">dismiss</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>仓库中写的是 <code>@Input() name:string = &quot;&quot;;</code>——按照幻灯片上的写法，严格模式的 TypeScript 会报告 <code>name</code> 没有初始值。运行 <code>modalExamples</code> 时，点击 <strong>Show Modal Example</strong> 会打开一个全屏页面，上面写着 &quot;Hello, IN4MATX 133!&quot;，并有一个 <strong>Dismiss</strong> 按钮用于关闭它。</p>
+<p>要<strong>取回数据</strong>，把数据传给 <code>dismiss(...)</code>，并在主页上用 <code>onDidDismiss()</code> 监听（幻灯片 45）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">/*modal-page.ts*/</span></span>
+<span class="line"><span style="color:#D4D4D4">@</span><span style="color:#DCDCAA">Input</span><span style="color:#D4D4D4">() </span><span style="color:#C8C8C8">name</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">string</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">constructor</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">public</span><span style="color:#9CDCFE"> modalController</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">ModalController</span><span style="color:#D4D4D4">) { }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">dismiss</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">modalController</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">dismiss</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">'Hello from modal!'</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">/*home-page.ts, creates ModalPage*/</span></span>
+<span class="line"><span style="color:#DCDCAA">presentModal</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">modalController</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">create</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">    component:</span><span style="color:#9CDCFE"> ModalPage</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    componentProps:</span><span style="color:#D4D4D4"> {</span><span style="color:#9CDCFE">name:</span><span style="color:#CE9178"> "IN4MATX 133"</span><span style="color:#D4D4D4">}</span></span>
+<span class="line"><span style="color:#D4D4D4">  }).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">modal</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">    modal</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">present</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#9CDCFE">    modal</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">onDidDismiss</span><span style="color:#D4D4D4">().</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">data</span><span style="color:#D4D4D4">)</span><span style="color:#569CD6">=></span><span style="color:#D4D4D4">{</span></span>
+<span class="line"><span style="color:#9CDCFE">      console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">data</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#6A9955">      // “Hello from modal!”</span></span>
+<span class="line"><span style="color:#D4D4D4">    })</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>幻灯片中的注释略有偏差：<code>onDidDismiss()</code> 解析为一个<strong>结果对象</strong>，字符串位于其 <code>data</code> 字段中。演示会输出 <code>{ data: &#39;Hello from modal!&#39;, role: undefined }</code>；使用 <code>data.data</code> 可以得到 <code>&#39;Hello from modal!&#39;</code>。</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Modal page with componentProps and onDidDismiss (slides 43–45) · Ionic web components; the modal&#39;s page is a plain element instead of an Angular component&quot;, &quot;width&quot;: 375, &quot;height&quot;: 360, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script&gt;window.Ionic = { config: { mode: \&quot;ios\&quot; } };&lt;/script&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-content class=\&quot;ion-padding\&quot;&gt;\n&lt;ion-button id=\&quot;open\&quot;&gt;Open Modal Page&lt;/ion-button&gt;\n&lt;/ion-content&gt;\n&lt;/ion-app&gt;&quot;, &quot;js&quot;: &quot;// Plays the role of ModalPage: shows {{name}} and calls dismiss(data).\nfunction makeModalPage(props) {\n  const page = document.createElement(&#39;div&#39;);\n  page.className = &#39;ion-page&#39;;\n  page.innerHTML = &#39;&lt;ion-content class=\&quot;ion-padding\&quot;&gt;Hello, &lt;b class=\&quot;name\&quot;&gt;&lt;/b&gt;!&#39; +\n    &#39; &lt;ion-button id=\&quot;dismiss\&quot;&gt;Dismiss&lt;/ion-button&gt;&lt;/ion-content&gt;&#39;;\n  page.querySelector(&#39;.name&#39;).textContent = props.name;        // componentProps\n  page.querySelector(&#39;#dismiss&#39;).addEventListener(&#39;click&#39;, () =&gt; {\n    page.closest(&#39;ion-modal&#39;).dismiss(&#39;Hello from modal!&#39;);     // dismiss(data)\n  });\n  return page;\n}\nfunction presentModal() {\n  const modal = document.createElement(&#39;ion-modal&#39;);\n  modal.appendChild(makeModalPage({ name: &#39;IN4MATX 133&#39; }));\n  document.body.appendChild(modal);\n  modal.present();\n  modal.onDidDismiss().then((data) =&gt; {\n    console.log(data);   // the whole result object, not just the string\n    modal.remove();\n  });\n}\ndocument.getElementById(&#39;open&#39;).addEventListener(&#39;click&#39;, presentModal);&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;Open the modal (scripted here).&quot;, &quot;js&quot;: &quot;customElements.whenDefined(&#39;ion-modal&#39;).then(() =&gt; presentModal());&quot;}, {&quot;note&quot;: &quot;Press Dismiss: onDidDismiss resolves and the home page logs the result.&quot;, &quot;js&quot;: &quot;setTimeout(() =&gt; document.querySelector(&#39;#dismiss&#39;).click(), 600);&quot;}]}</code></pre><blockquote>
+<p>🧪 <strong>Demo 文件</strong>：<a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/modalExamples/src/app/modal-example/modal-example.page.ts">modalExamples/src/app/modal-example/modal-example.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/modalExamples/src/app/modal-example/modal-example.page.html">modal-example.page.html</a></p>
+</blockquote>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：<code>&lt;ion-content padding&gt;</code>（幻灯片 44 和仓库中都是）是旧版 Ionic 的写法，在当前版本中不会增加内边距——在 <code>modalExamples</code> 中，&quot;Hello, IN4MATX 133!&quot; 会紧贴左上角。应使用 <code>&lt;ion-content class=&quot;ion-padding&quot;&gt;</code>。</p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#113-%E6%BC%94%E7%A4%BA-2%E4%B8%BA%E8%B4%AD%E7%89%A9%E6%B8%85%E5%8D%95%E6%B7%BB%E5%8A%A0%E6%8F%90%E7%A4%BA%E6%A1%86%E4%B8%8E%E6%A8%A1%E6%80%81%E9%A1%B5%E9%9D%A2%E5%B9%BB%E7%81%AF%E7%89%87-46--setup2--solution2">演示 2：模态框</a> · <a href="#114-%E9%97%AE%E9%A2%98-2%E4%BD%A0%E5%AF%B9-ionic-%E7%BB%84%E4%BB%B6%E6%9C%89%E5%A4%9A%E5%A4%A7%E6%8A%8A%E6%8F%A1%E5%B9%BB%E7%81%AF%E7%89%87-4748">问题 2</a></p>
+</blockquote>
+<h2 id="10-路由">10. 路由</h2>
+<p>与 Angular 一样，<code>app.routes.ts</code> 定义 URL 路由——但应用中没有浏览器地址栏，因此用户只能通过按钮和链接在页面之间移动（幻灯片 50）。幻灯片中的路由表：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> routes</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">Routes</span><span style="color:#D4D4D4"> = [</span></span>
+<span class="line"><span style="color:#D4D4D4">  { </span><span style="color:#9CDCFE">path:</span><span style="color:#CE9178"> ''</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">redirectTo:</span><span style="color:#CE9178"> 'home'</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">pathMatch:</span><span style="color:#CE9178"> 'full'</span><span style="color:#D4D4D4"> },</span></span>
+<span class="line"><span style="color:#D4D4D4">  { </span><span style="color:#9CDCFE">path:</span><span style="color:#CE9178"> 'home'</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">component:</span><span style="color:#9CDCFE"> HomeComponent</span><span style="color:#D4D4D4"> },</span></span>
+<span class="line"><span style="color:#D4D4D4">  { </span><span style="color:#9CDCFE">path:</span><span style="color:#CE9178"> 'page2'</span><span style="color:#D4D4D4">,</span><span style="color:#DCDCAA">loadChildren</span><span style="color:#9CDCFE">:</span><span style="color:#D4D4D4">()</span><span style="color:#569CD6">=></span><span style="color:#DCDCAA"> import</span><span style="color:#D4D4D4">(‘./</span><span style="color:#9CDCFE">page2</span><span style="color:#D4D4D4">/</span><span style="color:#9CDCFE">page2</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">module</span><span style="color:#D4D4D4">’).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">m</span><span style="color:#569CD6"> =></span><span style="color:#9CDCFE"> m</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">Page2Module</span><span style="color:#D4D4D4">)}</span></span>
+<span class="line"><span style="color:#D4D4D4">];</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>page2</code> 路由是<strong>惰性加载</strong>：只有在页面打开时才加载其代码。（又是弯引号：<code>import(&#39;./page2/page2.module&#39;)</code>。）<code>loadChildren</code> 加 module 的写法是较旧的 NgModule 风格；独立式组件的仓库项目则使用 <code>loadComponent</code> 进行惰性加载（来自 <code>setup2/src/app/app.routes.ts</code>）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> const</span><span style="color:#4FC1FF"> routes</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">Routes</span><span style="color:#D4D4D4"> = [</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#9CDCFE">    path:</span><span style="color:#CE9178"> 'home'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#DCDCAA">    loadComponent</span><span style="color:#9CDCFE">:</span><span style="color:#D4D4D4"> () </span><span style="color:#569CD6">=></span><span style="color:#569CD6"> import</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">'./home/home.page'</span><span style="color:#D4D4D4">).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#9CDCFE"> m</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">HomePage</span><span style="color:#D4D4D4">),</span></span>
+<span class="line"><span style="color:#D4D4D4">  },</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#9CDCFE">    path:</span><span style="color:#CE9178"> ''</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    redirectTo:</span><span style="color:#CE9178"> 'home'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    pathMatch:</span><span style="color:#CE9178"> 'full'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">  },</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#9CDCFE">    path:</span><span style="color:#CE9178"> 'modal'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#DCDCAA">    loadComponent</span><span style="color:#9CDCFE">:</span><span style="color:#D4D4D4"> () </span><span style="color:#569CD6">=></span><span style="color:#569CD6"> import</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">'./modal/modal.page'</span><span style="color:#D4D4D4">).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">( </span><span style="color:#9CDCFE">m</span><span style="color:#569CD6"> =></span><span style="color:#9CDCFE"> m</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">ModalPage</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  },</span></span>
+<span class="line"><span style="color:#D4D4D4">];</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>ionic generate page modal</code> 会自动为你添加最后那条路由。（对比 <a href="/~kazuhak/notes/in4matx-133/lec-11/zh-CN/#41-%E8%B7%AF%E7%94%B1%E8%A1%A8">Lecture 11 的路由表</a>。）</p>
+<p>要导航，需要在 Ionic 按钮上定义 <code>href</code> 属性（幻灯片 51）：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-content</span><span style="color:#9CDCFE"> padding</span><span style="color:#808080"> ></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> href</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"page2"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Go to page 2</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-content</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Ionic 还提供了其他方法来管理页面历史——返回上一页，以及打破典型撤销/重做循环的非线性导航。这些大多超出了本课的范围，但值得自己研究（幻灯片 52）。</p>
+<blockquote>
+<p>🧪 <strong>Demo 文件</strong>：<a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/setup2/src/app/app.routes.ts">setup2/src/app/app.routes.ts</a></p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://ionicframework.com/docs/angular/navigation">Ionic: Angular navigation</a></p>
+</blockquote>
+<h2 id="11-课堂问题与演示附解答">11. 课堂问题与演示（附解答）</h2>
+<p>两个投票都是信心自测，没有正确选项，幻灯片上每个选项的条形都显示 0%（未公布结果）。两个编程演示都使用同一个 &quot;My Shopping List&quot; 应用；解答在 Chromium 中编写并运行，下面的输出即来自于此。</p>
+<h3 id="111-演示-1购物清单幻灯片-34--setup1--solution1">11.1 演示 1：购物清单（幻灯片 34 · setup1 → solution1）</h3>
+<p>幻灯片 34 展示了目标效果：&quot;My Shopping List&quot;，包含复选框行 Broccoli、Bread、Orange Juice（已勾选）、Apples，以及一个 <strong>Check Out</strong> 按钮。<code>setup1/src/app/home/home.page.ts</code> 中已经有数据和 <code>checkOut()</code>：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C8C8C8">shoppingList</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">any</span><span style="color:#D4D4D4">[] = [</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span><span style="color:#CE9178">'item'</span><span style="color:#9CDCFE">:</span><span style="color:#CE9178">'Broccoli'</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">'inCart'</span><span style="color:#9CDCFE">:</span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">},</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span><span style="color:#CE9178">'item'</span><span style="color:#9CDCFE">:</span><span style="color:#CE9178">'Bread'</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">'inCart'</span><span style="color:#9CDCFE">:</span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">},</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span><span style="color:#CE9178">'item'</span><span style="color:#9CDCFE">:</span><span style="color:#CE9178">'Orange Juice'</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">'inCart'</span><span style="color:#9CDCFE">:</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">},</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span><span style="color:#CE9178">'item'</span><span style="color:#9CDCFE">:</span><span style="color:#CE9178">'Apples'</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">'inCart'</span><span style="color:#9CDCFE">:</span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">}</span></span>
+<span class="line"><span style="color:#D4D4D4">];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C8C8C8">itemsPurchased</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">any</span><span style="color:#D4D4D4">[] = [];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">checkOut</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">  var</span><span style="color:#9CDCFE"> boughtItems</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">shoppingList</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">filter</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">:</span><span style="color:#4EC9B0">any</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> item</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">inCart</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"><span style="color:#569CD6">  var</span><span style="color:#9CDCFE"> unboughtItems</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">shoppingList</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">filter</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">:</span><span style="color:#4EC9B0">any</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> !</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">inCart</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">shoppingList</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">unboughtItems</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">  boughtItems</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">forEach</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">:</span><span style="color:#4EC9B0">any</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">itemsPurchased</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">push</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>任务写在 <code>home.page.html</code> 的 TODO 注释中：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">&#x3C;!--Display the shopping list in an &#x3C;ion-list> using &#x3C;ion-checkbox>--></span></span>
+<span class="line"><span style="color:#6A9955">&#x3C;!--Bind the checkbox values to each item's inCart value--></span></span>
+<span class="line"><span style="color:#6A9955">&#x3C;!--Create an &#x3C;ion-button> and bind it to the checkOut() function--></span></span>
+<span class="line"><span style="color:#6A9955">&#x3C;!--Display an &#x3C;ion-card> after an item was purchased--></span></span>
+<span class="line"><span style="color:#6A9955">&#x3C;!--In the card, show a shopping report of each item purchased with the "cart" icon--></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>以及 <code>.ts</code> 中的 <code>//Don&#39;t forget to add imports for the new components!</code>。</p>
+<details>
+<summary>答案</summary>
+
+<p><code>home.page.html</code>（来自 <code>solution1</code>）：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-content</span><span style="color:#9CDCFE"> [fullscreen]</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"true"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-list</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">    @for(item of shoppingList; track item) {</span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">        &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">          &#x3C;</span><span style="color:#569CD6">ion-checkbox</span><span style="color:#9CDCFE"> [(ngModel)]</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"item.inCart"</span><span style="color:#808080">></span><span style="color:#D4D4D4">{{item.item}}</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-checkbox</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">        &#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-list</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> (click)</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"checkOut()"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Check Out</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">  @if(itemsPurchased.length > 0) {</span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-card</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">ion-card-header</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">        &#x3C;</span><span style="color:#569CD6">ion-card-title</span><span style="color:#808080">></span><span style="color:#D4D4D4">Shopping Report</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-card-title</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;/</span><span style="color:#569CD6">ion-card-header</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">ion-card-content</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">        @for(item of itemsPurchased; track item) {</span></span>
+<span class="line"><span style="color:#808080">          &#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">            &#x3C;</span><span style="color:#569CD6">ion-icon</span><span style="color:#9CDCFE"> name</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"cart-outline"</span><span style="color:#808080">>&#x3C;/</span><span style="color:#569CD6">ion-icon</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">            &#x3C;</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span><span style="color:#D4D4D4">{{item}}</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-label</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">          &#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">        }</span></span>
+<span class="line"><span style="color:#808080">      &#x3C;/</span><span style="color:#569CD6">ion-card-content</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;/</span><span style="color:#569CD6">ion-card</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-content</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>home.page.ts</code> 的改动：导入并加载每个新组件，为 <code>ngModel</code> 导入 <code>FormsModule</code>，并注册购物车图标：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">FormsModule</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@angular/forms'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">IonHeader</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonToolbar</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonTitle</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonContent</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonButton</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonList</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonLabel</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonCheckbox</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonItem</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonCard</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonCardContent</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonCardHeader</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonCardTitle</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonIcon</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@ionic/angular/standalone'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">addIcons</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> 'ionicons'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">cartOutline</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> 'ionicons/icons'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// ...</span></span>
+<span class="line"><span style="color:#C8C8C8">  imports</span><span style="color:#D4D4D4">: [</span><span style="color:#9CDCFE">IonHeader</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonToolbar</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonTitle</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonContent</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonButton</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonList</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonLabel</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonCheckbox</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonItem</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonCard</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonCardContent</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonCardHeader</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonCardTitle</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">IonIcon</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">FormsModule</span><span style="color:#D4D4D4">],</span></span>
+<span class="line"><span style="color:#6A9955">// ...</span></span>
+<span class="line"><span style="color:#DCDCAA">  constructor</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#DCDCAA">    addIcons</span><span style="color:#D4D4D4">({ </span><span style="color:#9CDCFE">cartOutline</span><span style="color:#D4D4D4"> });</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>（<code>solution1</code> 还在第一个 <code>filter</code> 中加入了 <code>console.log(item)</code> 和 <code>console.log(boughtItems)</code>，并把 <code>this.shoppingList = unboughtItems;</code> 移到了末尾——行为相同。）</p>
+<p>运行结果：勾选 Broccoli 并按下 <strong>Check Out</strong>，会输出四个条目（Broccoli 和 Orange Juice 现在为 <code>inCart: true</code>），列表中保留 <strong>Bread、Apples</strong>，并显示一张 &quot;Shopping Report&quot; 卡片，Broccoli 和 Orange Juice 旁边有购物车图标。勾选 Bread 再次结算，会把 <strong>Bread</strong> 加入报告，列表中只剩 Apples。</p>
+<p>关键原因：<code>[(ngModel)]</code> 会把勾选状态写回 <code>item.inCart</code>（使用 <code>[checked]</code> 的话，列表永远不会改变）；<code>@if</code> 在 <code>itemsPurchased</code> 有内容之前隐藏卡片；<code>checkOut()</code> 会替换 <code>shoppingList</code>，因此 <code>@for</code> 会重新渲染更短的列表。</p>
+<p>用 Ionic web 组件（不使用 Angular）重新实现的同一个应用；该步骤会勾选 Broccoli 并结算，输出 <code>[ &#39;Broccoli&#39;, &#39;Orange Juice&#39; ]</code>：</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Demo 1 check: the solution1 shopping list re-created with Ionic web components (no Angular)&quot;, &quot;width&quot;: 375, &quot;height&quot;: 560, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script&gt;window.Ionic = { config: { mode: \&quot;ios\&quot; } };&lt;/script&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-header&gt;\n  &lt;ion-toolbar&gt;&lt;ion-title&gt;My Shopping List&lt;/ion-title&gt;&lt;/ion-toolbar&gt;\n&lt;/ion-header&gt;\n&lt;ion-content&gt;\n  &lt;ion-list id=\&quot;list\&quot;&gt;&lt;/ion-list&gt;\n  &lt;ion-button id=\&quot;checkout\&quot;&gt;Check Out&lt;/ion-button&gt;\n  &lt;ion-card id=\&quot;report\&quot; hidden&gt;\n    &lt;ion-card-header&gt;&lt;ion-card-title&gt;Shopping Report&lt;/ion-card-title&gt;&lt;/ion-card-header&gt;\n    &lt;ion-card-content id=\&quot;bought\&quot;&gt;&lt;/ion-card-content&gt;\n  &lt;/ion-card&gt;\n&lt;/ion-content&gt;\n&lt;/ion-app&gt;&quot;, &quot;js&quot;: &quot;let shoppingList = [\n  {&#39;item&#39;:&#39;Broccoli&#39;, &#39;inCart&#39;:false},\n  {&#39;item&#39;:&#39;Bread&#39;, &#39;inCart&#39;:false},\n  {&#39;item&#39;:&#39;Orange Juice&#39;, &#39;inCart&#39;:true},\n  {&#39;item&#39;:&#39;Apples&#39;, &#39;inCart&#39;:false}\n];\nlet itemsPurchased = [];\nfunction render() {   // what @for / @if do in the template\n  const list = document.getElementById(&#39;list&#39;);\n  list.innerHTML = &#39;&#39;;\n  shoppingList.forEach((item) =&gt; {\n    const row = document.createElement(&#39;ion-item&#39;);\n    const box = document.createElement(&#39;ion-checkbox&#39;);\n    box.textContent = item.item;\n    box.checked = item.inCart;\n    box.addEventListener(&#39;ionChange&#39;, (e) =&gt; { item.inCart = e.detail.checked; });  // [(ngModel)]\n    row.appendChild(box);\n    list.appendChild(row);\n  });\n  document.getElementById(&#39;report&#39;).hidden = itemsPurchased.length == 0;\n  document.getElementById(&#39;bought&#39;).innerHTML = itemsPurchased.map((i) =&gt;\n    &#39;&lt;ion-item&gt;&lt;ion-icon name=\&quot;cart-outline\&quot;&gt;&lt;/ion-icon&gt;&lt;ion-label&gt;&#39; + i + &#39;&lt;/ion-label&gt;&lt;/ion-item&gt;&#39;).join(&#39;&#39;);\n}\nfunction checkOut() {\n  var boughtItems = shoppingList.filter((item) =&gt; item.inCart);\n  var unboughtItems = shoppingList.filter((item) =&gt; !item.inCart);\n  console.log(boughtItems.map((i) =&gt; i.item));\n  boughtItems.forEach((item) =&gt; { itemsPurchased.push(item.item); });\n  shoppingList = unboughtItems;\n  render();\n}\ndocument.getElementById(&#39;checkout&#39;).addEventListener(&#39;click&#39;, checkOut);\nrender();&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;Tick Broccoli, then press Check Out (scripted).&quot;, &quot;js&quot;: &quot;setTimeout(() =&gt; { shoppingList[0].inCart = true; checkOut(); }, 800);&quot;}]}</code></pre></details>
+
+<blockquote>
+<p>🧪 <strong>Demo 文件</strong>：<a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/setup1/src/app/home/home.page.html">setup1/src/app/home/home.page.html</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/setup1/src/app/home/home.page.ts">setup1/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/solution1/src/app/home/home.page.html">solution1/…/home.page.html</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/solution1/src/app/home/home.page.ts">solution1/…/home.page.ts</a></p>
+</blockquote>
+<p>回到 <a href="#7-%E5%88%97%E8%A1%A8%E4%B8%8E%E5%8D%A1%E7%89%87">第 7 节</a>。</p>
+<h3 id="112-问题-1你对-ionic-组件有多大把握幻灯片-3536">11.2 问题 1：你对 Ionic 组件有多大把握？（幻灯片 35–36）</h3>
+<p><em>到目前为止，你对能否使用 Ionic 组件有多大把握？</em></p>
+<ul>
+<li>A. 我对如何使用它们有很多疑问</li>
+<li>B. 我对如何使用它们有一些疑问</li>
+<li>C. 我还在消化这些信息，之后再来确认</li>
+<li>D. 我想一旦开始使用，我就能搞定</li>
+<li>E. 我相信我能够使用它们</li>
+</ul>
+<details>
+<summary>答案</summary>
+
+<p>这是一个自我评估投票——没有正确答案。如果你选了 A–C，最快的检查方法是看你能否解释演示 1 的三个要点：一个由 <code>@for</code> 构建 <code>&lt;ion-item&gt;</code> 行的 <code>&lt;ion-list&gt;</code>，一个使用 <code>[(ngModel)]</code> 绑定的复选框（外加 <code>FormsModule</code>），以及每个组件既被导入又列在 <code>imports</code> 中。</p>
+</details>
+
+<p>回到 <a href="#7-%E5%88%97%E8%A1%A8%E4%B8%8E%E5%8D%A1%E7%89%87">第 7 节</a>。</p>
+<h3 id="113-演示-2为购物清单添加提示框与模态页面幻灯片-46--setup2--solution2">11.3 演示 2：为购物清单添加提示框与模态页面（幻灯片 46 · setup2 → solution2）</h3>
+<p>幻灯片 46 展示了带有三个按钮的购物清单：<strong>Add Item</strong>、<strong>Delete Item(s)</strong>、<strong>Check Out</strong>。<code>setup2</code> 已经有列表和按钮、注入好的 <code>AlertController</code> 与 <code>ModalController</code>、一个生成好的 <code>modal</code> 页面（工具栏显示 &quot;Checked out!&quot;，并带有 Shopping Report 卡片），以及以下 TODO：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> addItem</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#6A9955">  //TODO: use the alert controller to create and display a text input field, and add that to the shopping list.</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> deleteItems</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#6A9955"> //TODO: use the alert controller to create and display a set of checkboxes for each item in the shopping list.</span></span>
+<span class="line"><span style="color:#6A9955"> //For each item checked, delete the item from the list.</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> checkOut</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#6A9955">  // ...filters the list as before, then:</span></span>
+<span class="line"><span style="color:#569CD6">  var</span><span style="color:#9CDCFE"> itemsPurchased</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">boughtItems</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">map</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">:</span><span style="color:#4EC9B0">any</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> item</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>在模态页面中：<code>dismiss()</code> 里有 <code>//TODO: use the modal controller to dismiss this page</code>，其工具栏中有 <code>&lt;!--TODO: add dismiss button in an &lt;ion-buttons&gt; and bind it to dismiss() function--&gt;</code>。<code>setup2</code> 中的复选框使用 <code>[checked]=&quot;item.inCart&quot;</code> 绑定。</p>
+<details>
+<summary>答案</summary>
+
+<p><strong>Add Item</strong> —— 带有文本输入框的提示框。<code>Ok</code> 处理函数会接收以 <code>name</code> 为键的输入值：</p>
+<div class="code-collapse is-collapsed"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">addItem</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">alertController</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">create</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">    header:</span><span style="color:#CE9178"> 'What would you like to add?'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    inputs:</span><span style="color:#D4D4D4"> [</span></span>
+<span class="line"><span style="color:#D4D4D4">      {</span></span>
+<span class="line"><span style="color:#9CDCFE">        name:</span><span style="color:#CE9178"> 'item'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">        type:</span><span style="color:#CE9178"> 'text'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">        placeholder:</span><span style="color:#CE9178"> 'Add an item'</span></span>
+<span class="line"><span style="color:#D4D4D4">      }</span></span>
+<span class="line"><span style="color:#D4D4D4">    ],</span></span>
+<span class="line"><span style="color:#9CDCFE">    buttons:</span><span style="color:#D4D4D4"> [</span></span>
+<span class="line"><span style="color:#D4D4D4">      {</span></span>
+<span class="line"><span style="color:#9CDCFE">        text:</span><span style="color:#CE9178"> 'Cancel'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">        role:</span><span style="color:#CE9178"> 'cancel'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">        cssClass:</span><span style="color:#CE9178"> 'secondary'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#DCDCAA">        handler</span><span style="color:#9CDCFE">:</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">data</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#6A9955">          //No need to do anything</span></span>
+<span class="line"><span style="color:#9CDCFE">          console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">'Confirm Cancel'</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">        }</span></span>
+<span class="line"><span style="color:#D4D4D4">      }, {</span></span>
+<span class="line"><span style="color:#9CDCFE">        text:</span><span style="color:#CE9178"> 'Ok'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#DCDCAA">        handler</span><span style="color:#9CDCFE">:</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">data</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">          console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">data</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">          this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">shoppingList</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">push</span><span style="color:#D4D4D4">({</span><span style="color:#CE9178">'item'</span><span style="color:#9CDCFE">:data</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">'inCart'</span><span style="color:#9CDCFE">:</span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">});</span></span>
+<span class="line"><span style="color:#D4D4D4">        }</span></span>
+<span class="line"><span style="color:#D4D4D4">      }</span></span>
+<span class="line"><span style="color:#D4D4D4">    ]</span></span>
+<span class="line"><span style="color:#D4D4D4">  }).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">alert</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">    alert</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">present</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="31"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>展开全部（31 行）</span></button><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>输入 &quot;Milk&quot; 并按下 Ok，会输出 <code>{item: &#39;Milk&#39;}</code> 并添加一行 Milk。</p>
+<p><strong>Delete Item(s)</strong> —— 用 <code>map</code> 为每个条目构建一个复选框输入，然后过滤掉被勾选的条目。对于复选框输入，处理函数会收到被勾选值组成的<strong>数组</strong>：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">deleteItems</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">  var</span><span style="color:#9CDCFE"> inputs</span><span style="color:#D4D4D4">:</span><span style="color:#4EC9B0">any</span><span style="color:#D4D4D4">[] = </span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">shoppingList</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">map</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">:</span><span style="color:#4EC9B0">any</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> {</span><span style="color:#9CDCFE">name:</span><span style="color:#CE9178">'toRemove'</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">type:</span><span style="color:#CE9178">'checkbox'</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">label:item</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">value:item</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">};</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">alertController</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">create</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">    header:</span><span style="color:#CE9178"> 'Which would you like to delete?'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    inputs:</span><span style="color:#9CDCFE"> inputs</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    buttons:</span><span style="color:#D4D4D4"> [</span></span>
+<span class="line"><span style="color:#D4D4D4">      { </span><span style="color:#9CDCFE">text:</span><span style="color:#CE9178"> 'Cancel'</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">role:</span><span style="color:#CE9178"> 'cancel'</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">cssClass:</span><span style="color:#CE9178"> 'secondary'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#DCDCAA">        handler</span><span style="color:#9CDCFE">:</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">data</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">'Confirm Cancel'</span><span style="color:#D4D4D4">); } },</span></span>
+<span class="line"><span style="color:#D4D4D4">      { </span><span style="color:#9CDCFE">text:</span><span style="color:#CE9178"> 'Ok'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#DCDCAA">        handler</span><span style="color:#9CDCFE">:</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">data</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">          console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">data</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">          this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">shoppingList</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">shoppingList</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">filter</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">            return</span><span style="color:#D4D4D4"> !</span><span style="color:#9CDCFE">data</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">includes</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">item</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">          });</span></span>
+<span class="line"><span style="color:#D4D4D4">        }</span></span>
+<span class="line"><span style="color:#D4D4D4">      }</span></span>
+<span class="line"><span style="color:#D4D4D4">    ]</span></span>
+<span class="line"><span style="color:#D4D4D4">  }).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">alert</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">    alert</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">present</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>勾选 Bread 并按下 Ok，会输出 <code>[&#39;Bread&#39;]</code> 并将其删除。</p>
+<p><strong>Check Out</strong> —— 计算完 <code>itemsPurchased</code> 后，打开模态页面，并通过 <code>componentProps</code> 把列表传入（它会进入页面的 <code>@Input() itemsPurchased</code>）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">modalController</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">create</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  component:</span><span style="color:#9CDCFE"> ModalPage</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  componentProps:</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">itemsPurchased:</span><span style="color:#9CDCFE"> itemsPurchased</span><span style="color:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#D4D4D4">}).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">modal</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">  modal</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">present</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>并使用 <code>import { ModalPage } from &#39;../modal/modal.page&#39;;</code>。模态页面的 <code>dismiss()</code>：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">dismiss</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">modalController</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">dismiss</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#CE9178">    'dismissed'</span><span style="color:#9CDCFE">:</span><span style="color:#569CD6"> true</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>另外：复选框改为 <code>[(ngModel)]=&quot;item.inCart&quot;</code> 并导入 <code>FormsModule</code>——使用 <code>[checked]</code> 时，勾选框永远不会设置 <code>inCart</code>，因此结算时只会购买 Orange Juice。另外，<code>addItem</code>/<code>deleteItems</code>/<code>checkOut</code> 去掉了 <code>async</code>，因为它们使用 <code>.then()</code>。</p>
+<p>运行：添加 Milk、删除 Bread、勾选 Milk 并按下 Check Out 后，会出现一个全屏的 &quot;Checked out!&quot; 页面，显示包含 <strong>Orange Juice</strong> 和 <strong>Milk</strong> 的 Shopping Report，而下方的列表保留 Broccoli 和 Apples。</p>
+<p><strong>仓库中的解答漏掉了一项 TODO</strong>：<code>solution2</code> 的模态页面从未添加关闭按钮，因此 <code>dismiss()</code> 永远不会被调用，页面在手机上也无法关闭（在桌面浏览器中按 Escape 可以关闭）。缺少的部分如下：</p>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-toolbar</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-title</span><span style="color:#808080">></span><span style="color:#D4D4D4">Checked out!</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-title</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">ion-buttons</span><span style="color:#9CDCFE"> slot</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"end"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> (click)</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"dismiss()"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Dismiss</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">ion-buttons</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-toolbar</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>需要为模态页面的 imports 添加 <code>IonButtons</code> 和 <code>IonButton</code>。（这最后一段代码是为这些笔记编写的，不在仓库中。）</p>
+</details>
+
+<blockquote>
+<p>🧪 <strong>Demo 文件</strong>：<a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/setup2/src/app/home/home.page.ts">setup2/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/setup2/src/app/modal/modal.page.html">setup2/…/modal.page.html</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/solution2/src/app/home/home.page.ts">solution2/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W7_L1_IonicComponents/solution2/src/app/modal/modal.page.ts">solution2/…/modal.page.ts</a></p>
+</blockquote>
+<p>回到 <a href="#8-%E6%A8%A1%E6%80%81%E5%AF%B9%E8%AF%9D%E6%A1%86toastalertaction-sheet">第 8 节</a> · <a href="#9-%E6%A8%A1%E6%80%81%E9%A1%B5%E9%9D%A2">第 9 节</a>。</p>
+<h3 id="114-问题-2你对-ionic-组件有多大把握幻灯片-4748">11.4 问题 2：你对 Ionic 组件有多大把握？（幻灯片 47–48）</h3>
+<p><em>你对能否使用 Ionic 组件有多大把握？</em> —— 与 <a href="#112-%E9%97%AE%E9%A2%98-1%E4%BD%A0%E5%AF%B9-ionic-%E7%BB%84%E4%BB%B6%E6%9C%89%E5%A4%9A%E5%A4%A7%E6%8A%8A%E6%8F%A1%E5%B9%BB%E7%81%AF%E7%89%87-3536">问题 1</a> 相同的五个选项，只是在模态框演示之后再次提问。</p>
+<details>
+<summary>答案</summary>
+
+<p>同样没有正确答案。需要自我检验的新技能：从 <code>.ts</code> 文件中创建并显示对话框（create → present），在按钮的 <code>handler</code> 中读取提示框的输入值，以及通过 <code>componentProps</code> 把数据传入模态页面（并通过 <code>dismiss(data)</code> + <code>onDidDismiss()</code> 把数据传回）。</p>
+</details>
+
+<p>回到 <a href="#9-%E6%A8%A1%E6%80%81%E9%A1%B5%E9%9D%A2">第 9 节</a>。</p>
+<h2 id="12-速查与必记的-5-个要点">12. 速查与必记的 5 个要点</h2>
+<p><strong>组件</strong></p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>标签</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>结构</td>
+<td><code>ion-header</code>, <code>ion-content</code>, <code>ion-footer</code>, <code>ion-toolbar</code>, <code>ion-title</code>, <code>ion-tabs</code></td>
+<td>工具栏放在 header/footer 中</td>
+</tr>
+<tr>
+<td>条目</td>
+<td><code>ion-item</code>, <code>ion-label</code>, <code>ion-thumbnail</code>, <code>ion-button</code></td>
+<td>一行；<code>slot=&quot;start&quot;</code>/<code>&quot;end&quot;</code>；<code>button</code>、<code>href</code>、<code>color</code></td>
+</tr>
+<tr>
+<td>图标</td>
+<td><code>ion-icon</code>, <code>ion-badge</code>, <code>ion-avatar</code>, <code>ion-chip</code></td>
+<td><code>addIcons({ heart })</code> + <code>name=&quot;heart&quot;</code></td>
+</tr>
+<tr>
+<td>输入</td>
+<td><code>ion-input</code>, <code>ion-checkbox</code>, <code>ion-toggle</code>, <code>ion-radio</code>, <code>ion-datetime</code></td>
+<td>放在 <code>ion-item</code> 中；<code>[(ngModel)]</code> 需要 <code>FormsModule</code></td>
+</tr>
+<tr>
+<td>列表</td>
+<td><code>ion-list</code>, <code>ion-card</code>, <code>ion-card-header</code>, <code>ion-card-title</code>, <code>ion-card-subtitle</code>, <code>ion-card-content</code></td>
+<td>列表中可以包含卡片</td>
+</tr>
+<tr>
+<td>模态</td>
+<td><code>ToastController</code>, <code>AlertController</code>, <code>ActionSheetController</code>, <code>ModalController</code></td>
+<td><code>create({...}).then(x =&gt; x.present())</code></td>
+</tr>
+</tbody></table>
+<p><strong>控制器</strong></p>
+<table>
+<thead>
+<tr>
+<th>调用</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>toastController.create({ message, duration })</code></td>
+<td>短消息，会自行消失</td>
+</tr>
+<tr>
+<td><code>alertController.create({ header, subHeader, message, inputs, buttons })</code></td>
+<td>居中对话框；按钮的 <code>handler(data)</code> 会收到输入值</td>
+</tr>
+<tr>
+<td><code>actionSheetController.create({ header, buttons })</code></td>
+<td>底部面板；按钮可设 <code>role: &#39;destructive&#39; / &#39;cancel&#39;</code>、<code>icon</code>、<code>handler</code></td>
+</tr>
+<tr>
+<td><code>modalController.create({ component, componentProps })</code></td>
+<td>覆盖在页面之上的页面；props → <code>@Input()</code></td>
+</tr>
+<tr>
+<td><code>modalController.dismiss(data)</code></td>
+<td>关闭最上层的模态框，并把 <code>data</code> 传回</td>
+</tr>
+<tr>
+<td><code>modal.onDidDismiss().then(r =&gt; r.data)</code></td>
+<td>读取模态框传回的内容</td>
+</tr>
+</tbody></table>
+<p><strong>CLI</strong></p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>npm install -g @ionic/cli</code></td>
+<td>安装 Ionic CLI</td>
+</tr>
+<tr>
+<td><code>ionic start [projectname]</code></td>
+<td>新建项目</td>
+</tr>
+<tr>
+<td><code>ionic generate page [name]</code></td>
+<td>新建页面（并添加其路由）</td>
+</tr>
+<tr>
+<td><code>ionic serve</code></td>
+<td>在浏览器中运行</td>
+</tr>
+</tbody></table>
+<p><strong>必记的 5 个要点</strong></p>
+<ol>
+<li>独立式页面必须从 <code>@ionic/angular/standalone</code> <strong>导入</strong>每个 Ionic 组件，并把它列入 <code>imports: [...]</code>——使用 <code>ngModel</code> 还需要 <code>FormsModule</code>。</li>
+<li><code>[checked]</code> 只负责显示值；<code>[(ngModel)]</code> 才会把用户的选择写回你的数据。</li>
+<li>图标需要用 <code>addIcons({ ... })</code> 注册你用到的每一个名称——包括操作表选项中的图标——否则它们会悄无声息地不显示。</li>
+<li>对话框和模态页面都从 <code>.ts</code> 中打开：<code>create()</code> 返回 Promise，在 <code>present()</code> 之前什么都不会出现。</li>
+<li><code>componentProps</code> 的键会成为模态页面的 <code>@Input()</code>；<code>dismiss(data)</code> 把数据传回，而 <code>onDidDismiss()</code> 解析为一个对象，其 <code>.data</code> 就是该值。</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="笔记翻页" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/~kazuhak/notes/in4matx-133/lec-12/zh-CN/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>上一篇 · 第 12 讲</span><span class="pager-title" data-astro-cid-gxyjxt6l>混合与原生架构</span></a><a class="card interactive pager-card pager-next" href="/~kazuhak/notes/in4matx-133/lec-14/zh-CN/" rel="next" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>第 14 讲 · 下一篇<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>移动设计原则</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>快捷键<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> 上一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> 下一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> 切换语言</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="目录" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>顶部</button><script type="module" src="/~kazuhak/_astro/NoteReader.astro_astro_type_script_index_0_lang.DS40VSrb.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/~kazuhak/assets/js/bento.js" defer></script><script src="/~kazuhak/assets/js/chat-widget.js" defer></script></body></html>
