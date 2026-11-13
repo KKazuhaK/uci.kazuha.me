@@ -1,0 +1,578 @@
+<!DOCTYPE html><html lang="en-US"><head><title>IN4MATX 133 Mobile Design Principles | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="What makes a good user experience, four principles of mobile design (useful initial view, the uh-oh button, error prevention, platform conventions), human interface guidelines, iOS navigation, modals, branding, color, typography and icons, Google Material Design vs iOS (navigation bar, swiping), and planning A4's pages, components and services."><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-14/en-US/"><link rel="icon" href="/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-14/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-14/zh-CN/"><link rel="stylesheet" href="/_astro/BaseLayout.CnlNRG6h.css"><link rel="stylesheet" href="/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/_astro/katex.mPfuf26R.css"><link rel="stylesheet" href="/_astro/index.Yoh2HO3w.css"></head><body data-nav-path="/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="en-US" data-viz-base="/assets/viz/" data-viz-version="1794551217" data-source-url="/notes/in4matx-133/lec-14/en-US/source.md" data-editor-url="/tools/md-editor/" data-alt-url="/notes/in4matx-133/lec-14/zh-CN/" data-prev-url="/notes/in4matx-133/lec-13/en-US/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="Previous / next note" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/notes/in4matx-133/lec-13/en-US/" title="Previous: Ionic Components ([)" aria-label="Previous: Lecture 13" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>Lecture 13</span></a><button type="button" class="rb-title" data-scroll-top title="Back to top" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>IN4MATX 133</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>Lecture 14</span></button><a class="rb-btn rb-lang" href="/notes/in4matx-133/lec-14/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>中</span></a><span class="rb-btn rb-disabled rb-side-next" aria-hidden="true" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/notes/in4matx-133/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>IN4MATX 133</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>Lecture 14</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/notes/in4matx-133/lec-14/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>中文</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>Headings</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>Open in Editor</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>Lecture 14 · User Interface Software Reading Notes</h2><p id="reader-description" data-astro-cid-gxyjxt6l>This page presents IN4MATX 133 Lecture 14 notes in a structured reading format so you can review HTML, CSS, JavaScript, the DOM, and UI tooling lecture by lecture, with live demos you can edit and run. The path below takes you back to Notes, Course Notes, the course page, or this note file. Hover over the ≡ icon on the right side to open the Table of Contents.</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>Last edited on November 12, 2026</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="in4matx-133-user-interface-software--lecture-14-mobile-design-principles">IN4MATX 133: User Interface Software — Lecture 14: Mobile Design Principles</h1>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-what-makes-a-good-user-experience">1. What makes a good user experience?</a></li>
+<li><a href="#2-a-useful-initial-view">2. A useful initial view</a></li>
+<li><a href="#3-the-uh-oh-button">3. The uh-oh button</a></li>
+<li><a href="#4-error-prevention">4. Error prevention</a></li>
+<li><a href="#5-follow-platform-conventions">5. Follow platform conventions</a></li>
+<li><a href="#6-human-interface-guidelines">6. Human interface guidelines</a></li>
+<li><a href="#7-ios-hig-navigation-and-modals">7. iOS HIG: navigation and modals</a></li>
+<li><a href="#8-ios-hig-branding-color-and-typography">8. iOS HIG: branding, color and typography</a></li>
+<li><a href="#9-design-choices-in-popular-apps">9. Design choices in popular apps</a></li>
+<li><a href="#10-app-icons-and-system-icons">10. App icons and system icons</a></li>
+<li><a href="#11-google-material-design-and-android-vs-ios">11. Google Material Design and Android vs iOS</a></li>
+<li><a href="#12-planning-a4-sketch-pages-outline-the-architecture">12. Planning A4: sketch pages, outline the architecture</a></li>
+<li><a href="#13-in-class-questions--demos-with-solutions">13. In-class Questions &amp; Demos (with Solutions)</a></li>
+<li><a href="#14-quick-reference--top-5-things-to-remember">14. Quick Reference &amp; Top 5 Things to Remember</a></li>
+</ul>
+<blockquote>
+<p>UCI IN4MATX 133: User Interface Software — Prof. Travis Linden Reid, Fall 2026, Thursday 11/12 (Week 7)<br>Built from the Lecture 14 slides (40 pages). A design lecture: there is no demo folder for it in the course repo, so the live demos here are small hand-made examples of the slides&#39; principles. Organized by concept, not by source.</p>
+</blockquote>
+<blockquote>
+<p>📅 <strong>Class logistics</strong>: A2 grades posted. A4 posted — it holds your hand less and needs more time with Ionic&#39;s documentation; you have all the skills at this point in the quarter. The <strong>README for A4 is critical</strong>, and today&#39;s concepts are critical for writing a good README.<br>Weeks 7–10 plan: A5 is now an <strong>open-ended app dev project</strong> instead of an AI project. Technical lecture content is almost done — remaining: device resources, databases, SASS. Week 10 may be time to work on the final project.</p>
+</blockquote>
+<hr>
+<h2 id="1-what-makes-a-good-user-experience">1. What makes a good user experience?</h2>
+<p>The lecture opens with a question (slide 5): <em>what makes a good user experience?</em> The answer on slide 6: <strong>it&#39;s not just the UI.</strong> The experience begins the first time you launch an app or go to a website, and it has several components:</p>
+<ul>
+<li>the <strong>initial impression</strong> (from boot-up to the app starting)</li>
+<li>the <strong>user interface</strong></li>
+<li>the <strong>visual design</strong></li>
+<li><strong>information presentation</strong></li>
+<li>the <strong>physical device</strong> and how it&#39;s used with the app</li>
+</ul>
+<p>Four principles of mobile design follow (slide 7): a useful initial view, the &quot;uh-oh&quot; button, error prevention, and following platform conventions — Sections 2–5.</p>
+<h2 id="2-a-useful-initial-view">2. A useful initial view</h2>
+<p>The first screen should already be worth something (slide 8):</p>
+<ul>
+<li><strong>Give users clear calls to action.</strong></li>
+<li><strong>Put useful content on the homepage</strong> — e.g. Pinterest&#39;s home screen is a grid of images right away; put more than navigation buttons there.</li>
+<li><strong>Make it easy to get back to the homepage</strong> — with a bottom navbar or a side navigation menu.</li>
+</ul>
+<p>The slide contrasts two screenshots: Pinterest (a search bar, then a feed of images, with a bottom navbar) and an anxiety-management app whose home screen is a grid of round icon buttons that only lead elsewhere — navigation buttons and nothing else.</p>
+<h2 id="3-the-uh-oh-button">3. The uh-oh button</h2>
+<p>Functions and buttons are often pressed by mistake, so (slide 9):</p>
+<ul>
+<li><strong>Undo and redo should be easy</strong> — Gmail&#39;s &quot;undo send&quot; is the example (its screenshot shows the Compose screen).</li>
+<li><strong>Navigating back a page should be easy</strong> — breadcrumbs or back buttons (top left).</li>
+</ul>
+<p>An &quot;undo send&quot; in Ionic terms is a toast with an <strong>Undo</strong> button (<a href="/notes/in4matx-133/lec-13/en-US/#8-modal-dialogs-toast-alert-action-sheet">Lecture 13</a> covers toasts). Press Send; press Undo within 4 seconds to get <code>Send undone: back to the draft</code>, or let it time out to get <code>Message really sent</code>:</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;The “uh-oh” button: an “undo send” toast (slide 9) · hand-made example with an Ionic toast&quot;, &quot;width&quot;: 375, &quot;height&quot;: 300, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script&gt;window.Ionic = { config: { mode: \&quot;ios\&quot; } };&lt;/script&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-header&gt;&lt;ion-toolbar&gt;&lt;ion-title&gt;Compose&lt;/ion-title&gt;&lt;/ion-toolbar&gt;&lt;/ion-header&gt;\n&lt;ion-content class=\&quot;ion-padding\&quot;&gt;\n  &lt;p&gt;Lunch Saturday?&lt;/p&gt;\n  &lt;ion-button id=\&quot;send\&quot;&gt;Send&lt;/ion-button&gt;\n&lt;/ion-content&gt;\n&lt;/ion-app&gt;&quot;, &quot;js&quot;: &quot;document.getElementById(&#39;send&#39;).addEventListener(&#39;click&#39;, () =&gt; {\n  let undone = false;\n  const toast = Object.assign(document.createElement(&#39;ion-toast&#39;), {\n    message: &#39;Message sent.&#39;, duration: 4000,\n    buttons: [{ text: &#39;Undo&#39;, handler: () =&gt; { undone = true; } }]\n  });\n  toast.addEventListener(&#39;didDismiss&#39;, () =&gt; toast.remove());\n  document.body.appendChild(toast);\n  toast.present();\n  toast.onDidDismiss().then(() =&gt; {\n    console.log(undone ? &#39;Send undone: back to the draft&#39; : &#39;Message really sent&#39;);\n  });\n});&quot;}</code></pre><h2 id="4-error-prevention">4. Error prevention</h2>
+<p>Providing input on small devices is difficult, so add as much assistance as possible to aid with input (slide 10):</p>
+<ul>
+<li><strong>Add input checks</strong> — how many digits are in that phone number? A credit card number?</li>
+<li><strong>Use appropriate widgets</strong> — a date/time spinner, sliders.</li>
+</ul>
+<p>The slide&#39;s screenshots are an Android event form (date fields &quot;Wed, Sep 19, 2012&quot; and times highlighted) and a DatePicker spinner (Sep/Oct/Nov, 03/04/05, 2016/2017/2018) — instead of typing a date, the user turns wheels that can only produce valid ones.</p>
+<p>A small booking form with both ideas: the phone field counts digits as you type and blocks submission unless there are exactly 10; the date uses the browser&#39;s date picker and the guest count a slider. The step types a 7-digit number and presses Book, which logs <code>Blocked: phone number has 7 digits, needs 10</code>:</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Error prevention (slide 10) · hand-made example: input checks and fitting widgets&quot;, &quot;width&quot;: 375, &quot;height&quot;: 330, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;form id=\&quot;f\&quot;&gt;\n  &lt;label&gt;Phone number&lt;br&gt;\n    &lt;input id=\&quot;phone\&quot; type=\&quot;tel\&quot; inputmode=\&quot;numeric\&quot; placeholder=\&quot;(949) 555-0123\&quot;&gt;\n  &lt;/label&gt;\n  &lt;small id=\&quot;hint\&quot;&gt;10 digits&lt;/small&gt;\n  &lt;label&gt;Date&lt;br&gt;&lt;input type=\&quot;date\&quot; id=\&quot;date\&quot;&gt;&lt;/label&gt;\n  &lt;label&gt;Guests: &lt;output id=\&quot;n\&quot;&gt;2&lt;/output&gt;&lt;br&gt;\n    &lt;input type=\&quot;range\&quot; min=\&quot;1\&quot; max=\&quot;10\&quot; value=\&quot;2\&quot; id=\&quot;guests\&quot;&gt;\n  &lt;/label&gt;\n  &lt;button&gt;Book&lt;/button&gt;\n&lt;/form&gt;&quot;, &quot;css&quot;: &quot;body { font-family: -apple-system, system-ui, sans-serif; margin: 16px; }\nlabel { display: block; margin-top: 12px; }\ninput { font-size: 16px; padding: 6px; width: 100%; box-sizing: border-box; }\nsmall { color: #666; }\nsmall.bad { color: #c00; }\nbutton { margin-top: 14px; font-size: 16px; padding: 8px 16px; }&quot;, &quot;js&quot;: &quot;const phone = document.getElementById(&#39;phone&#39;);\nconst hint = document.getElementById(&#39;hint&#39;);\nphone.addEventListener(&#39;input&#39;, () =&gt; {\n  const digits = phone.value.replace(/\\D/g, &#39;&#39;);        // keep digits only\n  hint.textContent = digits.length + &#39; / 10 digits&#39;;\n  hint.className = digits.length == 10 ? &#39;&#39; : &#39;bad&#39;;\n});\ndocument.getElementById(&#39;guests&#39;).addEventListener(&#39;input&#39;, (e) =&gt; {\n  document.getElementById(&#39;n&#39;).textContent = e.target.value;\n});\ndocument.getElementById(&#39;f&#39;).addEventListener(&#39;submit&#39;, (e) =&gt; {\n  const digits = phone.value.replace(/\\D/g, &#39;&#39;);\n  if (digits.length != 10) {\n    e.preventDefault();\n    console.log(&#39;Blocked: phone number has &#39; + digits.length + &#39; digits, needs 10&#39;);\n  }\n});&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;Type a 7-digit number and press Book (scripted): the check stops it.&quot;, &quot;js&quot;: &quot;phone.value=&#39;555-0123&#39;; phone.dispatchEvent(new Event(&#39;input&#39;)); document.querySelector(&#39;button&#39;).click();&quot;}]}</code></pre><h2 id="5-follow-platform-conventions">5. Follow platform conventions</h2>
+<p>Users should not have to wonder whether different words, situations, icons or actions mean the same thing, and should not have to remember app-specific navigation (slide 11). The slide shows the same &quot;Timetable&quot; conference app on iOS (light, tab bar at the bottom) and on Android (green toolbar, Material styling): same content, each following its own platform&#39;s look.</p>
+<p>Where those conventions are written down is the rest of the lecture.</p>
+<h2 id="6-human-interface-guidelines">6. Human interface guidelines</h2>
+<p>The platform conventions for iOS and Android are published as <strong>human interface guidelines (HIGs)</strong> (slide 12). They&#39;re created by the web/mobile platform developers (Google, Apple), and they (slide 13):</p>
+<ul>
+<li>define rules for visual design and style</li>
+<li>specify interactions</li>
+<li>establish layout techniques</li>
+<li>provide consistency across the platform</li>
+</ul>
+<p>HIGs are <strong>recommendations</strong> — you can choose to ignore them. Their goal is an optimal experience for a device or platform, and they most often follow best practices (slide 14).</p>
+<p>Apple&#39;s iOS guidelines, summarized (slide 15):</p>
+<ul>
+<li><strong>Content over UI.</strong></li>
+<li><strong>Respond to user preferences in display</strong> (dark mode, horizontal/vertical).</li>
+<li><strong>Use the whole screen.</strong></li>
+<li><strong>Limit on-screen controls.</strong></li>
+<li><strong>Make use of swiping.</strong></li>
+<li><strong>Reduce inputting information by making use of user data</strong> — e.g. Apple Pay, biometric auth (face/finger scan), or device location.</li>
+</ul>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://developer.apple.com/design/human-interface-guidelines/designing-for-ios">Apple HIG: Designing for iOS</a></p>
+</blockquote>
+<h2 id="7-ios-hig-navigation-and-modals">7. iOS HIG: navigation and modals</h2>
+<p><strong>Navigation</strong> (slide 16):</p>
+<ul>
+<li>Use a <strong>tab bar</strong> to navigate between the <strong>top-level sections</strong> of the app. It&#39;s for <strong>navigation, NOT actions</strong>, and it&#39;s <strong>always present</strong>.</li>
+<li>Use a <strong>sidebar</strong> for <strong>hierarchical content</strong>: at most <strong>2 layers</strong> of hierarchy, and <strong>collapsible</strong>.</li>
+</ul>
+<p>The slide&#39;s figures: a sidebar with a &quot;Section&quot; heading and Item 1–3 (one highlighted), and iPhone/iPad screens with a tab bar of star icons along the bottom. In Ionic, the tab bar is <code>&lt;ion-tabs&gt;</code>, which replaces the footer (<a href="/notes/in4matx-133/lec-13/en-US/#3-structural-components-content-header-footer">Lecture 13</a>).</p>
+<p><strong>Modals</strong> (slide 17) grab control of the experience until they&#39;re dismissed. They&#39;re meant to grab attention for doing <strong>one small, specific task</strong>. So:</p>
+<ul>
+<li>make sure the user can <strong>back out</strong></li>
+<li>use them to help <strong>avoid data loss</strong></li>
+<li>use them <strong>sparingly</strong></li>
+</ul>
+<p>The figures: a &quot;Location Services Off&quot; alert with <strong>Settings</strong> and <strong>OK</strong> buttons over a map, and a mail compose sheet (&quot;Let&#39;s grab lunch!&quot;) with <strong>Cancel</strong> and <strong>Send</strong> at the top — Cancel is the way to back out.</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: &quot;Make sure the user can back out&quot; is a rule your own modals must pass. A modal page with no Dismiss/Cancel button traps the user on a phone — the repo&#39;s Lecture 13 <code>solution2</code> modal has exactly that bug (<a href="/notes/in4matx-133/lec-13/en-US/#113-demo-2-adding-alerts-and-a-modal-page-to-the-shopping-list-slide-46--setup2--solution2">Lecture 13, Demo 2</a>).</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://developer.apple.com/design/human-interface-guidelines/navigation-and-search">Apple HIG: Navigation and search</a> · <a href="https://developer.apple.com/design/human-interface-guidelines/modality">Apple HIG: Modality</a></p>
+</blockquote>
+<h2 id="8-ios-hig-branding-color-and-typography">8. iOS HIG: branding, color and typography</h2>
+<p><strong>Branding</strong> (slide 18): it&#39;s important to be distinctive… but be careful not to pull the user out of the iOS experience. Your app doesn&#39;t have to look like a default app, but… The slide shows the same &quot;Attractions&quot; page (Arc de Triomphe) twice: once with a quiet red accent, once with a big red &quot;MY LOGO&quot; banner at the top <em>and</em> bottom — the second one shouts its brand over the content.</p>
+<p><strong>Color</strong> (slides 19–20):</p>
+<ul>
+<li>Use a <strong>key color</strong> to denote <strong>interactive elements</strong>.</li>
+<li><strong>Don&#39;t use the same color to indicate different meanings.</strong></li>
+<li>Use color judiciously to highlight certain elements.</li>
+<li>Denote <strong>&quot;active&quot;</strong> and <strong>&quot;inactive&quot;</strong> components differently.</li>
+<li>Use color <strong>accessibly</strong>: for <strong>colorblindness</strong> and <strong>cultural contexts</strong>. Slide 20&#39;s example: in the Stocks app, <strong>green</strong> marks a positive trend in English, but <strong>red</strong> marks a positive trend in Chinese.</li>
+</ul>
+<p>Slide 19&#39;s figures mark bad vs good (✗ vs ✓). Toolbar: ✗ fills <em>every</em> button (close, two actions, confirm) with blue; ✓ keeps only the confirm ✓ blue and the rest neutral. Map: ✗ a grey map whose locate button and search field are all filled blue; ✓ a blue-tinted map with neutral controls — color used judiciously, not on everything.</p>
+<p><strong>Color and typography</strong> (slide 21):</p>
+<ul>
+<li>Colors are great for grabbing attention, but can be <strong>overused</strong>.</li>
+<li>Use <strong>complementary colors</strong> — palette definers like paletton.com help.</li>
+<li>Use a <strong>single typeface</strong> (font) if possible; built-in fonts are just fine.</li>
+<li>Use <strong>font size, color and weight</strong> (bold) to highlight information.</li>
+</ul>
+<p>The slide&#39;s figures are Apple&#39;s system color swatches (Red, Orange, Yellow, Green, Teal Blue, Blue, Purple, Pink, with RGB values such as Blue R 0 G 122 B 255) and a type scale where SF Pro Display (20pt) and SF Pro Text (19pt) sit in a list of sizes from 16pt to 23pt.</p>
+<p>The demo uses one key blue (<code>#007aff</code>) for everything tappable, grey for inactive tabs, and a single typeface whose size and weight make the hierarchy. The step shows the anti-pattern — the same red for the button, the &quot;3 unread&quot; text and the active tab, so red no longer means one thing. Click the tabs to log <code>Tab: Contacts</code> etc.:</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Key color, active vs inactive, one typeface (slides 16, 19, 21) · hand-made example&quot;, &quot;width&quot;: 375, &quot;height&quot;: 380, &quot;interactive&quot;: true, &quot;html&quot;: &quot;&lt;div class=\&quot;screen\&quot;&gt;\n  &lt;h1&gt;Messages&lt;/h1&gt;\n  &lt;p class=\&quot;sub\&quot;&gt;3 unread&lt;/p&gt;\n  &lt;p&gt;Body text uses the same typeface; size and weight carry the hierarchy.&lt;/p&gt;\n  &lt;button class=\&quot;action\&quot;&gt;New message&lt;/button&gt;\n&lt;/div&gt;\n&lt;nav class=\&quot;tabbar\&quot;&gt;\n  &lt;a class=\&quot;active\&quot;&gt;Chats&lt;/a&gt;&lt;a&gt;Contacts&lt;/a&gt;&lt;a&gt;Settings&lt;/a&gt;\n&lt;/nav&gt;&quot;, &quot;css&quot;: &quot;:root { --key: #007aff; }          /* one key color = \&quot;you can tap this\&quot; */\nbody { margin: 0; font-family: -apple-system, system-ui, sans-serif; }\n.screen { padding: 16px; }\nh1 { font-size: 28px; font-weight: 700; margin: 0; }\n.sub { font-size: 15px; color: #8e8e93; margin: 4px 0 12px; }\n.action { background: var(--key); color: white; border: 0; border-radius: 8px; padding: 10px 14px; font-size: 16px; }\n.tabbar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; border-top: 1px solid #ddd; background: #f9f9f9; }\n.tabbar a { flex: 1; text-align: center; padding: 12px 0; font-size: 13px; color: #8e8e93; }  /* inactive */\n.tabbar a.active { color: var(--key); font-weight: 600; }                                   /* active */&quot;, &quot;js&quot;: &quot;document.querySelectorAll(&#39;.tabbar a&#39;).forEach((tab) =&gt; {\n  tab.addEventListener(&#39;click&#39;, () =&gt; {\n    document.querySelector(&#39;.tabbar a.active&#39;).classList.remove(&#39;active&#39;);\n    tab.classList.add(&#39;active&#39;);\n    console.log(&#39;Tab: &#39; + tab.textContent);\n  });\n});&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;Anti-pattern: the same red for a button AND for &#39;unread&#39; — color no longer has one meaning.&quot;, &quot;css&quot;: &quot;.action { background: #ff3b30; } .sub { color: #ff3b30; } .tabbar a.active { color: #ff3b30; }&quot;}]}</code></pre><blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://developer.apple.com/design/human-interface-guidelines/branding">Apple HIG: Branding</a> · <a href="https://developer.apple.com/design/human-interface-guidelines/color">Apple HIG: Color</a> · <a href="http://paletton.com">Paletton (palette definer)</a></p>
+</blockquote>
+<h2 id="9-design-choices-in-popular-apps">9. Design choices in popular apps</h2>
+<p>Slides 22–24 put three apps side by side, each with its logo, its color palette, and two screenshots:</p>
+<table>
+<thead>
+<tr>
+<th>App</th>
+<th>Palette on the slide</th>
+<th>Screens shown</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TikTok</td>
+<td>Turquoise <code>#25F4EE</code>, Red <code>#FE2C55</code>, Black <code>#000000</code>, White <code>#FFFFFF</code></td>
+<td>full-screen video feed; &quot;Friends / Now&quot; feed — both with a bottom tab bar (Home, Now, <strong>+</strong>, Inbox, Me)</td>
+</tr>
+<tr>
+<td>Instagram</td>
+<td>Blue <code>#405DE6</code>, Purple Blue <code>#5851DB</code>, Purple <code>#833AB4</code>, Purple Red <code>#C13584</code>, Rose <code>#E1306C</code>, Bright Red <code>#FD1D1D</code></td>
+<td>home feed with Stories row; a profile page with a blue &quot;Send Message&quot; button — bottom tab bar of icons</td>
+</tr>
+<tr>
+<td>Letterboxd</td>
+<td>Orange <code>#ff8000</code>, Green <code>#00e054</code>, Blue <code>#40bcf4</code>, plus White <code>#ffffff</code></td>
+<td>dark film page (&quot;Nomadland&quot;); a director&#39;s grid of posters</td>
+</tr>
+</tbody></table>
+<p>Then the poll: <em>Tell me something you feel all of these apps have in common in their design choices</em> (<a href="#131-question-1-what-do-these-apps-have-in-common-slides-2526">Question 1</a>). Things to look for, all from Sections 2–8: content first (photos, videos, posters fill the screen — &quot;content over UI&quot;), a bottom tab bar that&#39;s always present, a small brand palette where the brand colors appear in a few accents rather than everywhere, and one typeface with size and weight for hierarchy.</p>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#131-question-1-what-do-these-apps-have-in-common-slides-2526">Question 1</a></p>
+</blockquote>
+<h2 id="10-app-icons-and-system-icons">10. App icons and system icons</h2>
+<p>A good <strong>app icon</strong> is important (slide 27):</p>
+<ul>
+<li>keep the background simple</li>
+<li>only use words if they&#39;re essential or part of a logo</li>
+<li><strong>leave your icon out of the interface</strong> (the app icon is for the home screen, not for every page)</li>
+</ul>
+<p>Inside the interface, when appropriate, <strong>use system icons</strong> — cut, copy, paste, save, etc. The slide shows a row of Apple&#39;s app icons (Settings, Phone, Mail, Podcasts, Photos, Maps, Clock) and a table of system icons with their meanings, e.g.:</p>
+<table>
+<thead>
+<tr>
+<th>Icon</th>
+<th>Meaning (from the slide&#39;s table)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Action (Share)</td>
+<td>shows a modal view with share extensions, action extensions, and tasks like Copy, Favorite, Find</td>
+</tr>
+<tr>
+<td>Add</td>
+<td>creates a new item</td>
+</tr>
+<tr>
+<td>Bookmarks</td>
+<td>shows app-specific bookmarks</td>
+</tr>
+<tr>
+<td>Camera</td>
+<td>takes a photo or video, or shows the Photo Library</td>
+</tr>
+<tr>
+<td>Cancel</td>
+<td>closes the current view or ends edit mode without saving changes</td>
+</tr>
+<tr>
+<td>Compose</td>
+<td>opens a new view in edit mode</td>
+</tr>
+<tr>
+<td>Done</td>
+<td>saves the state and closes the current view, or exits edit mode</td>
+</tr>
+<tr>
+<td>Edit</td>
+<td>enters edit mode in the current context</td>
+</tr>
+<tr>
+<td>Fast Forward</td>
+<td>fast-forwards through media playback or slides</td>
+</tr>
+</tbody></table>
+<p>Using the system&#39;s icon means the user already knows what it does — the platform-conventions rule from <a href="#5-follow-platform-conventions">Section 5</a>. In Ionic, that&#39;s an <code>&lt;ion-icon&gt;</code> from Ionicons (<a href="/notes/in4matx-133/lec-13/en-US/#5-icons-badges-and-avatars">Lecture 13</a>).</p>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://developer.apple.com/design/human-interface-guidelines/app-icons">Apple HIG: App icons</a> · <a href="https://developer.apple.com/design/human-interface-guidelines/icons">Apple HIG: Icons</a></p>
+</blockquote>
+<h2 id="11-google-material-design-and-android-vs-ios">11. Google Material Design and Android vs iOS</h2>
+<p>Google&#39;s guidelines are <strong>Material Design</strong> (slide 28). Its philosophy: the interface should look like <strong>layers on a sheet of paper</strong>, with <strong>3D depth and motion</strong>. It follows many of the same interaction patterns as iOS design:</p>
+<ul>
+<li>limited use of modals</li>
+<li>use color to emphasize content</li>
+<li>be subtle with branding</li>
+</ul>
+<p>But there are a few key differences.</p>
+<p><strong>Universal navigation bar</strong> (slide 29): Android has a <strong>navigation bar at the bottom of the screen</strong> — sometimes a hardware button, sometimes done in software, but <strong>always present</strong> (the figure labels the app-level &quot;Navigation bar&quot; and the system-level &quot;Navigation bar&quot; with ◀ ● ■). iOS instead implements <strong>&quot;back&quot; in-app</strong>: the app&#39;s own tab bar is app-level, and the system only adds the home indicator.</p>
+<p><strong>Swiping</strong> (slide 30):</p>
+<table>
+<thead>
+<tr>
+<th>Gesture</th>
+<th>Android</th>
+<th>iOS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Swipe from the edge</td>
+<td><strong>Back</strong> (left or right edge)</td>
+<td><strong>back a screen</strong> (in-app)</td>
+</tr>
+<tr>
+<td>Swipe up</td>
+<td>Home</td>
+<td>Home</td>
+</tr>
+<tr>
+<td>Swipe up, hold, release / swipe up &amp; pause</td>
+<td>Overview of apps</td>
+<td>Multitask</td>
+</tr>
+<tr>
+<td>Moving between apps</td>
+<td>swiping moves between apps; the always-present back button also navigates across apps</td>
+<td>horizontal swipe on the home indicator; otherwise only after returning to home</td>
+</tr>
+</tbody></table>
+<p>So the same &quot;back&quot; means different things: on Android it&#39;s a system button that can even take you to the previous <em>app</em>; on iOS your app must provide its own back button (top left) and swipe-back.</p>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: An Ionic app runs on both. Ionic renders iOS styling on iPhones and Material styling on Android (the &quot;mode&quot;), but the <strong>navigation</strong> decisions — does every page have a back button? is the tab bar always there? — are yours, and must work without Android&#39;s system back button.</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://m3.material.io/">Material Design 3</a> · <a href="https://www.kickassux.com/ux-library/a-complete-guide-to-navigation-on-ios-android">A complete guide to navigation on iOS &amp; Android</a> · <a href="https://medium.com/@vedantha/interaction-design-patterns-ios-vs-android-111055f8a9b7">Interaction design patterns: iOS vs Android</a></p>
+</blockquote>
+<h2 id="12-planning-a4-sketch-pages-outline-the-architecture">12. Planning A4: sketch pages, outline the architecture</h2>
+<p>&quot;Switching gears: system design&quot; (slide 31). After a poll on how prepared you feel to start A4 (<a href="#132-question-2-how-prepared-do-you-feel-to-start-a4-slides-3233">Question 2</a>), the class plans A4 together. Planning and breaking down tasks makes tackling a large problem much easier: it&#39;s <strong>less intimidating</strong> and <strong>easier to start</strong> (slide 34). Two parts: sketch pages, then diagram an architecture plan.</p>
+<p><strong>Part 1: Sketch pages</strong> (slide 35):</p>
+<ol>
+<li>Skim the A4 requirements.</li>
+<li>Using pen &amp; paper, Google Drawings, Figma, or another tool of your choice, <strong>sketch out pages &amp; components</strong>.</li>
+<li>Draw, then analyze.</li>
+</ol>
+<p>The example is a hand-drawn texting app, <strong>&quot;WeChirp&quot;</strong>: a <strong>MessageList</strong> page (title &quot;We Chirp&quot;, a list of conversation preview cards with a user icon and name, a search box at the bottom; annotations &quot;user icon&quot;, &quot;convo preview card&quot;) and a <strong>Conversation</strong> page (contact name with icon at the top, message bubbles, a &quot;message…&quot; input at the bottom; annotation &quot;message bubble&quot;).</p>
+<p><strong>Part 2: Outline the architecture</strong> (slide 36). Write an outline of the <strong>pages</strong>, <strong>components</strong> and <strong>services</strong> you need for A4:</p>
+<table>
+<thead>
+<tr>
+<th>Piece</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Page</strong></td>
+<td>a full-screen view</td>
+</tr>
+<tr>
+<td><strong>Component</strong></td>
+<td>a UI element (model/controller <strong>&amp; view</strong>)</td>
+</tr>
+<tr>
+<td><strong>Service</strong></td>
+<td>injectable data (model/controller; <strong>NO view</strong>)</td>
+</tr>
+</tbody></table>
+<p>The WeChirp outline:</p>
+<ul>
+<li>Page: <strong>MessageList</strong><ul>
+<li>Component: <strong>ConversationCard</strong></li>
+<li>Component: <strong>Title</strong> — back button, UserIcon, contact name</li>
+<li>Component: <strong>Search</strong></li>
+</ul>
+</li>
+<li>Page: <strong>Conversation</strong><ul>
+<li>Component: <strong>MessageCard</strong></li>
+<li>Component: <strong>TypeMessage</strong></li>
+</ul>
+</li>
+<li>Component: <strong>UserIcon</strong> (used by both pages)</li>
+<li>Service: <strong>AllConversations</strong></li>
+<li>Service: <strong>Conversation</strong></li>
+</ul>
+<p>Note that the sketches didn&#39;t really draw any services (slide 36) — services hold data, so they don&#39;t show up in a picture; you have to think of them from what the pages need to know (the list of conversations; the messages of one conversation). That&#39;s <a href="/notes/in4matx-133/lec-11/en-US/#5-angular-services">Lecture 11&#39;s</a> split: the view in components, shared data in services. Then the same poll again (<a href="#133-question-3-how-prepared-do-you-feel-to-start-a4-post-activity-slides-3738">Question 3</a>).</p>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: A component that appears on two pages (UserIcon) goes at the top level of the outline, not under one page — that&#39;s the signal it should be its own reusable component.</p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#132-question-2-how-prepared-do-you-feel-to-start-a4-slides-3233">Question 2</a> · <a href="#133-question-3-how-prepared-do-you-feel-to-start-a4-post-activity-slides-3738">Question 3</a></p>
+</blockquote>
+<h2 id="13-in-class-questions--demos-with-solutions">13. In-class Questions &amp; Demos (with Solutions)</h2>
+<p>This lecture has no coding demos. The poll slides show &quot;Nobody has responded yet&quot; or 0% on every bar, so no results were revealed; the answers below come from the deck&#39;s own slides. (Slide 5&#39;s &quot;What makes a good user experience?&quot; is a discussion prompt, answered on slide 6 — see <a href="#1-what-makes-a-good-user-experience">Section 1</a>.)</p>
+<h3 id="131-question-1-what-do-these-apps-have-in-common-slides-2526">13.1 Question 1: What do these apps have in common? (slides 25–26)</h3>
+<p><em>L14-Q1: Tell me something you feel all of these apps have in common in their design choices.</em> (TikTok, Instagram, Letterboxd — slides 22–24; open response)</p>
+<details>
+<summary>Answer</summary>
+
+<p>An open question, but the slides&#39; principles give several solid answers:</p>
+<ul>
+<li><strong>Content over UI</strong> (slide 15): videos, photos and posters fill the screen; the UI chrome is thin.</li>
+<li><strong>A bottom tab bar, always present</strong> (slide 16): all three switch top-level sections with icons along the bottom, and it&#39;s navigation, not actions (TikTok&#39;s <strong>+</strong> is the one exception — a create action in the bar).</li>
+<li><strong>A small palette used judiciously</strong> (slides 19, 21): each brand has a few signature colors, but they appear as accents (a Post button, a heart, a rating), not as backgrounds everywhere — &quot;be careful not to pull a user out of the iOS experience&quot; (slide 18).</li>
+<li><strong>One typeface, hierarchy by size and weight</strong> (slide 21): names and titles are bold and bigger; metadata is smaller and grey.</li>
+<li><strong>Familiar system-style icons</strong> (slide 27): home, search, heart, share, profile.</li>
+</ul>
+</details>
+
+<p>Back to <a href="#9-design-choices-in-popular-apps">Section 9</a>.</p>
+<h3 id="132-question-2-how-prepared-do-you-feel-to-start-a4-slides-3233">13.2 Question 2: How prepared do you feel to start A4? (slides 32–33)</h3>
+<p><em>L14 Q2: How prepared do you feel to start A4?</em></p>
+<ul>
+<li>1 — Not at all prepared</li>
+<li>2 — A little prepared</li>
+<li>3 — Moderately prepared</li>
+<li>4 — Well prepared</li>
+<li>5 — Extremely well prepared</li>
+</ul>
+<details>
+<summary>Answer</summary>
+
+<p>A self-assessment poll — no correct answer. It&#39;s asked before the planning activity on purpose: the activity&#39;s claim (slide 34) is that breaking A4 into sketched pages and an outline of pages, components and services makes it less intimidating and easier to start.</p>
+</details>
+
+<p>Back to <a href="#12-planning-a4-sketch-pages-outline-the-architecture">Section 12</a>.</p>
+<h3 id="133-question-3-how-prepared-do-you-feel-to-start-a4-post-activity-slides-3738">13.3 Question 3: How prepared do you feel to start A4? (post-activity, slides 37–38)</h3>
+<p><em>L14 Q3: How prepared do you feel to start A4? (post-activity)</em> — the same 1–5 scale as <a href="#132-question-2-how-prepared-do-you-feel-to-start-a4-slides-3233">Question 2</a>.</p>
+<details>
+<summary>Answer</summary>
+
+<p>Again no correct answer; compare it with your answer to Question 2. If it didn&#39;t go up, the outline is the thing to finish: for every page you sketched, list its components, then ask what data each page needs — those are your services.</p>
+</details>
+
+<p>Back to <a href="#12-planning-a4-sketch-pages-outline-the-architecture">Section 12</a>.</p>
+<h2 id="14-quick-reference--top-5-things-to-remember">14. Quick Reference &amp; Top 5 Things to Remember</h2>
+<p><strong>Four principles of mobile design</strong></p>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>In practice</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Useful initial view</td>
+<td>clear calls to action, real content on the homepage, easy way back home (bottom navbar, side menu)</td>
+</tr>
+<tr>
+<td>The &quot;uh-oh&quot; button</td>
+<td>easy undo/redo (&quot;undo send&quot;), easy back (breadcrumbs, top-left back button)</td>
+</tr>
+<tr>
+<td>Error prevention</td>
+<td>input checks (digit counts), fitting widgets (date/time spinners, sliders)</td>
+</tr>
+<tr>
+<td>Platform conventions</td>
+<td>same words/icons/actions mean the same thing; no app-specific navigation to memorize</td>
+</tr>
+</tbody></table>
+<p><strong>iOS HIG checklist</strong></p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Overall</td>
+<td>content over UI; respect dark mode/orientation; whole screen; few controls; swiping; reuse user data (Apple Pay, biometrics, location)</td>
+</tr>
+<tr>
+<td>Navigation</td>
+<td>tab bar for top-level sections — navigation not actions, always present; sidebar for ≤ 2 levels, collapsible</td>
+</tr>
+<tr>
+<td>Modals</td>
+<td>one small task; user can back out; prevent data loss; sparingly</td>
+</tr>
+<tr>
+<td>Branding</td>
+<td>distinctive, but don&#39;t pull the user out of the iOS experience</td>
+</tr>
+<tr>
+<td>Color</td>
+<td>one key color for interactive elements; one meaning per color; active ≠ inactive; colorblindness and culture</td>
+</tr>
+<tr>
+<td>Typography</td>
+<td>one typeface; size, color, weight for emphasis</td>
+</tr>
+<tr>
+<td>Icons</td>
+<td>simple app icon, words only if essential, not inside the UI; system icons for standard actions</td>
+</tr>
+</tbody></table>
+<p><strong>iOS vs Android</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>iOS</th>
+<th>Android (Material)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Look</td>
+<td>content over UI</td>
+<td>layers of paper, depth and motion</td>
+</tr>
+<tr>
+<td>Back</td>
+<td>in-app back button / edge swipe goes back a screen</td>
+<td>always-present system navigation bar; back can cross apps</td>
+</tr>
+<tr>
+<td>Between apps</td>
+<td>via home</td>
+<td>swiping / back button</td>
+</tr>
+</tbody></table>
+<p><strong>Architecture outline</strong></p>
+<table>
+<thead>
+<tr>
+<th>Piece</th>
+<th>Has a view?</th>
+<th>Example (WeChirp)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Page</td>
+<td>yes, full screen</td>
+<td>MessageList, Conversation</td>
+</tr>
+<tr>
+<td>Component</td>
+<td>yes</td>
+<td>ConversationCard, MessageCard, TypeMessage, UserIcon</td>
+</tr>
+<tr>
+<td>Service</td>
+<td>no — injectable data</td>
+<td>AllConversations, Conversation</td>
+</tr>
+</tbody></table>
+<p><strong>Top 5 things to remember</strong></p>
+<ol>
+<li>A good user experience is more than the UI: first launch, visual design, how information is presented, and the physical device all count.</li>
+<li>The four principles: useful initial view, an easy &quot;uh-oh&quot; (undo/back), error prevention with checks and fitting widgets, and platform conventions.</li>
+<li>HIGs are recommendations from Apple and Google; on iOS: tab bar for top-level navigation (never actions), modals only for small tasks and always escapable.</li>
+<li>Color: one key color for interactive elements, never one color for two meanings, and remember colorblindness and culture (red = up in Chinese stock apps).</li>
+<li>Android has an always-present system back; iOS apps must provide their own back — so plan back buttons into every Ionic page, and outline pages → components → services before coding A4.</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="Note navigation" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/notes/in4matx-133/lec-13/en-US/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Previous · Lecture 13</span><span class="pager-title" data-astro-cid-gxyjxt6l>Ionic Components</span></a><a class="card interactive pager-card pager-next" href="/notes/in4matx-133/" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>Course hub<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>IN4MATX 133 · User Interface Software</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>Shortcuts<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> Previous</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> Next</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> Switch language</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="Table of Contents" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>Top</button><script type="module" src="/_astro/NoteReader.astro_astro_type_script_index_0_lang.D31mo3j-.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/assets/js/bento.js" defer></script><script src="/assets/js/chat-widget.js" defer></script></body></html>
