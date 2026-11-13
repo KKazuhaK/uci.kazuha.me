@@ -92,7 +92,7 @@ export function buildToc(contentEl: HTMLElement): void {
       clearTimeout(tocClickTimer);
       tocClickTimer = setTimeout(() => (tocClickScrolling = false), 800);
       target.scrollIntoView({ behavior: "smooth", block: "start" });
-      history.pushState(null, "", href);
+      history.pushState(history.state, "", href);  // keeps the reading bar docked (NoteReader.astro)
     }
   }, { signal });
 }

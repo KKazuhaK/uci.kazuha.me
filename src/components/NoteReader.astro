@@ -97,6 +97,69 @@ const S = zh
         <p class="notes-date" id="notes-date">{edited}</p>
       </div>
 
+      <div class="reading-bar" data-reading-bar hidden inert>
+        {prevLink ? (
+          <a class="rb-btn rb-prev" href={prevLink.href} title={`${S.prev}: ${prevLink.title} ([)`} aria-label={`${S.prev}: ${prevLink.label}`}>
+            <Icon name="chevron-left" /><span class="rb-text">{prevLink.label}</span>
+          </a>
+        ) : <span class="rb-btn rb-disabled" aria-hidden="true"><Icon name="chevron-left" /></span>}
+        <button type="button" class="rb-title" data-scroll-top title={S.backToTop}>
+          <span class="rb-course">{course.data.name}</span><span class="rb-dot">·</span><span class="rb-label">{label}</span>
+        </button>
+        {altUrl && (
+          <a class="rb-btn rb-lang" href={altUrl} data-lang-switch hreflang={alt} lang={alt} title={`${S.switchTo} ${LANG_LABEL[alt]} (L)`}>
+            <Icon name="languages" /><span>{LANG_SHORT[alt]}</span>
+          </a>
+        )}
+        {nextLink ? (
+          <a class="rb-btn rb-next" href={nextLink.href} title={`${S.next}: ${nextLink.title} (])`} aria-label={`${S.next}: ${nextLink.label}`}>
+            <span class="rb-text">{nextLink.label}</span><Icon name="chevron-right" />
+          </a>
+        ) : <span class="rb-btn rb-disabled" aria-hidden="true"><Icon name="chevron-right" /></span>}
+        <span class="rb-progress" data-reading-progress></span>
+      </div>
+      <script is:inline>
+        // Arrived with the reading bar's ‹ › (or [ ] while it showed; reading-bar.ts saves
+        // the target and where the bar was on screen): keep the bar where it was. It docks
+        // between the nav and the intro card (the card moves down to make room) and the page
+        // opens scrolled so the bar is back under the pointer. A reload or back/forward to
+        // that page keeps it docked (history.state) and lets the browser restore the scroll.
+        // Placed right after the intro and render-blocking (rel="expect" on #rb-dock-ready in
+        // the page head), so it runs before first paint and the page transition sees the bar
+        // in place. reading-bar.ts keeps it positioned while scrolling.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          var arrived = !!jump && same(jump.to) === same(location.pathname) && Date.now() - (jump.at || 0) < 60000;
+          var state = history.state;
+          if (!arrived && !(state && state.rbDocked)) return;
+          bar.hidden = false;
+          bar.inert = false;
+          bar.classList.add("rb-docked");
+          document.documentElement.classList.add("rb-docked-page");
+          intro.style.marginTop = bar.offsetHeight + 24 + "px";
+          var dock = intro.getBoundingClientRect().top + window.scrollY - bar.offsetHeight - 12;
+          if (arrived) {
+            var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+            var target = Math.max(0, dock - at);
+            // The rest of the page isn't parsed yet, so it may be too short to scroll
+            // that far: hold the height until it is.
+            var root = document.documentElement;
+            root.style.minHeight = target + window.innerHeight + "px";
+            document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+            window.scrollTo({ top: target, behavior: "instant" });
+            try { history.replaceState(Object.assign({}, state, { rbDocked: true }), ""); } catch (e) {}
+          }
+          bar.style.top = Math.max(12, dock - window.scrollY) + "px";
+        })();
+      </script>
+      <span id="rb-dock-ready" hidden></span>
+
       <div class="viewer-card" id="viewer-card">
         <article class="markdown-body" id="content" set:html={rendered.html} />
       </div>
@@ -131,27 +194,6 @@ const S = zh
 </main>
 
 <Fragment>
-  <div class="reading-bar" data-reading-bar hidden>
-    {prevLink ? (
-      <a class="rb-btn rb-prev" href={prevLink.href} title={`${S.prev}: ${prevLink.title} ([)`} aria-label={`${S.prev}: ${prevLink.label}`}>
-        <Icon name="chevron-left" /><span class="rb-text">{prevLink.label}</span>
-      </a>
-    ) : <span class="rb-btn rb-disabled" aria-hidden="true"><Icon name="chevron-left" /></span>}
-    <button type="button" class="rb-title" data-scroll-top title={S.backToTop}>
-      <span class="rb-course">{course.data.name}</span><span class="rb-dot">·</span><span class="rb-label">{label}</span>
-    </button>
-    {altUrl && (
-      <a class="rb-btn rb-lang" href={altUrl} data-lang-switch hreflang={alt} lang={alt} title={`${S.switchTo} ${LANG_LABEL[alt]} (L)`}>
-        <Icon name="languages" /><span>{LANG_SHORT[alt]}</span>
-      </a>
-    )}
-    {nextLink ? (
-      <a class="rb-btn rb-next" href={nextLink.href} title={`${S.next}: ${nextLink.title} (])`} aria-label={`${S.next}: ${nextLink.label}`}>
-        <span class="rb-text">{nextLink.label}</span><Icon name="chevron-right" />
-      </a>
-    ) : <span class="rb-btn rb-disabled" aria-hidden="true"><Icon name="chevron-right" /></span>}
-    <span class="rb-progress" data-reading-progress></span>
-  </div>
 
   <div id="toc-sidebar" hidden>
     <div class="toc-marks" id="toc-marks">
@@ -291,6 +333,8 @@ const S = zh
     overflow: hidden;
     transform: translate(-50%, 0);
     transition: transform 0.25s ease, opacity 0.25s ease;
+    /* Same element on the next note: the page transition keeps it in place. */
+    view-transition-name: reading-bar;
   }
   .reading-bar[hidden] { display: flex !important; }
   .reading-bar[hidden] {
@@ -348,6 +392,11 @@ const S = zh
     background: var(--uci-blue);
     transform-origin: left;
     transform: scaleX(var(--progress, 0));
+  }
+
+  @media print {
+    .reading-bar { display: none !important; }
+    :global(html.rb-docked-page #notes-intro) { margin-top: 0 !important; }
   }
 
   @media screen and (max-width: 736px) {

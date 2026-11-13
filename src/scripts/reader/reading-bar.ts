@@ -1,11 +1,16 @@
 // Floating reading bar + keyboard shortcuts + keeping your place when switching language.
 //   [ / ]  previous / next note      L  switch language
 // Shown (and kept) once the intro card has scrolled away; its middle button
-// scrolls back to the top.
+// scrolls back to the top. After a jump with its ‹ › (or [ ] while it shows), the
+// next note opens with the bar docked above the intro card at the same spot on
+// screen (the inline script after the bar in NoteReader.astro), so it can be
+// clicked again without scrolling.
 import { detailsCount, openDetailsAt, openDetailsIndexes } from "./details";
 import { HEADING_SELECTOR } from "./toc";
 
 const RESUME_KEY = "kzh-lang-switch-resume";
+/** A reading-bar jump: the note it goes to and where the bar was on screen ({to, top}); read by the inline script in NoteReader.astro. */
+const JUMP_KEY = "kzh-rb-jump";
 
 interface Resume {
   /** Path of the page we're switching to, so a stale entry never applies elsewhere. */
@@ -104,9 +109,34 @@ export function setupReadingBar(opts: {
     });
   });
 
-  // Visibility: after the intro card leaves the viewport.
+  // Remember a jump made with the bar, so the next note opens with it in place.
+  const markJump = (href: string): void => {
+    const top = Math.round(bar.getBoundingClientRect().top);
+    try { sessionStorage.setItem(JUMP_KEY, JSON.stringify({ to: new URL(href, location.href).pathname, top, at: Date.now() })); } catch {}
+  };
+  bar.querySelectorAll<HTMLAnchorElement>("a.rb-prev, a.rb-next").forEach((a) => {
+    a.addEventListener("click", (e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      markJump(a.href);
+    });
+  });
+
+  // Docked (arrived by a jump): stays shown, sitting above the intro card and
+  // sticking to the top of the screen once that spot scrolls past.
+  const docked = bar.classList.contains("rb-docked");
+  const placeDocked = (): void => {
+    const dock = docTop(intro) - bar.offsetHeight - 12;
+    bar.style.top = `${Math.max(12, dock - window.scrollY)}px`;
+  };
+  if (docked) {
+    window.addEventListener("resize", placeDocked);
+    window.addEventListener("load", placeDocked);
+  }
+
+  // Visibility: after the intro card leaves the viewport (always, once docked).
   new IntersectionObserver(([entry]) => {
-    bar.hidden = entry!.isIntersecting;
+    bar.hidden = !docked && entry!.isIntersecting;
+    bar.inert = bar.hidden;  // out of the tab order while it's off screen
   }).observe(intro);
 
   bar.querySelector("[data-scroll-top]")?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
@@ -117,6 +147,7 @@ export function setupReadingBar(opts: {
     ticking = true;
     requestAnimationFrame(() => {
       ticking = false;
+      if (docked) placeDocked();
       const y = window.scrollY;
       if (progress) {
         const top = docTop(content);
@@ -129,8 +160,11 @@ export function setupReadingBar(opts: {
   document.addEventListener("keydown", (e) => {
     if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return;
     if (document.querySelector(".mv-palette-overlay:not([hidden])")) return;
-    if (e.key === "[" && prevUrl) location.href = prevUrl;
-    else if (e.key === "]" && nextUrl) location.href = nextUrl;
+    if ((e.key === "[" && prevUrl) || (e.key === "]" && nextUrl)) {
+      const to = e.key === "[" ? prevUrl! : nextUrl!;
+      if (!bar.hidden) markJump(to);  // only when the bar is showing: it then stays put
+      location.href = to;
+    }
     else if ((e.key === "l" || e.key === "L") && altUrl) {
       document.querySelector<HTMLAnchorElement>("a[data-lang-switch]")?.click();
     } else return;

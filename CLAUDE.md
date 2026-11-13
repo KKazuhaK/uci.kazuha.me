@@ -173,7 +173,7 @@ With those options the HTML is byte-identical to the legacy md-viewer's `markdow
 
 ### Reading UI (note pages)
 
-Breadcrumb `Notes › <Course> › <Lecture N>` with language switch, Headings palette (⌘/Ctrl+Shift+O), Open in Editor; TOC sidebar (4+ headings; hidden ≤768px); prev/next cards; floating reading bar after the intro scrolls away (prev · course · lang · next, progress line, tucks while scrolling down); shortcuts `[` `]` `L`; Top + Ask AI button group. Language preference: `localStorage.kzh-lang`, written on every note view and by the hub toggle; hubs/Notes home/Home links follow it (`LangBoot` picks the language before first paint: `?lang=` → preference → en-US).
+Breadcrumb `Notes › <Course> › <Lecture N>` with language switch, Headings palette (⌘/Ctrl+Shift+O), Open in Editor; TOC sidebar (4+ headings; hidden ≤768px); prev/next cards; floating reading bar after the intro scrolls away (prev · course · lang · next, progress line); after a jump with its ‹ › (or `[` `]` while it shows) the next note opens with it docked between the nav and the intro at the same spot on screen (inline script after `#notes-intro` in `NoteReader.astro`, render-blocking via `rel=expect`; kept on reload through `history.state`) and it stays put across the page transition (`view-transition-name`); shortcuts `[` `]` `L`; Top + Ask AI button group. Language preference: `localStorage.kzh-lang`, written on every note view and by the hub toggle; hubs/Notes home/Home links follow it (`LangBoot` picks the language before first paint: `?lang=` → preference → en-US).
 
 ### viz components (`public/assets/viz/`)
 

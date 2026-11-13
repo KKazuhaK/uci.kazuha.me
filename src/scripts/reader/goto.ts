@@ -74,7 +74,7 @@ export function setupGoto(content: HTMLElement, triggers: (HTMLButtonElement | n
   function jumpToHeading(h: Item | undefined): void {
     if (!h) return;
     h.element.scrollIntoView({ behavior: "smooth", block: "start" });
-    if (h.element.id) history.pushState(null, "", "#" + encodeURIComponent(h.element.id));
+    if (h.element.id) history.pushState(history.state, "", "#" + encodeURIComponent(h.element.id));  // keeps the reading bar docked (NoteReader.astro)
     closePalette();
   }
 

@@ -26,6 +26,8 @@ const note = props.group.versions[props.lang]!;
 ---
 
 <BaseLayout title={`${props.course.data.name} ${note.data.title}`} description={note.data.summary} lang={props.lang} navPath="notes/">
+  <!-- Hold the first paint until the reading bar has been docked (NoteReader.astro). -->
+  <link slot="head" rel="expect" href="#rb-dock-ready" blocking="render" />
   {Object.keys(props.group.versions).map((l) => (
     <link slot="head" rel="alternate" hreflang={l} href={canonicalUrl(noteUrl(props.group.courseSlug, props.group.slug, l as Lang), Astro.site)} />
   ))}
