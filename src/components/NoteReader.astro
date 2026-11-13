@@ -71,6 +71,28 @@ const S = zh
 >
   <section id="one">
     <div class="inner notes-shell">
+      <nav class="reading-bar" data-reading-bar aria-label={zh ? "上一篇 / 下一篇" : "Previous / next note"}>
+        {prevLink ? (
+          <a class="rb-btn rb-prev" href={prevLink.href} title={`${S.prev}: ${prevLink.title} ([)`} aria-label={`${S.prev}: ${prevLink.label}`}>
+            <Icon name="chevron-left" /><span class="rb-text">{prevLink.label}</span>
+          </a>
+        ) : <span class="rb-btn rb-disabled" aria-hidden="true"><Icon name="chevron-left" /></span>}
+        <button type="button" class="rb-title" data-scroll-top title={S.backToTop}>
+          <span class="rb-course">{course.data.name}</span><span class="rb-dot">·</span><span class="rb-label">{label}</span>
+        </button>
+        {altUrl && (
+          <a class="rb-btn rb-lang" href={altUrl} data-lang-switch hreflang={alt} lang={alt} title={`${S.switchTo} ${LANG_LABEL[alt]} (L)`}>
+            <Icon name="languages" /><span>{LANG_SHORT[alt]}</span>
+          </a>
+        )}
+        {nextLink ? (
+          <a class="rb-btn rb-next" href={nextLink.href} title={`${S.next}: ${nextLink.title} (])`} aria-label={`${S.next}: ${nextLink.label}`}>
+            <span class="rb-text">{nextLink.label}</span><Icon name="chevron-right" />
+          </a>
+        ) : <span class="rb-btn rb-disabled" aria-hidden="true"><Icon name="chevron-right" /></span>}
+        <span class="rb-progress" data-reading-progress></span>
+      </nav>
+
       <div class="notes-intro" id="notes-intro">
         <nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb">
           <a href={url("notes/")} class="crumb">Notes</a>
@@ -97,65 +119,36 @@ const S = zh
         <p class="notes-date" id="notes-date">{edited}</p>
       </div>
 
-      <div class="reading-bar" data-reading-bar hidden inert>
-        {prevLink ? (
-          <a class="rb-btn rb-prev" href={prevLink.href} title={`${S.prev}: ${prevLink.title} ([)`} aria-label={`${S.prev}: ${prevLink.label}`}>
-            <Icon name="chevron-left" /><span class="rb-text">{prevLink.label}</span>
-          </a>
-        ) : <span class="rb-btn rb-disabled" aria-hidden="true"><Icon name="chevron-left" /></span>}
-        <button type="button" class="rb-title" data-scroll-top title={S.backToTop}>
-          <span class="rb-course">{course.data.name}</span><span class="rb-dot">·</span><span class="rb-label">{label}</span>
-        </button>
-        {altUrl && (
-          <a class="rb-btn rb-lang" href={altUrl} data-lang-switch hreflang={alt} lang={alt} title={`${S.switchTo} ${LANG_LABEL[alt]} (L)`}>
-            <Icon name="languages" /><span>{LANG_SHORT[alt]}</span>
-          </a>
-        )}
-        {nextLink ? (
-          <a class="rb-btn rb-next" href={nextLink.href} title={`${S.next}: ${nextLink.title} (])`} aria-label={`${S.next}: ${nextLink.label}`}>
-            <span class="rb-text">{nextLink.label}</span><Icon name="chevron-right" />
-          </a>
-        ) : <span class="rb-btn rb-disabled" aria-hidden="true"><Icon name="chevron-right" /></span>}
-        <span class="rb-progress" data-reading-progress></span>
-      </div>
       <script is:inline>
-        // Arrived with the reading bar's ‹ › (or [ ] while it showed; reading-bar.ts saves
-        // the target and where the bar was on screen): keep the bar where it was. It docks
-        // in the intro card: in the middle of the breadcrumb row when there's room (desktop),
-        // otherwise in a row of its own at the top of the card. The page opens scrolled so
-        // the bar is back under the pointer, and while scrolling it moves with that row
-        // until it reaches the top of the screen, where it stays. A reload or back/forward to
-        // that page keeps it docked (history.state) and lets the browser restore the scroll.
-        // Placed right after the intro and render-blocking (rel="expect" on #rb-dock-ready in
-        // the page head), so it runs before first paint and the page transition sees the bar
-        // in place. reading-bar.ts keeps it positioned while scrolling.
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
         (function () {
           var bar = document.querySelector("[data-reading-bar]");
           var intro = document.getElementById("notes-intro");
           if (!bar || !intro) return;
-          var jump = null;
-          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
-          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
-          // A jump older than a minute was abandoned (navigation stopped): ignore it.
-          var arrived = !!jump && same(jump.to) === same(location.pathname) && Date.now() - (jump.at || 0) < 60000;
-          var state = history.state;
-          if (!arrived && !(state && state.rbDocked)) return;
-          bar.hidden = false;
-          bar.inert = false;
-          bar.classList.add("rb-docked");
-          // Where the docked bar sits, as an offset from the top of the intro card, after
-          // making room for it if needed. Also called by reading-bar.ts on resize.
-          function dockOffset() {
+          bar.classList.add("rb-ready");
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            bar.classList.remove("is-floating");
             var w = bar.offsetWidth, h = bar.offsetHeight;
-            var cx = document.documentElement.clientWidth / 2;
+            if (wasFloating) bar.classList.add("is-floating");
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
             var crumbs = intro.querySelector(".notes-breadcrumb");
             var cur = intro.querySelector(".crumb-current");
             var acts = intro.querySelector(".intro-actions");
             var room = intro.querySelector(".rb-room");
             var fits = false;
             if (crumbs && cur && acts) {
-              // Measure with the Headings button shown: goto.ts reveals it after this runs,
-              // and the row must still fit then.
+              // Measure with the Headings button shown: goto.ts reveals it later.
               var gotoBtn = document.getElementById("goto-heading-viewer");
               var wasHidden = !!gotoBtn && gotoBtn.hidden;
               if (gotoBtn) gotoBtn.hidden = false;
@@ -163,37 +156,44 @@ const S = zh
               if (gotoBtn) gotoBtn.hidden = wasHidden;
               fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
             }
-            // The spacer row is only added or removed when the choice changes, so a
-            // resize (a phone's address bar showing) never shifts the page.
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
             if (fits) {
               if (room) room.remove();
               var r = crumbs.getBoundingClientRect();
-              return r.top + r.height / 2 - h / 2 - intro.getBoundingClientRect().top;
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
             }
-            if (!room) {
-              room = document.createElement("div");
-              room.className = "rb-room";
-              intro.insertBefore(room, intro.firstChild);
-            }
-            room.style.height = h + 10 + "px";
-            return room.getBoundingClientRect().top - intro.getBoundingClientRect().top;
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
           }
-          window.__kzhRbDockOffset = dockOffset;
-          var offset = dockOffset();
-          bar.dataset.dockOffset = String(offset);
-          var dock = intro.getBoundingClientRect().top + window.scrollY + offset;
-          if (arrived) {
-            var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
-            var target = Math.max(0, dock - at);
-            // The rest of the page isn't parsed yet, so it may be too short to scroll
-            // that far: hold the height until it is.
-            var root = document.documentElement;
-            root.style.minHeight = target + window.innerHeight + "px";
-            document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
-            window.scrollTo({ top: target, behavior: "instant" });
-            try { history.replaceState(Object.assign({}, state, { rbDocked: true }), ""); } catch (e) {}
-          }
-          bar.style.top = Math.max(12, dock - window.scrollY) + "px";
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) bar.classList.add("is-floating");
         })();
       </script>
       <span id="rb-dock-ready" hidden></span>
@@ -354,33 +354,39 @@ const S = zh
   }
   @media (hover: none) { .pager-hint { display: none; } }
 
-  /* ── Floating reading bar (appears once the intro card scrolls away) ── */
+  /* ── Reading bar: blended into the intro card at the top, a floating pill once it
+     sticks to the top of the screen (.is-floating, set by reading-bar.ts) ── */
+  /* Without the inline script (no JS) it stays a plain row above the intro. */
   .reading-bar {
-    position: fixed;
-    top: 12px;
-    left: 50%;
+    position: relative;
     z-index: 1000;
+    align-self: center;
     display: flex;
     align-items: center;
     gap: 2px;
-    max-width: calc(100vw - 32px);
+    max-width: calc(100% - 32px);
     padding: 5px;
     border-radius: 999px;
-    background: var(--card);
-    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.1), 0 0 0 1px var(--hairline);
+    background: transparent;
+    box-shadow: none;
     overflow: hidden;
-    transform: translate(-50%, 0);
-    transition: transform 0.25s ease, opacity 0.25s ease;
+    transition: background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
     /* Same element on the next note: the page transition keeps it in place. */
     view-transition-name: reading-bar;
   }
-  .reading-bar[hidden] { display: flex !important; }
-  .reading-bar[hidden] {
-    opacity: 0;
-    pointer-events: none;
-    transform: translate(-50%, -140%);
+  .reading-bar.rb-ready { position: sticky; top: 12px; }
+  /* Fades out as the end of the card scrolls up to it (reading-bar.ts), rather than
+     being cut off by the card's edge. */
+  .reading-bar.rb-leaving { opacity: 0; pointer-events: none; }
+  .reading-bar.is-floating {
+    background: var(--card);
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.1), 0 0 0 1px var(--hairline);
   }
-  :global(html[data-theme="dark"]) .reading-bar { box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--hairline); }
+  :global(html[data-theme="dark"]) .reading-bar.is-floating { box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--hairline); }
+  /* In the card, only the pager: the breadcrumb row already shows course, unit and language. */
+  .reading-bar:not(.is-floating) .rb-title,
+  .reading-bar:not(.is-floating) .rb-lang,
+  .reading-bar:not(.is-floating) .rb-progress { display: none; }
   .rb-btn,
   .rb-title {
     display: inline-flex;
@@ -441,7 +447,7 @@ const S = zh
     .intro-actions { margin-left: 0; width: 100%; flex-wrap: wrap; }
     .note-pager { grid-template-columns: 1fr; }
     .pager-next { text-align: left; align-items: flex-start; }
-    .rb-text { display: none; }
+    .reading-bar.is-floating .rb-text { display: none; }
     .rb-btn { padding: 0 10px; }
   }
 </style>

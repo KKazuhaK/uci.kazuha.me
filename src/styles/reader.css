@@ -104,7 +104,10 @@ html[data-theme="dark"] {
 	border: 1px solid var(--notes-border);
 	border-radius: 1.4rem;
 	box-shadow: var(--notes-viewer-shadow);
+	/* clip, not hidden: rounds the corners without making a scroll container, which
+	   would stop the reading bar (position: sticky, NoteReader.astro) from sticking. */
 	overflow: hidden;
+	overflow: clip;
 }
 
 .notes-shell,
@@ -1019,7 +1022,10 @@ a.course-chip:focus {
 		border-radius: 0;
 		border-left: none;
 		border-right: none;
+		/* clip, not hidden: "hidden" on either axis makes a scroll container again and the
+		   reading bar would stop sticking (see .notes-shell above). */
 		overflow-x: hidden;
+		overflow-x: clip;
 	}
 
 	/* ── page title ── */

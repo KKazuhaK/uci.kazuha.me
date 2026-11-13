@@ -1,10 +1,10 @@
-// Floating reading bar + keyboard shortcuts + keeping your place when switching language.
+// Reading bar + keyboard shortcuts + keeping your place when switching language.
 //   [ / ]  previous / next note      L  switch language
-// Shown (and kept) once the intro card has scrolled away; its middle button
-// scrolls back to the top. After a jump with its ‹ › (or [ ] while it shows), the
-// next note opens with the bar docked in the intro card at the same spot on screen
-// (the inline script after the bar in NoteReader.astro), so it can be clicked again
-// without scrolling.
+// The bar sits in the intro card (placed by the inline script after the intro in
+// NoteReader.astro) and is sticky: once it reaches the top of the screen it stays
+// there as a floating pill (.is-floating) with the course, language and a middle
+// button that scrolls back to the top. After a jump with its ‹ › (or [ ]), the next
+// note opens scrolled so the bar is at the same spot on screen, under the pointer.
 import { detailsCount, openDetailsAt, openDetailsIndexes } from "./details";
 import { HEADING_SELECTOR } from "./toc";
 
@@ -97,7 +97,7 @@ export function setupReadingBar(opts: {
   nextUrl: string | undefined;
   altUrl: string | undefined;
 }): void {
-  const { content, intro, bar, progress, prevUrl, nextUrl, altUrl } = opts;
+  const { content, bar, progress, prevUrl, nextUrl, altUrl } = opts;
 
   // Language switch links remember where we are.
   document.querySelectorAll<HTMLAnchorElement>("a[data-lang-switch]").forEach((a) => {
@@ -121,29 +121,24 @@ export function setupReadingBar(opts: {
     });
   });
 
-  // Docked (arrived by a jump): stays shown, moving with its spot in the intro card
-  // and sticking to the top of the screen once that spot scrolls past.
-  const docked = bar.classList.contains("rb-docked");
-  let dockOffset = Number(bar.dataset["dockOffset"] || 0);
-  const placeDocked = (): void => {
-    bar.style.top = `${Math.max(12, docTop(intro) + dockOffset - window.scrollY)}px`;
+  // Floating once sticky has pinned it to the top of the screen (CSS top: 12px).
+  const shell = bar.parentElement;
+  const updateFloating = (): void => {
+    const r = bar.getBoundingClientRect();
+    bar.classList.toggle("is-floating", window.scrollY > 0 && r.top <= 12.5);
+    // Its sticky box can outlast the card's end by its own height (negative margin):
+    // fade it out once the card's bottom edge reaches it.
+    bar.classList.toggle("rb-leaving", !!shell && shell.getBoundingClientRect().bottom < r.bottom + 8);
   };
   // The layout may change (window resized, fonts loaded): decide again where it fits.
   const relayout = (): void => {
-    const f = (window as { __kzhRbDockOffset?: () => number }).__kzhRbDockOffset;
-    if (typeof f === "function") dockOffset = f();
-    placeDocked();
+    const f = (window as { __kzhRbLayout?: () => void }).__kzhRbLayout;
+    if (typeof f === "function") f();
+    updateFloating();
   };
-  if (docked) {
-    window.addEventListener("resize", relayout);
-    window.addEventListener("load", relayout);
-  }
-
-  // Visibility: after the intro card leaves the viewport (always, once docked).
-  new IntersectionObserver(([entry]) => {
-    bar.hidden = !docked && entry!.isIntersecting;
-    bar.inert = bar.hidden;  // out of the tab order while it's off screen
-  }).observe(intro);
+  window.addEventListener("resize", relayout);
+  window.addEventListener("load", relayout);
+  updateFloating();
 
   bar.querySelector("[data-scroll-top]")?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
 
@@ -153,7 +148,7 @@ export function setupReadingBar(opts: {
     ticking = true;
     requestAnimationFrame(() => {
       ticking = false;
-      if (docked) placeDocked();
+      updateFloating();
       const y = window.scrollY;
       if (progress) {
         const top = docTop(content);
@@ -168,8 +163,7 @@ export function setupReadingBar(opts: {
     if (document.querySelector(".mv-palette-overlay:not([hidden])")) return;
     if ((e.key === "[" && prevUrl) || (e.key === "]" && nextUrl)) {
       const to = e.key === "[" ? prevUrl! : nextUrl!;
-      if (!bar.hidden) markJump(to);  // only when the bar is showing: it then stays put
-      location.href = to;
+      location.href = to;  // no jump mark: keeping the bar under the pointer is for clicks
     }
     else if ((e.key === "l" || e.key === "L") && altUrl) {
       document.querySelector<HTMLAnchorElement>("a[data-lang-switch]")?.click();
