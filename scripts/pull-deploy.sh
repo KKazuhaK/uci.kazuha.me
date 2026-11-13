@@ -48,7 +48,13 @@ else
   git_progress -C "$dist" fetch --depth 1 origin "$DEPLOY_BRANCH"
   if [ "$(git -C "$dist" rev-parse HEAD)" != "$(git -C "$dist" rev-parse FETCH_HEAD)" ]; then
     git -C "$dist" reset -q --hard FETCH_HEAD
-    git -C "$dist" gc -q --prune=now
+    # Each build is a new single commit: drop the old ones now and then (a full gc
+    # takes seconds, so not on every deploy).
+    packs=("$dist"/.git/objects/pack/*.pack)
+    if [ "${#packs[@]}" -gt 5 ]; then
+      git -C "$dist" reflog expire --expire=now --all
+      git -C "$dist" gc -q --prune=now
+    fi
   fi
 fi
 

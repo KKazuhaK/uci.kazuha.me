@@ -16,6 +16,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Type and content check + renderer parity, in parallel with `build` so they don't
+  # hold up a deploy; `publish` and `cloudflare` wait for both.
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22.22"
+          cache: npm
+
+      - run: npm ci
+      - name: Type and content check
+        run: npx astro check
+      - name: Renderer matches the legacy md-viewer on every note
+        run: npx tsx scripts/migrate/parity.ts
+
   # Runs third-party code (npm ci, astro): read-only token. The `publish` job pushes.
   build:
     runs-on: ubuntu-latest
@@ -34,10 +56,6 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - name: Type and content check
-        run: npx astro check
-      - name: Renderer matches the legacy md-viewer on every note
-        run: npx tsx scripts/migrate/parity.ts
       # Every "branch" target in deploy/targets.json (the ICS server: `deploy`).
       # Building is also where viz configs and note links are validated.
       - name: Build each server target
@@ -63,7 +81,7 @@ jobs:
   # `build` so that npm code never runs in a job holding a write token: that token
   # decides what every server publishes. Installs and runs nothing from npm.
   publish:
-    needs: build
+    needs: [check, build]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -106,7 +124,7 @@ jobs:
   # `wrangler deploy`. Runs only after `build` passed and never touches any
   # server branch, so the servers are unaffected either way.
   cloudflare:
-    needs: build
+    needs: [check, build]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     # Runs third-party code (npm ci, astro build): read-only token.

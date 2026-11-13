@@ -89,8 +89,10 @@ else
         2>/dev/null || echo "gh-error"
     }
     # How long each step took in the last successful build: the % and "of ~1m13s"
-    # are measured against it. Without one, the % counts finished steps.
-    base_id="$(gh run list --repo "$repo" --workflow site --branch main --event push --status success \
+    # are measured against it. Without one, the % counts finished steps. Not needed
+    # unattended (--ci only runs once the build is done; nobody watches the bar).
+    base_id=""
+    [ "$ci" = 1 ] || base_id="$(gh run list --repo "$repo" --workflow site --branch main --event push --status success \
       --limit 2 --json databaseId --jq "[.[].databaseId | select(. != $id)][0] // \"\"" 2>/dev/null || true)"
     base_steps=""
     if [ -n "$base_id" ]; then
@@ -188,23 +190,31 @@ else
         "         https://github.com/$repo/actions/runs/$id"
       exit 1
     fi
-    # The `publish` job pushes the build to the deploy branch once `build` passes.
-    # (Runs from before that job existed have none: nothing to wait for.)
+    # The `publish` job pushes the build to the deploy branch once `build` and
+    # `check` pass. (Runs from before that job existed have none: nothing to wait for.)
+    # → "publish status|publish conclusion|check status" ("none" for a job not listed)
     publish_job() {
-      gh run view "$id" --repo "$repo" --json jobs \
-        --jq '[.jobs[] | select(.name == "publish") | "\(.status)|\(.conclusion // "")"][0] // "none"' \
-        2>/dev/null || echo "gh-error"
+      gh run view "$id" --repo "$repo" --json jobs --jq '
+        ([.jobs[] | select(.name == "publish") | "\(.status)|\(.conclusion // "")"][0] // "none|")
+        + "|" + ([.jobs[] | select(.name == "check") | .status][0] // "none")' \
+        2>/dev/null || echo "gh-error||"
     }
-    # A job waiting on `needs` may not be listed for a few seconds after `build` ends:
-    # only take "none" (a run from before the publish job existed) after a minute.
-    IFS='|' read -r pstatus pconclusion <<<"$(publish_job)"
+    # A job waiting on `needs` isn't listed until they finish: `check` runs alongside
+    # `build` and may still be going. Only take "none" (a run from before the publish
+    # job existed) once `check` is done (or absent) and a minute has passed.
+    IFS='|' read -r pstatus pconclusion cstatus <<<"$(publish_job)"
     none_until=$((SECONDS + 60))
-    while [ "$pstatus" != "completed" ] && { [ "$pstatus" != "none" ] || [ "$SECONDS" -lt "$none_until" ]; } \
+    while [ "$pstatus" != "completed" ] \
+        && { [ "$pstatus" != "none" ] || [ "$SECONDS" -lt "$none_until" ] || { [ "$cstatus" != "completed" ] && [ "$cstatus" != "none" ]; }; } \
         && [ "$SECONDS" -lt "$deadline" ]; do
-      case "$pstatus" in none) pword="not listed yet" ;; gh-error) pword="status unknown, retrying" ;; *) pword="$pstatus" ;; esac
+      case "$pstatus" in
+        none) if [ "$cstatus" != "completed" ] && [ "$cstatus" != "none" ]; then pword="waiting for the type check"; else pword="not listed yet"; fi ;;
+        gh-error) pword="status unknown, retrying" ;;
+        *) pword="$pstatus" ;;
+      esac
       live "publish-$pstatus" "build passed; publish job $pword · $(dur $((SECONDS - _stage_t0)))"
       sleep 5
-      IFS='|' read -r pstatus pconclusion <<<"$(publish_job)"
+      IFS='|' read -r pstatus pconclusion cstatus <<<"$(publish_job)"
     done
     live_clear
     if [ "$pstatus" != "completed" ] && [ "$pstatus" != "none" ]; then
@@ -213,7 +223,8 @@ else
       exit 1
     fi
     if [ "$pstatus" = "completed" ] && [ "$pconclusion" != "success" ]; then
-      fail "the publish job ${pconclusion:-failed}, so the build never reached the $DEPLOY_BRANCH branch" \
+      case "$pconclusion" in skipped) pwhat="was skipped (the type check or the build failed)" ;; *) pwhat="${pconclusion:-failed}" ;; esac
+      fail "the publish job $pwhat, so the build never reached the $DEPLOY_BRANCH branch" \
         "https://github.com/$repo/actions/runs/$id"
       exit 1
     fi
