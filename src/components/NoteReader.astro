@@ -73,10 +73,10 @@ const S = zh
     <div class="inner notes-shell">
       <nav class="reading-bar" data-reading-bar aria-label={zh ? "上一篇 / 下一篇" : "Previous / next note"}>
         {prevLink ? (
-          <a class="rb-btn rb-prev" href={prevLink.href} title={`${S.prev}: ${prevLink.title} ([)`} aria-label={`${S.prev}: ${prevLink.label}`}>
+          <a class="rb-btn rb-prev rb-side-prev" href={prevLink.href} title={`${S.prev}: ${prevLink.title} ([)`} aria-label={`${S.prev}: ${prevLink.label}`}>
             <Icon name="chevron-left" /><span class="rb-text">{prevLink.label}</span>
           </a>
-        ) : <span class="rb-btn rb-disabled" aria-hidden="true"><Icon name="chevron-left" /></span>}
+        ) : <span class="rb-btn rb-disabled rb-side-prev" aria-hidden="true"><Icon name="chevron-left" /></span>}
         <button type="button" class="rb-title" data-scroll-top title={S.backToTop}>
           <span class="rb-course">{course.data.name}</span><span class="rb-dot">·</span><span class="rb-label">{label}</span>
         </button>
@@ -86,10 +86,10 @@ const S = zh
           </a>
         )}
         {nextLink ? (
-          <a class="rb-btn rb-next" href={nextLink.href} title={`${S.next}: ${nextLink.title} (])`} aria-label={`${S.next}: ${nextLink.label}`}>
+          <a class="rb-btn rb-next rb-side-next" href={nextLink.href} title={`${S.next}: ${nextLink.title} (])`} aria-label={`${S.next}: ${nextLink.label}`}>
             <span class="rb-text">{nextLink.label}</span><Icon name="chevron-right" />
           </a>
-        ) : <span class="rb-btn rb-disabled" aria-hidden="true"><Icon name="chevron-right" /></span>}
+        ) : <span class="rb-btn rb-disabled rb-side-next" aria-hidden="true"><Icon name="chevron-right" /></span>}
         <span class="rb-progress" data-reading-progress></span>
       </nav>
 
@@ -361,9 +361,14 @@ const S = zh
     position: relative;
     z-index: 1000;
     align-self: center;
-    display: flex;
+    /* A fixed width per state, ‹ at the left edge and › at the right, so the buttons are
+       at the same spot on every note (first and last notes, short or long labels). */
+    display: grid;
+    /* The sides keep room for their buttons; the title gives way (ellipsis) first. */
+    grid-template-columns: minmax(2.75rem, 1fr) minmax(0, auto) auto minmax(2.75rem, 1fr);
     align-items: center;
     gap: 2px;
+    width: 16rem;
     max-width: calc(100% - 32px);
     padding: 5px;
     border-radius: 999px;
@@ -379,6 +384,7 @@ const S = zh
      being cut off by the card's edge. */
   .reading-bar.rb-leaving { opacity: 0; pointer-events: none; }
   .reading-bar.is-floating {
+    width: 38rem;
     background: var(--card);
     box-shadow: 0 6px 24px rgba(15, 23, 42, 0.1), 0 0 0 1px var(--hairline);
   }
@@ -409,6 +415,13 @@ const S = zh
   :global(html[data-theme="dark"]) .rb-btn:hover,
   :global(html[data-theme="dark"]) .rb-title:hover { color: #58a6ff; }
   .rb-disabled { opacity: 0.3; pointer-events: none; }
+  .rb-side-prev { grid-column: 1; justify-self: start; }
+  .rb-title { grid-column: 2; }
+  .rb-lang { grid-column: 3; }
+  .rb-side-next { grid-column: 4; justify-self: end; }
+  .rb-side-prev,
+  .rb-side-next { min-width: 0; max-width: 100%; }
+  .rb-text { overflow: hidden; text-overflow: ellipsis; }
   .rb-title {
     color: var(--ink);
     min-width: 0;
