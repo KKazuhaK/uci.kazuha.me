@@ -121,8 +121,10 @@ const S = zh
       <script is:inline>
         // Arrived with the reading bar's ‹ › (or [ ] while it showed; reading-bar.ts saves
         // the target and where the bar was on screen): keep the bar where it was. It docks
-        // between the nav and the intro card (the card moves down to make room) and the page
-        // opens scrolled so the bar is back under the pointer. A reload or back/forward to
+        // in the intro card: in the middle of the breadcrumb row when there's room (desktop),
+        // otherwise in a row of its own at the top of the card. The page opens scrolled so
+        // the bar is back under the pointer, and while scrolling it moves with that row
+        // until it reaches the top of the screen, where it stays. A reload or back/forward to
         // that page keeps it docked (history.state) and lets the browser restore the scroll.
         // Placed right after the intro and render-blocking (rel="expect" on #rb-dock-ready in
         // the page head), so it runs before first paint and the page transition sees the bar
@@ -141,9 +143,45 @@ const S = zh
           bar.hidden = false;
           bar.inert = false;
           bar.classList.add("rb-docked");
-          document.documentElement.classList.add("rb-docked-page");
-          intro.style.marginTop = bar.offsetHeight + 24 + "px";
-          var dock = intro.getBoundingClientRect().top + window.scrollY - bar.offsetHeight - 12;
+          // Where the docked bar sits, as an offset from the top of the intro card, after
+          // making room for it if needed. Also called by reading-bar.ts on resize.
+          function dockOffset() {
+            var w = bar.offsetWidth, h = bar.offsetHeight;
+            var cx = document.documentElement.clientWidth / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it after this runs,
+              // and the row must still fit then.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row is only added or removed when the choice changes, so a
+            // resize (a phone's address bar showing) never shifts the page.
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              return r.top + r.height / 2 - h / 2 - intro.getBoundingClientRect().top;
+            }
+            if (!room) {
+              room = document.createElement("div");
+              room.className = "rb-room";
+              intro.insertBefore(room, intro.firstChild);
+            }
+            room.style.height = h + 10 + "px";
+            return room.getBoundingClientRect().top - intro.getBoundingClientRect().top;
+          }
+          window.__kzhRbDockOffset = dockOffset;
+          var offset = dockOffset();
+          bar.dataset.dockOffset = String(offset);
+          var dock = intro.getBoundingClientRect().top + window.scrollY + offset;
           if (arrived) {
             var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
             var target = Math.max(0, dock - at);
@@ -396,7 +434,7 @@ const S = zh
 
   @media print {
     .reading-bar { display: none !important; }
-    :global(html.rb-docked-page #notes-intro) { margin-top: 0 !important; }
+    :global(#notes-intro .rb-room) { display: none; }
   }
 
   @media screen and (max-width: 736px) {

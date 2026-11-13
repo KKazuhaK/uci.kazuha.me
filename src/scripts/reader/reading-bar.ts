@@ -2,9 +2,9 @@
 //   [ / ]  previous / next note      L  switch language
 // Shown (and kept) once the intro card has scrolled away; its middle button
 // scrolls back to the top. After a jump with its ‹ › (or [ ] while it shows), the
-// next note opens with the bar docked above the intro card at the same spot on
-// screen (the inline script after the bar in NoteReader.astro), so it can be
-// clicked again without scrolling.
+// next note opens with the bar docked in the intro card at the same spot on screen
+// (the inline script after the bar in NoteReader.astro), so it can be clicked again
+// without scrolling.
 import { detailsCount, openDetailsAt, openDetailsIndexes } from "./details";
 import { HEADING_SELECTOR } from "./toc";
 
@@ -121,16 +121,22 @@ export function setupReadingBar(opts: {
     });
   });
 
-  // Docked (arrived by a jump): stays shown, sitting above the intro card and
-  // sticking to the top of the screen once that spot scrolls past.
+  // Docked (arrived by a jump): stays shown, moving with its spot in the intro card
+  // and sticking to the top of the screen once that spot scrolls past.
   const docked = bar.classList.contains("rb-docked");
+  let dockOffset = Number(bar.dataset["dockOffset"] || 0);
   const placeDocked = (): void => {
-    const dock = docTop(intro) - bar.offsetHeight - 12;
-    bar.style.top = `${Math.max(12, dock - window.scrollY)}px`;
+    bar.style.top = `${Math.max(12, docTop(intro) + dockOffset - window.scrollY)}px`;
+  };
+  // The layout may change (window resized, fonts loaded): decide again where it fits.
+  const relayout = (): void => {
+    const f = (window as { __kzhRbDockOffset?: () => number }).__kzhRbDockOffset;
+    if (typeof f === "function") dockOffset = f();
+    placeDocked();
   };
   if (docked) {
-    window.addEventListener("resize", placeDocked);
-    window.addEventListener("load", placeDocked);
+    window.addEventListener("resize", relayout);
+    window.addEventListener("load", relayout);
   }
 
   // Visibility: after the intro card leaves the viewport (always, once docked).
