@@ -6,6 +6,7 @@
 // Trees are given in heap positions: position 1 is the root, the children
 // of p are 2p and 2p + 1, "-" marks an empty position.
 import { checkParams } from "./_core.js";
+import { treeView, heapPlace } from "./_tree.js";
 
 const MAXPOS = 31;
 
@@ -153,10 +154,11 @@ export function steps(config) {
 	const trees = parseTrees(config.tree).trees;
 	const views = parseViews(config.views || "plain").views;
 	const frames = [];
-	// Same drawing height for every tree in the demo (no page jump between trees),
-	// and a "depth d" gutter only when a depth step is shown.
+	// Same drawing height for every tree in the demo (no page jump between trees);
+	// one extra row when the null links are shown, since they hang below the leaves.
+	const showNulls = views.some(function(v) { return v.name === "nulls"; });
 	const maxDepth = Math.max.apply(null, trees.map(function(t) { return depthOf(t.pos.length - 1); }));
-	const gutter = views.some(function(v) { return v.name === "depth"; });
+	const rows = maxDepth + 1 + (showNulls ? 1 : 0);
 	trees.forEach(function(t, ti) {
 		const pos = t.pos, at = t.at;
 		const all = nodes(pos);
@@ -166,7 +168,7 @@ export function steps(config) {
 		const internal = all.filter(function(p) { return kids(pos, p).length > 0; });
 		const name = t.label ? "**" + t.label + "**: " : "";
 		views.forEach(function(v) {
-			const f = { tree: ti, maxDepth: maxDepth, gutter: gutter, pos: pos, hl: [], rel: [], bad: [], edges: [], badge: null, ghosts: [], nulls: false, levels: false, msg: "", group: ti };
+			const f = { tree: ti, span: depthOf(pos.length - 1) + (showNulls ? 1 : 0), rows: rows, pos: pos, hl: [], rel: [], bad: [], edges: [], edgeRole: "active", badge: null, ghosts: [], nulls: false, msg: "", group: ti };
 			const vars = [["nodes n", String(n)], ["height h", String(h)]];
 			if (t.label) vars.unshift(["tree", t.label]);
 			switch (v.name) {
@@ -218,7 +220,7 @@ export function steps(config) {
 				break;
 			case "path": {
 				const ps = v.nodes.map(function(x) { return at[x]; });
-				f.hl = [ps[0], ps[ps.length - 1]]; f.rel = ps.slice(1, -1);
+				f.hl = [ps[0], ps[ps.length - 1]]; f.rel = ps.slice(1, -1); f.edgeRole = "path";
 				for (let i = 1; i < ps.length; i++) f.edges.push(Math.max(ps[i - 1], ps[i]));
 				f.msg = name + "**Simple path** " + v.nodes.join("-") + ": " + v.nodes.length + " nodes, so its **length** is " + (v.nodes.length - 1) + " (edges, not nodes).";
 				vars.push(["path length", String(v.nodes.length - 1)]);
@@ -226,7 +228,6 @@ export function steps(config) {
 			}
 			case "depth": {
 				f.badge = {}; all.forEach(function(p) { f.badge[p] = depthOf(p); });
-				f.levels = true;
 				const per = [];
 				for (let d = 0; d <= h; d++) per.push(all.filter(function(p) { return depthOf(p) === d; }).length);
 				f.msg = name + "**Depth (level)** = number of edges from the root: the root is at depth 0. Nodes per level: " +
@@ -285,154 +286,43 @@ export function steps(config) {
 	return frames;
 }
 
-// ---------- drawing ----------
+// ---------- drawing (shared tree view, one per tree) ----------
 
-const CSS = `
-.vz-bt-wrap { overflow-x: auto; }
-.vz-bt { display: block; margin: 0 auto; font-family: "Consolas", "Menlo", monospace; overflow: visible; }
-.vz-bt .bt-edge { stroke: var(--vz-muted); stroke-width: 1.4; transition: stroke .3s, stroke-width .3s; }
-.vz-bt .bt-edge.is-on { stroke: var(--vz-cmp-bd); stroke-width: 3.5; }
-.vz-bt .bt-level { stroke: var(--vz-border); stroke-dasharray: 3 4; }
-.vz-bt .bt-levtext { fill: var(--vz-muted); font-size: 11px; dominant-baseline: central; }
-.vz-bt .bt-node circle { fill: var(--vz-surface); stroke: var(--vz-border); stroke-width: 1.6; transition: fill .3s, stroke .3s, stroke-width .3s; }
-.vz-bt .bt-node text { fill: var(--vz-ink); font-weight: 600; text-anchor: middle; dominant-baseline: central; font-size: 13px; transition: fill .3s; }
-.vz-bt .bt-node.is-cmp circle { fill: var(--vz-cmp-bg); stroke: var(--vz-cmp-bd); stroke-width: 3; }
-.vz-bt .bt-node.is-min circle { fill: var(--vz-min-bg); stroke: var(--vz-min-bd); stroke-width: 2.2; }
-.vz-bt .bt-node.is-min text { fill: var(--vz-min-fg); }
-.vz-bt .bt-node.is-swap circle { fill: var(--vz-swap-bg); stroke: var(--vz-swap-bd); stroke-width: 2.6; }
-.vz-bt .bt-node.is-swap text { fill: var(--vz-swap-fg); }
-.vz-bt .bt-ghost { fill: none; stroke: var(--vz-swap-bd); stroke-width: 1.6; stroke-dasharray: 4 3; }
-.vz-bt .bt-ghostedge { stroke: var(--vz-swap-bd); stroke-width: 1.2; stroke-dasharray: 4 3; }
-.vz-bt .bt-null { stroke: var(--vz-muted); stroke-width: 1.2; }
-.vz-bt .bt-badge rect { fill: var(--vz-blue); }
-.vz-bt .bt-badge text { fill: #fff; font-size: 10px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
-.vz-bt-fade { animation: vz-bt-in .3s ease-out; }
-@keyframes vz-bt-in { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .vz-bt-fade { animation: none; } }
-`;
-
-function ensureCss() {
-	if (document.getElementById("viz-binary-tree-style")) return;
-	const st = document.createElement("style");
-	st.id = "viz-binary-tree-style";
-	st.textContent = CSS;
-	document.head.appendChild(st);
-}
-
-const SVGNS = "http://www.w3.org/2000/svg";
-function el(tag, attrs, parent) {
-	const e = document.createElementNS(SVGNS, tag);
-	for (const k in attrs) e.setAttribute(k, attrs[k]);
-	if (parent) parent.appendChild(e);
-	return e;
-}
-
-// Heap-position layout, like the slides: level d has 2^d evenly spaced slots.
-function layout(pos, levels, maxDepth) {
-	const last = pos.length - 1;
-	const depth = Math.max(0, depthOf(last));
-	const slots = Math.pow(2, depth);
-	const colW = depth >= 4 ? 40 : 44, rowH = 58, padX = levels ? 62 : 22, padY = 32, nullH = 26;
-	const W = Math.max(slots * colW + padX + 22, 240), H = padY + Math.max(depth, maxDepth || 0) * rowH + 22 + nullH;
-	const xy = function(p) {
-		const d = depthOf(p), span = slots / Math.pow(2, d), off = p - Math.pow(2, d);
-		return { x: padX + (off * span + span / 2) * colW, y: padY + d * rowH };
-	};
-	return { W: W, H: H, xy: xy, depth: depth, padX: padX, rowH: rowH, padY: padY, colW: colW };
-}
-
-// Rebuild the SVG for the tree (cheap: ≤ 31 nodes); node colours then fade via CSS.
-function build(stage, frame) {
-	const pos = frame.pos;
-	const g = layout(pos, frame.gutter, frame.maxDepth);
-	stage.textContent = "";
-	const wrap = document.createElement("div");
-	wrap.className = "vz-bt-wrap vz-bt-fade";
-	const svg = el("svg", { "class": "vz-bt", viewBox: "0 0 " + g.W + " " + g.H, width: g.W, role: "img", "aria-label": "binary tree" });
-	svg.style.maxWidth = "100%";
-	svg.style.height = "auto";
-	const gLev = el("g", {}, svg), gE = el("g", {}, svg), gX = el("g", {}, svg), gN = el("g", {}, svg), gB = el("g", {}, svg);
-	const levels = [];
-	for (let d = 0; d <= g.depth; d++) {
-		const y = g.padY + d * g.rowH;
-		const line = el("line", { "class": "bt-level", x1: g.padX - 20, y1: y, x2: g.W - 6, y2: y }, gLev);
-		const tx = el("text", { "class": "bt-levtext", x: 2, y: y }, gLev);
-		tx.textContent = "depth " + d;
-		levels.push(line, tx);
+// Each tree has its own view (key "t" + index); only the current tree's view is
+// shown. Node ids are heap positions, so a step only changes colours, which fade.
+export function render(stage, frame) {
+	const views = stage._btViews || (stage._btViews = {});
+	const key = "t" + frame.tree;
+	const view = views[key] = treeView(stage, key);
+	for (const k in views) {
+		if (views[k].wrap && stage.contains(views[k].wrap)) views[k].wrap.style.display = k === key ? "" : "none";
 	}
-	const edges = {}, nodesEl = {};
-	for (let p = 2; p < pos.length; p++) {
-		if (!has(pos, p)) continue;
-		const a = g.xy(p >> 1), b = g.xy(p);
-		edges[p] = el("line", Object.assign({ "class": "bt-edge" }, trimmed(a, b, 15)), gE);
+	const pos = frame.pos, D = frame.span;
+	const nodes = [], edges = [];
+	function add(p, d) {
+		const at = heapPlace(p, D);
+		nodes.push(Object.assign({ id: p, col: at.col, depth: at.depth }, d));
 	}
 	for (let p = 1; p < pos.length; p++) {
 		if (!has(pos, p)) continue;
-		const q = g.xy(p);
-		const gr = el("g", { "class": "bt-node" }, gN);
-		el("circle", { cx: q.x, cy: q.y, r: 15 }, gr);
-		el("text", { x: q.x, y: q.y }, gr).textContent = pos[p];
-		nodesEl[p] = gr;
+		const role = frame.bad.indexOf(p) >= 0 ? "swap" : frame.hl.indexOf(p) >= 0 ? "cmp" : frame.rel.indexOf(p) >= 0 ? "min" : "";
+		add(p, { label: pos[p], role: role, badge: frame.badge ? frame.badge[p] : undefined });
+		if (p > 1) edges.push({ from: p >> 1, to: p, role: frame.edges.indexOf(p) >= 0 ? frame.edgeRole : "" });
 	}
-	wrap.appendChild(svg);
-	stage.appendChild(wrap);
-	return { key: frame.tree + "|" + frame.gutter + "|" + pos.join(","), g: g, levels: levels, edges: edges, nodes: nodesEl, gX: gX, gB: gB, wrap: wrap };
-}
-
-// Line from a to b cut back by r at both ends, so it stops at the circles'
-// edges instead of running under them (node fills are translucent in dark mode).
-function trimmed(a, b, r) {
-	const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
-	const ux = dx / len * r, uy = dy / len * r;
-	return { x1: a.x + ux, y1: a.y + uy, x2: b.x - ux, y2: b.y - uy };
-}
-
-export function render(stage, frame) {
-	ensureCss();
-	let st = stage._bt;
-	const key = frame.tree + "|" + frame.gutter + "|" + frame.pos.join(",");
-	if (!st || st.key !== key || !stage.contains(st.wrap)) st = stage._bt = build(stage, frame);
-	const pos = frame.pos, g = st.g;
-	st.levels.forEach(function(e) { e.style.display = frame.levels ? "" : "none"; });
-	for (const p in st.nodes) {
-		const n = Number(p);
-		let c = "bt-node";
-		if (frame.bad.indexOf(n) >= 0) c += " is-swap";
-		else if (frame.hl.indexOf(n) >= 0) c += " is-cmp";
-		else if (frame.rel.indexOf(n) >= 0) c += " is-min";
-		st.nodes[p].setAttribute("class", c);
-	}
-	for (const p in st.edges) st.edges[p].setAttribute("class", "bt-edge" + (frame.edges.indexOf(Number(p)) >= 0 ? " is-on" : ""));
-
-	// Extras (ghost slots, null links, badges) are redrawn per frame.
-	st.gX.textContent = "";
-	st.gB.textContent = "";
+	// Gaps of a not-complete tree and null links are dashed placeholders.
 	frame.ghosts.forEach(function(p) {
-		const a = g.xy(p >> 1), b = g.xy(p);
-		el("line", Object.assign({ "class": "bt-ghostedge" }, trimmed(a, b, 15)), st.gX);
-		el("circle", { "class": "bt-ghost", cx: b.x, cy: b.y, r: 15 }, st.gX);
+		add(p, { label: "", role: "ghost" });
+		edges.push({ from: p >> 1, to: p, dashed: true });
 	});
 	if (frame.nulls) {
 		for (let p = 1; p < pos.length; p++) {
 			if (!has(pos, p)) continue;
-			const a = g.xy(p);
-			[2 * p, 2 * p + 1].forEach(function(c, i) {
+			[2 * p, 2 * p + 1].forEach(function(c) {
 				if (has(pos, c)) return;
-				const dx = (i ? 1 : -1) * Math.min(12, g.colW / 3.2), x2 = a.x + dx, y2 = a.y + 26;
-				el("line", { "class": "bt-null", x1: a.x + (i ? 9 : -9), y1: a.y + 11, x2: x2, y2: y2 }, st.gX);
-				// ground symbol (three shrinking bars), as in circuit diagrams
-				[5, 3, 1.4].forEach(function(w, k) {
-					el("line", { "class": "bt-null", x1: x2 - w, y1: y2 + k * 3, x2: x2 + w, y2: y2 + k * 3 }, st.gX);
-				});
+				add(c, { label: "\u2205", role: "ghost" });
+				edges.push({ from: p, to: c, dashed: true });
 			});
 		}
 	}
-	if (frame.badge) {
-		for (const p in frame.badge) {
-			const q = g.xy(Number(p));
-			const b = el("g", { "class": "bt-badge" }, st.gB);
-			el("rect", { x: q.x + 5, y: q.y - 31, width: 16, height: 15, rx: 4 }, b);
-			el("text", { x: q.x + 13, y: q.y - 23.5 }, b).textContent = String(frame.badge[p]);
-		}
-	}
+	view.update({ nodes: nodes, edges: edges, cols: Math.pow(2, D), rows: frame.rows });
 }

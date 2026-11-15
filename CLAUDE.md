@@ -178,7 +178,7 @@ Breadcrumb `Notes › <Course> › <Lecture N>` with language switch, Headings p
 
 ### viz components (`public/assets/viz/`)
 
-Flat, one file per algorithm/structure, `_`-prefixed = infrastructure; `README.md` is the catalog + authoring contract (403 publicly). `_core.js` must stay DOM-free (build-time validation and the skills import it under node). When adding a component, also add it to the relevant skill's `references/viz-components.md`. Old `tools/md-viewer/viz/*` URLs 301 to `assets/viz/`.
+Flat, one file per algorithm/structure, `_`-prefixed = infrastructure; `README.md` is the catalog + authoring contract (403 publicly). Trees and arrays are drawn only through the shared `_tree.js` / `_array.js` views (elements keyed by a stable id, so moves animate the same way everywhere); a component never draws its own. `_core.js` must stay DOM-free (build-time validation and the skills import it under node). When adding a component, also add it to the relevant skill's `references/viz-components.md`. Old `tools/md-viewer/viz/*` URLs 301 to `assets/viz/`.
 
 ---
 

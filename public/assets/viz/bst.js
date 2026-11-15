@@ -3,6 +3,7 @@
 // in its in-order column and its depth as the row, so symmetric order is
 // visible as left-to-right order.
 import { checkParams } from "./_core.js";
+import { treeView } from "./_tree.js";
 
 const MAXN = 15;
 const MAXOPS = 10;
@@ -203,8 +204,8 @@ export function steps(config) {
 	function count(x) { return x ? 1 + count(x.left) + count(x.right) : 0; }
 	function height(x) { return x ? 1 + Math.max(height(x.left), height(x.right)) : 0; }
 
-	// marks: { id: cls }; extra: { gone: {key, col, depth} } for a removed node drawn dashed.
-	function snapshot(marks, extra) {
+	// marks: { id: cls }
+	function snapshot(marks) {
 		const nodes = [], edges = [];
 		let col = 0;
 		(function walk(x, d, parent) {
@@ -214,13 +215,13 @@ export function steps(config) {
 			walk(x.right, d + 1, x);
 			if (parent) edges.push([parent.id, x.id]);
 		})(root, 0, null);
-		return { nodes: nodes, edges: edges, gone: extra && extra.gone ? extra.gone : null };
+		return { nodes: nodes, edges: edges };
 	}
 
 	function push(f) {
-		const s = snapshot(f.marks, f);
+		const s = snapshot(f.marks);
 		frames.push({
-			nodes: s.nodes, edges: s.edges, gone: s.gone,
+			nodes: s.nodes, edges: s.edges,
 			lines: f.lines || [], group: f.group, msg: f.msg,
 			vars: [
 				["key", f.key === undefined ? "—" : String(f.key)],
@@ -348,81 +349,24 @@ export function steps(config) {
 	frames.forEach(function(f) { f.lines = f.lines.map(function(l) { return map[l]; }).filter(Boolean); });
 	push({ group: ops.length, msg: "Done. In-order: " + (function() { const a = []; (function w(x) { if (!x) return; w(x.left); a.push(x.key); w(x.right); })(root); return a.length ? a.join(" ") : "(empty)"; })() +
 		". Height " + height(root) + "; every operation walks one root-to-node path, so its cost is O(height)." });
+	// One drawing size for the whole demo, so the page doesn't jump between steps.
+	const cols = frames.reduce(function(m, f) { return Math.max(m, f.nodes.length); }, 1);
+	const rows = frames.reduce(function(m, f) { return f.nodes.reduce(function(r, nd) { return Math.max(r, nd.depth + 1); }, m); }, 1);
+	frames.forEach(function(f) { f.cols = cols; f.rows = rows; });
 	return frames;
 }
 
 // ---------- drawing ----------
 
-const CSS = `
-.vz-bst-wrap { overflow-x: auto; }
-.vz-bst { display: block; margin: 0 auto; font-family: "Consolas", "Menlo", monospace; overflow: visible; }
-.vz-bst .bst-edge { stroke: var(--vz-muted); stroke-width: 1.4; }
-.vz-bst .bst-node circle { fill: var(--vz-surface); stroke: var(--vz-border); stroke-width: 1.6; transition: fill .3s, stroke .3s; }
-.vz-bst .bst-node text { fill: var(--vz-ink); font-weight: 600; text-anchor: middle; dominant-baseline: central; font-size: 13px; }
-.vz-bst .bst-node .bst-val { fill: var(--vz-blue); font-size: 10px; font-weight: 700; }
-.vz-bst .bst-node.is-cmp circle { fill: var(--vz-cmp-bg); stroke: var(--vz-cmp-bd); stroke-width: 3; }
-.vz-bst .bst-node.is-min circle { fill: var(--vz-min-bg); stroke: var(--vz-min-bd); stroke-width: 2.5; }
-.vz-bst .bst-node.is-min text { fill: var(--vz-min-fg); }
-.vz-bst .bst-node.is-swap circle { fill: var(--vz-swap-bg); stroke: var(--vz-swap-bd); stroke-width: 2.5; }
-.vz-bst .bst-node.is-swap text { fill: var(--vz-swap-fg); }
-.vz-bst .bst-node.is-sorted circle { fill: var(--vz-sorted-bg); stroke: var(--vz-sorted-bd); stroke-width: 2.5; }
-.vz-bst .bst-node.is-sorted text { fill: var(--vz-sorted-fg); }
-.vz-bst .bst-empty { fill: var(--vz-muted); font-size: 13px; text-anchor: middle; }
-`;
-
-function ensureCss() {
-	if (document.getElementById("viz-bst-style")) return;
-	const st = document.createElement("style");
-	st.id = "viz-bst-style";
-	st.textContent = CSS;
-	document.head.appendChild(st);
-}
-
-const SVGNS = "http://www.w3.org/2000/svg";
-function el(tag, attrs, parent) {
-	const e = document.createElementNS(SVGNS, tag);
-	for (const k in attrs) e.setAttribute(k, attrs[k]);
-	if (parent) parent.appendChild(e);
-	return e;
-}
-
-// Line from a to b cut back by r at both ends, so it stops at the circles'
-// edges instead of running under them (node fills are translucent in dark mode).
-function trimmed(a, b, r) {
-	const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
-	const ux = dx / len * r, uy = dy / len * r;
-	return { x1: a.x + ux, y1: a.y + uy, x2: b.x - ux, y2: b.y - uy };
-}
+// ---------- drawing (shared tree view: nodes glide to their new place) ----------
 
 export function render(stage, frame) {
-	ensureCss();
-	const colW = 40, rowH = 52, pad = 22, R = 15;
-	const cols = Math.max(frame.nodes.length, 1);
-	const rows = frame.nodes.reduce(function(m, nd) { return Math.max(m, nd.depth + 1); }, 1);
-	const W = Math.max(cols * colW + pad * 2, 200), H = rows * rowH + pad;
-	stage.textContent = "";
-	const wrap = document.createElement("div");
-	wrap.className = "vz-bst-wrap";
-	const svg = el("svg", { "class": "vz-bst", viewBox: "0 0 " + W + " " + H, width: W, role: "img", "aria-label": "binary search tree" });
-	svg.style.maxWidth = "100%";
-	svg.style.height = "auto";
-	const pos = {};
-	frame.nodes.forEach(function(nd) { pos[nd.id] = { x: pad + (nd.col + 0.5) * colW, y: pad + nd.depth * rowH }; });
-	const gE = el("g", {}, svg), gN = el("g", {}, svg);
-	frame.edges.forEach(function(e) {
-		const a = pos[e[0]], b = pos[e[1]];
-		el("line", Object.assign({ "class": "bst-edge" }, trimmed(a, b, R)), gE);
+	treeView(stage).update({
+		nodes: frame.nodes.map(function(nd) {
+			return { id: nd.id, label: nd.key, val: nd.val, col: nd.col, depth: nd.depth, role: nd.cls ? nd.cls.replace(/^is-/, "") : "" };
+		}),
+		edges: frame.edges.map(function(e) { return { from: e[0], to: e[1] }; }),
+		cols: frame.cols, rows: frame.rows,
+		empty: "(empty tree)"
 	});
-	frame.nodes.forEach(function(nd) {
-		const g = el("g", { "class": "bst-node " + nd.cls }, gN);
-		const p = pos[nd.id];
-		el("circle", { cx: p.x, cy: p.y, r: R }, g);
-		el("text", { x: p.x, y: p.y }, g).textContent = String(nd.key);
-		if (nd.val !== null && nd.val !== undefined) {
-			el("text", { "class": "bst-val", x: p.x + R + 1, y: p.y - R + 2 }, g).textContent = String(nd.val);
-		}
-	});
-	if (!frame.nodes.length) el("text", { "class": "bst-empty", x: W / 2, y: H / 2 }, svg).textContent = "(empty tree)";
-	wrap.appendChild(svg);
-	stage.appendChild(wrap);
 }

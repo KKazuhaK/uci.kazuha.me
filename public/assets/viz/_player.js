@@ -214,7 +214,8 @@ function animateSwap(stage, swap) {
 	if (!swap || swap[0] === swap[1] || !stage.animate) return;
 	if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 	const row = stage.querySelector(".vz-row");
-	if (!row) return;
+	// Rows drawn by _array.js animate their own moves (by element id).
+	if (!row || row.dataset.keyed) return;
 	// Finish any arc still flying from the previous step (fast stepping / Play),
 	// so cells never stack up mid-air. Only the arcs made here are cancelled;
 	// the cells' CSS colour transitions keep running.
@@ -464,6 +465,9 @@ export function mount(wrapper, mod, rawConfig, source) {
 		config = newConfig;
 		frames = mod.steps(config);
 		idx = 0;
+		// New data: start from an empty stage, so the shared views don't glide the
+		// old demo's elements into the new one.
+		stage.textContent = "";
 		refreshCode();
 		refreshSwitch();
 		update();

@@ -1,5 +1,6 @@
 // Queue on a circular array, step by step: front index and size n, rear =
 // (front + n) % capacity, indices wrap around instead of shifting.
+import { arrayView } from "./_array.js";
 import { checkParams } from "./_core.js";
 
 const MAX_OPS = 24;
@@ -133,6 +134,9 @@ export function steps(config) {
 	const ops = plan(config).ops;
 	const cap = config.capacity;
 	const data = new Array(cap).fill(null);
+	// Each enqueued element gets a fresh id, so it pops in; a slot keeps its id until overwritten.
+	const ids = new Array(cap).fill(null);
+	let nextId = 0;
 	let front = 0;
 	let n = 0;
 	const out = [];
@@ -140,7 +144,7 @@ export function steps(config) {
 
 	function push(f) {
 		frames.push({
-			data: data.slice(), cap: cap, front: front, n: n,
+			data: data.slice(), ids: ids.slice(), cap: cap, front: front, n: n,
 			hi: f.hi === undefined ? -1 : f.hi, hiCls: f.hiCls || "",
 			lines: f.lines || [], msg: f.msg, group: f.group,
 			vars: [
@@ -158,6 +162,7 @@ export function steps(config) {
 		if (o.kind === "enqueue") {
 			const slot = (front + n) % cap;
 			data[slot] = o.item;
+			ids[slot] = nextId++;
 			n++;
 			push({ group: g, op: o.src, hi: slot, hiCls: "is-sorted", lines: [3, 4],
 				msg: "enqueue " + o.item + ": write it at (front + n) % capacity = (" + front + " + " + (n - 1) + ") % " + cap + " = " + slot + "." + (slot < front ? " That wrapped around to the start of the array." : "") + " O(1)." });
@@ -177,42 +182,25 @@ export function steps(config) {
 	return frames;
 }
 
-const STYLE = `
-.vz-cq .vz-cell.vz-cq-free { border-style: dashed; color: var(--vz-muted); background: transparent; font-weight: 400; opacity: 0.7; }
-.vz-cq-cap { color: var(--vz-muted); font-size: 0.78rem; text-align: center; margin-bottom: 0.4rem; }
-`;
-
-function ensureStyle() {
-	if (document.getElementById("viz-circular-queue-style")) return;
-	const s = document.createElement("style");
-	s.id = "viz-circular-queue-style";
-	s.textContent = STYLE;
-	document.head.appendChild(s);
-}
-
-function escapeHtml(t) {
-	return String(t).replace(/[&<>"']/g, function(ch) {
-		return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
-	});
-}
-
+// Draw one frame with the shared array view. The slots are fixed; an enqueued
+// element pops in, a free slot is drawn dashed (a dequeued one keeps its stale value).
 export function render(stage, frame) {
-	ensureStyle();
 	const inQueue = new Set();
 	for (let k = 0; k < frame.n; k++) inQueue.add((frame.front + k) % frame.cap);
 	const rear = (frame.front + frame.n) % frame.cap;
-	let html = '<div class="vz-cq"><div class="vz-cq-cap">data — capacity ' + frame.cap + "</div><div class=\"vz-row\">";
-	for (let k = 0; k < frame.cap; k++) {
-		const cls = ["vz-cell"];
-		if (k === frame.hi && frame.hiCls) cls.push(frame.hiCls);
-		else if (inQueue.has(k)) cls.push("is-min");
-		else cls.push("vz-cq-free");
-		const v = frame.data[k];
-		const ptrs = [];
-		if (frame.n > 0 && k === frame.front) ptrs.push('<span class="vz-ptr is-min">front</span>');
-		if (frame.n < frame.cap && k === rear) ptrs.push('<span class="vz-ptr is-cmp">rear slot</span>');
-		html += '<div class="vz-col"><div class="' + cls.join(" ") + '">' + (v === null ? "" : escapeHtml(v)) +
-			'</div><div class="vz-idx">' + k + '</div><div class="vz-ptrs">' + ptrs.join("") + "</div></div>";
-	}
-	stage.innerHTML = html + "</div></div>";
+	arrayView(stage).update({
+		caption: "data — capacity " + frame.cap,
+		cells: frame.data.map(function(v, k) {
+			const role = k === frame.hi && frame.hiCls ? frame.hiCls.replace("is-", "") : inQueue.has(k) ? "min" : "unused";
+			// A never-used slot has no element: its id is the slot. A dequeued slot keeps its stale value.
+			return { id: frame.ids[k] === null ? "free" + k : "e" + frame.ids[k], label: v === null ? "" : v, role: role };
+		}),
+		index: true,
+		ptrs: frame.data.map(function(_, k) {
+			const p = [];
+			if (frame.n > 0 && k === frame.front) p.push({ name: "front", role: "min" });
+			if (frame.n < frame.cap && k === rear) p.push({ name: "rear slot", role: "cmp" });
+			return p;
+		})
+	});
 }

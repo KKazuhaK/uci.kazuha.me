@@ -1,6 +1,7 @@
 // Insertion sort, step by step (swap version from the ICS 46 slides): each
 // pass takes the next element and swaps it left past every larger neighbour,
 // stopping (break) at the first neighbour that is not larger.
+import { arrayView } from "./_array.js";
 import { checkParams, parseIntList, randomInts } from "./_core.js";
 
 export const meta = {
@@ -52,6 +53,8 @@ export const input = {
 export function steps(config) {
   const a = config.array.slice();
   const n = a.length;
+  // Which original element sits in each slot, so a swap is drawn as two cells moving.
+  const ids = a.map(function(_, k) { return k; });
   const frames = [];
   let comparisons = 0;
   let swaps = 0;
@@ -59,6 +62,7 @@ export function steps(config) {
   function push(f) {
     frames.push({
       arr: a.slice(),
+      ids: ids.slice(),
       sorted: f.sorted,
       i: f.i,
       j: f.j,
@@ -107,6 +111,7 @@ export function steps(config) {
       });
       if (less) {
         [a[j], a[j - 1]] = [a[j - 1], a[j]];
+        [ids[j], ids[j - 1]] = [ids[j - 1], ids[j]];
         swaps++;
         push({
           sorted: i, i: i, j: j, key: j - 1, swap: [j - 1, j], val: val, lines: [4], group: i,
@@ -138,37 +143,29 @@ export function steps(config) {
   return frames;
 }
 
+// Draw one frame with the shared array view: each swap is the two cells moving.
+// A cell can be both compared and sorted: the classes combine, as before.
 export function render(stage, frame) {
-  const n = frame.arr.length;
-  let row = stage.querySelector(".vz-row");
-  if (!row || row.childElementCount !== n) {
-    stage.textContent = "";
-    row = document.createElement("div");
-    row.className = "vz-row";
-    for (let k = 0; k < n; k++) {
-      const col = document.createElement("div");
-      col.className = "vz-col";
-      col.innerHTML = '<div class="vz-cell"></div><div class="vz-idx">' + k + '</div><div class="vz-ptrs"></div>';
-      row.appendChild(col);
-    }
-    stage.appendChild(row);
-  }
-
-  Array.from(row.children).forEach(function(col, k) {
-    const cell = col.querySelector(".vz-cell");
-    cell.textContent = frame.arr[k];
-    const isSwap = !!frame.swap && frame.swap.includes(k);
-    const isKey = !isSwap && frame.key === k && frame.sorted <= (frame.i === undefined ? -1 : frame.i);
-    cell.classList.toggle("is-swap", isSwap);
-    cell.classList.toggle("is-min", isKey);
-    cell.classList.toggle("is-sorted", !isSwap && !isKey && (k < frame.sorted || (frame.i !== undefined && k <= frame.i && frame.sorted <= frame.i)));
-    cell.classList.toggle("is-cmp", k === frame.cmp);
-
-    const ptrs = [];
-    if (k === frame.i) ptrs.push('<span class="vz-ptr">i</span>');
-    const jAt = frame.key !== undefined ? frame.key : frame.j;
-    if (frame.i !== undefined && frame.i > 0 && k === jAt) ptrs.push('<span class="vz-ptr is-min">j</span>');
-    if (k === frame.cmp) ptrs.push('<span class="vz-ptr is-cmp">j−1</span>');
-    col.querySelector(".vz-ptrs").innerHTML = ptrs.join("");
+  arrayView(stage).update({
+    cells: frame.arr.map(function(v, k) {
+      const isSwap = !!frame.swap && frame.swap.includes(k);
+      const isKey = !isSwap && frame.key === k && frame.sorted <= (frame.i === undefined ? -1 : frame.i);
+      const isSorted = !isSwap && !isKey && (k < frame.sorted || (frame.i !== undefined && k <= frame.i && frame.sorted <= frame.i));
+      const roles = [];
+      if (isSwap) roles.push("swap");
+      if (isKey) roles.push("min");
+      if (isSorted) roles.push("sorted");
+      if (k === frame.cmp) roles.push("cmp");
+      return { id: frame.ids[k], label: v, role: roles };
+    }),
+    index: true,
+    ptrs: frame.arr.map(function(_, k) {
+      const p = [];
+      if (k === frame.i) p.push({ name: "i" });
+      const jAt = frame.key !== undefined ? frame.key : frame.j;
+      if (frame.i !== undefined && frame.i > 0 && k === jAt) p.push({ name: "j", role: "min" });
+      if (k === frame.cmp) p.push({ name: "j−1", role: "cmp" });
+      return p;
+    })
   });
 }

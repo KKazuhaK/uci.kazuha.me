@@ -2,6 +2,7 @@
 // remove with shifting, resize by doubling (or +1) and halving at 1/4 full.
 // Matches the Lecture 3 ArrayList: initial capacity 2, add(item) appends,
 // remove() removes the last item.
+import { arrayView } from "./_array.js";
 import { checkParams } from "./_core.js";
 
 const MAX_OPS = 14;
@@ -150,7 +151,7 @@ export const legend = [
 	{ cls: "is-sorted", label: "Just written" },
 	{ cls: "is-min", label: "Being moved / read" },
 	{ cls: "is-swap", label: "Copied into the new buffer" },
-	{ cls: "vz-al-empty", label: "Allocated, unused" }
+	{ cls: "is-unused", label: "Allocated, unused" }
 ];
 
 export const input = {
@@ -178,15 +179,30 @@ export function steps(config) {
 	const ops = plan(config).ops;
 	let cap = config.capacity;
 	let data = new Array(cap).fill(null);
+	// Element ids, parallel to data: an element keeps its id wherever it moves (a
+	// shift, a copy into the new buffer). null = empty slot; "stale:k" = the
+	// leftover copy a shift leaves behind in slot k.
+	let ids = new Array(cap).fill(null);
+	let nextId = 0;
 	let n = 0;
 	let copies = 0;
 	let moves = 0;
 	const frames = [];
 	let lastResult = "—";
+	// Widest item, so the columns keep one width through the whole demo.
+	const width = ops.reduce(function(w, o) { return o.item ? Math.max(w, o.item.length) : w; }, 1);
+
+	// Slot ids for drawing: an empty slot gets an id of its own, so it never glides.
+	function slotIds(list) {
+		return list.map(function(id, k) { return id === null ? "empty:" + k : id; });
+	}
 
 	function push(f) {
 		frames.push({
 			data: data.slice(),
+			ids: slotIds(ids),
+			newIds: f.newIds ? slotIds(f.newIds) : null,
+			width: width,
 			cap: cap,
 			n: n,
 			newBuf: f.newBuf ? f.newBuf.slice() : null,
@@ -210,19 +226,22 @@ export function steps(config) {
 
 	function resize(newCap, g, op, why) {
 		const bigger = new Array(newCap).fill(null);
-		push({ group: g, op: op, newBuf: bigger, lines: why === "grow" ? [2, 18] : [13, 14, 18],
+		const biggerIds = new Array(newCap).fill(null);
+		push({ group: g, op: op, newBuf: bigger, newIds: biggerIds, lines: why === "grow" ? [2, 18] : [13, 14, 18],
 			msg: (why === "grow" ? "Full (n_ == capacity_ == " + cap + "), so resize to " + newCap + (config.growth === "plus1" ? " (this demo grows by +1 instead of the code's 2 × capacity_)" : "") + ": allocate a new buffer." : "n_ = " + n + " ≤ capacity_/4 = " + Math.floor(cap / 4) + ", so shrink: allocate a buffer of capacity " + newCap + ".") });
 		for (let i = 0; i < n; i++) {
 			bigger[i] = data[i];
+			biggerIds[i] = ids[i];
 			copies++;
 			const hi = {}; hi[i] = "is-min";
 			const nh = {}; nh[i] = "is-swap";
-			push({ group: g, op: op, newBuf: bigger, hi: hi, newHi: nh, lines: [19, 20],
+			push({ group: g, op: op, newBuf: bigger, newIds: biggerIds, hi: hi, newHi: nh, lines: [19, 20],
 				msg: "Copy `data_[" + i + "]` = " + data[i] + " into the new buffer (copy " + copies + " so far)." });
 		}
-		push({ group: g, op: op, newBuf: bigger, lines: [21, 22, 23],
+		push({ group: g, op: op, newBuf: bigger, newIds: biggerIds, lines: [21, 22, 23],
 			msg: "`delete[]` the old buffer and point `data_` at the new one. That resize cost " + n + " copies." });
 		data = bigger;
+		ids = biggerIds;
 		cap = newCap;
 	}
 
@@ -240,11 +259,14 @@ export function steps(config) {
 			if (n === cap) resize(config.growth === "double" ? cap * 2 : cap + 1, g, o.src, "grow");
 			for (let i = n; i > o.index; i--) {
 				data[i] = data[i - 1];
+				ids[i] = ids[i - 1];
+				ids[i - 1] = "stale:" + (i - 1);
 				moves++;
 				const hi = {}; hi[i] = "is-min";
 				push({ group: g, op: o.src, hi: hi, lines: [3, 4], msg: "Shift right: `data_[" + i + "] = data_[" + (i - 1) + "]` (" + data[i] + "). Back to front, so nothing is overwritten." });
 			}
 			data[o.index] = o.item;
+			ids[o.index] = "e" + nextId++;
 			n++;
 			const hi = {}; hi[o.index] = "is-sorted";
 			push({ group: g, op: o.src, hi: hi, lines: [5, 6], msg: "Write " + o.item + " into `data_[" + o.index + "]` and `++n_` → size " + n + "." });
@@ -257,6 +279,8 @@ export function steps(config) {
 		push({ group: g, op: o.src, hi: hr, lines: [9], msg: "`" + o.src + "`: save `item = data_[" + o.index + "]` = " + item + "." });
 		for (let i = o.index; i + 1 < n; i++) {
 			data[i] = data[i + 1];
+			ids[i] = ids[i + 1];
+			ids[i + 1] = "stale:" + (i + 1);
 			moves++;
 			const hi = {}; hi[i] = "is-min";
 			push({ group: g, op: o.src, hi: hi, lines: [10, 11], msg: "Shift left: `data_[" + i + "] = data_[" + (i + 1) + "]` (" + data[i] + "). Front to back." });
@@ -273,15 +297,14 @@ export function steps(config) {
 }
 
 const STYLE = `
-.vz-al { display: flex; flex-direction: column; gap: 0.9rem; align-items: center; overflow-x: auto; }
-.vz-al-label { color: var(--vz-muted); font-size: 0.78rem; margin-bottom: 0.25rem; text-align: center; }
+.vz-al { display: flex; flex-direction: column; align-items: center; overflow-x: auto; }
 .vz-al .vz-row { flex-wrap: nowrap; }
-.vz-al .vz-col { flex: 0 0 auto; }
-/* Items are strings ("ROCKS", "Throws"): let a cell grow to fit its text. */
-.vz-al .vz-cell { width: auto; min-width: 3.2rem; height: 3.35rem; aspect-ratio: auto; padding: 0 0.5rem; white-space: nowrap; }
-@media (max-width: 736px) { .vz-al .vz-cell { min-width: 2.3rem; height: 2.5rem; padding: 0 0.3rem; } }
-.vz-cell.vz-al-empty, .vz-swatch.vz-al-empty { border-style: dashed; color: var(--vz-muted); background: transparent; }
-.vz-al-old { opacity: 0.55; }
+/* Items are strings ("ROCKS", "Throws"): every column is as wide as the widest item. */
+.vz-al .vz-col { flex: 0 0 var(--al-col, 3.2rem); }
+.vz-al .vz-cell { width: 100%; aspect-ratio: auto; height: 3.35rem; padding: 0 0.2rem; white-space: nowrap; }
+@media (max-width: 736px) { .vz-al .vz-col { flex-basis: calc(var(--al-col, 3.2rem) * 0.8); } .vz-al .vz-cell { height: 2.5rem; } }
+.vz-al .vz-arr.is-old { opacity: 0.55; }
+.viz-legend .vz-swatch.is-unused { border-style: dashed; color: var(--vz-muted); background: transparent; }
 `;
 
 function ensureStyle() {
@@ -292,33 +315,45 @@ function ensureStyle() {
 	document.head.appendChild(s);
 }
 
-function rowHtml(buf, n, hi, label, extraPtrs) {
-	let html = '<div><div class="vz-al-label">' + label + '</div><div class="vz-row">';
-	for (let k = 0; k < buf.length; k++) {
-		const v = buf[k];
-		const cls = ["vz-cell"];
-		if (v === null || v === undefined) cls.push("vz-al-empty");
-		if (hi[k]) cls.push(hi[k]);
-		const ptrs = (extraPtrs && extraPtrs[k]) || "";
-		html += '<div class="vz-col"><div class="' + cls.join(" ") + '">' + (v === null || v === undefined ? "" : escapeHtml(v)) +
-			'</div><div class="vz-idx">' + k + '</div><div class="vz-ptrs">' + ptrs + "</div></div>";
-	}
-	return html + "</div></div>";
-}
-
-function escapeHtml(t) {
-	return String(t).replace(/[&<>"']/g, function(ch) {
-		return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+// One buffer as cells: an element's hi class ("is-min" …) becomes its role; a
+// slot holding nothing is "unused", and the stale copy a shift leaves is dim.
+function cellsOf(buf, ids, hi) {
+	return buf.map(function(v, k) {
+		const mark = hi && hi[k] ? hi[k].replace(/^is-/, "") : "";
+		const role = mark || (v === null ? "unused" : String(ids[k]).indexOf("stale:") === 0 ? "dim" : "");
+		return { id: ids[k], label: v === null ? "" : v, role: role, title: v === null ? undefined : v };
 	});
 }
 
 export function render(stage, frame) {
 	ensureStyle();
-	const ptrs = {};
-	if (frame.n < frame.cap) ptrs[frame.n] = '<span class="vz-ptr">n_</span>';
-	let html = '<div class="vz-al">';
-	html += '<div class="' + (frame.newBuf ? "vz-al-old" : "") + '">' +
-		rowHtml(frame.data, frame.n, frame.hi, "data_ — size " + frame.n + " / capacity " + frame.cap, frame.newBuf ? null : ptrs) + "</div>";
-	if (frame.newBuf) html += rowHtml(frame.newBuf, frame.n, frame.newHi, "bigger — new buffer, capacity " + frame.newBuf.length, null);
-	stage.innerHTML = html + "</div>";
+	let box = stage.firstElementChild;
+	if (!box || !box.classList.contains("vz-al")) {
+		stage.textContent = "";
+		box = document.createElement("div");
+		box.className = "vz-al";
+		stage.appendChild(box);
+	}
+	box.style.setProperty("--al-col", Math.max(3.2, frame.width * 0.85 + 1.2) + "rem");
+
+	const ptrs = frame.data.map(function() { return []; });
+	if (!frame.newBuf && frame.n < frame.cap) ptrs[frame.n] = [{ name: "n_" }];
+	const cur = arrayView(box, "a");
+	cur.update({
+		cells: cellsOf(frame.data, frame.ids, frame.hi),
+		index: true,
+		ptrs: ptrs,
+		caption: "data_ — size " + frame.n + " / capacity " + frame.cap
+	});
+	cur.el.classList.toggle("is-old", !!frame.newBuf);
+
+	if (frame.newBuf) {
+		arrayView(box, "new").update({
+			cells: cellsOf(frame.newBuf, frame.newIds, frame.newHi),
+			index: true,
+			caption: "bigger — new buffer, capacity " + frame.newBuf.length
+		});
+	} else if (box.querySelector(".vz-arr + .vz-arr")) {
+		arrayView(box, "new").el.remove(); // the old buffer is gone after the copy
+	}
 }

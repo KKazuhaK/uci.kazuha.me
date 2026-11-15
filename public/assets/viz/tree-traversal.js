@@ -3,6 +3,8 @@
 // The tree is given in heap positions: position 1 is the root, the children
 // of position p are 2p and 2p + 1, "-" marks an empty position.
 import { checkParams } from "./_core.js";
+import { treeView, heapPlace } from "./_tree.js";
+import { arrayView } from "./_array.js";
 
 const MAXPOS = 31;
 
@@ -100,7 +102,7 @@ export function code(config) {
 }
 
 export const legend = [
-	{ cls: "is-cmp", label: "Current node t (moving ring)" },
+	{ cls: "is-cmp", label: "Current node t" },
 	{ cls: "is-min", label: "On the call stack / in the queue" },
 	{ cls: "is-sorted", label: "Visited" }
 ];
@@ -218,176 +220,37 @@ export function steps(config) {
 	return frames;
 }
 
-// ---------- drawing ----------
-// Built once per tree and then only updated: node colours fade, a ring glides
-// from node to node as `t` moves, and each newly visited node's chip slides
-// into the output row.
+// ---------- drawing (shared tree and array views) ----------
+// Tree: ids are heap positions, so a step only changes colours (they fade).
+// Output: one cell per node, id = node id; the newest visited node pops in.
 
-const CSS = `
-.vz-tt-wrap { overflow-x: auto; }
-.vz-tt { display: block; margin: 0 auto; font-family: "Consolas", "Menlo", monospace; overflow: visible; }
-.vz-tt .tt-edge { stroke: var(--vz-muted); stroke-width: 1.4; transition: stroke .3s, stroke-width .3s; }
-.vz-tt .tt-edge.is-active { stroke: var(--vz-min-bd); stroke-width: 3; }
-.vz-tt .tt-node circle { fill: var(--vz-surface); stroke: var(--vz-border); stroke-width: 1.6; transition: fill .3s, stroke .3s; }
-.vz-tt .tt-node text { fill: var(--vz-ink); font-weight: 600; text-anchor: middle; dominant-baseline: central; font-size: 13px; transition: fill .3s; }
-.vz-tt .tt-node.is-active circle { fill: var(--vz-min-bg); stroke: var(--vz-min-bd); }
-.vz-tt .tt-node.is-active text { fill: var(--vz-min-fg); }
-.vz-tt .tt-node.is-visited circle { fill: var(--vz-sorted-bg); stroke: var(--vz-sorted-bd); }
-.vz-tt .tt-node.is-visited text { fill: var(--vz-sorted-fg); }
-.vz-tt .tt-node.is-just circle { animation: vz-tt-flash .5s ease-out; }
-.vz-tt .tt-cursor { fill: none; stroke: var(--vz-cmp-bd); stroke-width: 3; transition: transform .38s cubic-bezier(0.45, 0, 0.25, 1), opacity .25s; }
-.vz-tt .tt-rank { fill: var(--vz-blue); font-size: 10px; font-weight: 700; text-anchor: middle; }
-.vz-tt-outlabel { text-align: center; color: var(--vz-muted); font-size: .8rem; margin-top: .5rem; }
-.vz-tt-out { flex-wrap: wrap; row-gap: .5rem; }
-.vz-tt-out .vz-col { flex: 0 0 2.6rem; }
-.vz-tt-out .vz-cell.is-empty { border-style: dashed; color: transparent; }
-.vz-tt-out .vz-cell.is-new { animation: vz-tt-in .4s ease-out; }
-@keyframes vz-tt-in { from { opacity: 0; transform: translateY(-10px) scale(.8); } to { opacity: 1; transform: none; } }
-@keyframes vz-tt-flash { 0% { stroke-width: 6; } 100% { stroke-width: 1.6; } }
-@media (prefers-reduced-motion: reduce) {
-  .vz-tt .tt-cursor { transition: none; }
-  .vz-tt .tt-node.is-just circle, .vz-tt-out .vz-cell.is-new { animation: none; }
-}
-`;
-
-function ensureCss() {
-	if (document.getElementById("viz-tree-traversal-style")) return;
-	const st = document.createElement("style");
-	st.id = "viz-tree-traversal-style";
-	st.textContent = CSS;
-	document.head.appendChild(st);
-}
-
-const SVGNS = "http://www.w3.org/2000/svg";
-function el(tag, attrs, parent) {
-	const e = document.createElementNS(SVGNS, tag);
-	for (const k in attrs) e.setAttribute(k, attrs[k]);
-	if (parent) parent.appendChild(e);
-	return e;
-}
-
-// x = in-order rank (each node its own column), y = depth.
-function layout(pos) {
-	const x = {}, y = {};
-	let rank = 0, maxD = 0;
-	(function walk(p, d) {
-		if (p >= pos.length || pos[p] === null) return;
-		walk(2 * p, d + 1);
-		x[p] = rank++;
-		y[p] = d;
-		if (d > maxD) maxD = d;
-		walk(2 * p + 1, d + 1);
-	})(1, 0);
-	return { x: x, y: y, cols: rank, depth: maxD };
-}
-
-function build(stage, pos) {
-	const g = layout(pos);
-	const colW = 42, rowH = 58, pad = 22, R = 16;
-	const W = Math.max(g.cols * colW + pad * 2, 200), H = (g.depth + 1) * rowH + pad;
-	const xy = {};
-	for (let p = 1; p < pos.length; p++) if (pos[p] !== null) xy[p] = { x: pad + g.x[p] * colW + colW / 2, y: pad + g.y[p] * rowH };
-	stage.textContent = "";
-	const wrap = document.createElement("div");
-	wrap.className = "vz-tt-wrap";
-	const svg = el("svg", { "class": "vz-tt", viewBox: "0 0 " + W + " " + H, width: W, role: "img", "aria-label": "binary tree" });
-	svg.style.maxWidth = "100%";
-	svg.style.height = "auto";
-	const edges = {}, nodes = {};
-	for (let p = 2; p < pos.length; p++) {
-		if (pos[p] === null) continue;
-		edges[p] = el("line", Object.assign({ "class": "tt-edge" }, trimmed(xy[p >> 1], xy[p], R)), svg);
-	}
-	for (let p = 1; p < pos.length; p++) {
-		if (pos[p] === null) continue;
-		const gr = el("g", { "class": "tt-node" }, svg);
-		el("circle", { cx: xy[p].x, cy: xy[p].y, r: R }, gr);
-		el("text", { x: xy[p].x, y: xy[p].y }, gr).textContent = pos[p];
-		const rk = el("text", { "class": "tt-rank", x: xy[p].x + R + 2, y: xy[p].y - R + 2 }, svg);
-		nodes[p] = { g: gr, rank: rk };
-	}
-	// The cursor ring sits at the origin and is moved with a CSS transform, so it can glide.
-	const cursor = el("circle", { "class": "tt-cursor", cx: 0, cy: 0, r: R + 4 }, svg);
-	wrap.appendChild(svg);
-	// Output = an array with one slot per node, filled in visit order
-	// (the same big cells as the other array demos).
-	const label = document.createElement("div");
-	label.className = "vz-tt-outlabel";
-	label.textContent = "output (visit order)";
-	const out = document.createElement("div");
-	out.className = "vz-row vz-tt-out";
-	out.setAttribute("role", "group");
-	out.setAttribute("aria-label", "output (visit order)");
-	const cells = [];
-	for (let p = 1; p < pos.length; p++) {
-		if (pos[p] === null) continue;
-		const col = document.createElement("div");
-		col.className = "vz-col";
-		col.innerHTML = '<div class="vz-cell is-empty"></div><div class="vz-idx">' + (cells.length + 1) + "</div>";
-		out.appendChild(col);
-		cells.push(col.firstChild);
-	}
-	stage.appendChild(wrap);
-	stage.appendChild(label);
-	stage.appendChild(out);
-	return { key: pos.join(","), xy: xy, edges: edges, nodes: nodes, cursor: cursor, out: out, cells: cells, lastStep: -2, shownOut: -1 };
-}
-
-// Line from a to b cut back by r at both ends, so it stops at the circles'
-// edges instead of running under them (node fills are translucent in dark mode).
-function trimmed(a, b, r) {
-	const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
-	const ux = dx / len * r, uy = dy / len * r;
-	return { x1: a.x + ux, y1: a.y + uy, x2: b.x - ux, y2: b.y - uy };
-}
+function depthOf(p) { return Math.floor(Math.log2(p)); }
 
 export function render(stage, frame) {
-	ensureCss();
 	const pos = frame.pos;
-	const key = pos.join(",");
-	let st = stage._tt;
-	if (!st || st.key !== key || !stage.contains(st.out)) st = stage._tt = build(stage, pos);
-	const forward = frame.step === st.lastStep + 1;
-
+	const D = depthOf(pos.length - 1);
 	const rankOf = {};
 	frame.visited.forEach(function(p, k) { rankOf[p] = k + 1; });
-	const justVisited = forward && frame.visited.length === st.shownOut + 1 ? frame.visited[frame.visited.length - 1] : 0;
+	const nodes = [], edges = [];
+	let total = 0;
 	for (let p = 1; p < pos.length; p++) {
 		if (pos[p] === null) continue;
-		const c = ["tt-node"];
-		if (rankOf[p]) c.push("is-visited");
-		else if (frame.active.indexOf(p) >= 0) c.push("is-active");
-		if (p === justVisited) c.push("is-just");
-		st.nodes[p].g.setAttribute("class", c.join(" "));
-		st.nodes[p].rank.textContent = rankOf[p] ? String(rankOf[p]) : "";
-		// Highlight the edges along the current call stack (DFS only).
-		if (st.edges[p]) {
+		total++;
+		const at = heapPlace(p, D);
+		const role = p === frame.cur ? "cmp" : rankOf[p] ? "sorted" : frame.active.indexOf(p) >= 0 ? "min" : "";
+		nodes.push({ id: p, label: pos[p], col: at.col, depth: at.depth, role: role, badge: rankOf[p] });
+		if (p > 1) {
+			// Edges along the current call stack (DFS only).
 			const on = frame.order !== "level" && frame.active.indexOf(p) >= 0 && frame.active.indexOf(p >> 1) >= 0;
-			st.edges[p].setAttribute("class", "tt-edge" + (on ? " is-active" : ""));
+			edges.push({ from: p >> 1, to: p, role: on ? "active" : "" });
 		}
 	}
+	treeView(stage).update({ nodes: nodes, edges: edges, cols: Math.pow(2, D), rows: D + 1 });
 
-	if (frame.cur && st.xy[frame.cur]) {
-		const q = st.xy[frame.cur];
-		// Glide only when stepping forward from a visible ring; otherwise jump there.
-		const jump = !st.cursorShown || (!forward && frame.step !== st.lastStep);
-		if (jump) st.cursor.style.transition = "none";
-		st.cursor.style.transform = "translate(" + q.x + "px," + q.y + "px)";
-		st.cursor.style.opacity = "1";
-		if (jump) { void st.cursor.getBoundingClientRect(); st.cursor.style.transition = ""; }
-		st.cursorShown = true;
-	} else {
-		st.cursor.style.opacity = "0";
-		st.cursorShown = false;
-	}
-
-	// Output cells: fill slot k with the k-th visited node; the newest one drops in.
-	st.cells.forEach(function(cell, k) {
-		const p = frame.visited[k];
-		const isNew = !!justVisited && k === frame.visited.length - 1;
-		cell.textContent = p ? pos[p] : "";
-		cell.className = "vz-cell " + (p ? "is-sorted" : "is-empty") + (isNew ? " is-new" : "");
-	});
-	st.shownOut = frame.visited.length;
-	st.lastStep = frame.step;
+	// Output row: visited nodes in order, then empty slots so the row keeps its width.
+	const cells = frame.visited.map(function(p) { return { id: p, label: pos[p], role: "sorted" }; });
+	for (let k = frame.visited.length; k < total; k++) cells.push({ id: "slot" + k, label: "", role: "unused" });
+	const index = [];
+	for (let k = 1; k <= total; k++) index.push(k);
+	arrayView(stage, "out").update({ cells: cells, index: index, caption: "output (visit order)" });
 }

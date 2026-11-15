@@ -3,6 +3,7 @@
 // v < a[j], swap when both stop, stop when they cross, then swap a[lo] with
 // a[j]. mode "partition" runs one partition(a, 0, n-1); mode "sort" runs the
 // whole recursion. The input is taken as already shuffled.
+import { arrayView } from "./_array.js";
 import { checkParams, randomInts } from "./_core.js";
 
 export const meta = {
@@ -89,6 +90,8 @@ export function steps(config) {
 	const a = parseItems(config.items).values.slice();
 	const n = a.length;
 	const done = new Array(n).fill(false);
+	// Which original element sits in each slot, so a swap is drawn as two cells moving.
+	const ids = a.map(function(_, k) { return k; });
 	const frames = [];
 	const stack = [];
 	let comparisons = 0;
@@ -98,6 +101,7 @@ export function steps(config) {
 	function push(f) {
 		frames.push({
 			a: a.slice(),
+			ids: ids.slice(),
 			done: done.slice(),
 			lo: f.lo, hi: f.hi,
 			i: f.i, j: f.j,
@@ -161,11 +165,13 @@ export function steps(config) {
 			}
 			const x = a[i], y = a[j];
 			[a[i], a[j]] = [a[j], a[i]];
+			[ids[i], ids[j]] = [ids[j], ids[i]];
 			swaps++;
 			push(at({ swap: [i, j], lines: [19], msg: "`i < j`, so swap `a[" + i + "]` and `a[" + j + "]`: " + x + " goes right, " + y + " comes left. Back to the top of `while (true)`." }));
 		}
 		const y = a[j];
 		[a[lo], a[j]] = [a[j], a[lo]];
+		[ids[lo], ids[j]] = [ids[j], ids[lo]];
 		if (lo !== j) swaps++;
 		done[j] = true;
 		push(at({ pivot: j, swap: lo === j ? null : [lo, j], lines: [21], msg: lo === j
@@ -208,11 +214,7 @@ export function steps(config) {
 }
 
 const STYLE = `
-.vz-qs .vz-row { gap: 0.3rem; }
-.vz-qs .vz-col { flex: 0 1 3.6rem; }
-.vz-qs .vz-cell { width: 100%; }
 .vz-cell.is-out, .viz-legend .vz-swatch.is-out { opacity: 0.4; border-style: dashed; }
-.vz-qs .vz-col.is-ghost .vz-cell { border-style: dashed; color: var(--vz-muted); font-size: 0.7rem; opacity: 0.6; }
 `;
 
 function ensureStyle() {
@@ -223,44 +225,33 @@ function ensureStyle() {
 	document.head.appendChild(s);
 }
 
+// Draw one frame with the shared array view: the partition swaps and the final
+// pivot swap are cells moving. The extra "end" slot is where j starts (hi + 1).
+// A cell can carry several highlights at once (e.g. compared and pivot): the classes combine.
 export function render(stage, frame) {
 	ensureStyle();
 	const n = frame.a.length;
-	let box = stage.querySelector(".vz-qs");
-	if (!box || box.dataset.n !== String(n)) {
-		stage.textContent = "";
-		box = document.createElement("div");
-		box.className = "vz-qs";
-		box.dataset.n = String(n);
-		const row = document.createElement("div");
-		row.className = "vz-row";
-		for (let k = 0; k <= n; k++) {
-			const col = document.createElement("div");
-			col.className = "vz-col" + (k === n ? " is-ghost" : "");
-			col.innerHTML = '<div class="vz-ptrs"></div><div class="vz-cell"></div><div class="vz-idx">' + k + '</div>';
-			row.appendChild(col);
-		}
-		box.appendChild(row);
-		stage.appendChild(box);
-	}
-	Array.from(box.querySelector(".vz-row").children).forEach(function(col, k) {
-		const cell = col.querySelector(".vz-cell");
-		const p = [];
-		if (frame.i !== undefined && k === frame.i) p.push('<span class="vz-ptr is-cmp">i ↓</span>');
-		if (frame.j !== undefined && k === frame.j) p.push('<span class="vz-ptr is-min">j ↓</span>');
-		col.querySelector(".vz-ptrs").innerHTML = p.join("");
-		if (k === n) {
-			cell.textContent = "end";
-			col.style.visibility = frame.j === n ? "visible" : "hidden";
-			return;
-		}
-		cell.textContent = frame.a[k];
+	const cells = frame.a.map(function(v, k) {
 		const inRange = frame.lo === undefined || (k >= frame.lo && k <= frame.hi);
 		const isSwap = !!frame.swap && frame.swap.includes(k);
-		cell.classList.toggle("is-swap", isSwap);
-		cell.classList.toggle("is-min", !isSwap && k === frame.pivot && !frame.done[k]);
-		cell.classList.toggle("is-sorted", !isSwap && frame.done[k]);
-		cell.classList.toggle("is-cmp", k === frame.cmp);
-		cell.classList.toggle("is-out", !inRange && !frame.done[k]);
+		const roles = [];
+		if (isSwap) roles.push("swap");
+		if (!isSwap && k === frame.pivot && !frame.done[k]) roles.push("min");
+		if (!isSwap && frame.done[k]) roles.push("sorted");
+		if (k === frame.cmp) roles.push("cmp");
+		if (!inRange && !frame.done[k]) roles.push("out");
+		return { id: frame.ids[k], label: v, role: roles };
+	});
+	// The "end" slot (where j starts, hi + 1) only shows while j is on it, as before.
+	cells.push({ id: "end", label: "end", role: "ghost", hidden: frame.j !== n });
+	arrayView(stage).update({
+		cells: cells,
+		index: true,
+		ptrs: cells.map(function(_, k) {
+			const p = [];
+			if (frame.i !== undefined && k === frame.i) p.push({ name: "i ↓", role: "cmp" });
+			if (frame.j !== undefined && k === frame.j) p.push({ name: "j ↓", role: "min" });
+			return p;
+		})
 	});
 }

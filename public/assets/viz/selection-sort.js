@@ -1,5 +1,6 @@
 // Selection sort, step by step: each pass scans the unsorted part for the
 // minimum, then swaps it to the front of that part.
+import { arrayView } from "./_array.js";
 import { checkParams, parseIntList, randomInts } from "./_core.js";
 
 export const meta = {
@@ -53,6 +54,8 @@ export const input = {
 export function steps(config) {
 	const a = config.array.slice();
 	const n = a.length;
+	// Which original element sits in each slot, so a swap is drawn as two cells moving.
+	const ids = a.map(function(_, k) { return k; });
 	const frames = [];
 	let comparisons = 0;
 	let swaps = 0;
@@ -61,6 +64,7 @@ export function steps(config) {
 		const minIdx = f.minIdx;
 		frames.push({
 			arr: a.slice(),
+			ids: ids.slice(),
 			sorted: f.sorted,
 			i: f.i,
 			j: f.j,
@@ -113,6 +117,7 @@ export function steps(config) {
 		if (minIdx !== i) {
 			const before = [a[i], a[minIdx]];
 			[a[i], a[minIdx]] = [a[minIdx], a[i]];
+			[ids[i], ids[minIdx]] = [ids[minIdx], ids[i]];
 			swaps++;
 			push({
 				sorted: i + 1, i: i, minIdx: minIdx, swap: [i, minIdx], lines: [7], group: i,
@@ -134,37 +139,21 @@ export function steps(config) {
 	return frames;
 }
 
-// Draw one frame into `stage`. Cells are created once and then updated so
-// colour changes can transition instead of flashing.
+// Draw one frame with the shared array view: a swap is the two cells moving.
 export function render(stage, frame) {
-	const n = frame.arr.length;
-	let row = stage.querySelector(".vz-row");
-	if (!row || row.childElementCount !== n) {
-		stage.textContent = "";
-		row = document.createElement("div");
-		row.className = "vz-row";
-		for (let k = 0; k < n; k++) {
-			const col = document.createElement("div");
-			col.className = "vz-col";
-			col.innerHTML = '<div class="vz-cell"></div><div class="vz-idx">' + k + '</div><div class="vz-ptrs"></div>';
-			row.appendChild(col);
-		}
-		stage.appendChild(row);
-	}
-
-	Array.from(row.children).forEach(function(col, k) {
-		const cell = col.querySelector(".vz-cell");
-		cell.textContent = frame.arr[k];
-		const isSwap = !!frame.swap && frame.swap.includes(k);
-		cell.classList.toggle("is-swap", isSwap);
-		cell.classList.toggle("is-sorted", !isSwap && k < frame.sorted);
-		cell.classList.toggle("is-min", !isSwap && k >= frame.sorted && k === frame.minIdx);
-		cell.classList.toggle("is-cmp", k === frame.j);
-
-		const ptrs = [];
-		if (k === frame.i) ptrs.push('<span class="vz-ptr">i</span>');
-		if (k === frame.minIdx && !frame.swap) ptrs.push('<span class="vz-ptr is-min">minIdx</span>');
-		if (k === frame.j) ptrs.push('<span class="vz-ptr is-cmp">j</span>');
-		col.querySelector(".vz-ptrs").innerHTML = ptrs.join("");
+	arrayView(stage).update({
+		cells: frame.arr.map(function(v, k) {
+			const isSwap = !!frame.swap && frame.swap.includes(k);
+			const role = isSwap ? "swap" : k < frame.sorted ? "sorted" : k === frame.minIdx ? "min" : k === frame.j ? "cmp" : "";
+			return { id: frame.ids[k], label: v, role: role };
+		}),
+		index: true,
+		ptrs: frame.arr.map(function(_, k) {
+			const p = [];
+			if (k === frame.i) p.push({ name: "i" });
+			if (k === frame.minIdx && !frame.swap) p.push({ name: "minIdx", role: "min" });
+			if (k === frame.j) p.push({ name: "j", role: "cmp" });
+			return p;
+		})
 	});
 }

@@ -2,6 +2,7 @@
 // with lo/mid/hi, and every merge() with its copy to aux and the k loop
 // that picks from the left (i) or right (j) half. mode "merge" shows one
 // merge of two already sorted halves (the slides' A G L O R | H I M S T).
+import { arrayView } from "./_array.js";
 import { checkParams, randomInts } from "./_core.js";
 
 export const meta = {
@@ -117,13 +118,17 @@ export const input = {
 	random: function() { return randomInts(8, 1, 99).join(", "); }
 };
 
-function show(v) { return v === null ? "" : String(v); }
-
 export function steps(config) {
 	const parsed = parseItems(config.items);
 	const a = parsed.values.slice();
 	const n = a.length;
 	const aux = new Array(n).fill(null);
+	// Cell ids for the two rows. A slot of `a` gets a fresh id each time merge()
+	// writes it, and a slot of `aux` each time it is copied from `a`, so those
+	// values appear as new cells; an empty aux slot has an id of its own.
+	const aId = a.map(function(_, k) { return "a" + k + ".0"; });
+	const auxId = new Array(n).fill(null);
+	const gen = new Array(n).fill(0);
 	const frames = [];
 	const stack = [];
 	let comparisons = 0;
@@ -135,6 +140,8 @@ export function steps(config) {
 		frames.push({
 			a: a.slice(),
 			aux: aux.slice(),
+			aIds: aId.slice(),
+			auxIds: auxId.map(function(id, k) { return id === null ? "empty:" + k : id; }),
 			lo: f.lo, mid: f.mid, hi: f.hi,
 			i: f.i, j: f.j, k: f.k,
 			cmp: f.cmp || null,
@@ -157,9 +164,18 @@ export function steps(config) {
 		sortedRanges.push([lo, hi]);
 	}
 
+	function copyToAux(k) {
+		aux[k] = a[k];
+		auxId[k] = "x" + k + "." + (++gen[k]);
+	}
+
+	function wrote(k) {
+		aId[k] = "a" + k + "." + (++gen[k]);
+	}
+
 	function merge(lo, mid, hi) {
 		const show2 = function(x) { return "`" + x + "`"; };
-		for (let k = lo; k <= hi; k++) aux[k] = a[k];
+		for (let k = lo; k <= hi; k++) copyToAux(k);
 		push({ lo: lo, mid: mid, hi: hi, lines: [10, 11],
 			msg: "`merge(a, aux, " + lo + ", " + mid + ", " + hi + ")`: copy `a[" + lo + ".." + hi + "]` into `aux`. Left half is `aux[" + lo + ".." + mid + "]`, right half is `aux[" + (mid + 1) + ".." + hi + "]`, both sorted." });
 		let i = lo, j = mid + 1;
@@ -185,6 +201,7 @@ export function steps(config) {
 					a[k] = aux[i++];
 				}
 			}
+			wrote(k);
 			push({ lo: lo, mid: mid, hi: hi, i: i, j: j, k: k, cmp: cmp, wrote: k, lines: line,
 				msg: "k = " + k + ": " + why + " `a[" + k + "] = " + a[k] + "`." });
 		}
@@ -225,7 +242,7 @@ export function steps(config) {
 
 	function treeMerge(lo, mid, hi) {
 		const node = nodeAt[lo + "-" + hi];
-		for (let k = lo; k <= hi; k++) aux[k] = a[k];
+		for (let k = lo; k <= hi; k++) copyToAux(k);
 		merging = [lo, mid, hi];
 		node.state = "merge";
 		node.vals = new Array(hi - lo + 1).fill(null);
@@ -252,6 +269,7 @@ export function steps(config) {
 					a[k] = aux[i++];
 				}
 			}
+			wrote(k);
 			node.vals[k - lo] = a[k];
 			pushTree({ lo: lo, mid: mid, hi: hi, i: i, j: j, k: k, cmp: cmp, wrote: k, lines: line,
 				msg: "k = " + k + ": " + why + ", `a[" + k + "] = " + a[k] + "`." });
@@ -309,17 +327,14 @@ export function steps(config) {
 }
 
 const STYLE = `
-.vz-ms { display: flex; flex-direction: column; gap: 0.35rem; }
-.vz-ms .vz-ms-line { display: flex; justify-content: center; align-items: flex-start; gap: 0.4rem; }
-.vz-ms .vz-ms-line::after { content: ""; width: 2.2rem; flex: 0 1 auto; }
-.vz-ms .vz-ms-name { width: 2.2rem; flex: 0 0 auto; padding-top: 0.75rem; text-align: right; color: var(--vz-muted); font: 0.8rem "Consolas", "Menlo", monospace; }
+.vz-ms { display: flex; flex-direction: column; }
 .vz-ms .vz-row { flex: 0 1 auto; min-width: 0; gap: 0.3rem; }
 .vz-ms .vz-col { flex: 0 1 auto; width: 3.2rem; }
 .vz-ms .vz-cell { width: 100%; aspect-ratio: auto; height: 2.5rem; font-size: 1.05rem; border-radius: 0.5rem; }
 .vz-ms .vz-idx { margin-top: 0.15rem; }
+.vz-ms .vz-arr { align-items: center; }
 .vz-cell.is-out, .viz-legend .vz-swatch.is-out { opacity: 0.4; border-style: dashed; }
 .vz-cell.is-empty { color: transparent; border-style: dashed; }
-.vz-ms .vz-ptrs { min-height: 1.3em; flex-direction: row; gap: 0.3rem; }
 .vz-mt { display: grid; gap: 0.55rem 0; justify-content: center; }
 .vz-mt-idx { text-align: center; color: var(--vz-muted); font-size: 0.72rem; font-variant-numeric: tabular-nums; }
 .vz-mt-node { display: flex; gap: 0.2rem; padding: 0.2rem; margin: 0 0.15rem; border: 1.5px solid transparent; border-radius: 0.7rem; transition: opacity 0.25s, border-color 0.25s; }
@@ -340,20 +355,6 @@ function ensureStyle() {
 	s.id = "viz-merge-sort-style";
 	s.textContent = STYLE;
 	document.head.appendChild(s);
-}
-
-function buildRow(name, n) {
-	const line = document.createElement("div");
-	line.className = "vz-ms-line";
-	line.innerHTML = '<div class="vz-ms-name">' + name + '</div><div class="vz-row"></div>';
-	const row = line.querySelector(".vz-row");
-	for (let k = 0; k < n; k++) {
-		const col = document.createElement("div");
-		col.className = "vz-col";
-		col.innerHTML = '<div class="vz-cell"></div><div class="vz-idx">' + k + '</div><div class="vz-ptrs"></div>';
-		row.appendChild(col);
-	}
-	return line;
 }
 
 function renderTree(stage, t) {
@@ -406,18 +407,14 @@ function renderTree(stage, t) {
 export function render(stage, frame) {
 	ensureStyle();
 	if (frame.tree) return renderTree(stage, frame.tree);
-	const n = frame.a.length;
-	let box = stage.querySelector(".vz-ms");
-	if (!box || box.dataset.n !== String(n)) {
+	let box = stage.firstElementChild;
+	if (!box || !box.classList.contains("vz-ms")) {
 		stage.textContent = "";
 		box = document.createElement("div");
 		box.className = "vz-ms";
-		box.dataset.n = String(n);
-		box.appendChild(buildRow("aux", n));
-		box.appendChild(buildRow("a", n));
 		stage.appendChild(box);
 	}
-	const rows = box.querySelectorAll(".vz-row");
+	const n = frame.a.length;
 	const inRange = function(k) { return frame.lo === undefined || (k >= frame.lo && k <= frame.hi); };
 	// Inside a running merge, only the slots already written (lo..k) are a
 	// sorted result; the old halves still in a[] are about to be overwritten.
@@ -426,29 +423,35 @@ export function render(stage, frame) {
 		if (merging && k >= frame.lo && k <= frame.hi) return frame.k !== undefined && k <= frame.k;
 		return frame.sorted.some(function(r) { return k >= r[0] && k <= r[1] && r[1] > r[0]; });
 	};
+	const slots = function() { return Array.from({ length: n }, function() { return []; }); };
+	// i / j run one past their half when it is used up: no slot to mark then.
+	const mark = function(list, k, p) { if (k !== undefined && k >= 0 && k < n) list[k].push(p); };
 
-	Array.from(rows[0].children).forEach(function(col, k) {
-		const cell = col.querySelector(".vz-cell");
-		cell.textContent = show(frame.aux[k]);
-		cell.classList.toggle("is-empty", frame.aux[k] === null);
-		cell.classList.toggle("is-out", !inRange(k));
-		cell.classList.toggle("is-cmp", !!frame.cmp && frame.cmp.includes(k));
-		const p = [];
-		if (k === frame.lo) p.push('<span class="vz-ptr">lo</span>');
-		if (k === frame.mid) p.push('<span class="vz-ptr">mid</span>');
-		if (k === frame.hi) p.push('<span class="vz-ptr">hi</span>');
-		if (frame.i !== undefined && k === frame.i) p.push('<span class="vz-ptr is-cmp">i</span>');
-		if (frame.j !== undefined && k === frame.j) p.push('<span class="vz-ptr is-min">j</span>');
-		col.querySelector(".vz-ptrs").innerHTML = p.join("");
+	const auxPtrs = slots();
+	mark(auxPtrs, frame.lo, { name: "lo" });
+	mark(auxPtrs, frame.mid, { name: "mid" });
+	mark(auxPtrs, frame.hi, { name: "hi" });
+	mark(auxPtrs, frame.i, { name: "i", role: "cmp" });
+	mark(auxPtrs, frame.j, { name: "j", role: "min" });
+	arrayView(box, "aux").update({
+		caption: "aux",
+		index: true,
+		ptrs: auxPtrs,
+		cells: frame.aux.map(function(v, k) {
+			const role = frame.cmp && frame.cmp.includes(k) ? "cmp" : v === null ? "unused" : !inRange(k) ? "out" : "";
+			return { id: frame.auxIds[k], label: v === null ? "" : v, role: role };
+		})
 	});
 
-	Array.from(rows[1].children).forEach(function(col, k) {
-		const cell = col.querySelector(".vz-cell");
-		cell.textContent = show(frame.a[k]);
-		const wrote = frame.wrote === k;
-		cell.classList.toggle("is-swap", wrote);
-		cell.classList.toggle("is-sorted", !wrote && isSorted(k));
-		cell.classList.toggle("is-out", !inRange(k));
-		col.querySelector(".vz-ptrs").innerHTML = frame.k !== undefined && k === frame.k ? '<span class="vz-ptr">k</span>' : "";
+	const aPtrs = slots();
+	mark(aPtrs, frame.k, { name: "k" });
+	arrayView(box, "a").update({
+		caption: "a",
+		index: true,
+		ptrs: aPtrs,
+		cells: frame.a.map(function(v, k) {
+			const role = frame.wrote === k ? "swap" : isSorted(k) ? "sorted" : !inRange(k) ? "out" : "";
+			return { id: frame.aIds[k], label: v, role: role };
+		})
 	});
 }

@@ -13,6 +13,8 @@ with the running line highlighted, variable watch, optional input bar).
 | --- | --- |
 | `_player.js` | Shared player UI. A component may declare `meta.switch = { key, label, options: [{ value, label }] }` to get a one-click button row that re-runs the demo with that param changed (code panel follows; e.g. tree-traversal's order). Expand button opens the block in a near-fullscreen `<dialog>` (the same node is moved, so state survives; components may export `moved(stage, config)` to react, since iframes reload). Hides the toolbar when a demo has only one frame (`.is-static`). `meta.msgPosition: "top"` puts the step note under the toolbar. |
 | `_core.js` | DOM-free helpers: `checkParams`, `withDefaults`, parsing. Param types: `string`, `bool`, `int`, `enum`, `int[]`, `number[]`, `json-array`. |
+| `_tree.js` | Shared tree drawing: `treeView(stage, key?).update({ nodes: [{ id, label, col, depth, role, val, badge, dashed }], edges: [{ from, to, role, dashed }] or [{ key, at: [c1, d1, c2, d2] }], cols, rows, empty })`; `heapPlace(i, depth)`. One size, palette and motion for every tree: a node keyed by `id` glides to its new place (edges follow), new ones fade in, removed ones fade out, colours cross-fade. |
+| `_array.js` | Shared array drawing on the `.vz-row` / `.vz-cell` styles: `arrayView(stage, key?).update({ cells: [{ id, label, role, dashed, hidden }], index, ptrs, caption })`. A cell keyed by `id` glides when its element changes slot (a swap arcs, a shift slides, a new one pops in); index and pointer rows stay with the slots. |
 | `<component>.js` | One component each. Must stay DOM-free at import time (check_md.py runs `validate`/`steps` under node); only `render` touches the DOM. |
 
 ## Components
@@ -65,8 +67,20 @@ export const input = { key, label, format, parse, random };   // optional (for "
 
 A frame with `swap: [p, q]` gets a swap animation from the player (the two cells of the first `.vz-row` trade places along arcs) when stepping forward, so array components only need to set `swap`.
 
-Components inject their own CSS once (`<style id="viz-<name>-style">`) using the
-player's `--vz-*` colour variables, so light and dark themes both work.
+**Trees and arrays are drawn with `_tree.js` / `_array.js`, never by hand.** A
+component describes each frame as data (`steps()` stays DOM-free) and gives
+every element a stable id that follows it through swaps, shifts and moves (a
+parallel `ids` array, as in `selection-sort.js` and `bst.js`), so the shared
+views animate it. States are the shared roles, the same names as the legend
+swatches: `cmp`, `min`, `swap`, `sorted`, `ghost`, `out`, `dim`, `unused` (several
+at once as a list). Set the same `cols` / `rows` on every frame of a tree so the
+drawing keeps one size. This is what keeps every demo's size, colours, layout
+and motion the same; a new kind of picture that neither covers gets a shared
+module of its own rather than private drawing code.
+
+Anything else a component needs (layout around the views, labels) injects its
+own CSS once (`<style id="viz-<name>-style">`) using the player's `--vz-*`
+colour variables, so light and dark themes both work.
 
 ## Common params (every component)
 
