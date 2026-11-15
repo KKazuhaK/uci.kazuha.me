@@ -2,7 +2,7 @@
 // singly linked list (Lectures 4–5). Accepts calls — push(x); pop() — or the
 // algs4 shorthand used on the slides: "to be or not to - be - -", where a
 // word pushes it and "-" pops.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_OPS = 24;
 const MAX_LEN = 10;
@@ -10,7 +10,7 @@ const MAX_LEN = 10;
 export const meta = {
 	name: "stack",
 	summary: "Stack on a singly linked list: push and pop at the head (the top), O(1) each.",
-	groupLabel: "operation",
+	groupLabel: { en: "operation", zh: "操作" },
 	params: {
 		ops: { type: "string", required: true, desc: "push(x); pop(); peek() — or shorthand \"to be or - not\" (word = push, - = pop)." },
 		code: { type: "enum", values: ["cpp", "none"], default: "cpp", desc: "Code beside the demo." }
@@ -108,15 +108,18 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-sorted", label: "Just pushed" },
-	{ cls: "is-min", label: "Top (peek)" },
-	{ cls: "is-swap", label: "Popped" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-sorted", label: T("Just pushed", "刚压入") },
+		{ cls: "is-min", label: T("Top (peek)", "栈顶（peek）") },
+		{ cls: "is-swap", label: T("Popped", "已弹出") }
+	];
+}
 
 export const input = {
 	key: "ops",
-	label: "Operations",
+	label: { en: "Operations", zh: "操作" },
 	format: function(config) { return config.ops; },
 	parse: function(text) {
 		return String(text).trim() ? { value: String(text).trim() } : { error: "type e.g. a b - c - -" };
@@ -134,13 +137,24 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const ops = plan(config).ops;
 	const st = [];
 	const popped = [];
 	const frames = [];
 
+	const ui = {
+		cap: T("stack (top first)", "栈（栈顶在上）"),
+		top: T("← head (top)", "← head（栈顶）"),
+		ret: T("returned", "返回"),
+		bottom: T("bottom", "栈底"),
+		empty: T("empty: head → nullptr", "空：head → nullptr"),
+		out: T("popped", "已弹出")
+	};
+
 	function push(f) {
 		frames.push({
+			ui: ui,
 			items: st.slice(),
 			gone: f.gone === undefined ? null : f.gone,
 			mark: f.mark || "",
@@ -149,27 +163,31 @@ export function steps(config) {
 			group: f.group,
 			vars: [
 				["op", f.op || "—"],
-				["n (size)", String(st.length)],
-				["top", st.length ? "\"" + st[st.length - 1] + "\"" : "nullptr"],
-				["popped so far", popped.length ? popped.join(" ") : "—"]
+				[T("n (size)", "n（大小）"), String(st.length)],
+				[T("top", "栈顶"), st.length ? "\"" + st[st.length - 1] + "\"" : "nullptr"],
+				[T("popped so far", "已弹出"), popped.length ? popped.join(" ") : "—"]
 			]
 		});
 	}
 
-	push({ group: -1, msg: "Start: an empty stack (`head == nullptr`). The top of the stack is the head of the list." });
+	push({ group: -1, msg: T("Start: an empty stack (`head == nullptr`). The top of the stack is the head of the list.",
+		"开始：空栈（`head == nullptr`）。栈顶就是链表的头。") });
 	ops.forEach(function(o, g) {
 		if (o.kind === "push") {
 			st.push(o.item);
-			push({ group: g, op: o.src, mark: "is-sorted", lines: [2, 3], msg: "push " + o.item + ": new node at the head; it is the new top. Nothing else moves — O(1)." });
+			push({ group: g, op: o.src, mark: "is-sorted", lines: [2, 3], msg: T("push " + o.item + ": new node at the head; it is the new top. Nothing else moves — O(1).",
+				"压入 " + o.item + "：在头部新建一个节点，它成为新的栈顶。其他节点都不动——O(1)。") });
 		} else if (o.kind === "peek") {
-			push({ group: g, op: o.src, mark: "is-min", lines: [12], msg: "peek(): return the top item \"" + st[st.length - 1] + "\" without removing it." });
+			push({ group: g, op: o.src, mark: "is-min", lines: [12], msg: T("peek(): return the top item \"" + st[st.length - 1] + "\" without removing it.", "peek()：返回栈顶元素 \"" + st[st.length - 1] + "\"，但不删除它。") });
 		} else {
 			const item = st.pop();
 			popped.push(item);
-			push({ group: g, op: o.src, gone: item, lines: [6, 7, 8, 9, 10], msg: "pop(): the top \"" + item + "\" comes off (last in, first out); `head` moves to the node below. O(1)." });
+			push({ group: g, op: o.src, gone: item, lines: [6, 7, 8, 9, 10], msg: T("pop(): the top \"" + item + "\" comes off (last in, first out); `head` moves to the node below. O(1).",
+				"弹出 pop()：栈顶 \"" + item + "\" 被取下（后进先出）；`head` 移到下面的节点。O(1)。") });
 		}
 	});
-	push({ group: ops.length, msg: "Done. Left on the stack (top first): " + (st.length ? st.slice().reverse().join(", ") : "nothing") + ". Popped in order: " + (popped.join(" ") || "nothing") + "." });
+	push({ group: ops.length, msg: T("Done. Left on the stack (top first): " + (st.length ? st.slice().reverse().join(", ") : "nothing") + ". Popped in order: " + (popped.join(" ") || "nothing") + ".",
+		"完成。栈中剩下（栈顶在前）：" + (st.length ? st.slice().reverse().join("、") : "无") + "。按顺序弹出的元素：" + (popped.join(" ") || "无") + "。") });
 	return frames;
 }
 
@@ -204,15 +222,15 @@ function escapeHtml(t) {
 
 export function render(stage, frame) {
 	ensureStyle();
-	let html = '<div class="vz-st"><div class="vz-st-col"><div class="vz-st-cap">stack (top first)</div>';
+	let html = '<div class="vz-st"><div class="vz-st-col"><div class="vz-st-cap">' + frame.ui.cap + '</div>';
 	for (let k = frame.items.length - 1; k >= 0; k--) {
 		const isTop = k === frame.items.length - 1;
 		const cls = ["vz-st-cell"];
 		if (isTop && frame.mark) cls.push(frame.mark);
-		html += '<div class="' + cls.join(" ") + '"><span>' + escapeHtml(frame.items[k]) + "</span><small>" + (isTop ? "← head (top)" : "") + "</small></div>";
+		html += '<div class="' + cls.join(" ") + '"><span>' + escapeHtml(frame.items[k]) + "</span><small>" + (isTop ? frame.ui.top : "") + "</small></div>";
 	}
-	html += '<div class="vz-st-base">' + (frame.items.length ? "bottom" : "empty: head → nullptr") + "</div></div>";
-	html += '<div class="vz-st-col vz-st-out"><div class="vz-st-cap">popped</div>' +
-		(frame.gone !== null ? '<div class="vz-st-cell is-swap"><span>' + escapeHtml(frame.gone) + "</span><small>returned</small></div>" : "") + "</div>";
+	html += '<div class="vz-st-base">' + (frame.items.length ? frame.ui.bottom : frame.ui.empty) + "</div></div>";
+	html += '<div class="vz-st-col vz-st-out"><div class="vz-st-cap">' + frame.ui.out + '</div>' +
+		(frame.gone !== null ? '<div class="vz-st-cell is-swap"><span>' + escapeHtml(frame.gone) + "</span><small>" + frame.ui.ret + "</small></div>" : "") + "</div>";
 	stage.innerHTML = html + "</div>";
 }

@@ -3,7 +3,7 @@
 // Matches the Lecture 3 ArrayList: initial capacity 2, add(item) appends,
 // remove() removes the last item.
 import { arrayView } from "./_array.js";
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_OPS = 14;
 const MAX_SIZE = 16;
@@ -12,7 +12,7 @@ const MAX_CAP = 32;
 export const meta = {
 	name: "arraylist",
 	summary: "ArrayList operations on a fixed-capacity buffer: shifting, doubling when full, halving at 1/4 full.",
-	groupLabel: "operation",
+	groupLabel: { en: "operation", zh: "操作" },
 	params: {
 		ops: { type: "string", required: true, desc: "Calls separated by ; — add(x), add(i, x), remove(), remove(i), get(i). Items: words or \"quoted\"." },
 		capacity: { type: "int", default: 2, min: 1, max: 8, desc: "Initial capacity (Lecture 3: 2)." },
@@ -147,16 +147,19 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-sorted", label: "Just written" },
-	{ cls: "is-min", label: "Being moved / read" },
-	{ cls: "is-swap", label: "Copied into the new buffer" },
-	{ cls: "is-unused", label: "Allocated, unused" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-sorted", label: T("Just written", "刚写入") },
+		{ cls: "is-min", label: T("Being moved / read", "正在移动 / 读取") },
+		{ cls: "is-swap", label: T("Copied into the new buffer", "已复制到新缓冲区") },
+		{ cls: "is-unused", label: T("Allocated, unused", "已分配，未使用") }
+	];
+}
 
 export const input = {
 	key: "ops",
-	label: "Operations",
+	label: { en: "Operations", zh: "操作" },
 	format: function(config) { return config.ops; },
 	parse: function(text) {
 		return String(text).trim() ? { value: String(text).trim() } : { error: "type some calls, e.g. add(A); add(B); add(0, C)" };
@@ -176,6 +179,7 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const ops = plan(config).ops;
 	let cap = config.capacity;
 	let data = new Array(cap).fill(null);
@@ -203,6 +207,8 @@ export function steps(config) {
 			ids: slotIds(ids),
 			newIds: f.newIds ? slotIds(f.newIds) : null,
 			width: width,
+			caption: T("data_ — size " + n + " / capacity " + cap, "data_ — 大小 " + n + " / 容量 " + cap),
+			newCaption: f.newBuf ? T("bigger — new buffer, capacity " + f.newBuf.length, "bigger — 新缓冲区，容量 " + f.newBuf.length) : null,
 			cap: cap,
 			n: n,
 			newBuf: f.newBuf ? f.newBuf.slice() : null,
@@ -212,23 +218,28 @@ export function steps(config) {
 			msg: f.msg,
 			group: f.group,
 			vars: [
-				["op", f.op || "—"],
-				["n_ (size)", String(n)],
-				["capacity_", String(cap)],
-				["copies (resizes)", String(copies)],
-				["shifts", String(moves)],
-				["returned", lastResult]
+				[T("op", "操作"), f.op || "—"],
+				[T("n_ (size)", "n_（大小）"), String(n)],
+				[T("capacity_", "capacity_（容量）"), String(cap)],
+				[T("copies (resizes)", "复制次数（扩容）"), String(copies)],
+				[T("shifts", "移位次数"), String(moves)],
+				[T("returned", "返回值"), lastResult]
 			]
 		});
 	}
 
-	push({ group: -1, msg: "Start: an empty ArrayList with capacity " + cap + "." + (config.growth === "plus1" ? " This demo grows a full buffer by +1 instead of doubling." : "") });
+	push({ group: -1, msg: T("Start: an empty ArrayList with capacity " + cap + "." + (config.growth === "plus1" ? " This demo grows a full buffer by +1 instead of doubling." : ""),
+		"开始：一个空的 ArrayList，容量为 " + cap + "。" + (config.growth === "plus1" ? "本演示在缓冲区已满时只增加 1，而不是翻倍。" : "")) });
 
 	function resize(newCap, g, op, why) {
 		const bigger = new Array(newCap).fill(null);
 		const biggerIds = new Array(newCap).fill(null);
 		push({ group: g, op: op, newBuf: bigger, newIds: biggerIds, lines: why === "grow" ? [2, 18] : [13, 14, 18],
-			msg: (why === "grow" ? "Full (n_ == capacity_ == " + cap + "), so resize to " + newCap + (config.growth === "plus1" ? " (this demo grows by +1 instead of the code's 2 × capacity_)" : "") + ": allocate a new buffer." : "n_ = " + n + " ≤ capacity_/4 = " + Math.floor(cap / 4) + ", so shrink: allocate a buffer of capacity " + newCap + ".") });
+			msg: why === "grow"
+				? T("Full (n_ == capacity_ == " + cap + "), so resize to " + newCap + (config.growth === "plus1" ? " (this demo grows by +1 instead of the code's 2 × capacity_)" : "") + ": allocate a new buffer.",
+					"已满（n_ == capacity_ == " + cap + "），所以扩容（resize）到 " + newCap + (config.growth === "plus1" ? "（本演示每次只增加 1，而不是代码中的 2 × capacity_）" : "") + "：分配一个新缓冲区。")
+				: T("n_ = " + n + " ≤ capacity_/4 = " + Math.floor(cap / 4) + ", so shrink: allocate a buffer of capacity " + newCap + ".",
+					"n_ = " + n + " ≤ capacity_/4 = " + Math.floor(cap / 4) + "，所以缩容：分配一个容量为 " + newCap + " 的缓冲区。") });
 		for (let i = 0; i < n; i++) {
 			bigger[i] = data[i];
 			biggerIds[i] = ids[i];
@@ -236,10 +247,12 @@ export function steps(config) {
 			const hi = {}; hi[i] = "is-min";
 			const nh = {}; nh[i] = "is-swap";
 			push({ group: g, op: op, newBuf: bigger, newIds: biggerIds, hi: hi, newHi: nh, lines: [19, 20],
-				msg: "Copy `data_[" + i + "]` = " + data[i] + " into the new buffer (copy " + copies + " so far)." });
+				msg: T("Copy `data_[" + i + "]` = " + data[i] + " into the new buffer (copy " + copies + " so far).",
+					"把 `data_[" + i + "]` = " + data[i] + " 复制到新缓冲区（目前共复制 " + copies + " 次）。") });
 		}
 		push({ group: g, op: op, newBuf: bigger, newIds: biggerIds, lines: [21, 22, 23],
-			msg: "`delete[]` the old buffer and point `data_` at the new one. That resize cost " + n + " copies." });
+			msg: T("`delete[]` the old buffer and point `data_` at the new one. That resize cost " + n + " copies.",
+				"`delete[]` 释放旧缓冲区，并让 `data_` 指向新缓冲区。这次扩容共复制了 " + n + " 个元素。") });
 		data = bigger;
 		ids = biggerIds;
 		cap = newCap;
@@ -249,13 +262,15 @@ export function steps(config) {
 		if (o.kind === "get") {
 			const hi = {}; hi[o.index] = "is-min";
 			lastResult = String(data[o.index]);
-			push({ group: g, op: o.src, hi: hi, msg: "`" + o.src + "`: read `data_[" + o.index + "]` = " + data[o.index] + " directly — O(1), no walking." });
+			push({ group: g, op: o.src, hi: hi, msg: T("`" + o.src + "`: read `data_[" + o.index + "]` = " + data[o.index] + " directly — O(1), no walking.",
+				"`" + o.src + "`：直接读取 `data_[" + o.index + "]` = " + data[o.index] + "——O(1)，无需遍历。") });
 			return;
 		}
 		if (o.kind === "add") {
 			lastResult = "—";
 			push({ group: g, op: o.src, lines: [1],
-				msg: "`" + o.src + "`" + (o.append ? ": append, i.e. insert at index n_ = " + n + "." : ": insert at index " + o.index + ".") });
+				msg: T("`" + o.src + "`" + (o.append ? ": append, i.e. insert at index n_ = " + n + "." : ": insert at index " + o.index + "."),
+					"`" + o.src + "`" + (o.append ? "：追加，即插入到下标 n_ = " + n + " 处。" : "：插入到下标 " + o.index + " 处。")) });
 			if (n === cap) resize(config.growth === "double" ? cap * 2 : cap + 1, g, o.src, "grow");
 			for (let i = n; i > o.index; i--) {
 				data[i] = data[i - 1];
@@ -263,36 +278,38 @@ export function steps(config) {
 				ids[i - 1] = "stale:" + (i - 1);
 				moves++;
 				const hi = {}; hi[i] = "is-min";
-				push({ group: g, op: o.src, hi: hi, lines: [3, 4], msg: "Shift right: `data_[" + i + "] = data_[" + (i - 1) + "]` (" + data[i] + "). Back to front, so nothing is overwritten." });
+				push({ group: g, op: o.src, hi: hi, lines: [3, 4], msg: T("Shift right: `data_[" + i + "] = data_[" + (i - 1) + "]` (" + data[i] + "). Back to front, so nothing is overwritten.",
+					"右移：`data_[" + i + "] = data_[" + (i - 1) + "]`（" + data[i] + "）。从后往前移，所以不会覆盖任何元素。") });
 			}
 			data[o.index] = o.item;
 			ids[o.index] = "e" + nextId++;
 			n++;
 			const hi = {}; hi[o.index] = "is-sorted";
-			push({ group: g, op: o.src, hi: hi, lines: [5, 6], msg: "Write " + o.item + " into `data_[" + o.index + "]` and `++n_` → size " + n + "." });
+			push({ group: g, op: o.src, hi: hi, lines: [5, 6], msg: T("Write " + o.item + " into `data_[" + o.index + "]` and `++n_` → size " + n + ".", "把 " + o.item + " 写入 `data_[" + o.index + "]`，并执行 `++n_` → 大小为 " + n + "。") });
 			return;
 		}
 		// remove
 		const item = data[o.index];
 		lastResult = String(item);
 		const hr = {}; hr[o.index] = "is-min";
-		push({ group: g, op: o.src, hi: hr, lines: [9], msg: "`" + o.src + "`: save `item = data_[" + o.index + "]` = " + item + "." });
+		push({ group: g, op: o.src, hi: hr, lines: [9], msg: T("`" + o.src + "`: save `item = data_[" + o.index + "]` = " + item + ".", "`" + o.src + "`：先保存 `item = data_[" + o.index + "]` = " + item + "。") });
 		for (let i = o.index; i + 1 < n; i++) {
 			data[i] = data[i + 1];
 			ids[i] = ids[i + 1];
 			ids[i + 1] = "stale:" + (i + 1);
 			moves++;
 			const hi = {}; hi[i] = "is-min";
-			push({ group: g, op: o.src, hi: hi, lines: [10, 11], msg: "Shift left: `data_[" + i + "] = data_[" + (i + 1) + "]` (" + data[i] + "). Front to back." });
+			push({ group: g, op: o.src, hi: hi, lines: [10, 11], msg: T("Shift left: `data_[" + i + "] = data_[" + (i + 1) + "]` (" + data[i] + "). Front to back.", "左移：`data_[" + i + "] = data_[" + (i + 1) + "]`（" + data[i] + "）。从前往后移。") });
 		}
 		data[n - 1] = null;
 		n--;
-		push({ group: g, op: o.src, lines: [12], msg: "`--n_` → size " + n + ". The old last slot is now unused." });
+		push({ group: g, op: o.src, lines: [12], msg: T("`--n_` → size " + n + ". The old last slot is now unused.", "`--n_` → 大小为 " + n + "。原来的最后一个槽位现在不再使用。") });
 		if (config.shrink && cap > 1 && n <= Math.floor(cap / 4)) resize(Math.floor(cap / 2), g, o.src, "shrink");
-		push({ group: g, op: o.src, lines: [15], msg: "Return " + item + "." });
+		push({ group: g, op: o.src, lines: [15], msg: T("Return " + item + ".", "返回 " + item + "。") });
 	});
 
-	push({ group: ops.length, msg: "Done: size " + n + ", capacity " + cap + ". Resizing copied " + copies + " element(s) in total; shifting moved " + moves + "." });
+	push({ group: ops.length, msg: T("Done: size " + n + ", capacity " + cap + ". Resizing copied " + copies + " element(s) in total; shifting moved " + moves + ".",
+		"完成：大小 " + n + "，容量 " + cap + "。扩容共复制了 " + copies + " 个元素；移位共移动了 " + moves + " 个元素。") });
 	return frames;
 }
 
@@ -343,7 +360,7 @@ export function render(stage, frame) {
 		cells: cellsOf(frame.data, frame.ids, frame.hi),
 		index: true,
 		ptrs: ptrs,
-		caption: "data_ — size " + frame.n + " / capacity " + frame.cap
+		caption: frame.caption
 	});
 	cur.el.classList.toggle("is-old", !!frame.newBuf);
 
@@ -351,7 +368,7 @@ export function render(stage, frame) {
 		arrayView(box, "new").update({
 			cells: cellsOf(frame.newBuf, frame.newIds, frame.newHi),
 			index: true,
-			caption: "bigger — new buffer, capacity " + frame.newBuf.length
+			caption: frame.newCaption
 		});
 	} else if (box.querySelector(".vz-arr + .vz-arr")) {
 		arrayView(box, "new").el.remove(); // the old buffer is gone after the copy

@@ -4,8 +4,8 @@
 import { escapeHtml } from "../../lib/markdown/code";
 
 interface Player {
-  mount(wrapper: HTMLElement, mod: unknown, config: unknown, source: string): void;
-  renderError(wrapper: HTMLElement, problems: string[], source: string): void;
+  mount(wrapper: HTMLElement, mod: unknown, config: unknown, source: string, lang: string): void;
+  renderError(wrapper: HTMLElement, problems: string[], source: string, lang: string): void;
 }
 
 /** `version` busts the HTTP cache once per deploy, so a note using a newly
@@ -14,6 +14,8 @@ export async function applyVizRendering(container: HTMLElement, vizBase: string,
   const blocks = Array.from(container.querySelectorAll<HTMLElement>('pre[data-language="viz"]'));
   if (!blocks.length) return;
   const at = (file: string) => new URL(vizBase + file + "?v=" + version, document.baseURI).href;
+  // The demos speak the page's language (note pages set data-lang; md-viewer is English).
+  const lang = container.closest<HTMLElement>("[data-lang]")?.dataset["lang"] === "zh-CN" ? "zh-CN" : "en-US";
 
   let player: Player | null = null;
   let playerError: unknown = null;
@@ -51,15 +53,15 @@ export async function applyVizRendering(container: HTMLElement, vizBase: string,
     if (!player) {
       console.warn("viz player failed to load.", playerError);
       wrapper.className = "mermaid-block mermaid-error";
-      wrapper.innerHTML = '<div class="mermaid-error-msg">Interactive demo failed to load.</div><pre><code>' + escapeHtml(source) + "</code></pre>";
+      wrapper.innerHTML = '<div class="mermaid-error-msg">' + (lang === "zh-CN" ? "交互演示加载失败。" : "Interactive demo failed to load.") + '</div><pre><code>' + escapeHtml(source) + "</code></pre>";
     } else if (problems.length) {
-      player.renderError(wrapper, problems, source);
+      player.renderError(wrapper, problems, source, lang);
     } else {
       try {
-        player.mount(wrapper, mod, config, source);
+        player.mount(wrapper, mod, config, source, lang);
       } catch (error) {
         console.warn("viz render failed.", error);
-        player.renderError(wrapper, [error instanceof Error && error.message ? error.message : "render failed"], source);
+        player.renderError(wrapper, [error instanceof Error && error.message ? error.message : "render failed"], source, lang);
       }
     }
     pre.replaceWith(wrapper);

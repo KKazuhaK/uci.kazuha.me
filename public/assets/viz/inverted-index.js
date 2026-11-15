@@ -12,7 +12,7 @@ const MAX_DOC_CHARS = 300;
 export const meta = {
 	name: "inverted-index",
 	summary: "Inverted index construction: (term, docID) pairs → sort → dictionary with doc. frequency + postings (docIDs, counts or positions).",
-	groupLabel: "phase",
+	groupLabel: { en: "phase", zh: "阶段" },
 	params: {
 		docs: { type: "string", required: true, desc: "Documents separated by newlines, or by ; followed by the next docID:, each \"docID: text\" (docID a whole number). Tokens = runs of letters, digits and ', lowercased. At most 5 documents, 80 tokens in all." },
 		postings: { type: "enum", values: ["docs", "counts", "positions"], default: "docs", desc: "What a posting stores: the docID (L15 p22), docID:count (L16 p10) or docID,position (L16 p11)." },
@@ -107,7 +107,8 @@ const TEXT = {
 	}
 };
 
-function T(config) { return TEXT[config && config.lang === "zh" ? "zh" : "en"]; }
+// The page language (_lang) also switches the messages; the "lang" param keeps working on its own.
+function T(config) { return TEXT[config && (config.lang === "zh" || config._lang === "zh-CN") ? "zh" : "en"]; }
 
 export function legend(config) {
 	const l = T(config).legend;
@@ -120,7 +121,7 @@ export function legend(config) {
 
 export const input = {
 	key: "docs",
-	label: "Documents",
+	label: { en: "Documents", zh: "文档" },
 	format: function(config) { return config.docs; },
 	parse: function(text) {
 		const p = parseDocs(text);

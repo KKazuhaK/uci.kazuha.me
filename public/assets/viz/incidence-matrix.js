@@ -11,7 +11,7 @@ const MAX_OPERANDS = 5;
 export const meta = {
 	name: "incidence-matrix",
 	summary: "Term-document incidence matrix: answer a Boolean query (AND / OR / NOT) with bitwise operations on the terms' 0/1 rows.",
-	groupLabel: "term",
+	groupLabel: { en: "term", zh: "词项" },
 	params: {
 		terms: { type: "string", required: true, desc: "One row per term: \"Brutus: 1 1 0 1 0 0; Caesar: 1 1 0 1 1 1\" (rows separated by ; or newlines)." },
 		docs: { type: "string", required: true, desc: "Document (column) names, comma-separated; as many as each row has bits." },
@@ -139,7 +139,8 @@ const TEXT = {
 	}
 };
 
-function T(config) { return TEXT[config && config.lang === "zh" ? "zh" : "en"]; }
+// The page language (_lang) also switches the messages; the "lang" param keeps working on its own.
+function T(config) { return TEXT[config && (config.lang === "zh" || config._lang === "zh-CN") ? "zh" : "en"]; }
 
 export function legend(config) {
 	const l = T(config).legend;
@@ -152,7 +153,7 @@ export function legend(config) {
 
 export const input = {
 	key: "query",
-	label: "Query",
+	label: { en: "Query", zh: "查询" },
 	format: function(config) { return config.query; },
 	parse: function(text) {
 		const q = parseQuery(text);

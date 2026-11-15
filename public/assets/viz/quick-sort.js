@@ -4,12 +4,12 @@
 // a[j]. mode "partition" runs one partition(a, 0, n-1); mode "sort" runs the
 // whole recursion. The input is taken as already shuffled.
 import { arrayView } from "./_array.js";
-import { checkParams, randomInts } from "./_core.js";
+import { checkParams, randomInts, tr } from "./_core.js";
 
 export const meta = {
 	name: "quick-sort",
 	summary: "Quicksort with the slides' partition(): i and j scan toward each other, swap, then the pivot drops into a[j].",
-	groupLabel: "partition",
+	groupLabel: { en: "partition", zh: "划分" },
 	params: {
 		items: { type: "string", required: true, desc: "Values after the shuffle, comma-separated: integers or short words (2–16 items, 1–3 chars each), e.g. \"K, R, A, T, E\"." },
 		mode: { type: "enum", values: ["sort", "partition"], default: "sort", desc: "\"sort\" runs the whole recursion; \"partition\" runs only partition(a, 0, n-1)." },
@@ -67,17 +67,20 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-min", label: "Pivot v" },
-	{ cls: "is-cmp", label: "Being compared with v" },
-	{ cls: "is-swap", label: "Just swapped" },
-	{ cls: "is-sorted", label: "In its final place" },
-	{ cls: "is-out", label: "Outside lo..hi" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-min", label: T("Pivot v", "枢轴 v") },
+		{ cls: "is-cmp", label: T("Being compared with v", "正在与 v 比较") },
+		{ cls: "is-swap", label: T("Just swapped", "刚交换") },
+		{ cls: "is-sorted", label: T("In its final place", "已在最终位置") },
+		{ cls: "is-out", label: T("Outside lo..hi", "lo..hi 之外") }
+	];
+}
 
 export const input = {
 	key: "items",
-	label: "Items",
+	label: { en: "Items", zh: "元素" },
 	format: function(config) { return config.items; },
 	parse: function(text) {
 		const r = parseItems(text);
@@ -87,6 +90,7 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const a = parseItems(config.items).values.slice();
 	const n = a.length;
 	const done = new Array(n).fill(false);
@@ -111,13 +115,14 @@ export function steps(config) {
 			lines: f.lines || [],
 			msg: f.msg,
 			group: group,
+			endLabel: T("end", "末尾"),
 			vars: [
-				["call stack", stack.length ? stack.join(" › ") : "—"],
+				[T("call stack", "调用栈"), stack.length ? stack.join(" › ") : "—"],
 				["lo, hi", f.lo === undefined ? "—" : f.lo + ", " + f.hi],
 				["v", f.v === undefined ? "—" : String(f.v)],
 				["i, j", f.i === undefined ? "—" : f.i + ", " + f.j],
-				["comparisons", String(comparisons)],
-				["swaps", String(swaps)]
+				[T("comparisons", "比较次数"), String(comparisons)],
+				[T("swaps", "交换次数"), String(swaps)]
 			]
 		});
 	}
@@ -129,21 +134,23 @@ export function steps(config) {
 		const v = a[lo];
 		const base = function() { return { lo: lo, hi: hi, i: i, j: j, v: v, pivot: lo }; };
 		const at = function(f) { return Object.assign(base(), f); };
-		push(at({ lines: [8, 9, 10], msg: "`partition(a, " + lo + ", " + hi + ")`: `i = " + lo + "`, `j = hi + 1 = " + (hi + 1) + "`, pivot `v = a[" + lo + "] = " + v + "`." }));
+		push(at({ lines: [8, 9, 10], msg: T("`partition(a, " + lo + ", " + hi + ")`: `i = " + lo + "`, `j = hi + 1 = " + (hi + 1) + "`, pivot `v = a[" + lo + "] = " + v + "`.",
+			"`partition(a, " + lo + ", " + hi + ")`：`i = " + lo + "`，`j = hi + 1 = " + (hi + 1) + "`，枢轴 `v = a[" + lo + "] = " + v + "`。") }));
 		while (true) {
 			// i scans right: while (i < hi && a[++i] < v) { if (i == hi) break; }
 			while (true) {
 				if (!(i < hi)) {
-					push(at({ lines: [12], msg: "`i < hi` is false (i = " + i + "), so `a[++i]` is not evaluated: i stays at " + i + "." }));
+					push(at({ lines: [12], msg: T("`i < hi` is false (i = " + i + "), so `a[++i]` is not evaluated: i stays at " + i + ".", "`i < hi` 为假（i = " + i + "），所以不会计算 `a[++i]`：i 停在 " + i + "。") }));
 					break;
 				}
 				i++;
 				comparisons++;
 				const lt = a[i] < v;
-				push(at({ cmp: i, lines: [12], msg: "`++i` → i = " + i + ". `a[" + i + "] < v`? " + a[i] + " < " + v + (lt ? " is true: it belongs on the left, keep going." : " is false: i stops on " + a[i] + " (≥ v, it should not stay on the left).") }));
+				push(at({ cmp: i, lines: [12], msg: T("`++i` → i = " + i + ". `a[" + i + "] < v`? " + a[i] + " < " + v + (lt ? " is true: it belongs on the left, keep going." : " is false: i stops on " + a[i] + " (≥ v, it should not stay on the left)."),
+					"`++i` → i = " + i + "。`a[" + i + "] < v`？" + a[i] + " < " + v + (lt ? " 为真：它应该留在左边，继续向右。" : " 为假：i 停在 " + a[i] + " 上（≥ v，它不该留在左边）。")) }));
 				if (!lt) break;
 				if (i === hi) {
-					push(at({ lines: [13], msg: "`i == hi`: break, i stops at the right end." }));
+					push(at({ lines: [13], msg: T("`i == hi`: break, i stops at the right end.", "`i == hi`：break，i 停在右端。") }));
 					break;
 				}
 			}
@@ -152,22 +159,24 @@ export function steps(config) {
 				j--;
 				comparisons++;
 				const gt = v < a[j];
-				push(at({ cmp: j, lines: [15], msg: "`--j` → j = " + j + ". `v < a[" + j + "]`? " + v + " < " + a[j] + (gt ? " is true: it belongs on the right, keep going." : " is false: j stops on " + a[j] + " (≤ v, it should not stay on the right).") }));
+				push(at({ cmp: j, lines: [15], msg: T("`--j` → j = " + j + ". `v < a[" + j + "]`? " + v + " < " + a[j] + (gt ? " is true: it belongs on the right, keep going." : " is false: j stops on " + a[j] + " (≤ v, it should not stay on the right)."),
+					"`--j` → j = " + j + "。`v < a[" + j + "]`？" + v + " < " + a[j] + (gt ? " 为真：它应该留在右边，继续向左。" : " 为假：j 停在 " + a[j] + " 上（≤ v，它不该留在右边）。")) }));
 				if (!gt) break;
 				if (j === lo) {
-					push(at({ lines: [16], msg: "`j == lo`: break, j stops at the left end." }));
+					push(at({ lines: [16], msg: T("`j == lo`: break, j stops at the left end.", "`j == lo`：break，j 停在左端。") }));
 					break;
 				}
 			}
 			if (i >= j) {
-				push(at({ lines: [18], msg: "`i >= j` (" + i + " ≥ " + j + "): the pointers met or crossed, leave the loop." }));
+				push(at({ lines: [18], msg: T("`i >= j` (" + i + " ≥ " + j + "): the pointers met or crossed, leave the loop.", "`i >= j`（" + i + " ≥ " + j + "）：两个指针相遇或交错，退出循环。") }));
 				break;
 			}
 			const x = a[i], y = a[j];
 			[a[i], a[j]] = [a[j], a[i]];
 			[ids[i], ids[j]] = [ids[j], ids[i]];
 			swaps++;
-			push(at({ swap: [i, j], lines: [19], msg: "`i < j`, so swap `a[" + i + "]` and `a[" + j + "]`: " + x + " goes right, " + y + " comes left. Back to the top of `while (true)`." }));
+			push(at({ swap: [i, j], lines: [19], msg: T("`i < j`, so swap `a[" + i + "]` and `a[" + j + "]`: " + x + " goes right, " + y + " comes left. Back to the top of `while (true)`.",
+			"`i < j`，所以交换 `a[" + i + "]` 和 `a[" + j + "]`：" + x + " 去右边，" + y + " 来到左边。回到 `while (true)` 的开头。") }));
 		}
 		const y = a[j];
 		[a[lo], a[j]] = [a[j], a[lo]];
@@ -175,9 +184,12 @@ export function steps(config) {
 		if (lo !== j) swaps++;
 		done[j] = true;
 		push(at({ pivot: j, swap: lo === j ? null : [lo, j], lines: [21], msg: lo === j
-			? "`swap(a[lo], a[j])` with j = lo: the pivot " + v + " was already the smallest, it stays at " + j + "."
-			: "`swap(a[lo], a[j])`: pivot " + v + " moves to index " + j + " (and " + y + ", which is ≤ v, moves to the front). Now " + v + " is in its final place." }));
-		push(at({ pivot: j, lines: [22], msg: "`return " + j + "`: everything in " + lo + ".." + (j - 1) + " is ≤ " + v + ", everything in " + (j + 1) + ".." + hi + " is ≥ " + v + "." }));
+			? T("`swap(a[lo], a[j])` with j = lo: the pivot " + v + " was already the smallest, it stays at " + j + ".",
+				"`swap(a[lo], a[j])`，其中 j = lo：枢轴 " + v + " 本来就是最小的，仍留在下标 " + j + "。")
+			: T("`swap(a[lo], a[j])`: pivot " + v + " moves to index " + j + " (and " + y + ", which is ≤ v, moves to the front). Now " + v + " is in its final place.",
+				"`swap(a[lo], a[j])`：枢轴 " + v + " 移到下标 " + j + "（而 " + y + " ≤ v，被换到最前面）。现在 " + v + " 已在最终位置。") }));
+		push(at({ pivot: j, lines: [22], msg: T("`return " + j + "`: everything in " + lo + ".." + (j - 1) + " is ≤ " + v + ", everything in " + (j + 1) + ".." + hi + " is ≥ " + v + ".",
+			"`return " + j + "`：" + lo + ".." + (j - 1) + " 中的所有元素都 ≤ " + v + "，" + (j + 1) + ".." + hi + " 中的所有元素都 ≥ " + v + "。") }));
 		stack.pop();
 		group++;
 		return j;
@@ -185,30 +197,30 @@ export function steps(config) {
 
 	function sort(lo, hi) {
 		stack.push("sort(" + lo + "," + hi + ")");
-		push({ lo: lo, hi: hi, lines: [1], msg: "Call `sort(a, " + lo + ", " + hi + ")`." });
+		push({ lo: lo, hi: hi, lines: [1], msg: T("Call `sort(a, " + lo + ", " + hi + ")`.", "调用 `sort(a, " + lo + ", " + hi + ")`。") });
 		if (hi <= lo) {
 			if (hi === lo) done[lo] = true;
-			push({ lo: lo, hi: hi, lines: [2], msg: hi === lo ? "`hi <= lo`: one element (" + a[lo] + ") is already in its final place, return." : "`hi <= lo` (" + hi + " < " + lo + "): empty range, return." });
+			push({ lo: lo, hi: hi, lines: [2], msg: hi === lo ? T("`hi <= lo`: one element (" + a[lo] + ") is already in its final place, return.", "`hi <= lo`：只有一个元素（" + a[lo] + "），已在最终位置，返回。") : T("`hi <= lo` (" + hi + " < " + lo + "): empty range, return.", "`hi <= lo`（" + hi + " < " + lo + "）：范围为空，返回。") });
 			stack.pop();
 			return;
 		}
-		push({ lo: lo, hi: hi, lines: [3], msg: "Partition `a[" + lo + ".." + hi + "]`." });
+		push({ lo: lo, hi: hi, lines: [3], msg: T("Partition `a[" + lo + ".." + hi + "]`.", "对 `a[" + lo + ".." + hi + "]` 做划分。") });
 		const j = partition(lo, hi);
-		push({ lo: lo, hi: hi, lines: [4], msg: "Back in `sort(" + lo + "," + hi + ")` with j = " + j + ". Sort the left part: `sort(a, " + lo + ", " + (j - 1) + ")`." });
+		push({ lo: lo, hi: hi, lines: [4], msg: T("Back in `sort(" + lo + "," + hi + ")` with j = " + j + ". Sort the left part: `sort(a, " + lo + ", " + (j - 1) + ")`.", "回到 `sort(" + lo + "," + hi + ")`，j = " + j + "。排序左半部分：`sort(a, " + lo + ", " + (j - 1) + ")`。") });
 		sort(lo, j - 1);
-		push({ lo: lo, hi: hi, lines: [5], msg: "Back in `sort(" + lo + "," + hi + ")`. Sort the right part: `sort(a, " + (j + 1) + ", " + hi + ")`." });
+		push({ lo: lo, hi: hi, lines: [5], msg: T("Back in `sort(" + lo + "," + hi + ")`. Sort the right part: `sort(a, " + (j + 1) + ", " + hi + ")`.", "回到 `sort(" + lo + "," + hi + ")`。排序右半部分：`sort(a, " + (j + 1) + ", " + hi + ")`。") });
 		sort(j + 1, hi);
 		stack.pop();
 	}
 
 	if ((config.mode || "sort") === "partition") {
-		push({ lines: [], msg: "One `partition(a, 0, " + (n - 1) + ")` on the shuffled array." });
+		push({ lines: [], msg: T("One `partition(a, 0, " + (n - 1) + ")` on the shuffled array.", "对已洗牌的数组做一次 `partition(a, 0, " + (n - 1) + ")`。") });
 		const j = partition(0, n - 1);
-		push({ lines: [], msg: "Done: " + a.join(" ") + ", j = " + j + "." });
+		push({ lines: [], msg: T("Done: " + a.join(" ") + ", j = " + j + ".", "完成：" + a.join(" ") + "，j = " + j + "。") });
 	} else {
-		push({ lines: [], msg: "Start (array already shuffled): `sort(a, 0, " + (n - 1) + ")`." });
+		push({ lines: [], msg: T("Start (array already shuffled): `sort(a, 0, " + (n - 1) + ")`.", "开始（数组已洗牌）：`sort(a, 0, " + (n - 1) + ")`。") });
 		sort(0, n - 1);
-		push({ lines: [], msg: "Done: " + a.join(" ") + ". " + comparisons + " comparisons, " + swaps + " swaps." });
+		push({ lines: [], msg: T("Done: " + a.join(" ") + ". " + comparisons + " comparisons, " + swaps + " swaps.", "完成：" + a.join(" ") + "。比较 " + comparisons + " 次，交换 " + swaps + " 次。") });
 	}
 	return frames;
 }
@@ -243,7 +255,7 @@ export function render(stage, frame) {
 		return { id: frame.ids[k], label: v, role: roles };
 	});
 	// The "end" slot (where j starts, hi + 1) only shows while j is on it, as before.
-	cells.push({ id: "end", label: "end", role: "ghost", hidden: frame.j !== n });
+	cells.push({ id: "end", label: frame.endLabel, role: "ghost", hidden: frame.j !== n });
 	arrayView(stage).update({
 		cells: cells,
 		index: true,

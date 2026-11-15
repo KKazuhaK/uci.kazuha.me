@@ -5,7 +5,7 @@
 // or a DOM edit can be stepped through like any other demo.
 //
 // DOM-free at import time: validate() and steps() run under node in check_md.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 // Libraries a demo may load (pinned versions, CDN). Add here when a lecture needs one.
 const LIBS = {
@@ -31,7 +31,7 @@ const STEP_KEYS = ["note", "html", "css", "js", "width"];
 export const meta = {
 	name: "web-demo",
 	summary: "Live HTML/CSS/JS: source tabs, rendered page in a sandboxed iframe, console; optional steps and viewport widths.",
-	groupLabel: "step",
+	groupLabel: { en: "step", zh: "步骤" },
 	msgPosition: "top",
 	params: {
 		html: { type: "string", required: true, desc: "Body HTML (no <html>/<head>/<body> tags)." },
@@ -96,6 +96,7 @@ export function validate(config) {
 // step introduced and `removed` where lines were taken out (a line diff
 // against the previous frame).
 export function steps(config) {
+	const T = tr(config);
 	const frames = [];
 	let html = config.html;
 	let css = config.css || "";
@@ -109,15 +110,15 @@ export function steps(config) {
 			added: added, removed: removed, msg: msg, group: group,
 			libs: config.libs || [],
 			vars: list.length || width ? [
-				["viewport", width ? width + "px" : "demo width"],
-				["changes applied", list.length ? (group + " of " + list.length) : "—"]
+				[T("viewport", "视口"), width ? width + "px" : T("demo width", "演示宽度")],
+				[T("changes applied", "已应用的改动"), list.length ? T(group + " of " + list.length, group + " / " + list.length) : "—"]
 			] : []
 		});
 	}
 
 	push(list.length
-		? "Start: the page as written. Step forward to apply each change (changed lines are marked in the source)."
-		: "The page rendered live. Console output, alerts and errors appear in the console below the page.",
+		? T("Start: the page as written. Step forward to apply each change (changed lines are marked in the source).", "开始：页面保持原样。逐步前进以应用每处改动（改动的行会在源码中标出）。")
+		: T("The page rendered live. Console output, alerts and errors appear in the console below the page.", "页面实时渲染。控制台输出、`alert` 和错误会显示在页面下方的控制台中。"),
 		{}, {}, 0);
 
 	list.forEach(function(s, k) {
@@ -287,7 +288,7 @@ html[data-theme="dark"] .vz-wd-chrome .vz-wd-badge { background: #1b1f26; color:
 .vz-wd-resize:hover::after, .vz-wd-frame.is-dragging .vz-wd-resize::after { background: var(--vz-blue); }
 .vz-wd-console { margin: 0; min-height: 1.6rem; max-height: 9rem; overflow: auto; padding: 0.45rem 0.75rem; border: 1px solid var(--vz-border);
 	border-radius: 0.6rem; background: var(--vz-surface); font: 0.78rem/1.45 "Consolas", "Menlo", monospace; white-space: pre-wrap; }
-.vz-wd-console:empty::before { content: "console (empty)"; color: var(--vz-muted); }
+.vz-wd-console:empty::before { content: attr(data-empty); color: var(--vz-muted); }
 .vz-wd-console .is-error { color: #dc2626; }
 .vz-wd-console .is-warn { color: #b45309; }
 .vz-wd-console .is-info { color: var(--vz-muted); }
@@ -330,6 +331,30 @@ function hookScript(token) {
 		"document.addEventListener('submit',function(e){if(!e.defaultPrevented){e.preventDefault();s('info',['[form submitted] (not sent: the demo stays on the page)'])}});" +
 		"window.addEventListener('unhandledrejection',function(e){s('error',['Uncaught (in promise) '+(e.reason&&e.reason.message||e.reason)])});" +
 		"})();";
+}
+
+// The component's own UI words (the demo's text comes from its config).
+function words(config) {
+	const T = tr(config);
+	return {
+		run: T("Run edited code", "运行编辑后的代码"), runTitle: T("Run the edited code (Ctrl/⌘ + Enter)", "运行编辑后的代码（Ctrl/⌘ + Enter）"),
+		revert: T("Revert", "还原"), revertTitle: T("Back to this step's code", "回到这一步的代码"),
+		copyTitle: T("Copy this tab's code", "复制此标签页的代码"), copy: T("Copy", "复制"), copied: T("Copied", "已复制"),
+		runnerTitle: T("Open this code in Code Runner (new tab)", "在 Code Runner 中打开这段代码（新标签页）"), runner: T("Code Runner", "Code Runner"),
+		source: T("Source (editable)", "源码（可编辑）"),
+		dividerTitle: T("Drag to resize · double-click to reset", "拖动调整大小 · 双击重置"),
+		liveResult: T("Live result", "实时结果"),
+		resizeTitle: T("Drag to change the viewport width · double-click to reset", "拖动调整视口宽度 · 双击重置"),
+		consoleEmpty: T("console (empty)", "控制台（空）"),
+		stackTitle: T("Show the code above the page", "把代码显示在页面上方"), splitTitle: T("Show the code beside the page", "把代码显示在页面旁边"),
+		stacked: T("Stacked", "上下排列"), sideBySide: T("Side by side", "左右排列"),
+		editedTitle: T("Edited (Revert to undo)", "已编辑（点“还原”撤销）"),
+		removedHere: function(n, lines) { return T(n + " line" + (n > 1 ? "s" : "") + " removed here:\n" + lines.join("\n"), "此处删除了 " + n + " 行：\n" + lines.join("\n")); },
+		viewport: function(w, scale, resized) {
+			return T("viewport " + w + "px" + (scale < 1 ? " · shown at " + Math.round(scale * 100) + "%" : "") + (resized ? " · resized" : ""),
+				"视口 " + w + "px" + (scale < 1 ? " · 显示为 " + Math.round(scale * 100) + "%" : "") + (resized ? " · 已调整" : ""));
+		}
+	};
 }
 
 function buildDoc(frame, token, src) {
@@ -401,6 +426,7 @@ export function render(stage, frame, config) {
 	if (!st) st = setup(stage, config);
 
 	st.config = config;
+	st.ui = words(config);
 	if (frame !== st.frame) st.userWidth = null; // a step sets its own viewport
 	st.frame = frame;
 	st.edited = st.edits.get(frame) || null;
@@ -438,8 +464,9 @@ function setup(stage, config) {
 	stage.textContent = "";
 	const st = stage._webDemo = {
 		token: "wd" + Math.random().toString(36).slice(2), stage: stage, tab: null, docKey: null,
-		edited: null, edits: new WeakMap(), codeHeight: 0, userWidth: null, near: false, pending: null
+		edited: null, edits: new WeakMap(), codeHeight: 0, userWidth: null, near: false, pending: null, ui: words(config)
 	};
+	const ui = st.ui;
 	const showSource = config.source !== "none";
 	const editable = showSource && !!config.interactive;
 	const root = document.createElement("div");
@@ -448,10 +475,10 @@ function setup(stage, config) {
 		'<div class="vz-wd-bar">' +
 			(showSource ? '<span class="vz-wd-tabs"></span>' : "") +
 			'<span class="vz-wd-spacer"></span>' +
-			(editable ? '<button type="button" class="viz-btn" data-wd="run" title="Run the edited code (Ctrl/⌘ + Enter)">Run edited code</button>' +
-				'<button type="button" class="viz-btn" data-wd="revert" title="Back to this step\'s code">Revert</button>' : "") +
-			(showSource ? '<button type="button" class="viz-btn" data-wd="copy" title="Copy this tab\'s code">' + svg("copy") + "<span>Copy</span></button>" : "") +
-			'<button type="button" class="viz-btn" data-wd="runner" title="Open this code in Code Runner (new tab)">' + svg("runner") + "<span>Code Runner</span></button>" +
+			(editable ? '<button type="button" class="viz-btn" data-wd="run" title="' + esc(ui.runTitle) + '">' + esc(ui.run) + "</button>" +
+				'<button type="button" class="viz-btn" data-wd="revert" title="' + esc(ui.revertTitle) + '">' + esc(ui.revert) + "</button>" : "") +
+			(showSource ? '<button type="button" class="viz-btn" data-wd="copy" title="' + esc(ui.copyTitle) + '">' + svg("copy") + "<span>" + esc(ui.copy) + "</span></button>" : "") +
+			'<button type="button" class="viz-btn" data-wd="runner" title="' + esc(ui.runnerTitle) + '">' + svg("runner") + "<span>" + esc(ui.runner) + "</span></button>" +
 			(showSource ? '<button type="button" class="viz-btn" data-wd="layout"></button>' : "") +
 		"</div>" +
 		'<div class="vz-wd-body">' +
@@ -459,16 +486,16 @@ function setup(stage, config) {
 				'<div class="vz-wd-left"><div class="vz-wd-code">' +
 					'<div class="vz-wd-gutter"></div>' +
 					'<div class="vz-wd-edit"><div class="vz-wd-hl"' + (editable ? ' aria-hidden="true"' : "") + "></div>" +
-					(editable ? '<textarea spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off" aria-label="Source (editable)"></textarea>' : "") +
+					(editable ? '<textarea spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off" aria-label="' + esc(ui.source) + '"></textarea>' : "") +
 				"</div></div></div>" +
-				'<div class="vz-wd-divider" role="separator" aria-orientation="vertical" title="Drag to resize · double-click to reset"></div>' : "") +
+				'<div class="vz-wd-divider" role="separator" aria-orientation="vertical" title="' + esc(ui.dividerTitle) + '"></div>' : "") +
 			'<div class="vz-wd-right">' +
 				'<div class="vz-wd-window">' +
 					'<div class="vz-wd-chrome" aria-hidden="true"><i></i><i></i><i></i><span class="vz-wd-badge"></span></div>' +
-					'<div class="vz-wd-frame"><iframe sandbox="allow-scripts allow-forms" title="Live result"></iframe>' +
-						'<div class="vz-wd-resize" title="Drag to change the viewport width · double-click to reset"></div></div>' +
+					'<div class="vz-wd-frame"><iframe sandbox="allow-scripts allow-forms" title="' + esc(ui.liveResult) + '"></iframe>' +
+						'<div class="vz-wd-resize" title="' + esc(ui.resizeTitle) + '"></div></div>' +
 				"</div>" +
-				'<pre class="vz-wd-console" aria-live="polite"></pre>' +
+				'<pre class="vz-wd-console" aria-live="polite" data-empty="' + esc(ui.consoleEmpty) + '"></pre>' +
 			"</div>" +
 		"</div>";
 	stage.appendChild(root);
@@ -512,8 +539,8 @@ function setup(stage, config) {
 			load(st, st.frame, true);
 		} else if (act === "copy") {
 			const done = function() {
-				b.innerHTML = svg("check") + "<span>Copied</span>";
-				setTimeout(function() { b.innerHTML = svg("copy") + "<span>Copy</span>"; }, 1200);
+				b.innerHTML = svg("check") + "<span>" + esc(st.ui.copied) + "</span>";
+				setTimeout(function() { b.innerHTML = svg("copy") + "<span>" + esc(st.ui.copy) + "</span>"; }, 1200);
 			};
 			if (navigator.clipboard) navigator.clipboard.writeText(st.text).then(done, function() {});
 		} else if (act === "runner") {
@@ -618,8 +645,8 @@ function applyLayout(st) {
 	st.root.classList.toggle("is-split", split);
 	st.left.style.minHeight = split ? st.codeHeight + "px" : "";
 	st.layoutBtn.hidden = !wide || expanded(st);
-	st.layoutBtn.title = split ? "Show the code above the page" : "Show the code beside the page";
-	st.layoutBtn.innerHTML = svg(split ? "stack" : "split") + "<span>" + (split ? "Stacked" : "Side by side") + "</span>";
+	st.layoutBtn.title = split ? st.ui.stackTitle : st.ui.splitTitle;
+	st.layoutBtn.innerHTML = svg(split ? "stack" : "split") + "<span>" + esc(split ? st.ui.stacked : st.ui.sideBySide) + "</span>";
 }
 
 function paintTabs(st, frame) {
@@ -628,7 +655,7 @@ function paintTabs(st, frame) {
 		const changed = (frame.added && frame.added[k]) || (frame.removed && frame.removed[k]);
 		const edited = st.edited && st.edited[k] !== frame[k];
 		return '<button type="button" class="vz-wd-tab' + (k === st.tab ? " is-on" : "") + (changed ? " is-changed" : "") +
-			(edited ? " is-edited" : "") + '" data-tab="' + k + '"' + (edited ? ' title="Edited (Revert to undo)"' : "") + ">" +
+			(edited ? " is-edited" : "") + '" data-tab="' + k + '"' + (edited ? ' title="' + esc(st.ui.editedTitle) + '"' : "") + ">" +
 			k.toUpperCase() + "</button>";
 	}).join("");
 	if (st.revertBtn) st.revertBtn.disabled = !st.edited;
@@ -657,7 +684,7 @@ function paintCode(st) {
 	st.gutter.innerHTML = rows.map(function(_, k) {
 		const gone = removed.get(k + 1) || (k === rows.length - 1 && removed.get(rows.length + 1));
 		return '<div class="' + (added.has(k + 1) ? "is-added" : "") + delClass(k) + '"' +
-			(gone ? ' title="' + esc(gone.length + " line" + (gone.length > 1 ? "s" : "") + " removed here:\n" + gone.join("\n")) + '"' : "") +
+			(gone ? ' title="' + esc(st.ui.removedHere(gone.length, gone)) + '"' : "") +
 			">" + (k + 1) + "</div>";
 	}).join("");
 	st.hl.innerHTML = rows.map(function(line, k) {
@@ -709,6 +736,5 @@ function fit(st, config) {
 	st.iframe.style.transform = scale < 1 ? "scale(" + scale + ")" : "";
 	st.box.style.height = Math.ceil(h * scale) + "px";
 	st.box.style.width = scale < 1 ? "" : (st.userWidth || st.frame.width ? w + "px" : "");
-	st.badge.textContent = "viewport " + w + "px" + (scale < 1 ? " · shown at " + Math.round(scale * 100) + "%" : "") +
-		(st.userWidth ? " · resized" : "");
+	st.badge.textContent = st.ui.viewport(w, scale, !!st.userWidth);
 }

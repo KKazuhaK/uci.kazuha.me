@@ -1,14 +1,14 @@
 // Postfix (reverse Polish) evaluation with one stack (Lecture 5, slide 17):
 // a value is pushed; an operator pops v1 (right operand) then v2 (left
 // operand) and pushes v2 op v1.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_TOKENS = 25;
 
 export const meta = {
 	name: "postfix-eval",
 	summary: "Evaluate a postfix expression with one stack: operands pushed, each operator pops two and pushes the result.",
-	groupLabel: "token",
+	groupLabel: { en: "token", zh: "词元" },
 	params: {
 		expression: { type: "string", required: true, desc: "Postfix, tokens separated by spaces, e.g. \"2 3 + 4 5 * *\". Integers 0–9999 and + - * /." },
 		code: { type: "enum", values: ["cpp", "none"], default: "cpp", desc: "Code beside the demo." }
@@ -65,15 +65,18 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-cmp", label: "Current token" },
-	{ cls: "is-sorted", label: "Just pushed" },
-	{ cls: "is-swap", label: "Popped" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-cmp", label: T("Current token", "当前词元") },
+		{ cls: "is-sorted", label: T("Just pushed", "刚压入") },
+		{ cls: "is-swap", label: T("Popped", "已弹出") }
+	];
+}
 
 export const input = {
 	key: "expression",
-	label: "Expression",
+	label: { en: "Expression", zh: "表达式" },
 	format: function(config) { return config.expression; },
 	parse: function(text) { return String(text).trim() ? { value: String(text).trim() } : { error: "type a postfix expression like 2 3 + 4 *" }; },
 	random: function() {
@@ -88,6 +91,7 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const tokens = plan(config).tokens;
 	const st = [];
 	const frames = [];
@@ -97,26 +101,29 @@ export function steps(config) {
 			tokens: tokens, pos: f.pos === undefined ? -1 : f.pos, vals: st.slice(),
 			newVal: !!f.newVal, popped: f.popped || null,
 			lines: f.lines || [], msg: f.msg, group: f.group,
+			cap: T("stack", "栈"), bottom: T("bottom", "栈底"), empty: T("empty", "空"),
 			vars: [
 				["tok", f.pos === undefined || f.pos < 0 || f.pos >= tokens.length ? "—" : "\"" + tokens[f.pos] + "\""],
-				["stack (top last)", st.length ? st.join(", ") : "empty"]
+				[T("stack (top last)", "栈（栈顶在最后）"), st.length ? st.join(", ") : T("empty", "空")]
 			]
 		});
 	}
 
-	push({ group: -1, msg: "Start: read the tokens left to right with one empty stack. No parentheses and no precedence rules are needed." });
+	push({ group: -1, msg: T("Start: read the tokens left to right with one empty stack. No parentheses and no precedence rules are needed.", "开始：从左到右读词元，只用一个空栈。不需要括号，也不需要优先级规则。") });
 	tokens.forEach(function(t, k) {
-		if (/^\d+$/.test(t)) { st.push(Number(t)); push({ group: k, pos: k, newVal: true, lines: [7], msg: "Operand " + t + ": push it." }); }
+		if (/^\d+$/.test(t)) { st.push(Number(t)); push({ group: k, pos: k, newVal: true, lines: [7], msg: T("Operand " + t + ": push it.", "操作数 " + t + "：压入栈。") }); }
 		else {
 			const v1 = st.pop();
 			const v2 = st.pop();
-			push({ group: k, pos: k, popped: [v1 + " (v1)", v2 + " (v2)"], lines: [2, 3, 4], msg: "Operator " + t + ": pop v1 = " + v1 + " (right operand, popped first), then v2 = " + v2 + " (left operand)." });
+			push({ group: k, pos: k, popped: [v1 + " (v1)", v2 + " (v2)"], lines: [2, 3, 4], msg: T("Operator " + t + ": pop v1 = " + v1 + " (right operand, popped first), then v2 = " + v2 + " (left operand).",
+				"运算符 `" + t + "`：弹出 `v1 = " + v1 + "`（右操作数，先弹出），再弹出 `v2 = " + v2 + "`（左操作数）。") });
 			const r = applyOp(t, v2, v1);
 			st.push(r);
-			push({ group: k, pos: k, newVal: true, lines: [5], msg: "Push v2 " + t + " v1 = " + v2 + " " + t + " " + v1 + " = " + r + "." + (t === "-" || t === "/" ? " (Order matters here: v1 " + t + " v2 would give " + applyOp(t, v1, v2) + ".)" : "") });
+			push({ group: k, pos: k, newVal: true, lines: [5], msg: T("Push v2 " + t + " v1 = " + v2 + " " + t + " " + v1 + " = " + r + "." + (t === "-" || t === "/" ? " (Order matters here: v1 " + t + " v2 would give " + applyOp(t, v1, v2) + ".)" : ""),
+				"压入 `v2 " + t + " v1 = " + v2 + " " + t + " " + v1 + " = " + r + "`。" + (t === "-" || t === "/" ? "（这里顺序很重要：`v1 " + t + " v2` 会得到 " + applyOp(t, v1, v2) + "。）" : "")) });
 		}
 	});
-	push({ group: tokens.length, pos: tokens.length, lines: [10], msg: "End of input: pop the result, " + st[0] + ". The stack is now empty, so the expression was well formed." });
+	push({ group: tokens.length, pos: tokens.length, lines: [10], msg: T("End of input: pop the result, " + st[0] + ". The stack is now empty, so the expression was well formed.", "输入结束：弹出结果 " + st[0] + "。栈现在为空，说明表达式格式正确。") });
 	return frames;
 }
 
@@ -159,11 +166,11 @@ export function render(stage, frame) {
 		else if (k < frame.pos) cls.push("is-done");
 		html += '<span class="' + cls.join(" ") + '">' + escapeHtml(t) + "</span>";
 	});
-	html += '</div><div class="vz-ev-stacks"><div class="vz-ev-col"><div class="vz-ev-cap">stack</div>';
+	html += '</div><div class="vz-ev-stacks"><div class="vz-ev-col"><div class="vz-ev-cap">' + frame.cap + "</div>";
 	(frame.popped || []).forEach(function(p) { html += '<div class="vz-ev-cell is-swap">' + escapeHtml(p) + "</div>"; });
 	for (let k = frame.vals.length - 1; k >= 0; k--) {
 		html += '<div class="vz-ev-cell' + (k === frame.vals.length - 1 && frame.newVal ? " is-sorted" : "") + '">' + escapeHtml(frame.vals[k]) + "</div>";
 	}
-	html += '<div class="vz-ev-base">' + (frame.vals.length ? "bottom" : "empty") + "</div></div></div></div>";
+	html += '<div class="vz-ev-base">' + (frame.vals.length ? frame.bottom : frame.empty) + "</div></div></div></div>";
 	stage.innerHTML = html;
 }

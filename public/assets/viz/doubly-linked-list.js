@@ -1,7 +1,7 @@
 // Doubly linked list with head and tail, step by step: addFirst / addLast /
 // removeFirst / removeLast, each O(1) because both ends are reachable and
 // every node knows its prev (Lecture 4, slides 42–45).
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_OPS = 12;
 const MAX_LEN = 7;
@@ -9,7 +9,7 @@ const MAX_LEN = 7;
 export const meta = {
 	name: "doubly-linked-list",
 	summary: "Doubly linked list with head and tail: add and remove at either end in O(1).",
-	groupLabel: "operation",
+	groupLabel: { en: "operation", zh: "操作" },
 	params: {
 		items: { type: "string", default: "", desc: "Starting list, head first, comma-separated (built without animation)." },
 		ops: { type: "string", required: true, desc: "Calls separated by ; — addFirst(x), addLast(x), removeFirst(), removeLast()." },
@@ -119,14 +119,17 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-sorted", label: "New node" },
-	{ cls: "is-swap", label: "Removed" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-sorted", label: T("New node", "新节点") },
+		{ cls: "is-swap", label: T("Removed", "已移除") }
+	];
+}
 
 export const input = {
 	key: "ops",
-	label: "Operations",
+	label: { en: "Operations", zh: "操作" },
 	format: function(config) { return config.ops; },
 	parse: function(text) { return String(text).trim() ? { value: String(text).trim() } : { error: "type e.g. addFirst(A); addLast(B); removeLast()" }; },
 	random: function() {
@@ -142,13 +145,16 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const pl = plan(config);
+	const ui = { gone: T("removed (deleted)", "已移除（已删除）") };
 	const list = pl.items.slice();
 	const frames = [];
 	let last = "—";
 
 	function push(f) {
 		frames.push({
+			ui: ui,
 			items: list.slice(), mark: f.mark || null, gone: f.gone === undefined ? null : f.gone,
 			lines: f.lines || [], msg: f.msg, group: f.group,
 			vars: [
@@ -156,29 +162,34 @@ export function steps(config) {
 				["n", String(list.length)],
 				["head", list.length ? "\"" + list[0] + "\"" : "nullptr"],
 				["tail", list.length ? "\"" + list[list.length - 1] + "\"" : "nullptr"],
-				["returned", last]
+				[T("returned", "返回值"), last]
 			]
 		});
 	}
 
-	push({ group: -1, msg: list.length ? "Start: " + list.length + " node(s). `head` and `tail` give O(1) access to both ends." : "Start: an empty list (`head == tail == nullptr`)." });
+	push({ group: -1, msg: list.length ? T("Start: " + list.length + " node(s). `head` and `tail` give O(1) access to both ends.", "开始：" + list.length + " 个节点。`head` 和 `tail` 让两端都能在 O(1) 内访问。") : T("Start: an empty list (`head == tail == nullptr`).", "开始：空链表（`head == tail == nullptr`）。") });
 	pl.ops.forEach(function(o, g) {
 		const was = list.length;
 		if (o.kind === "addFirst") {
 			list.unshift(o.item); last = "—";
-			push({ group: g, op: o.src, mark: 0, lines: [2, was ? 4 : 3, 5], msg: "addFirst(" + o.item + "): new node with `next = head`; " + (was ? "the old first node's `prev` points back at it; " : "the list was empty, so `tail` points at it too; ") + "`head` moves to it. O(1)." });
+			push({ group: g, op: o.src, mark: 0, lines: [2, was ? 4 : 3, 5], msg: T("addFirst(" + o.item + "): new node with `next = head`; " + (was ? "the old first node's `prev` points back at it; " : "the list was empty, so `tail` points at it too; ") + "`head` moves to it. O(1).",
+				"addFirst(" + o.item + ")：新建节点，令 `next = head`；" + (was ? "原来第一个节点的 `prev` 指回它；" : "链表原本为空，所以 `tail` 也指向它；") + "`head` 移到它上面。O(1)。") });
 		} else if (o.kind === "addLast") {
 			list.push(o.item); last = "—";
-			push({ group: g, op: o.src, mark: list.length - 1, lines: [8, was ? 10 : 9, 11], msg: "addLast(" + o.item + "): new node with `prev = tail`; " + (was ? "the old last node's `next` points at it; " : "the list was empty, so `head` points at it too; ") + "`tail` moves to it. O(1)." });
+			push({ group: g, op: o.src, mark: list.length - 1, lines: [8, was ? 10 : 9, 11], msg: T("addLast(" + o.item + "): new node with `prev = tail`; " + (was ? "the old last node's `next` points at it; " : "the list was empty, so `head` points at it too; ") + "`tail` moves to it. O(1).",
+				"addLast(" + o.item + ")：新建节点，令 `prev = tail`；" + (was ? "原来最后一个节点的 `next` 指向它；" : "链表原本为空，所以 `head` 也指向它；") + "`tail` 移到它上面。O(1)。") });
 		} else if (o.kind === "removeFirst") {
 			const item = list.shift(); last = "\"" + item + "\"";
-			push({ group: g, op: o.src, gone: item, lines: [14, list.length ? 16 : 15, 17, 18], msg: "removeFirst(): `head` moves to the second node and its `prev` is cleared" + (list.length ? "" : " — now empty, so `tail = nullptr` too") + ". Returns \"" + item + "\". O(1)." });
+			push({ group: g, op: o.src, gone: item, lines: [14, list.length ? 16 : 15, 17, 18], msg: T("removeFirst(): `head` moves to the second node and its `prev` is cleared" + (list.length ? "" : " — now empty, so `tail = nullptr` too") + ". Returns \"" + item + "\". O(1).",
+				"removeFirst()：`head` 移到第二个节点，并清空它的 `prev`" + (list.length ? "" : "——链表现在空了，所以 `tail = nullptr`") + "。返回 \"" + item + "\"。O(1)。") });
 		} else {
 			const item = list.pop(); last = "\"" + item + "\"";
-			push({ group: g, op: o.src, gone: item, lines: [21, list.length ? 23 : 22, 24, 25], msg: "removeLast(): `tail = tail->prev` — the step a singly linked list can't do without walking — then the new last node's `next` is cleared" + (list.length ? "" : " (now empty: `head = nullptr`)") + ". Returns \"" + item + "\". O(1)." });
+			push({ group: g, op: o.src, gone: item, lines: [21, list.length ? 23 : 22, 24, 25], msg: T("removeLast(): `tail = tail->prev` — the step a singly linked list can't do without walking — then the new last node's `next` is cleared" + (list.length ? "" : " (now empty: `head = nullptr`)") + ". Returns \"" + item + "\". O(1).",
+				"removeLast()：`tail = tail->prev`——单向链表不遍历就做不到这一步——然后清空新的最后一个节点的 `next`" + (list.length ? "" : "（链表现在空了：`head = nullptr`）") + "。返回 \"" + item + "\"。O(1)。") });
 		}
 	});
-	push({ group: pl.ops.length, msg: "Done: " + list.length + " node(s). Every operation here touched a constant number of pointers." });
+	push({ group: pl.ops.length, msg: T("Done: " + list.length + " node(s). Every operation here touched a constant number of pointers.",
+		"完成：" + list.length + " 个节点。这里每个操作都只改动了常数个指针。") });
 	return frames;
 }
 
@@ -232,6 +243,6 @@ export function render(stage, frame) {
 		});
 		html += "</div>";
 	}
-	if (frame.gone !== null) html += '<div class="vz-dll-gone"><div class="vz-dll-cap">removed (deleted)</div><div class="vz-dll-box is-swap"><span class="vz-dll-item">' + escapeHtml(frame.gone) + "</span></div></div>";
+	if (frame.gone !== null) html += '<div class="vz-dll-gone"><div class="vz-dll-cap">' + frame.ui.gone + '</div><div class="vz-dll-box is-swap"><span class="vz-dll-item">' + escapeHtml(frame.gone) + "</span></div></div>";
 	stage.innerHTML = html + "</div>";
 }

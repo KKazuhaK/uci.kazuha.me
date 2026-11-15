@@ -2,12 +2,12 @@
 // revealed one level at a time with the work charged to each call, the level
 // totals, and at the end the sum plus which part of the tree dominates
 // (the Master Theorem's three cases).
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 export const meta = {
   name: "recursion-tree",
   summary: "Recursion-tree method: expand T(n) = aT(n/b) + f(n) level by level, sum the levels, read off the Big-O.",
-  groupLabel: "level",
+  groupLabel: { en: "level", zh: "层" },
   params: {
     recurrence: { type: "string", required: true, desc: "e.g. \"T(n) = 2T(n/2) + n\", \"T(n) = T(n/2) + c\", \"T(n) = b + T(n-1)\". Work term: c, b, 1, O(1), n, n^2, n^3 (O(...) allowed)." },
     n: { type: "int", min: 1, max: 64, desc: "Input size to draw. Divide: a power of b (default: largest that fits). Subtract: 1–8 (default 5)." },
@@ -98,18 +98,21 @@ export const code = {
   ]
 };
 
-export const legend = [
-  { cls: "is-cmp", label: "Level being expanded" },
-  { cls: "is-sorted", label: "Levels already summed" },
-  { cls: "is-min", label: "Where most of the work is (final step)" }
-];
+export function legend(config) {
+  const T = tr(config);
+  return [
+    { cls: "is-cmp", label: T("Level being expanded", "正在展开的层") },
+    { cls: "is-sorted", label: T("Levels already summed", "已求和的层") },
+    { cls: "is-min", label: T("Where most of the work is (final step)", "大部分工作所在之处（最后一步）") }
+  ];
+}
 
 const EXAMPLES = ["T(n) = 2T(n/2) + n", "T(n) = T(n/2) + c", "T(n) = 2T(n/2) + c", "T(n) = 4T(n/2) + n",
   "T(n) = 4T(n/2) + n^2", "T(n) = 2T(n/2) + n^2", "T(n) = 3T(n/2) + n", "T(n) = 3T(n/3) + n", "T(n) = b + T(n-1)"];
 
 export const input = {
   key: "recurrence",
-  label: "Recurrence",
+  label: { en: "Recurrence", zh: "递推式" },
   format: function(config) { return config.recurrence; },
   parse: function(text) {
     const r = parseRecurrence(text);
@@ -143,10 +146,12 @@ function fmtExp(x) {
 }
 
 export function steps(config) {
+  const T = tr(config);
   const r = analyse(config);
   const baseName = config.base || "c";
   const fact = config.code === "factorial";
   const frames = [];
+  const ui = { aria: T("recursion tree", "递归树"), head: T("calls × cost = level", "调用数 × 单次开销 = 本层总计") };
   const levels = [];
   let running = { num: 0, w: 0, base: 0 };
 
@@ -163,7 +168,7 @@ export function steps(config) {
 
   function push(f) {
     frames.push({
-      shown: f.shown, cur: f.cur, summed: f.summed, dom: f.dom || null, levels: levels, r: r, baseName: baseName,
+      ui: ui, shown: f.shown, cur: f.cur, summed: f.summed, dom: f.dom || null, levels: levels, r: r, baseName: baseName,
       lines: f.lines || [], msg: f.msg, group: f.group,
       vars: f.vars
     });
@@ -174,8 +179,9 @@ export function steps(config) {
     : "T(n) = " + r.w + " + T(n−1),  T(0) = " + baseName;
   push({
     shown: 0, cur: -1, summed: -1, group: 0,
-    msg: "Recurrence " + rec + ". Draw it for n = " + r.n + ": every call is a node; charge each call only the work it does itself (not its recursive calls).",
-    vars: [["recurrence", rec], ["n", String(r.n)], ["level", "—"], ["running sum", "0"]]
+    msg: T("Recurrence " + rec + ". Draw it for n = " + r.n + ": every call is a node; charge each call only the work it does itself (not its recursive calls).",
+      "递推式 " + rec + "。取 n = " + r.n + " 来画：每次调用是一个节点；每次调用只记它自己做的工作（不含它的递归调用）。"),
+    vars: [[T("recurrence", "递推式"), rec], ["n", String(r.n)], [T("level", "层"), "—"], [T("running sum", "累计和"), "0"]]
   });
 
   for (let i = 0; i <= r.k; i++) {
@@ -183,19 +189,23 @@ export function steps(config) {
     running = addCost(running, L.total);
     let msg;
     if (L.leaf) {
-      msg = "Level " + i + " (leaves): " + L.count + (L.count === 1 ? " base case" : " base cases") + " T(" + L.size + "), each costs " + baseName +
-        " → level total `" + fmtCost(L.total, r, baseName) + "`.";
+      msg = T("Level " + i + " (leaves): " + L.count + (L.count === 1 ? " base case" : " base cases") + " T(" + L.size + "), each costs " + baseName +
+        " → level total `" + fmtCost(L.total, r, baseName) + "`.",
+        "第 " + i + " 层（叶子）：" + L.count + " 个基底情况 T(" + L.size + ")，每个开销 " + baseName +
+        " → 本层总计 `" + fmtCost(L.total, r, baseName) + "`。");
     } else {
       const each = fmtCost(L.per, r, baseName);
-      msg = "Level " + i + ": " + L.count + (L.count === 1 ? " call" : " calls") + " on input size " + sizeLabel(r, i) + " = " + L.size +
-        "; each does " + (r.d === 0 ? each : r.w + " = " + each) + " work outside its recursive calls → level total `" + fmtCost(L.total, r, baseName) + "`.";
+      msg = T("Level " + i + ": " + L.count + (L.count === 1 ? " call" : " calls") + " on input size " + sizeLabel(r, i) + " = " + L.size +
+        "; each does " + (r.d === 0 ? each : r.w + " = " + each) + " work outside its recursive calls → level total `" + fmtCost(L.total, r, baseName) + "`.",
+        "第 " + i + " 层：" + L.count + " 次调用，输入规模 " + sizeLabel(r, i) + " = " + L.size +
+        "；每次在递归调用之外做 " + (r.d === 0 ? each : r.w + " = " + each) + " 的工作 → 本层总计 `" + fmtCost(L.total, r, baseName) + "`。");
     }
     push({
       shown: i, cur: i, summed: i, group: i,
       lines: fact ? (L.leaf ? [3, 4] : [6]) : [],
       msg: msg,
-      vars: [["recurrence", rec], ["n", String(r.n)], ["level", i + " / " + r.k], ["calls", String(L.count)],
-        ["size", String(L.size)], ["level total", fmtCost(L.total, r, baseName)], ["running sum", fmtCost(running, r, baseName)]]
+      vars: [[T("recurrence", "递推式"), rec], ["n", String(r.n)], [T("level", "层"), i + " / " + r.k], [T("calls", "调用数"), String(L.count)],
+        [T("size", "规模"), String(L.size)], [T("level total", "本层总计"), fmtCost(L.total, r, baseName)], [T("running sum", "累计和"), fmtCost(running, r, baseName)]]
     });
   }
 
@@ -204,34 +214,42 @@ export function steps(config) {
   const nLevels = r.k + 1;
   if (r.mode === "subtract") {
     dom = "all";
-    msg = "Sum of all " + nLevels + " levels = `" + fmtCost(running, r, baseName) + "`. In general there are n + 1 calls: " +
-      (r.d === 0 ? "n·" + r.w + " + " + baseName + " → O(n)." : "the sizes n, n−1, …, 1 each do size^" + r.d + " work → O(n^" + (r.d + 1) + ").");
+    msg = T("Sum of all " + nLevels + " levels = `" + fmtCost(running, r, baseName) + "`. In general there are n + 1 calls: " +
+      (r.d === 0 ? "n·" + r.w + " + " + baseName + " → O(n)." : "the sizes n, n−1, …, 1 each do size^" + r.d + " work → O(n^" + (r.d + 1) + ")."),
+      "全部 " + nLevels + " 层之和 = `" + fmtCost(running, r, baseName) + "`。一般地共有 n + 1 次调用：" +
+      (r.d === 0 ? "n·" + r.w + " + " + baseName + " → O(n)。" : "规模 n、n−1、……、1 的调用各做 size^" + r.d + " 的工作 → O(n^" + (r.d + 1) + ")。"));
   } else {
     const bd = Math.pow(r.b, r.d);
     const logba = Math.log(r.a) / Math.log(r.b);
     const nd = r.d === 0 ? "1" : (r.d === 1 ? "n" : "n^" + r.d);
     const ndw = r.d === 0 ? r.w : nd;
-    const head = "Sum = `" + fmtCost(running, r, baseName) + "` over " + nLevels + " levels (log" + r.b + " n + 1). Leaves = " + r.a + "^log" + r.b + "(n) = " +
-      levels[r.k].count + " = n^log" + r.b + "(" + r.a + ")" + ". ";
+    const head = T("Sum = `" + fmtCost(running, r, baseName) + "` over " + nLevels + " levels (log" + r.b + " n + 1). Leaves = " + r.a + "^log" + r.b + "(n) = " +
+      levels[r.k].count + " = n^log" + r.b + "(" + r.a + ")" + ". ",
+      "共 " + nLevels + " 层（log" + r.b + " n + 1），总和 = `" + fmtCost(running, r, baseName) + "`。叶子数 = " + r.a + "^log" + r.b + "(n) = " +
+      levels[r.k].count + " = n^log" + r.b + "(" + r.a + ")" + "。");
     if (r.a === bd) {
       dom = "all";
-      msg = head + "a = b^d (" + r.a + " = " + r.b + "^" + r.d + "): every level costs about the same (" + ndw +
-        "), so total ≈ " + (r.d === 0 ? "" : nd + " × ") + "log n → O(" + (r.d === 0 ? "log n" : nd + " log n") + "). Work balanced across the tree.";
+      msg = head + T("a = b^d (" + r.a + " = " + r.b + "^" + r.d + "): every level costs about the same (" + ndw +
+        "), so total ≈ " + (r.d === 0 ? "" : nd + " × ") + "log n → O(" + (r.d === 0 ? "log n" : nd + " log n") + "). Work balanced across the tree.",
+        "a = b^d（" + r.a + " = " + r.b + "^" + r.d + "）：每层的开销都差不多（" + ndw +
+        "），所以总和 ≈ " + (r.d === 0 ? "" : nd + " × ") + "log n → O(" + (r.d === 0 ? "log n" : nd + " log n") + ")。工作量在整棵树上是均衡的。");
     } else if (r.a < bd) {
       dom = "root";
-      msg = head + "a < b^d (" + r.a + " < " + bd + "): level totals shrink going down, so the root's " + nd + " dominates → O(" + nd + ").";
+      msg = head + T("a < b^d (" + r.a + " < " + bd + "): level totals shrink going down, so the root's " + nd + " dominates → O(" + nd + ").",
+        "a < b^d（" + r.a + " < " + bd + "）：越往下每层总和越小，所以根的 " + nd + " 占主导 → O(" + nd + ")。");
     } else {
       dom = "leaves";
       const whole = Math.abs(logba - Math.round(logba)) < 1e-9;
       const exp = whole ? Math.round(logba) : fmtExp(logba);
       const big = whole ? (exp === 1 ? "n" : "n^" + exp) : "n^" + exp;
-      msg = head + "a > b^d (" + r.a + " > " + bd + "): level totals grow going down, so the leaves dominate → O(n^log" + r.b + "(" + r.a + ")) = O(" + big + ").";
+      msg = head + T("a > b^d (" + r.a + " > " + bd + "): level totals grow going down, so the leaves dominate → O(n^log" + r.b + "(" + r.a + ")) = O(" + big + ").",
+        "a > b^d（" + r.a + " > " + bd + "）：越往下每层总和越大，所以叶子占主导 → O(n^log" + r.b + "(" + r.a + ")) = O(" + big + ")。");
     }
   }
   push({
     shown: r.k, cur: -1, summed: r.k, dom: dom, group: r.k,
     msg: msg,
-    vars: [["recurrence", rec], ["n", String(r.n)], ["levels", String(nLevels)], ["leaves", String(levels[r.k].count)], ["total", fmtCost(running, r, baseName)]]
+    vars: [[T("recurrence", "递推式"), rec], ["n", String(r.n)], [T("levels", "层数"), String(nLevels)], [T("leaves", "叶子数"), String(levels[r.k].count)], [T("total", "总和"), fmtCost(running, r, baseName)]]
   });
   return frames;
 }
@@ -271,8 +289,8 @@ export function render(stage, frame) {
   const left = 34, gutter = 150, rowH = r.k > 5 ? 44 : 54, top = 22;
   const W = left + treeW + gutter, H = top + (r.k + 1) * rowH + 6;
   const nodeH = 26;
-  let svg = '<svg class="vz-rt" viewBox="0 0 ' + W + " " + H + '" style="max-width:' + W + 'px;min-width:' + Math.round(W * 0.62) + 'px" role="img" aria-label="recursion tree">';
-  svg += '<text class="rt-head" x="' + (left + treeW + 12) + '" y="12">calls × cost = level</text>';
+  let svg = '<svg class="vz-rt" viewBox="0 0 ' + W + " " + H + '" style="max-width:' + W + 'px;min-width:' + Math.round(W * 0.62) + 'px" role="img" aria-label="' + frame.ui.aria + '">';
+  svg += '<text class="rt-head" x="' + (left + treeW + 12) + '" y="12">' + frame.ui.head + '</text>';
 
   function isDom(i) {
     if (!frame.dom) return false;

@@ -89,6 +89,23 @@ export function checkParams(params, config) {
 	return errors;
 }
 
+// Text in the page's language. The player sets config._lang ("en-US" / "zh-CN",
+// from the note page); steps(config) and legend(config) pick each string with
+//   const T = tr(config);  msg: T("Swap a[i] and a[j].", "交换 a[i] 与 a[j]。")
+// English is the default (md-viewer, the build check, check_md.py).
+export function tr(config) {
+	const zh = !!config && config._lang === "zh-CN";
+	return function(en, zhText) { return zh && zhText !== undefined && zhText !== null ? zhText : en; };
+}
+
+// A static label that may come in both languages: "text" or { en, zh }.
+export function pick(value, lang) {
+	if (value && typeof value === "object" && !Array.isArray(value) && "en" in value) {
+		return lang === "zh-CN" && value.zh !== undefined ? value.zh : value.en;
+	}
+	return value;
+}
+
 // Fill in defaults for missing params (after validation passed).
 export function withDefaults(params, config) {
 	const all = Object.assign({}, COMMON_PARAMS, params);

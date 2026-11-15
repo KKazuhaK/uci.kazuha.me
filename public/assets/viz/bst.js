@@ -2,7 +2,7 @@
 // Hibbard deletion (remove), step by step. The tree is drawn with each node
 // in its in-order column and its depth as the row, so symmetric order is
 // visible as left-to-right order.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 import { treeView } from "./_tree.js";
 
 const MAXN = 15;
@@ -11,7 +11,7 @@ const MAXOPS = 10;
 export const meta = {
 	name: "bst",
 	summary: "Binary search tree: get(k) search hit/miss, put(k, v) insert or update, remove(k) by Hibbard deletion (leaf, one child, two children → successor).",
-	groupLabel: "operation",
+	groupLabel: { en: "operation", zh: "操作" },
 	params: {
 		keys: { type: "string", default: "", desc: "Starting tree: keys put in this order, comma-separated (ints or 1–3 char words, distinct, at most 15). \"k:v\" gives a value." },
 		ops: { type: "string", required: true, desc: "Operations separated by ';': get(k), put(k) or put(k, v), remove(k) (delete(k) also accepted). At most 10." },
@@ -149,16 +149,19 @@ export function code(config) {
 	return { cpp: CODE_LINES.filter(function(_, i) { return map[i + 1] > 0; }) };
 }
 
-export const legend = [
-	{ cls: "is-cmp", label: "x (node being compared)" },
-	{ cls: "is-min", label: "Successor" },
-	{ cls: "is-swap", label: "New / changed" },
-	{ cls: "is-sorted", label: "Search hit" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-cmp", label: T("x (node being compared)", "x（正在比较的节点）") },
+		{ cls: "is-min", label: T("Successor", "后继") },
+		{ cls: "is-swap", label: T("New / changed", "新建 / 改动") },
+		{ cls: "is-sorted", label: T("Search hit", "查找命中") }
+	];
+}
 
 export const input = {
 	key: "ops",
-	label: "Operations",
+	label: { en: "Operations", zh: "操作" },
 	format: function(config) { return config.ops; },
 	parse: function(text) {
 		const r = parseOps(text);
@@ -176,6 +179,7 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const start = parseKeys(config.keys || "").items;
 	const ops = parseOps(config.ops).ops;
 	const allKeys = start.map(function(x) { return x.key; }).concat(ops.map(function(x) { return x.key; }));
@@ -226,25 +230,27 @@ export function steps(config) {
 			vars: [
 				["key", f.key === undefined ? "—" : String(f.key)],
 				["x", f.x ? String(f.x.key) : (f.xnull ? "nullptr" : "—")],
-				["compares", String(compares)],
+				[T("compares", "比较次数"), String(compares)],
 				["n", String(count(root))],
-				["height", String(height(root))],
-				["returned", result]
+				[T("height", "高度"), String(height(root))],
+				[T("returned", "返回值"), result]
 			]
 		});
 	}
 
 	push({ group: 0, msg: root
-		? "BST built by putting " + start.map(function(s) { return s.key; }).join(", ") + " in that order. Every key is larger than all keys in its left subtree and smaller than all keys in its right subtree."
-		: "Empty BST (`root == nullptr`)." });
+		? T("BST built by putting " + start.map(function(s) { return s.key; }).join(", ") + " in that order. Every key is larger than all keys in its left subtree and smaller than all keys in its right subtree.",
+			"依次 put " + start.map(function(s) { return s.key; }).join("、") + " 建成的 BST。每个键都大于其左子树中的所有键，小于其右子树中的所有键。")
+		: T("Empty BST (`root == nullptr`).", "空 BST（`root == nullptr`）。") });
 
 	function mark(id, c) { const m = {}; if (id) m[id] = c; return m; }
 
 	// Walk down comparing `key`; returns { node, parent, dir } (node null on a miss).
+	// verb: [English, Chinese] for "search" / "insert" / "look"
 	function descend(key, g, base, verb) {
 		let x = root, parent = null, dir = null;
 		if (!x) {
-			push({ key: key, xnull: true, lines: [base.nil], group: g, msg: "`x == nullptr`: the tree is empty." });
+			push({ key: key, xnull: true, lines: [base.nil], group: g, msg: T("`x == nullptr`: the tree is empty.", "`x == nullptr`：树是空的。") });
 			return { node: null, parent: null, dir: null };
 		}
 		while (x) {
@@ -253,12 +259,14 @@ export function steps(config) {
 			if (c === 0) return { node: x, parent: parent, dir: dir };
 			const go = c < 0 ? "left" : "right";
 			push({ key: key, x: x, marks: mark(x.id, "is-cmp"), lines: c < 0 ? [base.lt, base.lt + 1] : [base.lt + 2, base.lt + 3], group: g,
-				msg: "`" + key + "` " + (c < 0 ? "<" : ">") + " `" + x.key + "`: " + verb + " in the " + go + " subtree." });
+				msg: T("`" + key + "` " + (c < 0 ? "<" : ">") + " `" + x.key + "`: " + verb[0] + " in the " + go + " subtree.",
+					"`" + key + "` " + (c < 0 ? "<" : ">") + " `" + x.key + "`：到" + (c < 0 ? "左" : "右") + "子树中" + verb[1] + "。") });
 			parent = x; dir = go;
 			x = x[go];
 		}
 		push({ key: key, xnull: true, marks: mark(parent.id, "is-cmp"), lines: [base.nil], group: g,
-			msg: "`" + parent.key + "`'s " + dir + " link is `nullptr`, so `" + key + "` is not in the tree." });
+			msg: T("`" + parent.key + "`'s " + dir + " link is `nullptr`, so `" + key + "` is not in the tree.",
+				"`" + parent.key + "` 的" + (dir === "left" ? "左" : "右") + "链接是 `nullptr`，所以 `" + key + "` 不在树中。") });
 		return { node: null, parent: parent, dir: dir };
 	}
 
@@ -266,46 +274,52 @@ export function steps(config) {
 		const g = idx + 1;
 		if (o.op === "get") {
 			const before = compares;
-			const r = descend(o.key, g, { nil: 2, lt: 3 }, "search");
+			const r = descend(o.key, g, { nil: 2, lt: 3 }, ["search", "继续查找"]);
 			if (r.node) {
 				result = r.node.val === null ? "val(" + r.node.key + ")" : String(r.node.val);
 				push({ key: o.key, x: r.node, marks: mark(r.node.id, "is-sorted"), lines: [7], group: g,
-					msg: "`" + o.key + "` == `" + r.node.key + "`: search hit after " + (compares - before) + " compare" + (compares - before === 1 ? "" : "s") + " (depth + 1)." });
+					msg: T("`" + o.key + "` == `" + r.node.key + "`: search hit after " + (compares - before) + " compare" + (compares - before === 1 ? "" : "s") + " (depth + 1).",
+						"`" + o.key + "` == `" + r.node.key + "`：查找命中，共比较 " + (compares - before) + " 次（深度 + 1）。") });
 			} else {
 				result = "Value()";
-				push({ key: o.key, xnull: true, lines: [2], group: g, msg: "Search miss: `get` returns `Value()` (a slide variant returns `nullptr` from a node-returning search)." });
+				push({ key: o.key, xnull: true, lines: [2], group: g, msg: T("Search miss: `get` returns `Value()` (a slide variant returns `nullptr` from a node-returning search).",
+					"查找未命中：`get` 返回 `Value()`（幻灯片中返回节点的版本会返回 `nullptr`）。") });
 			}
 		} else if (o.op === "put") {
-			const r = descend(o.key, g, { nil: 11, lt: 13 }, "insert");
+			const r = descend(o.key, g, { nil: 11, lt: 13 }, ["insert", "继续插入"]);
 			const val = o.val === null ? null : o.val;
 			if (r.node) {
 				const old = r.node.val;
 				r.node.val = val;
 				result = "—";
 				push({ key: o.key, x: r.node, marks: mark(r.node.id, "is-swap"), lines: [17], group: g,
-					msg: "`" + o.key + "` is already in the tree: update its value" + (val !== null ? " to " + val : "") + (old !== null ? " (was " + old + ")" : "") + ". No new node; the shape does not change." });
+					msg: T("`" + o.key + "` is already in the tree: update its value" + (val !== null ? " to " + val : "") + (old !== null ? " (was " + old + ")" : "") + ". No new node; the shape does not change.",
+						"`" + o.key + "` 已在树中：把它的值更新" + (val !== null ? "为 " + val : "") + (old !== null ? "（原为 " + old + "）" : "") + "。不新建节点，树的形状不变。") });
 			} else {
 				const nd = mk(o.key, val);
 				if (!r.parent) root = nd; else r.parent[r.dir] = nd;
 				result = "—";
 				push({ key: o.key, x: nd, marks: mark(nd.id, "is-swap"), lines: [11, 12], group: g,
-					msg: "`x == nullptr`: return `new Node(" + o.key + ", " + (val === null ? "val" : val) + ", 1)`" + (r.parent ? "; it becomes " + r.parent.key + "'s " + r.dir + " child" : "; it becomes the root") + "." });
+					msg: T("`x == nullptr`: return `new Node(" + o.key + ", " + (val === null ? "val" : val) + ", 1)`" + (r.parent ? "; it becomes " + r.parent.key + "'s " + r.dir + " child" : "; it becomes the root") + ".",
+						"`x == nullptr`：返回 `new Node(" + o.key + ", " + (val === null ? "val" : val) + ", 1)`，" + (r.parent ? "成为 " + r.parent.key + " 的" + (r.dir === "left" ? "左" : "右") + "孩子" : "成为根节点") + "。") });
 				if (r.parent) {
 					push({ key: o.key, marks: mark(nd.id, "is-swap"), lines: [18, 19, 20], group: g,
-						msg: "On the way back up, each call resets its link (`x->left = …` / `x->right = …`) and recomputes `size`, then returns `x`." });
+						msg: T("On the way back up, each call resets its link (`x->left = …` / `x->right = …`) and recomputes `size`, then returns `x`.",
+							"沿递归返回时，每一层都重设自己的链接（`x->left = …` / `x->right = …`）、重新计算 `size`，再返回 `x`。") });
 				}
 			}
 		} else {
-			const r = descend(o.key, g, { nil: 23, lt: 24 }, "look");
+			const r = descend(o.key, g, { nil: 23, lt: 24 }, ["look", "继续查找"]);
 			const x = r.node;
 			if (!x) {
 				result = "—";
-				push({ key: o.key, xnull: true, lines: [23], group: g, msg: "Nothing to remove; the tree is unchanged." });
+				push({ key: o.key, xnull: true, lines: [23], group: g, msg: T("Nothing to remove; the tree is unchanged.", "没有可删除的节点，树保持不变。") });
 				return;
 			}
 			const link = function(child) { if (!r.parent) root = child; else r.parent[r.dir] = child; };
 			push({ key: o.key, x: x, marks: mark(x.id, "is-cmp"), lines: [28], group: g,
-				msg: "Found `" + x.key + "`. " + (!x.left && !x.right ? "Case 1: it is a leaf." : (!x.left || !x.right ? "Case 2: it has one child." : "Case 3: it has two children.")) });
+				msg: T("Found `" + x.key + "`. " + (!x.left && !x.right ? "Case 1: it is a leaf." : (!x.left || !x.right ? "Case 2: it has one child." : "Case 3: it has two children.")),
+					"找到 `" + x.key + "`。" + (!x.left && !x.right ? "情况 1：它是叶子。" : (!x.left || !x.right ? "情况 2：它只有一个孩子。" : "情况 3：它有两个孩子。"))) });
 			if (!x.left || !x.right) {
 				const child = x.left || x.right;
 				const lines = !x.right ? [29, 30, 31] : [33, 34, 35];
@@ -314,8 +328,9 @@ export function steps(config) {
 				const m = child ? mark(child.id, "is-swap") : {};
 				push({ key: o.key, marks: m, lines: lines, group: g,
 					msg: child
-						? "Replace `" + x.key + "` with its only child `" + child.key + "` (the parent's link now points at it) and delete the node."
-						: "Return `nullptr` to the parent: the leaf is simply deleted." });
+						? T("Replace `" + x.key + "` with its only child `" + child.key + "` (the parent's link now points at it) and delete the node.",
+							"用唯一的孩子 `" + child.key + "` 顶替 `" + x.key + "`（父节点的链接改指向它），然后删除该节点。")
+						: T("Return `nullptr` to the parent: the leaf is simply deleted.", "向父节点返回 `nullptr`：叶子直接被删除。") });
 				return;
 			}
 			// Case 3: successor = min of right subtree.
@@ -323,16 +338,19 @@ export function steps(config) {
 			const path = {}; path[x.id] = "is-cmp";
 			path[s.id] = "is-min";
 			push({ key: o.key, x: x, marks: Object.assign({}, path), lines: [37, 38], group: g,
-				msg: "`t = x`. The successor is the smallest key in the right subtree: go right once to `" + s.key + "`, then left as far as possible." });
+				msg: T("`t = x`. The successor is the smallest key in the right subtree: go right once to `" + s.key + "`, then left as far as possible.",
+					"`t = x`。后继是右子树中最小的键：先向右走一步到 `" + s.key + "`，再一直向左走到底。") });
 			while (s.left) {
 				sp = s; s = s.left;
 				const m = {}; m[x.id] = "is-cmp"; m[s.id] = "is-min";
-				push({ key: o.key, x: x, marks: m, lines: [38], group: g, msg: "Go left to `" + s.key + "`." });
+				push({ key: o.key, x: x, marks: m, lines: [38], group: g, msg: T("Go left to `" + s.key + "`.", "向左走到 `" + s.key + "`。") });
 			}
 			const sm = {}; sm[x.id] = "is-cmp"; sm[s.id] = "is-min";
 			push({ key: o.key, x: x, marks: sm, lines: [38], group: g,
-				msg: "`" + s.key + "` has no left child: it is the successor (next largest key after `" + x.key + "`)." +
-					(s.right ? " Its right child `" + s.right.key + "` will move up into its place." : "") });
+				msg: T("`" + s.key + "` has no left child: it is the successor (next largest key after `" + x.key + "`)." +
+					(s.right ? " Its right child `" + s.right.key + "` will move up into its place." : ""),
+					"`" + s.key + "` 没有左孩子：它就是后继（`" + x.key + "` 之后的下一个更大的键）。" +
+					(s.right ? "它的右孩子 `" + s.right.key + "` 会上移到它的位置。" : "")) });
 			// deleteMin(t->right): unlink s.
 			if (sp === x) x.right = s.right; else sp.left = s.right;
 			s.right = x.right;
@@ -341,18 +359,22 @@ export function steps(config) {
 			result = String(x.key);
 			const fm = {}; fm[s.id] = "is-swap";
 			push({ key: o.key, x: s, marks: fm, lines: [39, 40, 41], group: g,
-				msg: "`x->right = deleteMin(t->right)`, `x->left = t->left`: `" + s.key + "` takes `" + x.key + "`'s place and `" + x.key + "` is deleted. Symmetric order still holds." });
+				msg: T("`x->right = deleteMin(t->right)`, `x->left = t->left`: `" + s.key + "` takes `" + x.key + "`'s place and `" + x.key + "` is deleted. Symmetric order still holds.",
+					"`x->right = deleteMin(t->right)`，`x->left = t->left`：`" + s.key + "` 顶替 `" + x.key + "` 的位置，`" + x.key + "` 被删除。对称序仍然成立。") });
 		}
 	});
 
 	const map = lineMap(config);
 	frames.forEach(function(f) { f.lines = f.lines.map(function(l) { return map[l]; }).filter(Boolean); });
-	push({ group: ops.length, msg: "Done. In-order: " + (function() { const a = []; (function w(x) { if (!x) return; w(x.left); a.push(x.key); w(x.right); })(root); return a.length ? a.join(" ") : "(empty)"; })() +
-		". Height " + height(root) + "; every operation walks one root-to-node path, so its cost is O(height)." });
+	const inorder = (function() { const a = []; (function w(x) { if (!x) return; w(x.left); a.push(x.key); w(x.right); })(root); return a; })();
+	push({ group: ops.length, msg: T("Done. In-order: " + (inorder.length ? inorder.join(" ") : "(empty)") +
+		". Height " + height(root) + "; every operation walks one root-to-node path, so its cost is O(height).",
+		"完成。中序：" + (inorder.length ? inorder.join(" ") : "（空）") +
+		"。高度 " + height(root) + "；每次操作只走一条从根到节点的路径，代价为 O(height)。") });
 	// One drawing size for the whole demo, so the page doesn't jump between steps.
 	const cols = frames.reduce(function(m, f) { return Math.max(m, f.nodes.length); }, 1);
 	const rows = frames.reduce(function(m, f) { return f.nodes.reduce(function(r, nd) { return Math.max(r, nd.depth + 1); }, m); }, 1);
-	frames.forEach(function(f) { f.cols = cols; f.rows = rows; });
+	frames.forEach(function(f) { f.cols = cols; f.rows = rows; f.empty = T("(empty tree)", "（空树）"); });
 	return frames;
 }
 
@@ -367,6 +389,6 @@ export function render(stage, frame) {
 		}),
 		edges: frame.edges.map(function(e) { return { from: e[0], to: e[1] }; }),
 		cols: frame.cols, rows: frame.rows,
-		empty: "(empty tree)"
+		empty: frame.empty
 	});
 }

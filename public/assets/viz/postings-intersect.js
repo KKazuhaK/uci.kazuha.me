@@ -10,7 +10,7 @@ const MAX_ID = 99999;
 export const meta = {
 	name: "postings-intersect",
 	summary: "Postings-list intersection (AND): two pointers walk two docID-sorted lists; matches go to the answer. O(x + y) comparisons.",
-	groupLabel: "comparison",
+	groupLabel: { en: "comparison", zh: "比较" },
 	params: {
 		lists: { type: "string", required: true, desc: "Two postings lists of docIDs, each strictly increasing, separated by |: \"2 4 8 16 | 1 2 3 5 8\" (at most 20 docIDs each)." },
 		terms: { type: "string", default: "Brutus, Caesar", desc: "Names of the two terms, comma-separated." },
@@ -103,7 +103,8 @@ const TEXT = {
 	}
 };
 
-function T(config) { return TEXT[config && config.lang === "zh" ? "zh" : "en"]; }
+// The page language (_lang) also switches the messages; the "lang" param keeps working on its own.
+function T(config) { return TEXT[config && (config.lang === "zh" || config._lang === "zh-CN") ? "zh" : "en"]; }
 
 export function legend(config) {
 	const l = T(config).legend;
@@ -116,7 +117,7 @@ export function legend(config) {
 
 export const input = {
 	key: "lists",
-	label: "Postings",
+	label: { en: "Postings", zh: "Postings" },
 	format: function(config) { return config.lists; },
 	parse: function(text) {
 		const p = parseLists(text);

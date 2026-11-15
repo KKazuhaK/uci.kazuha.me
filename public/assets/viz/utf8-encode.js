@@ -4,7 +4,7 @@
 // template (the high bits into the first byte, 6 bits into each
 // continuation byte) and read off the bytes in hexadecimal.
 // Default: Greek pi, U+03C0 = 960 -> 11001111 10000000 = CF 80.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_CHARS = 4;
 
@@ -21,7 +21,7 @@ const TABLE = [
 export const meta = {
 	name: "utf8-encode",
 	summary: "UTF-8 encoding of a character: code point → binary → row of the encoding table → payload bits into the byte template → bytes in hex.",
-	groupLabel: "character",
+	groupLabel: { en: "character", zh: "字符" },
 	params: {
 		text: { type: "string", default: "π", desc: "1–4 characters to encode, one after the other (default: π, the slide's example)." },
 		code: { type: "enum", values: ["python", "none"], default: "python", desc: "Python code beside the demo." }
@@ -75,15 +75,18 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-cmp", label: "Table row that applies" },
-	{ cls: "is-min", label: "Fixed marker bits" },
-	{ cls: "is-sorted", label: "Payload bits (from the code point)" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-cmp", label: T("Table row that applies", "适用的表行") },
+		{ cls: "is-min", label: T("Fixed marker bits", "固定的标记位") },
+		{ cls: "is-sorted", label: T("Payload bits (from the code point)", "有效载荷位（来自码位）") }
+	];
+}
 
 export const input = {
 	key: "text",
-	label: "Characters",
+	label: { en: "Characters", zh: "字符" },
 	format: function(config) { return config.text === undefined ? "π" : config.text; },
 	parse: function(text) {
 		const cs = chars(text.trim());
@@ -131,6 +134,7 @@ function lineFor(row) {
 }
 
 export function steps(config) {
+	const T = tr(config);
 	const cs = chars(config.text === undefined ? "π" : config.text);
 	const frames = [];
 	const done = [];
@@ -145,12 +149,14 @@ export function steps(config) {
 			stage: f.stage || 0,
 			done: done.slice(),
 			final: !!f.final,
+			ui: { decimal: T("Decimal", "十进制"), hexadecimal: T("Hexadecimal", "十六进制"), encoding: T("Encoding", "编码"), undef: T("Undefined", "未定义"), byte: T("byte ", "字节 ") },
 			lines: f.lines || [],
 			msg: f.msg,
 			vars: f.vars || []
 		});
 	}
-	push({ group: 0, msg: "The table maps each code-point range to a byte template. `0` / `10` / `110` / `1110` / `11110` are fixed marker bits; each `x` is filled with a bit of the code point.", lines: [] });
+	push({ group: 0, msg: T("The table maps each code-point range to a byte template. `0` / `10` / `110` / `1110` / `11110` are fixed marker bits; each `x` is filled with a bit of the code point.",
+		"该表把每个码位（code point）范围映射到一个字节模板。`0` / `10` / `110` / `1110` / `11110` 是固定的标记位；每个 `x` 填入码位的一个比特。"), lines: [] });
 	cs.forEach(function(c, k) {
 		const cp = c.codePointAt(0);
 		const row = rowOf(cp);
@@ -158,28 +164,32 @@ export function steps(config) {
 		const slots = tpl.reduce(function(a, t) { return a + (t.match(/x/g) || []).length; }, 0);
 		const g = k + 1;
 		const cpTxt = "U+" + hex(cp, 4);
-		const vars0 = [["char", c], ["cp", cp + " (0x" + hex(cp) + ")"]];
+		const vars0 = [[T("char", "字符"), c], ["cp", cp + " (0x" + hex(cp) + ")"]];
 		push({ group: g, ch: c, cp: cp, stage: 1, lines: [2], vars: vars0,
-			msg: "`" + c + "` is Unicode code point " + cp + " = " + cpTxt + " (hex " + hex(cp) + ")." });
+			msg: T("`" + c + "` is Unicode code point " + cp + " = " + cpTxt + " (hex " + hex(cp) + ").", "`" + c + "` 是 Unicode 码位 " + cp + " = " + cpTxt + "（十六进制 " + hex(cp) + "）。") });
 		const b16 = bin(cp, Math.max(16, Math.ceil(cp.toString(2).length / 8) * 8));
-		push({ group: g, ch: c, cp: cp, stage: 2, lines: [2], vars: vars0.concat([["binary", b16.replace(/(.{8})(?=.)/g, "$1 ")]]),
-			msg: "In binary: " + b16.replace(/(.{8})(?=.)/g, "$1 ") + "." });
-		push({ group: g, ch: c, cp: cp, row: row, stage: 3, lines: lineFor(row).slice(0, 1), vars: vars0.concat([["template", tpl.join(" ")]]),
-			msg: cp + " is in the range " + TABLE[row].dec + " (hex " + TABLE[row].hex + "), so the encoding follows " + tpl.join(" ") + ": " + tpl.length + " byte(s), " + slots + " payload bits." });
+		push({ group: g, ch: c, cp: cp, stage: 2, lines: [2], vars: vars0.concat([[T("binary", "二进制"), b16.replace(/(.{8})(?=.)/g, "$1 ")]]),
+			msg: T("In binary: " + b16.replace(/(.{8})(?=.)/g, "$1 ") + ".", "二进制：" + b16.replace(/(.{8})(?=.)/g, "$1 ") + "。") });
+		push({ group: g, ch: c, cp: cp, row: row, stage: 3, lines: lineFor(row).slice(0, 1), vars: vars0.concat([[T("template", "模板"), tpl.join(" ")]]),
+			msg: T(cp + " is in the range " + TABLE[row].dec + " (hex " + TABLE[row].hex + "), so the encoding follows " + tpl.join(" ") + ": " + tpl.length + " byte(s), " + slots + " payload bits.",
+				cp + " 位于范围 " + TABLE[row].dec + "（十六进制 " + TABLE[row].hex + "）内，所以编码遵循 " + tpl.join(" ") + "：" + tpl.length + " 个字节，" + slots + " 个有效载荷位。") });
 		const bytes = fill(cp, tpl);
 		const payload = bin(cp, slots);
 		const split = bytes.map(function(b) { return b.payload; });
-		push({ group: g, ch: c, cp: cp, row: row, bits: payload, bytes: bytes, stage: 4, lines: lineFor(row), vars: vars0.concat([["payload", payload]]),
-			msg: "Write " + cp + " in " + slots + " bits: " + payload + ". " + (tpl.length === 1 ? "All 7 go into the single byte." : "The high " + split[0].length + " bits (" + split[0] + ") go into the first byte, then 6 bits into each next byte (" + split.slice(1).join(", ") + ").") });
+		push({ group: g, ch: c, cp: cp, row: row, bits: payload, bytes: bytes, stage: 4, lines: lineFor(row), vars: vars0.concat([[T("payload", "有效载荷"), payload]]),
+			msg: T("Write " + cp + " in " + slots + " bits: " + payload + ". " + (tpl.length === 1 ? "All 7 go into the single byte." : "The high " + split[0].length + " bits (" + split[0] + ") go into the first byte, then 6 bits into each next byte (" + split.slice(1).join(", ") + ")."),
+				"把 " + cp + " 写成 " + slots + " 位：" + payload + "。" + (tpl.length === 1 ? "这 7 位全部放进这个单字节。" : "高 " + split[0].length + " 位（" + split[0] + "）放进第一个字节，然后每个后续字节放 6 位（" + split.slice(1).join(", ") + "）。")) });
 		const hexs = bytes.map(function(b) { return hex(b.value, 2); });
 		done.push({ ch: c, hex: hexs });
-		push({ group: g, ch: c, cp: cp, row: row, bits: payload, bytes: bytes, stage: 5, lines: lineFor(row), vars: vars0.concat([["bytes", hexs.join(" ")]]),
-			msg: "Final encoding: " + bytes.map(function(b) { return b.marker + b.payload; }).join(" ") + " = " + hexs.join(" ") + " in hexadecimal (" + bytes.length + " byte" + (bytes.length > 1 ? "s" : "") + ")." });
+		push({ group: g, ch: c, cp: cp, row: row, bits: payload, bytes: bytes, stage: 5, lines: lineFor(row), vars: vars0.concat([[T("bytes", "字节"), hexs.join(" ")]]),
+			msg: T("Final encoding: " + bytes.map(function(b) { return b.marker + b.payload; }).join(" ") + " = " + hexs.join(" ") + " in hexadecimal (" + bytes.length + " byte" + (bytes.length > 1 ? "s" : "") + ").",
+				"最终编码：" + bytes.map(function(b) { return b.marker + b.payload; }).join(" ") + " = 十六进制 " + hexs.join(" ") + "（" + bytes.length + " 个字节）。") });
 	});
 	const total = done.reduce(function(a, d) { return a + d.hex.length; }, 0);
 	push({ group: cs.length + 1, final: true, stage: 6, lines: [20],
-		vars: [["UTF-8", done.map(function(d) { return d.hex.join(" "); }).join(" | ")], ["bytes", String(total)], ["UTF-32 bytes", String(4 * cs.length)]],
-		msg: "`" + cs.join("") + "` in UTF-8: " + done.map(function(d) { return d.hex.join(" "); }).join(" ") + " — " + total + " byte(s). UTF-32 would use 4 bytes per character: " + (4 * cs.length) + "." });
+		vars: [["UTF-8", done.map(function(d) { return d.hex.join(" "); }).join(" | ")], [T("bytes", "字节"), String(total)], [T("UTF-32 bytes", "UTF-32 字节数"), String(4 * cs.length)]],
+		msg: T("`" + cs.join("") + "` in UTF-8: " + done.map(function(d) { return d.hex.join(" "); }).join(" ") + " — " + total + " byte(s). UTF-32 would use 4 bytes per character: " + (4 * cs.length) + ".",
+			"`" + cs.join("") + "` 的 UTF-8 编码：" + done.map(function(d) { return d.hex.join(" "); }).join(" ") + "——共 " + total + " 个字节。UTF-32 则每个字符用 4 个字节：共 " + (4 * cs.length) + " 个。") });
 	return frames;
 }
 
@@ -226,10 +236,10 @@ export function render(stage, frame) {
 			' = <span class="vz-u8-mono">U+' + hex(frame.cp, 4) + "</span>" +
 			(frame.stage >= 2 ? ' = <span class="vz-u8-mono">' + bin(frame.cp, Math.max(16, Math.ceil(frame.cp.toString(2).length / 8) * 8)).replace(/(.{8})(?=.)/g, "$1 ") + "</span>" : "") + "</div>";
 	}
-	html += "<table><thead><tr><th>Decimal</th><th>Hexadecimal</th><th>Encoding</th></tr></thead><tbody>";
+	html += "<table><thead><tr><th>" + frame.ui.decimal + "</th><th>" + frame.ui.hexadecimal + "</th><th>" + frame.ui.encoding + "</th></tr></thead><tbody>";
 	TABLE.forEach(function(r, k) {
 		const cls = (k === frame.row ? "is-cmp" : "") + (r.tpl ? "" : " is-undef");
-		html += '<tr class="' + cls + '"><td>' + r.dec + "</td><td>" + r.hex + "</td><td>" + (r.tpl ? r.tpl.join(" ") : "Undefined") + "</td></tr>";
+		html += '<tr class="' + cls + '"><td>' + r.dec + "</td><td>" + r.hex + "</td><td>" + (r.tpl ? r.tpl.join(" ") : frame.ui.undef) + "</td></tr>";
 	});
 	html += "</tbody></table>";
 	if (frame.row >= 0) {
@@ -240,7 +250,7 @@ export function render(stage, frame) {
 			const b = frame.bytes ? frame.bytes[k] : null;
 			html += '<div class="vz-u8-byte"><span class="m">' + marker + "</span>" +
 				(b ? '<span class="p">' + b.payload + "</span>" : '<span class="x">' + t.slice(marker.length) + "</span>") +
-				'<span class="h' + (frame.stage >= 5 ? " is-on" : "") + '">' + (frame.stage >= 5 && b ? "0x" + hex(b.value, 2) : "byte " + (k + 1)) + "</span></div>";
+				'<span class="h' + (frame.stage >= 5 ? " is-on" : "") + '">' + (frame.stage >= 5 && b ? "0x" + hex(b.value, 2) : frame.ui.byte + (k + 1)) + "</span></div>";
 		});
 		html += "</div>";
 	}

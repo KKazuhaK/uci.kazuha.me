@@ -2,12 +2,12 @@
 // pass takes the next element and swaps it left past every larger neighbour,
 // stopping (break) at the first neighbour that is not larger.
 import { arrayView } from "./_array.js";
-import { checkParams, parseIntList, randomInts } from "./_core.js";
+import { checkParams, parseIntList, randomInts, tr } from "./_core.js";
 
 export const meta = {
   name: "insertion-sort",
   summary: "Insertion sort on an array: swap a[j] left while a[j] < a[j-1], break at the first in-order pair.",
-  groupLabel: "pass",
+  groupLabel: { en: "pass", zh: "趟" },
   params: {
     array: { type: "int[]", required: true, minLength: 2, maxLength: 12, minValue: -99, maxValue: 999, desc: "Values to sort (2–12 integers, -99…999)." },
     code: { type: "enum", values: ["cpp", "none"], default: "cpp", desc: "Code shown beside the demo, with the running line highlighted." }
@@ -32,16 +32,19 @@ export const code = {
   ]
 };
 
-export const legend = [
-  { cls: "is-sorted", label: "Sorted part a[0…i−1]" },
-  { cls: "is-min", label: "Element being inserted · j" },
-  { cls: "is-cmp", label: "Compared with · j − 1" },
-  { cls: "is-swap", label: "Just swapped" }
-];
+export function legend(config) {
+  const T = tr(config);
+  return [
+    { cls: "is-sorted", label: T("Sorted part a[0…i−1]", "有序部分 a[0…i−1]") },
+    { cls: "is-min", label: T("Element being inserted · j", "正在插入的元素 · j") },
+    { cls: "is-cmp", label: T("Compared with · j − 1", "与之比较 · j − 1") },
+    { cls: "is-swap", label: T("Just swapped", "刚交换") }
+  ];
+}
 
 export const input = {
   key: "array",
-  label: "Array",
+  label: { en: "Array", zh: "数组" },
   format: function(config) { return config.array.join(", "); },
   parse: function(text) {
     const r = parseIntList(text);
@@ -51,6 +54,7 @@ export const input = {
 };
 
 export function steps(config) {
+  const T = tr(config);
   const a = config.array.slice();
   const n = a.length;
   // Which original element sits in each slot, so a swap is drawn as two cells moving.
@@ -73,18 +77,19 @@ export function steps(config) {
       msg: f.msg,
       group: f.group,
       vars: [
-        ["pass", f.i === undefined ? "—" : "i = " + f.i + " of " + (n - 1)],
+        [T("pass", "趟"), f.i === undefined ? "—" : T("i = " + f.i + " of " + (n - 1), "i = " + f.i + "，共 " + (n - 1))],
         ["j", f.j === undefined ? "—" : String(f.j)],
-        ["inserting", f.val === undefined ? "—" : String(f.val)],
-        ["comparisons", String(comparisons)],
-        ["swaps", String(swaps)]
+        [T("inserting", "正在插入"), f.val === undefined ? "—" : String(f.val)],
+        [T("comparisons", "比较次数"), String(comparisons)],
+        [T("swaps", "交换次数"), String(swaps)]
       ]
     });
   }
 
   push({
     sorted: 0, group: 0,
-    msg: "Start: n = " + n + ". Pass i inserts `arr[i]` into the sorted part `arr[0…i−1]` by swapping it left past every larger neighbour."
+    msg: T("Start: n = " + n + ". Pass i inserts `arr[i]` into the sorted part `arr[0…i−1]` by swapping it left past every larger neighbour.",
+      "开始：n = " + n + "。第 i 趟把 `arr[i]` 插入有序部分 `arr[0…i−1]`：不断与更大的左邻居交换，一路向左移动。")
   });
 
   for (let i = 0; i < n; i++) {
@@ -92,13 +97,15 @@ export function steps(config) {
     if (i === 0) {
       push({
         sorted: 1, i: 0, j: 0, val: val, lines: [1, 2], group: 0,
-        msg: "Pass i = 0: `j = 0`, so `j > 0` is false and the inner loop never runs. A single element is already sorted."
+        msg: T("Pass i = 0: `j = 0`, so `j > 0` is false and the inner loop never runs. A single element is already sorted.",
+          "第 i = 0 趟：`j = 0`，所以 `j > 0` 为假，内层循环不会执行。单个元素本来就是有序的。")
       });
       continue;
     }
     push({
       sorted: i, i: i, j: i, key: i, val: val, lines: [1, 2], group: i,
-      msg: "Pass i = " + i + ": insert `arr[" + i + "] = " + val + "` into the sorted part `arr[0…" + (i - 1) + "]`. Start with `j = " + i + "`."
+      msg: T("Pass i = " + i + ": insert `arr[" + i + "] = " + val + "` into the sorted part `arr[0…" + (i - 1) + "]`. Start with `j = " + i + "`.",
+        "第 i = " + i + " 趟：把 `arr[" + i + "] = " + val + "` 插入有序部分 `arr[0…" + (i - 1) + "]`。从 `j = " + i + "` 开始。")
     });
     let j = i;
     let stopped = false;
@@ -107,7 +114,8 @@ export function steps(config) {
       const less = a[j] < a[j - 1];
       push({
         sorted: i, i: i, j: j, key: j, cmp: j - 1, val: val, lines: [3], group: i,
-        msg: "Compare `arr[" + j + "] = " + a[j] + "` < `arr[" + (j - 1) + "] = " + a[j - 1] + "`? " + (less ? "Yes." : "No.")
+        msg: T("Compare `arr[" + j + "] = " + a[j] + "` < `arr[" + (j - 1) + "] = " + a[j - 1] + "`? " + (less ? "Yes." : "No."),
+          "比较 `arr[" + j + "] = " + a[j] + "` < `arr[" + (j - 1) + "] = " + a[j - 1] + "`？" + (less ? "是。" : "否。"))
       });
       if (less) {
         [a[j], a[j - 1]] = [a[j - 1], a[j]];
@@ -115,12 +123,14 @@ export function steps(config) {
         swaps++;
         push({
           sorted: i, i: i, j: j, key: j - 1, swap: [j - 1, j], val: val, lines: [4], group: i,
-          msg: "`std::swap(arr[" + j + "], arr[" + (j - 1) + "])`: " + val + " moves one slot left. Then `j--`."
+          msg: T("`std::swap(arr[" + j + "], arr[" + (j - 1) + "])`: " + val + " moves one slot left. Then `j--`.",
+            "`std::swap(arr[" + j + "], arr[" + (j - 1) + "])`：" + val + " 向左移动一格。然后 `j--`。")
         });
       } else {
         push({
           sorted: i + 1, i: i, j: j, key: j, val: val, lines: [6], group: i,
-          msg: "`else break;` — " + val + " is not smaller than its left neighbour, so it is in place. Everything further left is even smaller: stop early."
+          msg: T("`else break;` — " + val + " is not smaller than its left neighbour, so it is in place. Everything further left is even smaller: stop early.",
+            "`else break;` — " + val + " 不比左邻居小，所以已就位。更左边的元素还要更小：提前结束。")
         });
         stopped = true;
         break;
@@ -129,7 +139,8 @@ export function steps(config) {
     if (!stopped) {
       push({
         sorted: i + 1, i: i, j: 0, key: 0, val: val, lines: [2], group: i,
-        msg: "`j` reached 0: " + val + " is the smallest so far and now sits at the front. Pass " + i + " made " + i + " comparisons and " + i + " swaps (the worst a pass can do)."
+        msg: T("`j` reached 0: " + val + " is the smallest so far and now sits at the front. Pass " + i + " made " + i + " comparisons and " + i + " swaps (the worst a pass can do).",
+          "`j` 到达 0：" + val + " 是目前最小的，现在位于最前面。第 " + i + " 趟共比较 " + i + " 次、交换 " + i + " 次（一趟最多也就这样）。")
       });
     }
   }
@@ -137,8 +148,10 @@ export function steps(config) {
   const worst = n * (n - 1) / 2;
   push({
     sorted: n, group: n - 1,
-    msg: "Done: " + comparisons + " comparisons, " + swaps + " swaps. Swaps = number of out-of-order pairs (inversions) in the input. " +
-      "Best case (already sorted): n − 1 = " + (n - 1) + " comparisons, 0 swaps. Worst case (reverse sorted): n(n − 1)/2 = " + worst + " of each."
+    msg: T("Done: " + comparisons + " comparisons, " + swaps + " swaps. Swaps = number of out-of-order pairs (inversions) in the input. " +
+      "Best case (already sorted): n − 1 = " + (n - 1) + " comparisons, 0 swaps. Worst case (reverse sorted): n(n − 1)/2 = " + worst + " of each.",
+      "完成：比较 " + comparisons + " 次，交换 " + swaps + " 次。交换次数 = 输入中逆序对（inversion）的数量。" +
+      "最好情况（已有序）：n − 1 = " + (n - 1) + " 次比较，0 次交换。最坏情况（逆序）：比较和交换各 n(n − 1)/2 = " + worst + " 次。")
   });
   return frames;
 }

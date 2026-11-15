@@ -7,7 +7,7 @@
 //   match "first":   the classic Python urllib.robotparser (e.g. 3.10–3.12):
 //                    the first matching line in file order wins, paths are
 //                    plain prefixes (`*` and `$` are literal characters).
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_LINES = 40;
 const MAX_URLS = 10;
@@ -15,7 +15,7 @@ const MAX_URLS = 10;
 export const meta = {
 	name: "robots-txt",
 	summary: "robots.txt rules + a list of URLs: which group applies, which rule line matches, allowed or not (incl. Allow inside a Disallowed folder).",
-	groupLabel: "URL",
+	groupLabel: { en: "URL", zh: "URL" },
 	params: {
 		robots: { type: "string", required: true, desc: "The robots.txt file; lines separated by \\n." },
 		urls: { type: "string", required: true, desc: "Paths or URLs to test, comma- or newline-separated (/audio/x.mp3, https://www.cnn.com/ads/)." },
@@ -149,16 +149,19 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-min", label: "Group that applies" },
-	{ cls: "is-cmp", label: "Rule line that matches" },
-	{ cls: "is-sorted", label: "Winning Allow" },
-	{ cls: "is-swap", label: "Winning Disallow" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-min", label: T("Group that applies", "适用的分组") },
+		{ cls: "is-cmp", label: T("Rule line that matches", "匹配的规则行") },
+		{ cls: "is-sorted", label: T("Winning Allow", "胜出的 Allow") },
+		{ cls: "is-swap", label: T("Winning Disallow", "胜出的 Disallow") }
+	];
+}
 
 export const input = {
 	key: "urls",
-	label: "URLs",
+	label: { en: "URLs", zh: "URL" },
 	format: function(config) { return config.urls; },
 	parse: function(text) {
 		const t = String(text).trim();
@@ -176,6 +179,7 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const mode = config.match || "longest";
 	const agent = config.agent === undefined ? "MyCrawler" : config.agent;
 	const r = parseRobots(config.robots);
@@ -195,40 +199,48 @@ export function steps(config) {
 			current: f.current === undefined ? -1 : f.current,
 			code: f.code || [],
 			msg: f.msg,
+			ui: { allowed: T("✓ allowed", "✓ 允许"), disallowed: T("✗ disallowed", "✗ 禁止"), checking: T("checking…", "检查中…") },
 			vars: [
 				["agent", agent],
-				["group", g ? (pick.by === "*" ? "User-agent: * (lines " + g.first + "–" + g.last + ")" : "User-agent: " + pick.by + " (lines " + g.first + "–" + g.last + ")") : "none"],
-				["mode", mode === "longest" ? "longest match (RFC 9309)" : "first match (old robotparser)"],
+				[T("group", "分组"), g ? T(pick.by === "*" ? "User-agent: * (lines " + g.first + "–" + g.last + ")" : "User-agent: " + pick.by + " (lines " + g.first + "–" + g.last + ")",
+					pick.by === "*" ? "User-agent: *（第 " + g.first + "–" + g.last + " 行）" : "User-agent: " + pick.by + "（第 " + g.first + "–" + g.last + " 行）") : T("none", "无")],
+				["mode", mode === "longest" ? T("longest match (RFC 9309)", "最长匹配（RFC 9309）") : T("first match (old robotparser)", "首条匹配（旧版 robotparser）")],
 				["path", f.path || "—"],
-				["matching lines", f.hits && f.hits.length ? f.hits.join(", ") : "—"],
-				["verdict", f.verdict || "—"]
+				[T("matching lines", "匹配的行"), f.hits && f.hits.length ? f.hits.join(", ") : "—"],
+				[T("verdict", "判定"), f.verdict || "—"]
 			]
 		});
 	}
 	const groupMsg = !g
-		? "No group names `" + agent + "` and there is no `User-agent: *` group, so nothing restricts this crawler."
+		? T("No group names `" + agent + "` and there is no `User-agent: *` group, so nothing restricts this crawler.",
+			"没有分组指定 `" + agent + "`，也没有 `User-agent: *` 分组，所以这个爬虫不受任何限制。")
 		: pick.by === "*"
-			? "No group names `" + agent + "`, so the `User-agent: *` group (lines " + g.first + "–" + g.last + ") applies."
-			: "Lines " + g.first + "–" + g.last + " name `" + pick.by + "`: only that group's rules apply to `" + agent + "` — the `*` rules are ignored (the precedence rule, L6.5 p21).";
+			? T("No group names `" + agent + "`, so the `User-agent: *` group (lines " + g.first + "–" + g.last + ") applies.",
+				"没有分组指定 `" + agent + "`，所以适用 `User-agent: *` 分组（第 " + g.first + "–" + g.last + " 行）。")
+			: T("Lines " + g.first + "–" + g.last + " name `" + pick.by + "`: only that group's rules apply to `" + agent + "` — the `*` rules are ignored (the precedence rule, L6.5 p21).",
+				"第 " + g.first + "–" + g.last + " 行指定了 `" + pick.by + "`：只有该分组中的规则适用于 `" + agent + "`，`*` 分组的规则被忽略（优先级规则，L6.5 p21）。");
 	push({ group: 0, code: g ? [2, 3] : [3, 4, 5], msg: groupMsg });
 
 	urls.forEach(function(u, i) {
 		const path = pathOf(u);
 		if (!g) {
 			results.push({ url: u, ok: true, why: "no group" });
-			push({ group: i + 1, current: i, path: path, verdict: "allowed", code: [4, 5], msg: "`" + path + "`: no group applies → allowed." });
+			push({ group: i + 1, current: i, path: path, verdict: T("allowed", "允许"), code: [4, 5], msg: T("`" + path + "`: no group applies → allowed.", "`" + path + "`：没有适用的分组 → 允许。") });
 			return;
 		}
 		const hits = [];
 		g.rules.forEach(function(rule) { const L = matchLen(rule, path, mode); if (L) hits.push({ rule: rule, len: L }); });
 		const hitNs = hits.map(function(h) { return h.rule.n; });
 		push({ group: i + 1, current: i, path: path, hits: hitNs, code: [6, 7],
-			msg: "`" + path + "`: " + (hits.length ? hits.length + " rule line(s) match: " + hits.map(function(h) {
+			msg: T("`" + path + "`: " + (hits.length ? hits.length + " rule line(s) match: " + hits.map(function(h) {
 				return "line " + h.rule.n + " `" + (h.rule.allow ? "Allow" : "Disallow") + ": " + h.rule.path + "`";
-			}).join(", ") + "." : "no rule line matches.") });
+			}).join(", ") + "." : "no rule line matches."),
+				"`" + path + "`：" + (hits.length ? hits.length + " 条规则行匹配：" + hits.map(function(h) {
+					return "第 " + h.rule.n + " 行 `" + (h.rule.allow ? "Allow" : "Disallow") + ": " + h.rule.path + "`";
+				}).join("，") + "。" : "没有规则行匹配。")) });
 		if (!hits.length) {
 			results.push({ url: u, ok: true, why: "no rule matches" });
-			push({ group: i + 1, current: i, path: path, verdict: "allowed", code: [8, 9], msg: "No rule matches `" + path + "` → allowed (anything not disallowed may be crawled)." });
+			push({ group: i + 1, current: i, path: path, verdict: T("allowed", "允许"), code: [8, 9], msg: T("No rule matches `" + path + "` → allowed (anything not disallowed may be crawled).", "没有规则匹配 `" + path + "` → 允许（凡是没被禁止的都可以爬取）。") });
 			return;
 		}
 		let win;
@@ -238,17 +250,20 @@ export function steps(config) {
 			hits.forEach(function(h) { if (h.len > win.len || (h.len === win.len && h.rule.allow && !win.rule.allow)) win = h; });
 		}
 		let ok = win.rule.allow;
-		let note = "";
-		if (mode === "first" && win.rule.path === "") { ok = true; note = " (an empty `Disallow:` means allow everything)"; }
+		let note = "", noteZh = "";
+		if (mode === "first" && win.rule.path === "") { ok = true; note = " (an empty `Disallow:` means allow everything)"; noteZh = "（空的 `Disallow:` 表示全部允许）"; }
+		const tie = hits.some(function(h) { return h !== win && h.len === win.len; });
 		const why = mode === "first"
-			? "the first matching line in file order wins"
-			: (hits.length > 1 ? "the longest matching path wins" + (hits.some(function(h) { return h !== win && h.len === win.len; }) ? " (tie → Allow)" : "") : "it is the only match");
+			? T("the first matching line in file order wins", "文件中第一条匹配的行胜出")
+			: (hits.length > 1 ? T("the longest matching path wins" + (tie ? " (tie → Allow)" : ""), "最长的匹配路径胜出" + (tie ? "（平局时 Allow 胜出）" : "")) : T("it is the only match", "它是唯一的匹配"));
 		results.push({ url: u, ok: ok, why: "line " + win.rule.n });
-		push({ group: i + 1, current: i, path: path, hits: hitNs, win: win.rule.n, verdict: ok ? "allowed" : "disallowed", code: mode === "first" ? [10, 11, 15] : [12, 13, 14, 15],
-			msg: "Line " + win.rule.n + " wins because " + why + note + " → `" + path + "` is " + (ok ? "ALLOWED" : "DISALLOWED") + "." });
+		push({ group: i + 1, current: i, path: path, hits: hitNs, win: win.rule.n, verdict: ok ? T("allowed", "允许") : T("disallowed", "禁止"), code: mode === "first" ? [10, 11, 15] : [12, 13, 14, 15],
+			msg: T("Line " + win.rule.n + " wins because " + why + note + " → `" + path + "` is " + (ok ? "ALLOWED" : "DISALLOWED") + ".",
+				"第 " + win.rule.n + " 行胜出，因为" + why + noteZh + " → `" + path + "` " + (ok ? "允许爬取" : "禁止爬取") + "。") });
 	});
 	const nOk = results.filter(function(x) { return x.ok; }).length;
-	push({ group: urls.length + 1, code: [], msg: "Done: " + nOk + " of " + results.length + " URL(s) allowed for `" + agent + "`. robots.txt works on an honor basis — it is not a security mechanism (L7 p19)." });
+	push({ group: urls.length + 1, code: [], msg: T("Done: " + nOk + " of " + results.length + " URL(s) allowed for `" + agent + "`. robots.txt works on an honor basis — it is not a security mechanism (L7 p19).",
+		"完成：" + results.length + " 个 URL 中有 " + nOk + " 个允许 `" + agent + "` 爬取。robots.txt 基于君子协定运作，它不是安全机制（L7 p19）。") });
 	frames.forEach(function(f) { f.lines = f.code; f.rlines = r.lines; f.urlList = urls; delete f.code; });
 	return frames;
 }
@@ -307,7 +322,7 @@ export function render(stage, frame) {
 		const c = ["vz-rt-url"];
 		if (res) c.push(res.ok ? "is-ok" : "is-no");
 		else if (i === frame.current) c.push("is-cur");
-		html += '<div class="' + c.join(" ") + '"><span>' + esc(u) + '</span><span class="vz-rt-v">' + (res ? (res.ok ? "✓ allowed" : "✗ disallowed") : (i === frame.current ? "checking…" : "")) + "</span></div>";
+		html += '<div class="' + c.join(" ") + '"><span>' + esc(u) + '</span><span class="vz-rt-v">' + (res ? (res.ok ? frame.ui.allowed : frame.ui.disallowed) : (i === frame.current ? frame.ui.checking : "")) + "</span></div>";
 	});
 	stage.innerHTML = html + "</div></div>";
 }

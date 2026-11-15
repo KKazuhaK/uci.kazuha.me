@@ -5,7 +5,7 @@
 // text B: similarity = fraction of the n bits that agree, compared with tau.
 // The default is the slide's example with the slide's own 8-bit hashes;
 // without `hashes`, a demo hash (FNV-1a, top b bits) is used.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_WORDS = 16;
 
@@ -16,7 +16,7 @@ const SLIDE_HASHES = "tropical 01100001, fish 10101011, include 11100110, found 
 export const meta = {
 	name: "simhash",
 	summary: "Simhash: word weights × hash bits → column sums V → fingerprint bit = 1 if V[i] > 0; optional text B: fraction of equal bits vs τ.",
-	groupLabel: "word",
+	groupLabel: { en: "word", zh: "词" },
 	params: {
 		text: { type: "string", default: SLIDE_TEXT, desc: "Document A. Lower-cased, punctuation dropped; ≤ 16 distinct words after stopwords." },
 		stopwords: { type: "string", desc: "Words to drop, comma-separated. Default: \"in, the, and\" for the slide's text (the slide's word list leaves them out), else none." },
@@ -153,15 +153,18 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-cmp", label: "Word being added" },
-	{ cls: "is-sorted", label: "+weight (bit 1) / bit 1 in the fingerprint" },
-	{ cls: "is-min", label: "−weight (bit 0) / bits that differ" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-cmp", label: T("Word being added", "正在累加的词") },
+		{ cls: "is-sorted", label: T("+weight (bit 1) / bit 1 in the fingerprint", "+权重（位为 1）/ 指纹中为 1 的位") },
+		{ cls: "is-min", label: T("−weight (bit 0) / bits that differ", "−权重（位为 0）/ 不同的位") }
+	];
+}
 
 export const input = {
 	key: "text",
-	label: "Text A",
+	label: { en: "Text A", zh: "文本 A" },
 	format: function(config) { return config.text === undefined ? SLIDE_TEXT : config.text; },
 	parse: function(text) {
 		if (!tokens(text).length) return { error: "type some words" };
@@ -172,6 +175,7 @@ export const input = {
 function signed(x) { return x > 0 ? "+" + x : String(x); }
 
 export function steps(config) {
+	const T = tr(config);
 	const c = cfg(config);
 	const A = build(c, c.text, "text");
 	const b = A.b;
@@ -190,31 +194,37 @@ export function steps(config) {
 			col: f.col === undefined ? -1 : f.col,
 			B: f.B || null,
 			final: !!f.final,
+			lbl: { word: T("word", "词"), wt: T("wt", "权重"), hash: T("hash", "哈希") },
 			lines: f.lines || [],
 			msg: f.msg,
 			vars: f.vars || []
 		});
 	}
 	const wlist = A.words.map(function(w) { return w.word + " " + w.weight; }).join(", ");
-	push({ group: 0, phase: 1, lines: [4], msg: "Step 1: features = words weighted by their frequency" + (c.stop.length ? " (dropped: " + c.stop.join(", ") + ")" : "") + ": " + wlist + ".",
-		vars: [["words", String(A.words.length)]] });
-	push({ group: 0, phase: 2, lines: [7], msg: "Step 2: a " + b + "-bit hash value per word (" + (A.given ? "the slide's values" : "demo hash: FNV-1a, top " + b + " bits — not the slide's") + "). Each bit becomes +weight (1) or −weight (0).",
-		vars: [["words", String(A.words.length)], ["b", String(b)]] });
+	push({ group: 0, phase: 1, lines: [4], msg: T("Step 1: features = words weighted by their frequency" + (c.stop.length ? " (dropped: " + c.stop.join(", ") + ")" : "") + ": " + wlist + ".",
+			"第 1 步：特征 = 按词频加权的词" + (c.stop.length ? "（已去掉停用词：" + c.stop.join("、") + "）" : "") + "：" + wlist + "。"),
+		vars: [[T("words", "词数"), String(A.words.length)]] });
+	push({ group: 0, phase: 2, lines: [7], msg: T("Step 2: a " + b + "-bit hash value per word (" + (A.given ? "the slide's values" : "demo hash: FNV-1a, top " + b + " bits — not the slide's") + "). Each bit becomes +weight (1) or −weight (0).",
+			"第 2 步：每个词一个 " + b + " 位的哈希值（" + (A.given ? "幻灯片给出的值" : "演示用哈希：FNV-1a 的高 " + b + " 位，不是幻灯片里的值") + "）。每一位变成 +权重（1）或 −权重（0）。"),
+		vars: [[T("words", "词数"), String(A.words.length)], ["b", String(b)]] });
 	A.words.forEach(function(w, k) {
 		for (let i = 0; i < b; i++) v[i] += w.hash[i] === "1" ? w.weight : -w.weight;
 		push({ group: 1, phase: 3, upto: k, cur: k, v: v.slice(), lines: [6, 7, 8, 9, 10, 11, 12],
-			msg: "Step 3: `" + w.word + "` (weight " + w.weight + ", hash " + w.hash + ") adds " + w.hash.split("").map(function(x) { return x === "1" ? "+" + w.weight : "−" + w.weight; }).join(" ") + ". V = " + v.join(" ") + ".",
-			vars: [["word", w.word], ["wt", String(w.weight)], ["bits", w.hash], ["V", v.join(" ")]] });
+			msg: T("Step 3: `" + w.word + "` (weight " + w.weight + ", hash " + w.hash + ") adds " + w.hash.split("").map(function(x) { return x === "1" ? "+" + w.weight : "−" + w.weight; }).join(" ") + ". V = " + v.join(" ") + ".",
+				"第 3 步：`" + w.word + "`（权重 " + w.weight + "，哈希 " + w.hash + "）累加 " + w.hash.split("").map(function(x) { return x === "1" ? "+" + w.weight : "−" + w.weight; }).join(" ") + "。V = " + v.join(" ") + "。"),
+			vars: [[T("word", "词"), w.word], [T("wt", "权重"), String(w.weight)], [T("bits", "位"), w.hash], ["V", v.join(" ")]] });
 	});
 	const lastCol = b - 1;
 	const terms = A.words.map(function(w) { return w.hash[lastCol] === "1" ? w.weight : -w.weight; });
 	push({ group: 2, phase: 3, upto: A.words.length - 1, v: v.slice(), col: lastCol, lines: [8, 9, 10, 11, 12],
-		msg: "Check one column, bit " + b + ": " + v[lastCol] + " = " + terms.map(function(t, i) { return (i === 0 ? String(t) : (t > 0 ? "+ " + t : "− " + (-t))); }).join(" ") + ".",
+		msg: T("Check one column, bit " + b + ": " + v[lastCol] + " = " + terms.map(function(t, i) { return (i === 0 ? String(t) : (t > 0 ? "+ " + t : "− " + (-t))); }).join(" ") + ".",
+			"检查其中一列，第 " + b + " 位：" + v[lastCol] + " = " + terms.map(function(t, i) { return (i === 0 ? String(t) : (t > 0 ? "+ " + t : "− " + (-t))); }).join(" ") + "。"),
 		vars: [["V", v.join(" ")]] });
 	const fp = v.map(function(x) { return x > 0 ? "1" : "0"; }).join("");
 	push({ group: 2, phase: 4, upto: A.words.length - 1, v: v.slice(), fp: fp, lines: [13, 14], final: c.textB === undefined,
-		msg: "Step 4: bit i = 1 if V[i] > 0, else 0. V = " + v.join(" ") + " → " + b + "-bit fingerprint " + fp + ".",
-		vars: [["V", v.join(" ")], ["fingerprint", fp]] });
+		msg: T("Step 4: bit i = 1 if V[i] > 0, else 0. V = " + v.join(" ") + " → " + b + "-bit fingerprint " + fp + ".",
+			"第 4 步：若 V[i] > 0，则第 i 位为 1，否则为 0。V = " + v.join(" ") + " → " + b + " 位指纹 " + fp + "。"),
+		vars: [["V", v.join(" ")], [T("fingerprint", "指纹"), fp]] });
 	if (c.textB !== undefined) {
 		const B = build(c, c.textB, "textB");
 		const hb = simhash(B.words, b);
@@ -223,11 +233,13 @@ export function steps(config) {
 		const pct = Math.round(S * 1000) / 10;
 		const near = S * 100 >= c.tau;
 		push({ group: 3, phase: 5, upto: A.words.length - 1, v: v.slice(), fp: fp, B: { words: B.words, v: hb.v, fp: hb.fp }, lines: [3],
-			msg: "Same steps for text B (" + B.words.length + " words): V = " + hb.v.join(" ") + " → fingerprint " + hb.fp + ".",
+			msg: T("Same steps for text B (" + B.words.length + " words): V = " + hb.v.join(" ") + " → fingerprint " + hb.fp + ".",
+				"对文本 B 做同样的步骤（" + B.words.length + " 个词）：V = " + hb.v.join(" ") + " → 指纹 " + hb.fp + "。"),
 			vars: [["HA", fp], ["HB", hb.fp]] });
 		push({ group: 3, phase: 6, upto: A.words.length - 1, v: v.slice(), fp: fp, B: { words: B.words, v: hb.v, fp: hb.fp }, final: true, lines: [16, 17, 18],
-			msg: "S = (bits that agree) / n = " + same + " / " + b + " = " + pct + "% " + (near ? "≥" : "<") + " τ = " + c.tau + "% → " + (near ? "near duplicates." : "not near duplicates (under this τ)."),
-			vars: [["HA", fp], ["HB", hb.fp], ["same", same + " / " + b], ["S", pct + "%"]] });
+			msg: T("S = (bits that agree) / n = " + same + " / " + b + " = " + pct + "% " + (near ? "≥" : "<") + " τ = " + c.tau + "% → " + (near ? "near duplicates." : "not near duplicates (under this τ)."),
+				"S = （相同的位数）/ n = " + same + " / " + b + " = " + pct + "% " + (near ? "≥" : "<") + " τ = " + c.tau + "% → " + (near ? "近似重复。" : "不是近似重复（按这个 τ）。")),
+			vars: [["HA", fp], ["HB", hb.fp], [T("same", "相同位"), same + " / " + b], ["S", pct + "%"]] });
 	}
 	return frames;
 }
@@ -266,7 +278,7 @@ function esc(t) {
 export function render(stage, frame) {
 	ensureStyle();
 	const b = frame.b;
-	let html = '<div class="vz-sh"><table><thead><tr><th>word</th><th>wt</th><th>hash</th>';
+	let html = '<div class="vz-sh"><table><thead><tr><th>' + esc(frame.lbl.word) + "</th><th>" + esc(frame.lbl.wt) + "</th><th>" + esc(frame.lbl.hash) + "</th>";
 	for (let i = 0; i < b; i++) html += "<th>b" + (i + 1) + "</th>";
 	html += "</tr></thead><tbody>";
 	frame.words.forEach(function(w, k) {

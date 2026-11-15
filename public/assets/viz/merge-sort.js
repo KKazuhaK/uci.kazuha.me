@@ -3,12 +3,12 @@
 // that picks from the left (i) or right (j) half. mode "merge" shows one
 // merge of two already sorted halves (the slides' A G L O R | H I M S T).
 import { arrayView } from "./_array.js";
-import { checkParams, randomInts } from "./_core.js";
+import { checkParams, randomInts, tr } from "./_core.js";
 
 export const meta = {
 	name: "merge-sort",
 	summary: "Merge sort with an aux array: recursive splits, then merge() picks from aux[i] or aux[j] for each k.",
-	groupLabel: "merge",
+	groupLabel: { en: "merge", zh: "归并" },
 	params: {
 		items: { type: "string", required: true, desc: "Values, comma-separated: integers or short words (2–16 items, 1–3 chars each), e.g. \"M, E, R, G, E, S, R, T\"." },
 		mode: { type: "enum", values: ["sort", "merge"], default: "sort", desc: "\"sort\" runs the whole recursion; \"merge\" runs one merge(a, aux, 0, mid, n-1)." },
@@ -90,26 +90,27 @@ export function code(config) {
 
 // Sort mode (recursion tree) and merge mode (aux + a rows) colour different things.
 export function legend(config) {
+	const T = tr(config);
 	if ((config.mode || "sort") === "sort") {
 		return [
-			{ cls: "is-cur", label: "Current call" },
-			{ cls: "is-cmp", label: "Being compared · aux[i] vs aux[j]" },
-			{ cls: "is-swap", label: "Just written · a[k]" },
-			{ cls: "is-sorted", label: "Sorted (merge result)" },
-			{ cls: "is-used", label: "Already taken by the merge" }
+			{ cls: "is-cur", label: T("Current call", "当前调用") },
+			{ cls: "is-cmp", label: T("Being compared · aux[i] vs aux[j]", "正在比较 · aux[i] 与 aux[j]") },
+			{ cls: "is-swap", label: T("Just written · a[k]", "刚写入 · a[k]") },
+			{ cls: "is-sorted", label: T("Sorted (merge result)", "已有序（归并结果）") },
+			{ cls: "is-used", label: T("Already taken by the merge", "已被归并取走") }
 		];
 	}
 	return [
-		{ cls: "is-cmp", label: "Being compared · aux[i] vs aux[j]" },
-		{ cls: "is-swap", label: "Just written · a[k]" },
-		{ cls: "is-sorted", label: "Sorted subarray (merge result)" },
-		{ cls: "is-out", label: "Outside lo..hi" }
+		{ cls: "is-cmp", label: T("Being compared · aux[i] vs aux[j]", "正在比较 · aux[i] 与 aux[j]") },
+		{ cls: "is-swap", label: T("Just written · a[k]", "刚写入 · a[k]") },
+		{ cls: "is-sorted", label: T("Sorted subarray (merge result)", "有序子数组（归并结果）") },
+		{ cls: "is-out", label: T("Outside lo..hi", "lo..hi 之外") }
 	];
 }
 
 export const input = {
 	key: "items",
-	label: "Items",
+	label: { en: "Items", zh: "元素" },
 	format: function(config) { return config.items; },
 	parse: function(text) {
 		const r = parseItems(text);
@@ -119,6 +120,7 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const parsed = parseItems(config.items);
 	const a = parsed.values.slice();
 	const n = a.length;
@@ -151,10 +153,10 @@ export function steps(config) {
 			msg: f.msg,
 			group: group,
 			vars: [
-				...(mergeOnly ? [] : [["call stack", stack.length ? stack.join(" › ") : "—"]]),
+				...(mergeOnly ? [] : [[T("call stack", "调用栈"), stack.length ? stack.join(" › ") : "—"]]),
 				["lo, mid, hi", f.lo === undefined ? "—" : f.lo + ", " + (f.mid === undefined ? "?" : f.mid) + ", " + f.hi],
 				["i, j, k", f.i === undefined ? "—" : f.i + ", " + f.j + ", " + (f.k === undefined ? "—" : f.k)],
-				["comparisons", String(comparisons)]
+				[T("comparisons", "比较次数"), String(comparisons)]
 			]
 		});
 	}
@@ -177,37 +179,38 @@ export function steps(config) {
 		const show2 = function(x) { return "`" + x + "`"; };
 		for (let k = lo; k <= hi; k++) copyToAux(k);
 		push({ lo: lo, mid: mid, hi: hi, lines: [10, 11],
-			msg: "`merge(a, aux, " + lo + ", " + mid + ", " + hi + ")`: copy `a[" + lo + ".." + hi + "]` into `aux`. Left half is `aux[" + lo + ".." + mid + "]`, right half is `aux[" + (mid + 1) + ".." + hi + "]`, both sorted." });
+			msg: T("`merge(a, aux, " + lo + ", " + mid + ", " + hi + ")`: copy `a[" + lo + ".." + hi + "]` into `aux`. Left half is `aux[" + lo + ".." + mid + "]`, right half is `aux[" + (mid + 1) + ".." + hi + "]`, both sorted.",
+				"`merge(a, aux, " + lo + ", " + mid + ", " + hi + ")`：把 `a[" + lo + ".." + hi + "]` 复制到 `aux`。左半部分是 `aux[" + lo + ".." + mid + "]`，右半部分是 `aux[" + (mid + 1) + ".." + hi + "]`，两部分都已有序。") });
 		let i = lo, j = mid + 1;
 		push({ lo: lo, mid: mid, hi: hi, i: i, j: j, lines: [12],
-			msg: "`i = " + i + "` starts the left half, `j = " + j + "` starts the right half." });
+			msg: T("`i = " + i + "` starts the left half, `j = " + j + "` starts the right half.", "`i = " + i + "` 指向左半部分的起点，`j = " + j + "` 指向右半部分的起点。") });
 		for (let k = lo; k <= hi; k++) {
 			let line, why;
 			let cmp = null;
 			if (i > mid) {
-				line = [14]; why = "`i > mid` (left half used up): take " + show2(aux[j]) + " from the right, `j++`.";
+				line = [14]; why = ["`i > mid` (left half used up): take " + show2(aux[j]) + " from the right, `j++`.", "`i > mid`（左半部分已用完）：从右半部分取 " + show2(aux[j]) + "，`j++`。"];
 				a[k] = aux[j++];
 			} else if (j > hi) {
-				line = [15]; why = "`j > hi` (right half used up): take " + show2(aux[i]) + " from the left, `i++`.";
+				line = [15]; why = ["`j > hi` (right half used up): take " + show2(aux[i]) + " from the left, `i++`.", "`j > hi`（右半部分已用完）：从左半部分取 " + show2(aux[i]) + "，`i++`。"];
 				a[k] = aux[i++];
 			} else {
 				comparisons++;
 				cmp = [i, j];
 				if (less(aux[j], aux[i])) {
-					line = [16, 17]; why = "`aux[j] < aux[i]` (" + aux[j] + " < " + aux[i] + "): take " + show2(aux[j]) + " from the right, `j++`.";
+					line = [16, 17]; why = ["`aux[j] < aux[i]` (" + aux[j] + " < " + aux[i] + "): take " + show2(aux[j]) + " from the right, `j++`.", "`aux[j] < aux[i]`（" + aux[j] + " < " + aux[i] + "）：从右半部分取 " + show2(aux[j]) + "，`j++`。"];
 					a[k] = aux[j++];
 				} else {
-					line = [18]; why = "`aux[j] < aux[i]` is false (" + aux[j] + " vs " + aux[i] + (aux[i] === aux[j] ? ", equal, so the left one wins: stable" : "") + "): take " + show2(aux[i]) + " from the left, `i++`.";
+					line = [18]; why = ["`aux[j] < aux[i]` is false (" + aux[j] + " vs " + aux[i] + (aux[i] === aux[j] ? ", equal, so the left one wins: stable" : "") + "): take " + show2(aux[i]) + " from the left, `i++`.", "`aux[j] < aux[i]` 为假（" + aux[j] + " 对 " + aux[i] + (aux[i] === aux[j] ? "，相等，所以左边的优先：稳定" : "") + "）：从左半部分取 " + show2(aux[i]) + "，`i++`。"];
 					a[k] = aux[i++];
 				}
 			}
 			wrote(k);
 			push({ lo: lo, mid: mid, hi: hi, i: i, j: j, k: k, cmp: cmp, wrote: k, lines: line,
-				msg: "k = " + k + ": " + why + " `a[" + k + "] = " + a[k] + "`." });
+				msg: T("k = " + k + ": " + why[0] + " `a[" + k + "] = " + a[k] + "`.", "k = " + k + "：" + why[1] + " `a[" + k + "] = " + a[k] + "`。") });
 		}
 		addSorted(lo, hi);
 		push({ lo: lo, mid: mid, hi: hi, lines: [20],
-			msg: "Merge done: `a[" + lo + ".." + hi + "]` = " + a.slice(lo, hi + 1).join(" ") + " is sorted." });
+			msg: T("Merge done: `a[" + lo + ".." + hi + "]` = " + a.slice(lo, hi + 1).join(" ") + " is sorted.", "归并完成：`a[" + lo + ".." + hi + "]` = " + a.slice(lo, hi + 1).join(" ") + " 已有序。") });
 		group++;
 	}
 
@@ -248,31 +251,33 @@ export function steps(config) {
 		node.vals = new Array(hi - lo + 1).fill(null);
 		let i = lo, j = mid + 1;
 		pushTree({ lo: lo, mid: mid, hi: hi, i: i, j: j, lines: [10, 11, 12],
-			msg: "Both halves of `sort(" + lo + "," + hi + ")` are sorted. `merge()` copies `a[" + lo + ".." + hi + "]` to `aux` (the two halves below) and refills `a[" + lo + ".." + hi + "]` from the front: `i = " + i + "` on the left half, `j = " + j + "` on the right." });
+			msg: T("Both halves of `sort(" + lo + "," + hi + ")` are sorted. `merge()` copies `a[" + lo + ".." + hi + "]` to `aux` (the two halves below) and refills `a[" + lo + ".." + hi + "]` from the front: `i = " + i + "` on the left half, `j = " + j + "` on the right.",
+				"`sort(" + lo + "," + hi + ")` 的两半都已有序。`merge()` 把 `a[" + lo + ".." + hi + "]` 复制到 `aux`（下方的两半），再从头重新填写 `a[" + lo + ".." + hi + "]`：`i = " + i + "` 在左半部分，`j = " + j + "` 在右半部分。") });
 		for (let k = lo; k <= hi; k++) {
 			let line, why;
 			let cmp = null;
 			if (i > mid) {
-				line = [14]; why = "left half used up: take `" + aux[j] + "` from the right";
+				line = [14]; why = ["left half used up: take `" + aux[j] + "` from the right", "左半部分已用完：从右半部分取 `" + aux[j] + "`"];
 				a[k] = aux[j++];
 			} else if (j > hi) {
-				line = [15]; why = "right half used up: take `" + aux[i] + "` from the left";
+				line = [15]; why = ["right half used up: take `" + aux[i] + "` from the left", "右半部分已用完：从左半部分取 `" + aux[i] + "`"];
 				a[k] = aux[i++];
 			} else {
 				comparisons++;
 				cmp = [i, j];
 				if (less(aux[j], aux[i])) {
-					line = [16, 17]; why = "`" + aux[j] + " < " + aux[i] + "`: take `" + aux[j] + "` from the right";
+					line = [16, 17]; why = ["`" + aux[j] + " < " + aux[i] + "`: take `" + aux[j] + "` from the right", "`" + aux[j] + " < " + aux[i] + "`：从右半部分取 `" + aux[j] + "`"];
 					a[k] = aux[j++];
 				} else {
-					line = [18]; why = (aux[i] === aux[j] ? "`" + aux[i] + "` = `" + aux[j] + "`, the left one wins (stable)" : "`" + aux[i] + " ≤ " + aux[j] + "`") + ": take `" + aux[i] + "` from the left";
+					line = [18]; why = [(aux[i] === aux[j] ? "`" + aux[i] + "` = `" + aux[j] + "`, the left one wins (stable)" : "`" + aux[i] + " ≤ " + aux[j] + "`") + ": take `" + aux[i] + "` from the left",
+						(aux[i] === aux[j] ? "`" + aux[i] + "` = `" + aux[j] + "`，左边的优先（稳定）" : "`" + aux[i] + " ≤ " + aux[j] + "`") + "：从左半部分取 `" + aux[i] + "`"];
 					a[k] = aux[i++];
 				}
 			}
 			wrote(k);
 			node.vals[k - lo] = a[k];
 			pushTree({ lo: lo, mid: mid, hi: hi, i: i, j: j, k: k, cmp: cmp, wrote: k, lines: line,
-				msg: "k = " + k + ": " + why + ", `a[" + k + "] = " + a[k] + "`." });
+				msg: T("k = " + k + ": " + why[0] + ", `a[" + k + "] = " + a[k] + "`.", "k = " + k + "：" + why[1] + "，`a[" + k + "] = " + a[k] + "`。") });
 		}
 		merging = null;
 		node.state = "done";
@@ -280,27 +285,27 @@ export function steps(config) {
 		nodeAt[(mid + 1) + "-" + hi].state = "used";
 		addSorted(lo, hi);
 		pushTree({ lo: lo, mid: mid, hi: hi, lines: [20],
-			msg: "Merge done: `a[" + lo + ".." + hi + "]` = " + a.slice(lo, hi + 1).join(" ") + " is sorted." });
+			msg: T("Merge done: `a[" + lo + ".." + hi + "]` = " + a.slice(lo, hi + 1).join(" ") + " is sorted.", "归并完成：`a[" + lo + ".." + hi + "]` = " + a.slice(lo, hi + 1).join(" ") + " 已有序。") });
 		group++;
 	}
 
 	function sort(lo, hi, side) {
 		const node = nodeAt[lo + "-" + hi];
-		const where = side ? "The " + side + " half: " : "";
+		const where = side ? T("The " + side + " half: ", (side === "left" ? "左" : "右") + "半部分：") : "";
 		stack.push("sort(" + lo + "," + hi + ")");
 		current = lo + "-" + hi;
 		node.vals = a.slice(lo, hi + 1);
 		if (hi <= lo) {
 			node.state = "done";
 			addSorted(lo, lo);
-			pushTree({ lo: lo, hi: hi, lines: [2], msg: where + "`sort(" + lo + "," + hi + ")` has one element (`" + a[lo] + "`): already sorted, return." });
+			pushTree({ lo: lo, hi: hi, lines: [2], msg: where + T("`sort(" + lo + "," + hi + ")` has one element (`" + a[lo] + "`): already sorted, return.", "`sort(" + lo + "," + hi + ")` 只有一个元素（`" + a[lo] + "`）：已有序，返回。") });
 			stack.pop();
 			return;
 		}
 		node.state = "open";
 		const mid = lo + Math.floor((hi - lo) / 2);
 		pushTree({ lo: lo, mid: mid, hi: hi, lines: [3],
-			msg: where + "`sort(" + lo + "," + hi + ")`: `mid = " + mid + "`, split into " + lo + ".." + mid + " and " + (mid + 1) + ".." + hi + ", then sort each half." });
+			msg: where + T("`sort(" + lo + "," + hi + ")`: `mid = " + mid + "`, split into " + lo + ".." + mid + " and " + (mid + 1) + ".." + hi + ", then sort each half.", "`sort(" + lo + "," + hi + ")`：`mid = " + mid + "`，拆成 " + lo + ".." + mid + " 和 " + (mid + 1) + ".." + hi + " 两半，再分别排序。") });
 		sort(lo, mid, "left");
 		current = lo + "-" + hi;
 		sort(mid + 1, hi, "right");
@@ -314,14 +319,14 @@ export function steps(config) {
 		addSorted(0, config.mid);
 		addSorted(config.mid + 1, n - 1);
 		push({ lo: 0, mid: config.mid, hi: n - 1, lines: [8, 9],
-			msg: "Start: `a[0.." + config.mid + "]` and `a[" + (config.mid + 1) + ".." + (n - 1) + "]` are each sorted. `merge()` combines them into one sorted array." });
+			msg: T("Start: `a[0.." + config.mid + "]` and `a[" + (config.mid + 1) + ".." + (n - 1) + "]` are each sorted. `merge()` combines them into one sorted array.", "开始：`a[0.." + config.mid + "]` 和 `a[" + (config.mid + 1) + ".." + (n - 1) + "]` 各自已有序。`merge()` 把它们合并成一个有序数组。") });
 		merge(0, config.mid, n - 1);
-		push({ lines: [], msg: "Done: " + a.join(" ") + ". " + comparisons + " comparisons for n = " + n + " (between n/2 and n − 1)." });
+		push({ lines: [], msg: T("Done: " + a.join(" ") + ". " + comparisons + " comparisons for n = " + n + " (between n/2 and n − 1).", "完成：" + a.join(" ") + "。n = " + n + " 时共比较 " + comparisons + " 次（介于 n/2 和 n − 1 之间）。") });
 		frames.forEach(function(f) { f.lines = f.lines.map(function(l) { return l - MERGE_FROM + 1; }); });
 	} else {
 		sort(0, n - 1, null);
 		current = null;
-		pushTree({ lines: [], msg: "Done: " + a.join(" ") + ". " + comparisons + " comparisons; every level of the tree costs at most n, and there are lg n levels: ~n lg n." });
+		pushTree({ lines: [], msg: T("Done: " + a.join(" ") + ". " + comparisons + " comparisons; every level of the tree costs at most n, and there are lg n levels: ~n lg n.", "完成：" + a.join(" ") + "。共比较 " + comparisons + " 次；树的每一层最多花费 n，共有 lg n 层：约 n lg n。") });
 	}
 	return frames;
 }

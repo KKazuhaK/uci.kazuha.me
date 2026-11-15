@@ -10,7 +10,7 @@
 //       one; a short word -> add e.
 // Colours: a cell is purple when THAT step changed the word, plain when the
 // step left it alone; the final stem (after 1b) is bold.
-// `lang: "zh"` switches the messages, legend and headers to Chinese.
+// `lang: "zh"`, or a Chinese page (`_lang`), switches the messages, legend and headers to Chinese.
 import { checkParams } from "./_core.js";
 
 const MAX_WORDS = 12;
@@ -19,7 +19,7 @@ const VOWELS = "aeiouy";
 export const meta = {
 	name: "porter-step1",
 	summary: "Porter stemmer Step 1a + 1b: which suffix rule fires for each word, and the word after each step.",
-	groupLabel: "word",
+	groupLabel: { en: "word", zh: "单词" },
 	params: {
 		words: { type: "string", required: true, desc: "Lower-case words, comma- or space-separated (at most 12)." },
 		lang: { type: "enum", values: ["en", "zh"], default: "en", desc: "Language of the messages, legend and table headers." },
@@ -85,7 +85,7 @@ const TEXT = {
 	}
 };
 
-function T(config) { return TEXT[config && config.lang === "zh" ? "zh" : "en"]; }
+function T(config) { return TEXT[config && (config.lang === "zh" || config._lang === "zh-CN") ? "zh" : "en"]; }
 
 function splitWords(text) {
 	return String(text).split(/[\s,]+/).map(function(s) { return s.trim(); }).filter(Boolean);
@@ -194,7 +194,7 @@ export function legend(config) {
 
 export const input = {
 	key: "words",
-	label: "Words",
+	label: { en: "Words", zh: "单词" },
 	format: function(config) { return config.words; },
 	parse: function(text) {
 		const ws = splitWords(String(text).toLowerCase());

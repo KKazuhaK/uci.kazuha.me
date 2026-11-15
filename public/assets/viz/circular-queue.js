@@ -1,14 +1,14 @@
 // Queue on a circular array, step by step: front index and size n, rear =
 // (front + n) % capacity, indices wrap around instead of shifting.
 import { arrayView } from "./_array.js";
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_OPS = 24;
 
 export const meta = {
 	name: "circular-queue",
 	summary: "Queue on a fixed-capacity circular array: enqueue at (front + n) % capacity, dequeue at front, both O(1).",
-	groupLabel: "operation",
+	groupLabel: { en: "operation", zh: "操作" },
 	params: {
 		ops: { type: "string", required: true, desc: "enqueue(x); dequeue(); peek() — or shorthand \"a b - c\" (word = enqueue, - = dequeue)." },
 		capacity: { type: "int", default: 5, min: 2, max: 10, desc: "Array capacity (fixed; enqueue on a full queue is an error)." },
@@ -106,15 +106,18 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-sorted", label: "Just enqueued" },
-	{ cls: "is-swap", label: "Just dequeued (slot now free)" },
-	{ cls: "is-min", label: "In the queue" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-sorted", label: T("Just enqueued", "刚入队") },
+		{ cls: "is-swap", label: T("Just dequeued (slot now free)", "刚出队（槽位已空闲）") },
+		{ cls: "is-min", label: T("In the queue", "在队列中") }
+	];
+}
 
 export const input = {
 	key: "ops",
-	label: "Operations",
+	label: { en: "Operations", zh: "操作" },
 	format: function(config) { return config.ops; },
 	parse: function(text) {
 		return String(text).trim() ? { value: String(text).trim() } : { error: "type e.g. A B - C - D" };
@@ -131,6 +134,7 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const ops = plan(config).ops;
 	const cap = config.capacity;
 	const data = new Array(cap).fill(null);
@@ -142,8 +146,12 @@ export function steps(config) {
 	const out = [];
 	const frames = [];
 
+	const capText = T("data — capacity ", "data —— 容量 ") + cap;
+	const rearName = T("rear slot", "队尾槽位");
+
 	function push(f) {
 		frames.push({
+			capText: capText, rearName: rearName,
 			data: data.slice(), ids: ids.slice(), cap: cap, front: front, n: n,
 			hi: f.hi === undefined ? -1 : f.hi, hiCls: f.hiCls || "",
 			lines: f.lines || [], msg: f.msg, group: f.group,
@@ -151,13 +159,14 @@ export function steps(config) {
 				["op", f.op || "—"],
 				["front", String(front)],
 				["n", String(n)],
-				["rear slot (front + n) % cap", String((front + n) % cap)],
-				["dequeued so far", out.length ? out.join(" ") : "—"]
+				[T("rear slot (front + n) % cap", "队尾槽位 (front + n) % cap"), String((front + n) % cap)],
+				[T("dequeued so far", "已出队"), out.length ? out.join(" ") : "—"]
 			]
 		});
 	}
 
-	push({ group: -1, msg: "Start: capacity " + cap + ", front = 0, n = 0. The queue is the n slots starting at front, wrapping past the end." });
+	push({ group: -1, msg: T("Start: capacity " + cap + ", front = 0, n = 0. The queue is the n slots starting at front, wrapping past the end.",
+		"开始：容量 " + cap + "，front = 0，n = 0。队列就是从 front 开始的 n 个槽位，越过数组末尾后绕回开头。") });
 	ops.forEach(function(o, g) {
 		if (o.kind === "enqueue") {
 			const slot = (front + n) % cap;
@@ -165,9 +174,10 @@ export function steps(config) {
 			ids[slot] = nextId++;
 			n++;
 			push({ group: g, op: o.src, hi: slot, hiCls: "is-sorted", lines: [3, 4],
-				msg: "enqueue " + o.item + ": write it at (front + n) % capacity = (" + front + " + " + (n - 1) + ") % " + cap + " = " + slot + "." + (slot < front ? " That wrapped around to the start of the array." : "") + " O(1)." });
+				msg: T("enqueue " + o.item + ": write it at (front + n) % capacity = (" + front + " + " + (n - 1) + ") % " + cap + " = " + slot + "." + (slot < front ? " That wrapped around to the start of the array." : "") + " O(1).",
+					"入队 " + o.item + "：写入 (front + n) % capacity = (" + front + " + " + (n - 1) + ") % " + cap + " = " + slot + " 号槽位。" + (slot < front ? "这里已绕回到数组开头。" : "") + "O(1)。") });
 		} else if (o.kind === "peek") {
-			push({ group: g, op: o.src, hi: front, hiCls: "is-min", lines: [8], msg: "peek(): the front item is data[" + front + "] = " + data[front] + "." });
+			push({ group: g, op: o.src, hi: front, hiCls: "is-min", lines: [8], msg: T("peek(): the front item is data[" + front + "] = " + data[front] + ".", "peek()：队首元素是 data[" + front + "] = " + data[front] + "。") });
 		} else {
 			const slot = front;
 			const item = data[slot];
@@ -175,10 +185,12 @@ export function steps(config) {
 			front = (front + 1) % cap;
 			n--;
 			push({ group: g, op: o.src, hi: slot, hiCls: "is-swap", lines: [8, 9, 10, 11],
-				msg: "dequeue(): return data[" + slot + "] = " + item + ", then front = (" + slot + " + 1) % " + cap + " = " + front + ". Nothing shifts — O(1). The old value stays in the slot but is no longer part of the queue." });
+				msg: T("dequeue(): return data[" + slot + "] = " + item + ", then front = (" + slot + " + 1) % " + cap + " = " + front + ". Nothing shifts — O(1). The old value stays in the slot but is no longer part of the queue.",
+					"出队 dequeue()：返回 data[" + slot + "] = " + item + "，然后 front = (" + slot + " + 1) % " + cap + " = " + front + "。没有任何元素移动——O(1)。旧值仍留在槽位里，但已不属于队列。") });
 		}
 	});
-	push({ group: ops.length, msg: "Done: front = " + front + ", n = " + n + ". Dequeued in order: " + (out.join(" ") || "nothing") + "." });
+	push({ group: ops.length, msg: T("Done: front = " + front + ", n = " + n + ". Dequeued in order: " + (out.join(" ") || "nothing") + ".",
+		"完成：front = " + front + "，n = " + n + "。按顺序出队的元素：" + (out.join(" ") || "无") + "。") });
 	return frames;
 }
 
@@ -189,7 +201,7 @@ export function render(stage, frame) {
 	for (let k = 0; k < frame.n; k++) inQueue.add((frame.front + k) % frame.cap);
 	const rear = (frame.front + frame.n) % frame.cap;
 	arrayView(stage).update({
-		caption: "data — capacity " + frame.cap,
+		caption: frame.capText,
 		cells: frame.data.map(function(v, k) {
 			const role = k === frame.hi && frame.hiCls ? frame.hiCls.replace("is-", "") : inQueue.has(k) ? "min" : "unused";
 			// A never-used slot has no element: its id is the slot. A dequeued slot keeps its stale value.
@@ -199,7 +211,7 @@ export function render(stage, frame) {
 		ptrs: frame.data.map(function(_, k) {
 			const p = [];
 			if (frame.n > 0 && k === frame.front) p.push({ name: "front", role: "min" });
-			if (frame.n < frame.cap && k === rear) p.push({ name: "rear slot", role: "cmp" });
+			if (frame.n < frame.cap && k === rear) p.push({ name: frame.rearName, role: "cmp" });
 			return p;
 		})
 	});

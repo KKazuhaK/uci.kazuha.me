@@ -128,7 +128,8 @@ export function treeView(stage, key) {
 function createView(host) {
 	const wrap = document.createElement("div");
 	wrap.className = "vz-tree-wrap";
-	const svg = el("svg", { "class": "vz-tree", role: "img", "aria-label": "tree" });
+	const langEl = host.closest ? host.closest("[data-lang]") : null;
+	const svg = el("svg", { "class": "vz-tree", role: "img", "aria-label": langEl && langEl.getAttribute("data-lang") === "zh-CN" ? "树" : "tree" });
 	svg.style.maxWidth = "100%";
 	svg.style.height = "auto";
 	const gE = el("g", {}, svg), gN = el("g", {}, svg);

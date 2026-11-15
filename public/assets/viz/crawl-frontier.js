@@ -4,7 +4,7 @@
 // frontier. Optional per-host politeness delay (frontier.nextSite() skips a
 // host that was visited too recently) and an optional crawler trap (a page
 // that links to a brand-new URL every time it is fetched).
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_PAGES = 30;
 const MAX_HOSTS = 6;
@@ -13,7 +13,7 @@ const MAX_FRAMES = 400;
 export const meta = {
 	name: "crawl-frontier",
 	summary: "Basic crawl over a small link graph: seeds → frontier queue → fetch / store / extract, with optional per-host politeness delay and a crawler trap.",
-	groupLabel: "fetch",
+	groupLabel: { en: "fetch", zh: "获取" },
 	params: {
 		web: { type: "string", required: true, desc: "Link graph: \"host/path -> host/path, host/path; …\" — one page per ';'. Links to pages not listed are pages without links." },
 		seeds: { type: "string", required: true, desc: "Seed URLs, comma-separated (must be pages of the graph)." },
@@ -92,16 +92,19 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-min", label: "Being fetched" },
-	{ cls: "is-cmp", label: "In the frontier" },
-	{ cls: "is-sorted", label: "Crawled (stored)" },
-	{ cls: "is-swap", label: "Blocked by robots.txt" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-min", label: T("Being fetched", "正在获取") },
+		{ cls: "is-cmp", label: T("In the frontier", "在待爬队列中") },
+		{ cls: "is-sorted", label: T("Crawled (stored)", "已爬取（已存储）") },
+		{ cls: "is-swap", label: T("Blocked by robots.txt", "被 robots.txt 禁止") }
+	];
+}
 
 export const input = {
 	key: "web",
-	label: "Link graph",
+	label: { en: "Link graph", zh: "链接图" },
 	format: function(config) { return config.web; },
 	parse: function(text) {
 		const t = String(text).trim();
@@ -124,6 +127,7 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const w = parseWeb(config.web);
 	const pages = w.pages;
 	const order = w.order.slice();
@@ -157,18 +161,20 @@ export function steps(config) {
 			lines: f.lines || [],
 			msg: f.msg,
 			group: f.group,
+			ui: { resting: T("resting ", "休息 "), cap: T("Frontier (FIFO, front →)", "待爬队列（FIFO，队首 →）"), empty: T("empty", "空") },
 			vars: [
-				["clock", clock + " tick(s)"],
-				["fetched", fetches + " / budget " + budget],
-				["frontier", frontier.length + " URL(s)"],
-				["politeness", delay ? delay + " tick(s)/host" : "off (FIFO)"],
-				["waits", String(waits)]
+				[T("clock", "时钟"), T(clock + " tick(s)", clock + " 个 tick")],
+				[T("fetched", "已获取"), T(fetches + " / budget " + budget, fetches + " / 预算 " + budget)],
+				[T("frontier", "待爬队列"), T(frontier.length + " URL(s)", frontier.length + " 个 URL")],
+				[T("politeness", "礼貌性"), delay ? T(delay + " tick(s)/host", delay + " 个 tick/主机") : T("off (FIFO)", "关闭（FIFO）")],
+				[T("waits", "等待次数"), String(waits)]
 			]
 		});
 	}
 
 	seeds.forEach(function(s) { if (state.get(s) === "rest") { state.set(s, "frontier"); frontier.push(s); } });
-	push({ group: 0, msg: "Initialize the frontier with the seed URL(s): " + seeds.join(", ") + ". Everything else is still \"the rest of the web\"." });
+	push({ group: 0, msg: T("Initialize the frontier with the seed URL(s): " + seeds.join(", ") + ". Everything else is still \"the rest of the web\".",
+		"用种子 URL 初始化待爬队列（frontier）：" + seeds.join(", ") + "。其余所有页面仍属于“网络的其余部分”。") });
 
 	function permitted(u) { return !blocked.some(function(p) { return u.indexOf(p) === 0; }); }
 	function ready(h) { return !delay || !lastVisit.has(h) || clock - lastVisit.get(h) > delay; }
@@ -179,19 +185,20 @@ export function steps(config) {
 		if (k < 0) {
 			waits++;
 			const hs = Array.from(new Set(frontier.map(hostOf)));
-			push({ group: fetches, lines: [3], msg: "Every host in the frontier (" + hs.join(", ") + ") was visited less than " + delay + " tick(s) ago, so `next_site()` waits one tick. The thread idles: politeness costs time." });
+			push({ group: fetches, lines: [3], msg: T("Every host in the frontier (" + hs.join(", ") + ") was visited less than " + delay + " tick(s) ago, so `next_site()` waits one tick. The thread idles: politeness costs time.",
+				"待爬队列中的每个主机（" + hs.join(", ") + "）距上次访问都不足 " + delay + " 个 tick，所以 `next_site()` 等待一个 tick。线程空闲：礼貌性（politeness）是要花时间的。") });
 			clock++;
 			continue;
 		}
 		const url = frontier.splice(k, 1)[0];
 		const host = hostOf(url);
-		const skipped = k > 0 ? " (skipped " + k + " URL(s) whose host is still resting)" : "";
+		const skipped = k > 0 ? T(" (skipped " + k + " URL(s) whose host is still resting)", "（跳过了 " + k + " 个主机仍在休息的 URL）") : "";
 		state.set(url, "frontier");
-		push({ group: fetches + 1, current: url, lines: [3, 4], msg: "`next_site()` / `next_url()` → `" + url + "`" + skipped + "." });
+		push({ group: fetches + 1, current: url, lines: [3, 4], msg: T("`next_site()` / `next_url()` → `" + url + "`" + skipped + ".", "`next_site()` / `next_url()` → `" + url + "`" + skipped + "。") });
 
 		if (!permitted(url)) {
 			state.set(url, "blocked");
-			push({ group: fetches + 1, current: url, lines: [5, 10], msg: "`permits_crawl()` is False: robots.txt disallows `" + url + "`. Not fetched; release the site." });
+			push({ group: fetches + 1, current: url, lines: [5, 10], msg: T("`permits_crawl()` is False: robots.txt disallows `" + url + "`. Not fetched; release the site.", "`permits_crawl()` 为 False：robots.txt 禁止 `" + url + "`。不获取；释放该站点。") });
 			continue;
 		}
 		fetches++;
@@ -216,20 +223,33 @@ export function steps(config) {
 			else old.push(l);
 		});
 		push({ group: fetches, current: url, added: added, lines: [6, 7, 8, 9],
-			msg: "Fetch and store `" + url + "`; parse finds " + links.length + " link(s)." +
+			msg: T("Fetch and store `" + url + "`; parse finds " + links.length + " link(s)." +
 				(added.length ? " New → frontier: " + added.join(", ") + "." : " Nothing new.") +
 				(old.length ? " Already seen (skipped): " + old.join(", ") + "." : "") +
-				(trap && url.indexOf(trap) === 0 ? " ⚠️ Trap: this page always links to a URL nobody has seen before." : "") });
+				(trap && url.indexOf(trap) === 0 ? " ⚠️ Trap: this page always links to a URL nobody has seen before." : ""),
+				"获取并存储 `" + url + "`；解析发现 " + links.length + " 个链接。" +
+				(added.length ? "新的 → 加入待爬队列：" + added.join(", ") + "。" : "没有新链接。") +
+				(old.length ? "已见过（跳过）：" + old.join(", ") + "。" : "") +
+				(trap && url.indexOf(trap) === 0 ? "⚠️ 陷阱：这个页面总会链接到一个从未见过的 URL。" : "")) });
 		clock++;
-		push({ group: fetches, lines: [10], msg: "`release_site(" + host + ")`" + (delay ? ": " + host + " must now rest " + delay + " tick(s)." : ".") });
+		push({ group: fetches, lines: [10], msg: T("`release_site(" + host + ")`" + (delay ? ": " + host + " must now rest " + delay + " tick(s)." : "."),
+			"`release_site(" + host + ")`" + (delay ? "：" + host + " 现在必须休息 " + delay + " 个 tick。" : "。")) });
 	}
 
-	let end;
-	if (!frontier.length) end = "Done: the frontier is empty. Crawled " + crawled.length + " page(s) in " + clock + " tick(s)" + (waits ? ", " + waits + " of them waiting for politeness" : "") + ".";
-	else end = "Stopped: the budget of " + budget + " fetches is used up, but the frontier still holds " + frontier.length + " URL(s)" + (trap ? " — the trap would keep the crawler busy forever." : ".");
+	let end, endZh;
+	if (!frontier.length) {
+		end = "Done: the frontier is empty. Crawled " + crawled.length + " page(s) in " + clock + " tick(s)" + (waits ? ", " + waits + " of them waiting for politeness" : "") + ".";
+		endZh = "完成：待爬队列已空。共爬取 " + crawled.length + " 个页面，用了 " + clock + " 个 tick" + (waits ? "，其中 " + waits + " 个 tick 在等待礼貌性" : "") + "。";
+	} else {
+		end = "Stopped: the budget of " + budget + " fetches is used up, but the frontier still holds " + frontier.length + " URL(s)" + (trap ? " — the trap would keep the crawler busy forever." : ".");
+		endZh = "停止：" + budget + " 次获取的预算已用完，但待爬队列中仍有 " + frontier.length + " 个 URL" + (trap ? "——这个陷阱会让爬虫永远忙下去。" : "。");
+	}
 	const unreached = order.filter(function(u) { return state.get(u) === "rest"; });
-	if (unreached.length && !frontier.length) end += " Never reached (no path from the seeds): " + unreached.join(", ") + ".";
-	push({ group: fetches + 1, lines: [2], msg: end });
+	if (unreached.length && !frontier.length) {
+		end += " Never reached (no path from the seeds): " + unreached.join(", ") + ".";
+		endZh += "从未到达（从种子出发没有路径）：" + unreached.join(", ") + "。";
+	}
+	push({ group: fetches + 1, lines: [2], msg: T(end, endZh) });
 	return frames;
 }
 
@@ -273,7 +293,7 @@ export function render(stage, frame) {
 	let html = '<div class="vz-cf"><div class="vz-cf-hosts">';
 	frame.hosts.forEach(function(h) {
 		html += '<div class="vz-cf-host"><div class="vz-cf-hname"><span>' + esc(h.host) + "</span>" +
-			(h.rest > 0 ? '<span class="vz-cf-rest">resting ' + h.rest + "</span>" : "") + '</div><div class="vz-cf-pages">';
+			(h.rest > 0 ? '<span class="vz-cf-rest">' + frame.ui.resting + h.rest + "</span>" : "") + '</div><div class="vz-cf-pages">';
 		h.pages.forEach(function(p) {
 			const c = ["vz-cf-page"];
 			if (p.url === frame.current) c.push("is-min"); else if (cls[p.st]) c.push(cls[p.st]);
@@ -282,8 +302,8 @@ export function render(stage, frame) {
 		});
 		html += "</div></div>";
 	});
-	html += '</div><div class="vz-cf-q"><span class="vz-cf-qcap">Frontier (FIFO, front →)</span>';
-	if (!frame.frontier.length) html += '<span class="vz-cf-empty">empty</span>';
+	html += '</div><div class="vz-cf-q"><span class="vz-cf-qcap">' + frame.ui.cap + "</span>";
+	if (!frame.frontier.length) html += '<span class="vz-cf-empty">' + frame.ui.empty + "</span>";
 	frame.frontier.forEach(function(u) { html += '<span class="vz-cf-qitem">' + esc(u) + "</span>"; });
 	stage.innerHTML = html + "</div></div>";
 }

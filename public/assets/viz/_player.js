@@ -3,7 +3,7 @@
 // running line highlighted, variable watch, and the optional input bar.
 // A component only supplies steps(config) + render(stage, frame); see
 // selection-sort.js for the full contract and viz/README.md for the list.
-import { withDefaults } from "./_core.js";
+import { pick, withDefaults } from "./_core.js";
 
 const ICONS = {
 	prev: '<path d="m15 18-6-6 6-6"/>',
@@ -206,6 +206,24 @@ function ensureStyle() {
 	document.head.appendChild(style);
 }
 
+// The player's own words, per page language (components translate theirs with tr()).
+const UI = {
+	"en-US": {
+		error: "viz block could not be shown", demo: "interactive demo; use the arrow keys to step",
+		expand: "Expand", close: "Close (Esc)", closeLabel: "Close expanded view",
+		prev: "Prev", next: "Next", play: "Play", pause: "Pause", reset: "Back to the start",
+		endOf: function(g) { return "End of " + g; }, endTitle: function(g) { return "Jump to the end of this " + g; },
+		step: function(i, n) { return "Step " + i + " / " + n; }, speed: "Speed", run: "Run", random: "Random", group: "group"
+	},
+	"zh-CN": {
+		error: "演示无法显示", demo: "交互演示；用方向键逐步查看",
+		expand: "放大", close: "关闭（Esc）", closeLabel: "关闭放大视图",
+		prev: "上一步", next: "下一步", play: "播放", pause: "暂停", reset: "回到开头",
+		endOf: function(g) { return "跳到本" + g + "末尾"; }, endTitle: function(g) { return "跳到本" + g + "的最后一步"; },
+		step: function(i, n) { return "第 " + i + " / " + n + " 步"; }, speed: "速度", run: "运行", random: "随机", group: "组"
+	}
+};
+
 // Replace `wrapper`'s contents with a red error box listing what's wrong.
 // frame.swap = [p, q] on an array component: the two cells (already showing
 // their new values) fly from each other's slot along opposite arcs, so the
@@ -238,31 +256,37 @@ function animateSwap(stage, swap) {
 	});
 }
 
-export function renderError(wrapper, messages, source) {
+export function renderError(wrapper, messages, source, lang) {
 	ensureStyle();
+	const ui = UI[lang] || UI["en-US"];
 	wrapper.className = "viz-block viz-error";
 	wrapper.innerHTML =
-		'<div class="viz-error-msg"><strong>viz block could not be shown</strong><ul>' +
+		'<div class="viz-error-msg"><strong>' + ui.error + "</strong><ul>" +
 		messages.map(function(m) { return "<li>" + escapeHtml(m) + "</li>"; }).join("") +
 		"</ul></div><pre><code>" + escapeHtml(source) + "</code></pre>";
 }
 
 // Build the demo for component module `mod` inside `wrapper`.
-export function mount(wrapper, mod, rawConfig, source) {
+// `lang` is the page language ("en-US" / "zh-CN"): the player's words, and the
+// components' (config._lang, see tr() in _core.js).
+export function mount(wrapper, mod, rawConfig, source, lang) {
 	ensureStyle();
+	lang = lang === "zh-CN" ? "zh-CN" : "en-US";
+	const ui = UI[lang];
 	const errors = mod.validate(rawConfig);
 	if (errors.length) {
-		renderError(wrapper, errors, source);
+		renderError(wrapper, errors, source, lang);
 		return;
 	}
+	const configOf = function(raw) { const c = withDefaults(mod.meta.params, raw); c._lang = lang; return c; };
 
-	let config = withDefaults(mod.meta.params, rawConfig);
+	let config = configOf(rawConfig);
 	let frames = mod.steps(config);
 	let idx = Math.min(config.start, frames.length) - 1;
 	let shown = -1; // last rendered step, to animate swaps only when stepping forward
 	let timer = null;
 	let speed = 3;
-	const groupLabel = mod.meta.groupLabel || "group";
+	const groupLabel = pick(mod.meta.groupLabel, lang) || ui.group;
 	const legend = typeof mod.legend === "function" ? mod.legend(config) : mod.legend;
 	const codeSrc = typeof mod.code === "function" ? mod.code(config) : mod.code;
 	const codeLines = (config.code && config.code !== "none" && codeSrc && codeSrc[config.code]) || null;
@@ -270,7 +294,7 @@ export function mount(wrapper, mod, rawConfig, source) {
 	wrapper.className = "viz-block";
 	wrapper.tabIndex = 0;
 	wrapper.setAttribute("role", "group");
-	wrapper.setAttribute("aria-label", (config.title || mod.meta.name) + " — interactive demo; use the arrow keys to step");
+	wrapper.setAttribute("aria-label", (config.title || mod.meta.name) + " — " + ui.demo);
 
 	// Components whose stage is tall (web-demo) keep the step note next to the controls.
 	const msgTop = mod.meta.msgPosition === "top";
@@ -284,26 +308,26 @@ export function mount(wrapper, mod, rawConfig, source) {
 
 	wrapper.innerHTML =
 		'<div class="viz-head">' + (config.title ? '<div class="viz-title">' + escapeHtml(config.title) + "</div>" : "") +
-			'<button type="button" class="viz-btn is-icon viz-expand" data-act="expand" title="Expand" aria-label="Expand">' + icon("expand") + "</button>" +
+			'<button type="button" class="viz-btn is-icon viz-expand" data-act="expand" title="' + ui.expand + '" aria-label="' + ui.expand + '">' + icon("expand") + "</button>" +
 		"</div>" +
 		'<div class="viz-toolbar">' +
-			'<button type="button" class="viz-btn" data-act="prev">' + icon("prev") + '<span class="vz-label-long">Prev</span></button>' +
-			'<button type="button" class="viz-btn" data-act="next"><span class="vz-label-long">Next</span>' + icon("next") + "</button>" +
-			'<button type="button" class="viz-btn" data-act="play">' + icon("play") + "<span>Play</span></button>" +
-			(hasGroups ? '<button type="button" class="viz-btn" data-act="group" title="Jump to the end of this ' + groupLabel + '">' + icon("skip") + '<span class="vz-label-long">End of ' + groupLabel + "</span></button>" : "") +
-			'<button type="button" class="viz-btn is-icon" data-act="reset" title="Back to the start" aria-label="Back to the start">' + icon("reset") + "</button>" +
+			'<button type="button" class="viz-btn" data-act="prev">' + icon("prev") + '<span class="vz-label-long">' + ui.prev + "</span></button>" +
+			'<button type="button" class="viz-btn" data-act="next"><span class="vz-label-long">' + ui.next + "</span>" + icon("next") + "</button>" +
+			'<button type="button" class="viz-btn" data-act="play">' + icon("play") + "<span>" + ui.play + "</span></button>" +
+			(hasGroups ? '<button type="button" class="viz-btn" data-act="group" title="' + escapeHtml(ui.endTitle(groupLabel)) + '">' + icon("skip") + '<span class="vz-label-long">' + escapeHtml(ui.endOf(groupLabel)) + "</span></button>" : "") +
+			'<button type="button" class="viz-btn is-icon" data-act="reset" title="' + ui.reset + '" aria-label="' + ui.reset + '">' + icon("reset") + "</button>" +
 			'<span class="viz-spacer"></span>' +
 			'<span class="viz-step" aria-live="off"></span>' +
-			'<label class="viz-speed">Speed <input type="range" min="1" max="5" step="1" value="3" data-act="speed"></label>' +
+			'<label class="viz-speed">' + ui.speed + ' <input type="range" min="1" max="5" step="1" value="3" data-act="speed"></label>' +
 		"</div>" +
-		(sw ? '<div class="viz-switch" role="group" aria-label="' + escapeHtml(sw.label) + '"><span class="viz-switch-label">' + escapeHtml(sw.label) + "</span>" +
+		(sw ? '<div class="viz-switch" role="group" aria-label="' + escapeHtml(pick(sw.label, lang)) + '"><span class="viz-switch-label">' + escapeHtml(pick(sw.label, lang)) + "</span>" +
 			sw.options.map(function(o) {
-				return '<button type="button" class="viz-btn" data-act="switch" data-val="' + escapeHtml(o.value) + '" aria-pressed="false">' + escapeHtml(o.label) + "</button>";
+				return '<button type="button" class="viz-btn" data-act="switch" data-val="' + escapeHtml(o.value) + '" aria-pressed="false">' + escapeHtml(pick(o.label, lang)) + "</button>";
 			}).join("") + "</div>" : "") +
 		(msgTop ? '<div class="viz-msg is-top" aria-live="polite"></div>' : "") +
 		'<div class="viz-stage"></div>' +
 		(legend && legend.length ? '<div class="viz-legend">' + legend.map(function(l) {
-			return '<span><i class="vz-swatch ' + l.cls + '"></i>' + escapeHtml(l.label) + "</span>";
+			return '<span><i class="vz-swatch ' + l.cls + '"></i>' + escapeHtml(pick(l.label, lang)) + "</span>";
 		}).join("") + "</div>" : "") +
 		(msgTop ? "" : '<div class="viz-msg" aria-live="polite"></div>') +
 		(codeLines || hasVars ? '<div class="viz-panels' + (codeLines && hasVars ? "" : " is-single") + '">' +
@@ -314,10 +338,10 @@ export function mount(wrapper, mod, rawConfig, source) {
 		"</div>" : "") +
 		(config.interactive && mod.input ?
 			'<div class="viz-input">' +
-				"<label>" + escapeHtml(mod.input.label) + "</label>" +
-				'<input type="text" spellcheck="false" autocomplete="off" aria-label="' + escapeHtml(mod.input.label) + '">' +
-				'<button type="button" class="viz-btn" data-act="apply">Run</button>' +
-				(mod.input.random ? '<button type="button" class="viz-btn" data-act="random">' + icon("shuffle") + "<span>Random</span></button>" : "") +
+				"<label>" + escapeHtml(pick(mod.input.label, lang)) + "</label>" +
+				'<input type="text" spellcheck="false" autocomplete="off" aria-label="' + escapeHtml(pick(mod.input.label, lang)) + '">' +
+				'<button type="button" class="viz-btn" data-act="apply">' + ui.run + "</button>" +
+				(mod.input.random ? '<button type="button" class="viz-btn" data-act="random">' + icon("shuffle") + "<span>" + ui.random + "</span></button>" : "") +
 				'<span class="viz-input-err" role="alert"></span>' +
 			"</div>" : "");
 
@@ -361,7 +385,7 @@ export function mount(wrapper, mod, rawConfig, source) {
 		if (idx === shown + 1) animateSwap(stage, frame.swap);
 		shown = idx;
 		msgEl.innerHTML = formatMessage(frame.msg || "");
-		stepEl.textContent = "Step " + (idx + 1) + " / " + frames.length;
+		stepEl.textContent = ui.step(idx + 1, frames.length);
 		lineEls.forEach(function(el, k) {
 			el.classList.toggle("is-active", (frame.lines || []).includes(k + 1));
 		});
@@ -383,7 +407,7 @@ export function mount(wrapper, mod, rawConfig, source) {
 			clearTimeout(timer);
 			timer = null;
 		}
-		playBtn.innerHTML = on ? icon("pause") + "<span>Pause</span>" : icon("play") + "<span>Play</span>";
+		playBtn.innerHTML = on ? icon("pause") + "<span>" + ui.pause + "</span>" : icon("play") + "<span>" + ui.play + "</span>";
 		if (on) tick();
 	}
 
@@ -433,8 +457,8 @@ export function mount(wrapper, mod, rawConfig, source) {
 			placeholder = null;
 			document.documentElement.classList.remove("viz-modal-open");
 			btn.innerHTML = icon("expand");
-			btn.title = "Expand";
-			btn.setAttribute("aria-label", "Expand");
+			btn.title = ui.expand;
+			btn.setAttribute("aria-label", ui.expand);
 			wrapper.focus({ preventScroll: true });
 		} else {
 			placeholder = document.createElement("div");
@@ -452,8 +476,8 @@ export function mount(wrapper, mod, rawConfig, source) {
 			document.documentElement.classList.add("viz-modal-open");
 			dialog.showModal();
 			btn.innerHTML = icon("collapse");
-			btn.title = "Close (Esc)";
-			btn.setAttribute("aria-label", "Close expanded view");
+			btn.title = ui.close;
+			btn.setAttribute("aria-label", ui.closeLabel);
 			wrapper.focus({ preventScroll: true });
 		}
 		// Moving a block reloads any iframe in it; let the component catch up.
@@ -480,7 +504,7 @@ export function mount(wrapper, mod, rawConfig, source) {
 		const errs = mod.validate(next);
 		if (errs.length) return errs;
 		raw = next;
-		rebuild(withDefaults(mod.meta.params, raw));
+		rebuild(configOf(raw));
 		return [];
 	}
 

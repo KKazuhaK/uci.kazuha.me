@@ -1,7 +1,7 @@
 // Singly linked list, step by step: get / add / remove at the head or at an
 // index, with the finger and previous pointers walking the list. Matches the
 // Lecture 4 SinglyLinkedList: add(item) and remove() work at the HEAD.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_OPS = 10;
 const MAX_LEN = 8;
@@ -9,7 +9,7 @@ const MAX_LEN = 8;
 export const meta = {
 	name: "linked-list",
 	summary: "Singly linked list: walk with finger/previous, splice a node in, bypass and delete a node.",
-	groupLabel: "operation",
+	groupLabel: { en: "operation", zh: "操作" },
 	params: {
 		items: { type: "string", default: "", desc: "Starting list, head first, comma-separated, e.g. \"!, ?, ROCKS, ICS46\" (built without animation)." },
 		ops: { type: "string", required: true, desc: "Calls separated by ; — add(x) (at head), add(i, x), remove() (head), remove(i), get(i)." },
@@ -151,16 +151,19 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-sorted", label: "New node" },
-	{ cls: "is-min", label: "finger" },
-	{ cls: "is-cmp", label: "previous" },
-	{ cls: "is-swap", label: "Removed / deleted" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-sorted", label: T("New node", "新节点") },
+		{ cls: "is-min", label: "finger" },
+		{ cls: "is-cmp", label: "previous" },
+		{ cls: "is-swap", label: T("Removed / deleted", "已移除 / 已删除") }
+	];
+}
 
 export const input = {
 	key: "ops",
-	label: "Operations",
+	label: { en: "Operations", zh: "操作" },
 	format: function(config) { return config.ops; },
 	parse: function(text) {
 		return String(text).trim() ? { value: String(text).trim() } : { error: "type some calls, e.g. add(A); add(1, B); remove(0)" };
@@ -180,7 +183,9 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const pl = plan(config);
+	const ui = { loose: T("not in the list", "不在链表中"), deleted: T("deleted", "已删除"), next: T("next → ", "next → ") };
 	// Node graph: id -> { item, next }.
 	const nodes = new Map();
 	let nextId = 1;
@@ -228,6 +233,7 @@ export function steps(config) {
 		if (config.tail) addPtr(tail, "tail");
 		Object.entries(f.ptr || {}).forEach(function(e) { addPtr(e[1], e[0], e[0] === "finger" ? "is-min" : e[0] === "previous" ? "is-cmp" : e[0] === "current" ? "is-sorted" : ""); });
 		frames.push({
+			ui: ui,
 			chain: chain,
 			loose: loose,
 			ptrs: ptrs,
@@ -242,13 +248,13 @@ export function steps(config) {
 				["index", f.index === undefined ? "—" : String(f.index)],
 				["previous", f.ptr && "previous" in f.ptr ? itemOf(f.ptr.previous) : "—"],
 				["finger", f.ptr && "finger" in f.ptr ? itemOf(f.ptr.finger) : "—"],
-				["steps walked", String(walks)],
-				["returned", lastResult]
+				[T("steps walked", "已走步数"), String(walks)],
+				[T("returned", "返回值"), lastResult]
 			]
 		});
 	}
 
-	snapshot({ group: -1, msg: n ? "Start: " + n + " node(s), head first. Only `head` is reachable directly; everything else needs a walk." : "Start: an empty list (`head == nullptr`, n = 0)." });
+	snapshot({ group: -1, msg: n ? T("Start: " + n + " node(s), head first. Only `head` is reachable directly; everything else needs a walk.", "开始：" + n + " 个节点，头节点在前。只有 `head` 能直接到达，其余节点都要沿链表走过去。") : T("Start: an empty list (`head == nullptr`, n = 0).", "开始：空链表（`head == nullptr`，n = 0）。") });
 
 	pl.ops.forEach(function(o, g) {
 		const base = { group: g, op: o.src };
@@ -257,12 +263,14 @@ export function steps(config) {
 			const id = newNode(o.item, head);
 			const old = head;
 			snapshot(Object.assign({}, base, { loose: [id], ptr: { current: id }, marks: { [id]: "is-sorted" }, lines: [9, 10],
-				msg: "`" + o.src + "`: index 0 — allocate a node for " + o.item + " whose `next` is the current head (" + itemOf(old) + "). No walking." }));
+				msg: T("`" + o.src + "`: index 0 — allocate a node for " + o.item + " whose `next` is the current head (" + itemOf(old) + "). No walking.",
+					"`" + o.src + "`：下标 0——为 " + o.item + " 分配一个节点，让它的 `next` 指向当前的头（" + itemOf(old) + "）。不需要遍历。") }));
 			head = id;
 			if (tail === null) tail = id;
 			n++;
 			snapshot(Object.assign({}, base, { marks: { [id]: "is-sorted" }, lines: [10, 11],
-				msg: "Move `head` to the new node and `n++` → " + n + ". O(1)." + (config.tail && n === 1 ? " The list was empty, so `tail` points at it too." : "") }));
+				msg: T("Move `head` to the new node and `n++` → " + n + ". O(1)." + (config.tail && n === 1 ? " The list was empty, so `tail` points at it too." : ""),
+					"把 `head` 移到新节点，`n++` → " + n + "。O(1)。" + (config.tail && n === 1 ? "链表原本为空，所以 `tail` 也指向它。" : "")) }));
 			return;
 		}
 		if (o.kind === "add" || o.kind === "remove" || o.kind === "get") {
@@ -275,32 +283,38 @@ export function steps(config) {
 			const loop = isGet ? [3, 4] : o.kind === "add" ? [15, 16, 17] : [27, 28, 29];
 			if (o.kind === "remove") lastResult = "—";
 			snapshot(Object.assign({}, base, { index: index, ptr: ptr(), lines: start,
-				msg: "`" + o.src + "`" + (o.kind === "remove" && o.head ? " (= remove(0))" : "") + ": start the walk with " + (isGet ? "`finger = head`." : "`previous = nullptr`, `finger = head`.") }));
+				msg: T("`" + o.src + "`" + (o.kind === "remove" && o.head ? " (= remove(0))" : "") + ": start the walk with " + (isGet ? "`finger = head`." : "`previous = nullptr`, `finger = head`."),
+					"`" + o.src + "`" + (o.kind === "remove" && o.head ? "（= remove(0)）" : "") + "：开始遍历，" + (isGet ? "令 `finger = head`。" : "令 `previous = nullptr`、`finger = head`。")) }));
 			while (index > 0) {
 				previous = finger;
 				finger = nodes.get(finger).next;
 				index--;
 				walks++;
 				snapshot(Object.assign({}, base, { index: index, ptr: ptr(), lines: loop,
-					msg: (isGet ? "" : "`previous` = " + itemOf(previous) + ", ") + "`finger` moves to " + itemOf(finger) + "; index → " + index + "." }));
+					msg: T((isGet ? "" : "`previous` = " + itemOf(previous) + ", ") + "`finger` moves to " + itemOf(finger) + "; index → " + index + ".",
+						(isGet ? "" : "`previous` = " + itemOf(previous) + "，") + "`finger` 移到 " + itemOf(finger) + "；index → " + index + "。") }));
 			}
 			if (isGet) {
 				lastResult = "\"" + nodes.get(finger).item + "\"";
-				snapshot(Object.assign({}, base, { index: 0, ptr: ptr(), lines: [6], msg: "index is 0: return `finger->item` = " + itemOf(finger) + ". Took " + o.index + " step(s) — O(n) in the worst case." }));
+				snapshot(Object.assign({}, base, { index: 0, ptr: ptr(), lines: [6], msg: T("index is 0: return `finger->item` = " + itemOf(finger) + ". Took " + o.index + " step(s) — O(n) in the worst case.",
+					"index 为 0：返回 `finger->item` = " + itemOf(finger) + "。共走了 " + o.index + " 步——最坏情况 O(n)。") }));
 				return;
 			}
 			if (o.kind === "add") {
 				const id = newNode(o.item, null);
 				snapshot(Object.assign({}, base, { index: 0, loose: [id], ptr: { previous: previous, finger: finger, current: id }, marks: { [id]: "is-sorted" }, lines: [19],
-					msg: "Stop: `finger` is on the node now at position " + o.index + ", `previous` is the one before. Allocate `current` for " + o.item + "." }));
+					msg: T("Stop: `finger` is on the node now at position " + o.index + ", `previous` is the one before. Allocate `current` for " + o.item + ".",
+						"停下：`finger` 指向当前位于位置 " + o.index + " 的节点，`previous` 指向它前面的那个。为 " + o.item + " 分配 `current`。") }));
 				nodes.get(id).next = finger;
 				snapshot(Object.assign({}, base, { index: 0, loose: [id], ptr: { previous: previous, finger: finger, current: id }, marks: { [id]: "is-sorted" }, lines: [20],
-					msg: "`current->next = finger` — the new node points at " + itemOf(finger) + ". It is not in the list yet." }));
+					msg: T("`current->next = finger` — the new node points at " + itemOf(finger) + ". It is not in the list yet.",
+						"`current->next = finger`——新节点指向 " + itemOf(finger) + "。它还不在链表中。") }));
 				nodes.get(previous).next = id;
 				if (config.tail && finger === null) tail = id;
 				n++;
 				snapshot(Object.assign({}, base, { index: 0, ptr: { previous: previous, finger: finger, current: id }, marks: { [id]: "is-sorted" }, lines: [21, 22],
-					msg: "`previous->next = current` splices it in after " + itemOf(previous) + "; `n++` → " + n + "." + (config.tail && finger === null ? " It's the new last node, so `tail` moves too." : "") }));
+					msg: T("`previous->next = current` splices it in after " + itemOf(previous) + "; `n++` → " + n + "." + (config.tail && finger === null ? " It's the new last node, so `tail` moves too." : ""),
+						"`previous->next = current` 把它拼接到 " + itemOf(previous) + " 之后；`n++` → " + n + "。" + (config.tail && finger === null ? "它是新的最后一个节点，所以 `tail` 也要移动。" : "")) }));
 				return;
 			}
 			// remove
@@ -310,17 +324,21 @@ export function steps(config) {
 			else nodes.get(previous).next = nodes.get(victim).next;
 			if (config.tail && tail === victim) tail = previous;
 			snapshot(Object.assign({}, base, { index: 0, loose: [victim], ptr: { previous: previous, finger: victim }, marks: { [victim]: "is-swap" }, lines: previous === null ? [31, 32] : [33],
-				msg: previous === null ? "`previous` is still nullptr (index 0), so `head = finger->next`: head skips over " + itemOf(victim) + "." :
-					"`previous->next = finger->next`: " + itemOf(previous) + " now skips over " + itemOf(victim) + "." + (config.tail && tail === previous ? " It was the last node, so `tail = previous`." : "") }));
+				msg: previous === null ? T("`previous` is still nullptr (index 0), so `head = finger->next`: head skips over " + itemOf(victim) + ".",
+						"`previous` 仍是 nullptr（下标 0），所以 `head = finger->next`：head 绕过 " + itemOf(victim) + "。") :
+					T("`previous->next = finger->next`: " + itemOf(previous) + " now skips over " + itemOf(victim) + "." + (config.tail && tail === previous ? " It was the last node, so `tail = previous`." : ""),
+						"`previous->next = finger->next`：" + itemOf(previous) + " 现在绕过 " + itemOf(victim) + "。" + (config.tail && tail === previous ? "它原本是最后一个节点，所以 `tail = previous`。" : "")) }));
 			nodes.delete(victim);
 			n--;
 			lastResult = "\"" + item + "\"";
 			snapshot(Object.assign({}, base, { index: 0, ptr: { previous: previous }, deletedGhost: [{ id: victim, item: item, next: "", deleted: true }], lines: [34, 35, 36],
-				msg: "Copy `item` = \"" + item + "\" out, then `delete finger` and `n--` → " + n + ". Return \"" + item + "\". (Copy before delete — after it, `finger` dangles.)" }));
+				msg: T("Copy `item` = \"" + item + "\" out, then `delete finger` and `n--` → " + n + ". Return \"" + item + "\". (Copy before delete — after it, `finger` dangles.)",
+					"先把 `item` = \"" + item + "\" 复制出来，再 `delete finger` 并 `n--` → " + n + "。返回 \"" + item + "\"。（先复制再 delete——delete 之后 `finger` 就悬空了。）") }));
 		}
 	});
 
-	snapshot({ group: pl.ops.length, msg: "Done: " + n + " node(s). The walks took " + walks + " step(s) in total; head operations take none." });
+	snapshot({ group: pl.ops.length, msg: T("Done: " + n + " node(s). The walks took " + walks + " step(s) in total; head operations take none.",
+		"完成：" + n + " 个节点。遍历总共走了 " + walks + " 步；头部操作一步都不用走。") });
 	return frames;
 }
 
@@ -392,11 +410,11 @@ export function render(stage, frame) {
 		html += '<span class="vz-ll-null">→ nullptr</span></div>';
 	}
 	if (frame.loose.length) {
-		html += '<div><div class="vz-ll-caption">not in the list</div><div class="vz-ll-loose">';
+		html += '<div><div class="vz-ll-caption">' + frame.ui.loose + '</div><div class="vz-ll-loose">';
 		frame.loose.forEach(function(nd) {
 			const cls = nd.deleted ? "vz-ll-box is-swap is-deleted" : boxClass(frame, nd.id);
 			html += '<div class="vz-ll-node"><div class="' + cls + '"><span class="vz-ll-item">' + escapeHtml(nd.item) +
-				'</span><span class="vz-ll-next">' + (nd.deleted ? "deleted" : "next → " + escapeHtml(nd.next)) + "</span></div>" +
+				'</span><span class="vz-ll-next">' + (nd.deleted ? frame.ui.deleted : frame.ui.next + escapeHtml(nd.next)) + "</span></div>" +
 				'<div class="vz-ll-ptrs">' + (nd.deleted ? "" : ptrHtml(frame.ptrs[nd.id])) + "</div></div>";
 		});
 		html += "</div></div>";

@@ -1,14 +1,14 @@
 // Multidimensional arrays in row-major order (Lecture 2): walk the elements
 // in memory order, showing each one's place in the grid and in the flat
 // block, then (optionally) work out one element's offset and address.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_CELLS = 48;
 
 export const meta = {
 	name: "array-2d",
 	summary: "Row-major layout of a 2D or 3D C++ array: logical position ↔ flat offset ↔ address.",
-	groupLabel: "row",
+	groupLabel: { en: "row", zh: "行" },
 	params: {
 		dims: { type: "int[]", required: true, minLength: 2, maxLength: 3, minValue: 1, maxValue: 8, desc: "Dimensions, e.g. [4, 5] for int a[4][5] or [3, 2, 4] for int a[3][2][4] (at most 48 elements)." },
 		find: { type: "int[]", minLength: 2, maxLength: 3, minValue: 0, maxValue: 7, desc: "Optional element to locate at the end, e.g. [2, 3]." },
@@ -41,6 +41,7 @@ function unflatten(k, dims) {
 }
 
 export function steps(config) {
+	const T = tr(config);
 	const dims = config.dims;
 	const total = dims.reduce(function(a, b) { return a * b; }, 1);
 	const frames = [];
@@ -50,22 +51,27 @@ export function steps(config) {
 		const ix = f.flat >= 0 ? unflatten(f.flat, dims) : null;
 		frames.push({
 			dims: dims, flat: f.flat, done: f.done, lookup: !!f.lookup, msg: f.msg, group: f.group,
+			capLogical: T("logical view", "逻辑视图"),
+			capMemory: T("memory (one contiguous block, offset under each cell)", "内存（一整块连续空间，每个格子下方是偏移量）"),
+			rowWord: T("row ", "行 "),
 			vars: [
-				["declaration", decl(dims)],
-				["element", ix ? idxName(ix) : "—"],
-				["offset (" + formula + ")", f.flat >= 0 ? String(f.flat) : "—"],
-				["address (base + offset·" + config.elemSize + ")", f.flat >= 0 ? String(config.base + f.flat * config.elemSize) : "—"]
+				[T("declaration", "声明"), decl(dims)],
+				[T("element", "元素"), ix ? idxName(ix) : "—"],
+				[T("offset (" + formula + ")", "偏移量（" + formula + "）"), f.flat >= 0 ? String(f.flat) : "—"],
+				[T("address (base + offset·" + config.elemSize + ")", "地址（base + 偏移量·" + config.elemSize + "）"), f.flat >= 0 ? String(config.base + f.flat * config.elemSize) : "—"]
 			]
 		});
 	}
 
-	push({ flat: -1, done: 0, group: -1, msg: "`" + decl(dims) + "` is one contiguous block of " + total + " ints (" + total * config.elemSize + " bytes). Row-major: the last index changes fastest." });
+	push({ flat: -1, done: 0, group: -1, msg: T("`" + decl(dims) + "` is one contiguous block of " + total + " ints (" + total * config.elemSize + " bytes). Row-major: the last index changes fastest.",
+		"`" + decl(dims) + "` 是一整块连续的内存，共 " + total + " 个 `int`（" + total * config.elemSize + " 字节）。行主序（row-major）：最后一个下标变化最快。") });
 	if (config.walk) {
 		for (let k = 0; k < total; k++) {
 			const ix = unflatten(k, dims);
 			const rowStart = ix[ix.length - 1] === 0;
 			push({ flat: k, done: k, group: Math.floor(k / dims[dims.length - 1]),
-				msg: idxName(ix) + " is element " + k + " of the block" + (rowStart && k > 0 ? " — a new " + (dims.length === 2 ? "row" : "row of the inner 2D array") + " starts right after the previous one ends" : "") + "." });
+				msg: T(idxName(ix) + " is element " + k + " of the block" + (rowStart && k > 0 ? " — a new " + (dims.length === 2 ? "row" : "row of the inner 2D array") + " starts right after the previous one ends" : "") + ".",
+					idxName(ix) + " 是这块内存中的第 " + k + " 个元素" + (rowStart && k > 0 ? "——新的一" + (dims.length === 2 ? "行" : "行（内层二维数组的一行）") + "紧接在上一行结束之后开始" : "") + "。") });
 		}
 	}
 	if (config.find) {
@@ -73,8 +79,10 @@ export function steps(config) {
 		const off = dims.length === 2 ? f[0] * dims[1] + f[1] : f[0] * dims[1] * dims[2] + f[1] * dims[2] + f[2];
 		const work = dims.length === 2 ? f[0] + "·" + dims[1] + " + " + f[1] : f[0] + "·" + (dims[1] * dims[2]) + " + " + f[1] + "·" + dims[2] + " + " + f[2];
 		push({ flat: off, done: config.walk ? total : 0, lookup: true, group: total,
-			msg: "Where is " + idxName(f) + "? Skip " + (dims.length === 2 ? f[0] + " full row(s) of " + dims[1] : f[0] + " full " + dims[1] + "×" + dims[2] + " block(s) and " + f[1] + " row(s) of " + dims[2]) +
-				": offset = " + work + " = " + off + ", address = " + config.base + " + " + off + "·" + config.elemSize + " = " + (config.base + off * config.elemSize) + "." });
+			msg: T("Where is " + idxName(f) + "? Skip " + (dims.length === 2 ? f[0] + " full row(s) of " + dims[1] : f[0] + " full " + dims[1] + "×" + dims[2] + " block(s) and " + f[1] + " row(s) of " + dims[2]) +
+				": offset = " + work + " = " + off + ", address = " + config.base + " + " + off + "·" + config.elemSize + " = " + (config.base + off * config.elemSize) + ".",
+				idxName(f) + " 在哪里？先跳过 " + (dims.length === 2 ? f[0] + " 整行（每行 " + dims[1] + " 个）" : f[0] + " 整个 " + dims[1] + "×" + dims[2] + " 的块，再跳过 " + f[1] + " 行（每行 " + dims[2] + " 个）") +
+				"：偏移量 = " + work + " = " + off + "，地址 = " + config.base + " + " + off + "·" + config.elemSize + " = " + (config.base + off * config.elemSize) + "。") });
 	}
 	return frames;
 }
@@ -115,7 +123,7 @@ export function render(stage, frame) {
 	const R = dims[dims.length - 2];
 	const C = dims[dims.length - 1];
 	const blocks = dims.length === 3 ? dims[0] : 1;
-	let html = '<div class="vz-a2"><div><div class="vz-a2-cap">logical view</div><div class="vz-a2-blocks">';
+	let html = '<div class="vz-a2"><div><div class="vz-a2-cap">' + frame.capLogical + '</div><div class="vz-a2-blocks">';
 	for (let b = 0; b < blocks; b++) {
 		html += "<div>" + (blocks > 1 ? '<div class="vz-a2-cap">a[' + b + "]</div>" : "") + '<div class="vz-a2-grid" style="grid-template-columns: repeat(' + C + ', auto)">';
 		for (let i = 0; i < R; i++) for (let j = 0; j < C; j++) {
@@ -124,10 +132,10 @@ export function render(stage, frame) {
 		}
 		html += "</div></div>";
 	}
-	html += '</div></div><div><div class="vz-a2-cap">memory (one contiguous block, offset under each cell)</div><div class="vz-a2-flat">';
+	html += '</div></div><div><div class="vz-a2-cap">' + frame.capMemory + '</div><div class="vz-a2-flat">';
 	const total = blocks * R * C;
 	for (let k = 0; k < total; k++) {
-		html += '<div class="vz-a2-f' + (k > 0 && k % C === 0 ? " is-rowstart" : "") + '"><div class="' + cellCls(k, frame) + '">' + k + "</div><small>" + (k % C === 0 ? "row " + Math.floor(k / C) : "") + "</small></div>";
+		html += '<div class="vz-a2-f' + (k > 0 && k % C === 0 ? " is-rowstart" : "") + '"><div class="' + cellCls(k, frame) + '">' + k + "</div><small>" + (k % C === 0 ? frame.rowWord + Math.floor(k / C) : "") + "</small></div>";
 	}
 	stage.innerHTML = html + "</div></div></div>";
 }

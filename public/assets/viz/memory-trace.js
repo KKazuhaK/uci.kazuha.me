@@ -3,12 +3,12 @@
 // them. The config is the same step list the notes skill's memdiag.py uses
 // (full steps, or incremental "set" / "add_heap" / "add_vars" / "free" /
 // "push_frame" / "pop_frame"), so a trace written for one works in the other.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 export const meta = {
 	name: "memory-trace",
 	summary: "Step through stack and heap: every variable and field, pointer arrows, overwritten values struck through.",
-	groupLabel: "step",
+	groupLabel: { en: "step", zh: "步骤" },
 	params: {
 		steps: { type: "json-array", required: true, minLength: 1, maxLength: 12, desc: "memdiag-style steps: { code, note, stack, heap } or incremental { code, note, set, add_heap, add_vars, push_frame, pop_frame, free }." }
 	},
@@ -109,9 +109,11 @@ export function validate(config) {
 }
 
 export function steps(config) {
+	const T = tr(config);
 	return build(config.steps).states.map(function(s, k) {
 		return {
 			state: s,
+			ui: { stack: T("Stack", "栈"), heap: T("Heap", "堆"), noFrames: T("(no frames)", "（无栈帧）"), empty: T("(empty)", "（空）"), deleted: T("(deleted)", "（已删除）") },
 			msg: "`" + s.code + "`" + (s.note ? " — " + s.note : ""),
 			group: k
 		};
@@ -146,7 +148,7 @@ const STYLE = `
 .vz-mt-alias { color: var(--vz-muted); font-style: italic; }
 .vz-mt-dang { color: #c2410c; font-weight: 600; }
 .vz-mt-box.is-freed { border-style: dashed; opacity: 0.55; }
-.vz-mt-box.is-freed .vz-mt-head::after { content: "  (deleted)"; color: #c2410c; }
+.vz-mt-box.is-freed .vz-mt-head::after { content: "  " attr(data-deleted); color: #c2410c; }
 .vz-mt-svg { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
 `;
 
@@ -368,18 +370,19 @@ function draw(stage) {
 export function render(stage, frame) {
 	ensureStyle();
 	const s = frame.state;
-	let html = '<div class="vz-mt"><div class="vz-mt-col"><div class="vz-mt-cap">Stack</div>';
+	const ui = frame.ui;
+	let html = '<div class="vz-mt"><div class="vz-mt-col"><div class="vz-mt-cap">' + escapeHtml(ui.stack) + "</div>";
 	s.stack.forEach(function(f) {
 		html += '<div class="vz-mt-box"><div class="vz-mt-head">' + escapeHtml(f.frame) + "</div>" +
 			f.vars.map(function(v) { return rowHtml(v, f.frame + "." + v.name); }).join("") + "</div>";
 	});
-	if (!s.stack.length) html += '<div class="vz-mt-null">(no frames)</div>';
-	html += '</div><div class="vz-mt-col"><div class="vz-mt-cap">Heap</div><div class="vz-mt-col vz-mt-heap">';
+	if (!s.stack.length) html += '<div class="vz-mt-null">' + escapeHtml(ui.noFrames) + "</div>";
+	html += '</div><div class="vz-mt-col"><div class="vz-mt-cap">' + escapeHtml(ui.heap) + '</div><div class="vz-mt-col vz-mt-heap">';
 	s.heap.forEach(function(o) {
-		html += '<div class="vz-mt-box' + (o.freed ? " is-freed" : "") + '" data-obj="' + escapeHtml(o.id) + '"><div class="vz-mt-head">' + escapeHtml(o.type || o.id) + "</div>" +
+		html += '<div class="vz-mt-box' + (o.freed ? " is-freed" : "") + '" data-obj="' + escapeHtml(o.id) + '"><div class="vz-mt-head" data-deleted="' + escapeHtml(ui.deleted) + '">' + escapeHtml(o.type || o.id) + "</div>" +
 			(o.fields || []).map(function(v) { return rowHtml(v, o.id + "." + v.name); }).join("") + "</div>";
 	});
-	if (!s.heap.length) html += '<div class="vz-mt-null">(empty)</div>';
+	if (!s.heap.length) html += '<div class="vz-mt-null">' + escapeHtml(ui.empty) + "</div>";
 	stage.innerHTML = html + "</div></div></div>";
 	stage._vzMtFrame = frame;
 	draw(stage);

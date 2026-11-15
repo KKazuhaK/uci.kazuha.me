@@ -12,6 +12,7 @@ interface VizModule {
   meta: { params: Record<string, unknown> };
   validate(config: unknown): string[];
   steps(config: unknown): unknown[];
+  legend?: unknown;
 }
 
 const load = <T>(file: string): Promise<T> => import(/* @vite-ignore */ pathToFileURL(file).href);
@@ -44,8 +45,13 @@ export async function validateViz(blocks: { name: string; source: string }[], wh
         continue;
       }
       const core = await load<{ withDefaults(p: unknown, c: unknown): unknown }>(`${VIZ_DIR}/_core.js`);
-      const frames = mod.steps(core.withDefaults(mod.meta.params, config));
-      if (!Array.isArray(frames) || !frames.length) problems.push(`${tag}: steps() returned no frames`);
+      // Both page languages: the Chinese text paths must not crash either.
+      for (const lang of ["en-US", "zh-CN"]) {
+        const cfg = Object.assign(core.withDefaults(mod.meta.params, config) as object, { _lang: lang });
+        const frames = mod.steps(cfg);
+        if (!Array.isArray(frames) || !frames.length) problems.push(`${tag}: steps() returned no frames (${lang})`);
+        if (typeof mod.legend === "function") (mod.legend as (c: unknown) => unknown)(cfg);
+      }
     } catch (e) {
       problems.push(`${tag}: component crashed: ${(e as Error).message}`);
     }

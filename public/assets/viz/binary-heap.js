@@ -1,7 +1,7 @@
 // Binary heap (array-backed, pq[0] unused): insert + swim, sink, swim, and
 // delMax, plus heap sort's sortdown, step by step, drawn both as the tree
 // and as the array.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 import { treeView, heapPlace } from "./_tree.js";
 import { arrayView } from "./_array.js";
 
@@ -10,7 +10,7 @@ const MAXN = 15;
 export const meta = {
 	name: "binary-heap",
 	summary: "Array-backed binary heap: insert (swim up), swim(k), sink(k), delMax(), and heap sort's sortdown(), shown as tree and array.",
-	groupLabel: "operation",
+	groupLabel: { en: "operation", zh: "操作" },
 	params: {
 		heap: { type: "string", default: "", desc: "Starting keys pq[1..n] in level order, comma-separated (ints or 1–3 char words; at most 15). Need not be heap-ordered when the first op is swim/sink." },
 		ops: { type: "string", required: true, desc: "Operations separated by ';': insert(x), swim(k), sink(k), delMax(). delMin() on a min-heap. sortdown() (heap sort's second phase; must be the last op) keeps each removed max in the array, sorted. At most 16." },
@@ -154,16 +154,19 @@ export function code(config) {
 	return { cpp: lines.filter(function(_, i) { return map[i + 1] > 0; }) };
 }
 
-export const legend = [
-	{ cls: "is-cmp", label: "k (the key moving)" },
-	{ cls: "is-min", label: "Compared with" },
-	{ cls: "is-swap", label: "Just exchanged" },
-	{ cls: "is-sorted", label: "Settled / returned" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-cmp", label: T("k (the key moving)", "k（正在移动的键）") },
+		{ cls: "is-min", label: T("Compared with", "与之比较的键") },
+		{ cls: "is-swap", label: T("Just exchanged", "刚交换过") },
+		{ cls: "is-sorted", label: T("Settled / returned", "已就位 / 已返回") }
+	];
+}
 
 export const input = {
 	key: "ops",
-	label: "Operations",
+	label: { en: "Operations", zh: "操作" },
 	format: function(config) { return config.ops; },
 	parse: function(text) {
 		const r = parseOps(text);
@@ -182,6 +185,7 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const isMin = config.order === "min";
 	const raw = parseHeap(config.heap || "").items;
 	const ops = parseOps(config.ops).ops;
@@ -197,6 +201,9 @@ export function steps(config) {
 	let returned = "—";
 	const frames = [];
 	const parentWord = isMin ? "smaller" : "larger";
+	const parentWordZh = isMin ? "更小" : "更大";
+	const oppWord = isMin ? "larger" : "smaller";
+	const oppWordZh = isMin ? "更大" : "更小";
 
 	// less(i, j) in the slides' sense: for a min-heap the comparison flips.
 	function less(i, j) {
@@ -225,32 +232,37 @@ export function steps(config) {
 				["n", String(n)],
 				["k", f.k ? String(f.k) : "—"],
 				["j", f.j ? String(f.j) : "—"],
-				["compares", String(compares)],
-				["exchanges", String(exchanges)],
-				["returned", returned]
+				[T("compares", "比较次数"), String(compares)],
+				[T("exchanges", "交换次数"), String(exchanges)],
+				[T("returned", "返回值"), returned]
 			]
 		});
 	}
 
-	push({ group: 0, msg: (isMin ? "Min" : "Max") + "-heap in an array: `pq[0]` unused, root at `pq[1]`, the children of `pq[k]` are `pq[2k]` and `pq[2k+1]`, its parent is `pq[k/2]`." +
-		(n ? " n = " + n + "." : " Empty heap.") });
+	push({ group: 0, msg: T((isMin ? "Min" : "Max") + "-heap in an array: `pq[0]` unused, root at `pq[1]`, the children of `pq[k]` are `pq[2k]` and `pq[2k+1]`, its parent is `pq[k/2]`." +
+		(n ? " n = " + n + "." : " Empty heap."),
+		"数组里的" + (isMin ? "最小堆" : "最大堆") + "：`pq[0]` 不用，根在 `pq[1]`，`pq[k]` 的孩子是 `pq[2k]` 和 `pq[2k+1]`，它的父节点是 `pq[k/2]`。" +
+		(n ? "n = " + n + "。" : "堆是空的。")) });
 
 	function swim(k, g, base) {
 		// base = line offset: swim's lines 5..10.
 		while (true) {
 			if (k <= 1) {
-				push({ k: k, settled: k, lines: [6], group: g, msg: "k = 1: `" + pq[k] + "` reached the root, so the loop stops." });
+				push({ k: k, settled: k, lines: [6], group: g, msg: T("k = 1: `" + pq[k] + "` reached the root, so the loop stops.", "k = 1：`" + pq[k] + "` 已到达根，循环结束。") });
 				return;
 			}
 			const p = Math.floor(k / 2);
 			const lt = less(p, k);
 			push({ k: k, j: p, lines: [6], group: g,
-				msg: "Parent of k = " + k + " is k/2 = " + p + ". `less(" + p + ", " + k + ")`: is `" + pq[p] + "` " + (isMin ? "larger" : "smaller") + " than `" + pq[k] + "`? " +
-					(lt ? "Yes — heap order is violated." : "No — `" + pq[k] + "` is in place.") });
-			if (!lt) { push({ k: k, settled: k, lines: [9, 10], group: g, msg: "Heap order holds again; swim stops at k = " + k + "." }); return; }
+				msg: T("Parent of k = " + k + " is k/2 = " + p + ". `less(" + p + ", " + k + ")`: is `" + pq[p] + "` " + oppWord + " than `" + pq[k] + "`? " +
+					(lt ? "Yes — heap order is violated." : "No — `" + pq[k] + "` is in place."),
+					"k = " + k + " 的父节点是 k/2 = " + p + "。`less(" + p + ", " + k + ")`：`" + pq[p] + "` 比 `" + pq[k] + "` " + oppWordZh + "吗？" +
+					(lt ? "是——堆序被破坏了。" : "否——`" + pq[k] + "` 已在正确位置。")) });
+			if (!lt) { push({ k: k, settled: k, lines: [9, 10], group: g, msg: T("Heap order holds again; swim stops at k = " + k + ".", "堆序恢复，上浮在 k = " + k + " 处停止。") }); return; }
 			exch(k, p);
 			push({ k: p, swapped: [k, p], lines: [7, 8], group: g,
-				msg: "`exch(" + k + ", " + p + ")`: the " + parentWord + " key `" + pq[p] + "` moves up; `k = k/2 = " + p + "`." });
+				msg: T("`exch(" + k + ", " + p + ")`: the " + parentWord + " key `" + pq[p] + "` moves up; `k = k/2 = " + p + "`.",
+					"`exch(" + k + ", " + p + ")`：" + parentWordZh + "的键 `" + pq[p] + "` 上移；`k = k/2 = " + p + "`。") });
 			k = p;
 		}
 	}
@@ -258,27 +270,31 @@ export function steps(config) {
 	function sink(k, g) {
 		while (true) {
 			if (2 * k > n) {
-				push({ k: k, settled: k, lines: [12], group: g, msg: "2k = " + (2 * k) + " > n = " + n + ": `" + pq[k] + "` is a leaf now, so sink stops." });
+				push({ k: k, settled: k, lines: [12], group: g, msg: T("2k = " + (2 * k) + " > n = " + n + ": `" + pq[k] + "` is a leaf now, so sink stops.", "2k = " + (2 * k) + " > n = " + n + "：`" + pq[k] + "` 现在是叶子，下沉结束。") });
 				return;
 			}
 			let j = 2 * k;
-			push({ k: k, j: j, lines: [12, 13], group: g, msg: "2k = " + j + " ≤ n: `" + pq[k] + "` has a child. Start with the left child, j = " + j + " (`" + pq[j] + "`)." });
+			push({ k: k, j: j, lines: [12, 13], group: g, msg: T("2k = " + j + " ≤ n: `" + pq[k] + "` has a child. Start with the left child, j = " + j + " (`" + pq[j] + "`).", "2k = " + j + " ≤ n：`" + pq[k] + "` 有孩子。先取左孩子，j = " + j + "（`" + pq[j] + "`）。") });
 			if (j < n) {
 				const pick = less(j, j + 1);
 				if (pick) j++;
 				push({ k: k, j: j, lines: pick ? [14, 15] : [14], group: g,
-					msg: "Compare the two children `" + pq[2 * k] + "` and `" + pq[2 * k + 1] + "`: " +
-						(String(pq[2 * k]) === String(pq[2 * k + 1]) ? "they tie, so j stays at the left child " + j + "." : "the " + parentWord + " one is `" + pq[j] + "` at j = " + j + ".") });
+					msg: T("Compare the two children `" + pq[2 * k] + "` and `" + pq[2 * k + 1] + "`: " +
+						(String(pq[2 * k]) === String(pq[2 * k + 1]) ? "they tie, so j stays at the left child " + j + "." : "the " + parentWord + " one is `" + pq[j] + "` at j = " + j + "."),
+						"比较两个孩子 `" + pq[2 * k] + "` 和 `" + pq[2 * k + 1] + "`：" +
+						(String(pq[2 * k]) === String(pq[2 * k + 1]) ? "它们相等，所以 j 仍指向左孩子 " + j + "。" : parentWordZh + "的是 `" + pq[j] + "`，j = " + j + "。")) });
 			}
 			const ok = !less(k, j);
 			if (ok) {
 				push({ k: k, j: j, settled: k, lines: [16], group: g,
-					msg: "`less(" + k + ", " + j + ")` is false: `" + pq[k] + "` is not " + (isMin ? "larger" : "smaller") + " than `" + pq[j] + "`. Heap order holds; break." });
+					msg: T("`less(" + k + ", " + j + ")` is false: `" + pq[k] + "` is not " + oppWord + " than `" + pq[j] + "`. Heap order holds; break.",
+						"`less(" + k + ", " + j + ")` 为假：`" + pq[k] + "` 不比 `" + pq[j] + "` " + oppWordZh + "。堆序成立，`break`。") });
 				return;
 			}
 			exch(k, j);
 			push({ k: j, swapped: [k, j], lines: [17, 18], group: g,
-				msg: "`exch(" + k + ", " + j + ")`: `" + pq[k] + "` moves up, `" + pq[j] + "` moves down; `k = j = " + j + "`." });
+				msg: T("`exch(" + k + ", " + j + ")`: `" + pq[k] + "` moves up, `" + pq[j] + "` moves down; `k = j = " + j + "`.",
+				"`exch(" + k + ", " + j + ")`：`" + pq[k] + "` 上移，`" + pq[j] + "` 下移；`k = j = " + j + "`。") });
 			k = j;
 		}
 	}
@@ -290,32 +306,33 @@ export function steps(config) {
 			pq.length = n + 1;
 			ids[n] = nextId++;
 			ids.length = n + 1;
-			push({ k: n, lines: [1, 2], group: g, msg: "`insert(" + o.x + ")`: put it at the end of the bottom level, `pq[" + n + "]` (n is now " + n + ")." });
-			push({ k: n, lines: [3, 5], group: g, msg: "`swim(" + n + ")`: move it up while it is " + parentWord + " than its parent." });
+			push({ k: n, lines: [1, 2], group: g, msg: T("`insert(" + o.x + ")`: put it at the end of the bottom level, `pq[" + n + "]` (n is now " + n + ").", "`insert(" + o.x + ")`：把它放在最底层的末尾，即 `pq[" + n + "]`（n 现在是 " + n + "）。") });
+			push({ k: n, lines: [3, 5], group: g, msg: T("`swim(" + n + ")`: move it up while it is " + parentWord + " than its parent.", "`swim(" + n + ")`：只要它比父节点" + parentWordZh + "，就把它上移。") });
 			swim(n, g);
 		} else if (o.op === "swim") {
-			push({ k: o.k, lines: [5], group: g, msg: "`swim(" + o.k + ")`: `" + pq[o.k] + "` may be " + parentWord + " than its parent." });
+			push({ k: o.k, lines: [5], group: g, msg: T("`swim(" + o.k + ")`: `" + pq[o.k] + "` may be " + parentWord + " than its parent.", "`swim(" + o.k + ")`：`" + pq[o.k] + "` 可能比它的父节点" + parentWordZh + "。") });
 			swim(o.k, g);
 		} else if (o.op === "sink") {
-			push({ k: o.k, lines: [11], group: g, msg: "`sink(" + o.k + ")`: `" + pq[o.k] + "` may be " + (isMin ? "larger" : "smaller") + " than a child." });
+			push({ k: o.k, lines: [11], group: g, msg: T("`sink(" + o.k + ")`: `" + pq[o.k] + "` may be " + oppWord + " than a child.", "`sink(" + o.k + ")`：`" + pq[o.k] + "` 可能比某个孩子" + oppWordZh + "。") });
 			sink(o.k, g);
 		} else if (o.op === "sortdown") {
-			push({ lines: [27, 28], group: g, msg: "`sortdown()`: repeatedly move the maximum to the end of the heap and shrink n; the removed keys stay in the array, sorted." });
+			push({ lines: [27, 28], group: g, msg: T("`sortdown()`: repeatedly move the maximum to the end of the heap and shrink n; the removed keys stay in the array, sorted.", "`sortdown()`：反复把最大值换到堆的末尾并缩小 n；被移出的键留在数组里，保持有序。") });
 			while (n > 1) {
 				const top = pq[1];
 				exch(1, n);
 				n--;
 				push({ k: 1, swapped: n + 1 !== 1 ? [1, n + 1] : null, lines: [29], group: g,
-					msg: "`exch(1, n--)`: max `" + top + "` goes to a[" + (n + 1) + "], its final place; n is now " + n + ". The array is a heap a[1.." + n + "] followed by the sorted part a[" + (n + 1) + ".." + (pq.length - 1) + "]." });
+					msg: T("`exch(1, n--)`: max `" + top + "` goes to a[" + (n + 1) + "], its final place; n is now " + n + ". The array is a heap a[1.." + n + "] followed by the sorted part a[" + (n + 1) + ".." + (pq.length - 1) + "].",
+					"`exch(1, n--)`：最大值 `" + top + "` 换到 a[" + (n + 1) + "]，这是它的最终位置；n 现在是 " + n + "。数组由堆 a[1.." + n + "] 和后面的有序部分 a[" + (n + 1) + ".." + (pq.length - 1) + "] 组成。") });
 				if (n > 1) {
-					push({ k: 1, lines: [30, 11], group: g, msg: "`sink(1)`: restore heap order on a[1.." + n + "]." });
+					push({ k: 1, lines: [30, 11], group: g, msg: T("`sink(1)`: restore heap order on a[1.." + n + "].", "`sink(1)`：恢复 a[1.." + n + "] 上的堆序。") });
 					sink(1, g);
 				}
 			}
-			push({ k: 1, settled: 1, lines: [28], group: g, msg: "n = 1: a single key is already in place, so the loop stops. Sorted: " + pq.slice(1).join(" ") + "." });
+			push({ k: 1, settled: 1, lines: [28], group: g, msg: T("n = 1: a single key is already in place, so the loop stops. Sorted: " + pq.slice(1).join(" ") + ".", "n = 1：只剩一个键，已在正确位置，循环结束。排序结果：" + pq.slice(1).join(" ") + "。") });
 		} else {
 			const top = pq[1];
-			push({ k: 1, lines: [21, 22], group: g, msg: "`" + (isMin ? "delMin" : "delMax") + "()`: the " + (isMin ? "minimum" : "maximum") + " is at the root, `max = pq[1] = " + top + "`." });
+			push({ k: 1, lines: [21, 22], group: g, msg: T("`" + (isMin ? "delMin" : "delMax") + "()`: the " + (isMin ? "minimum" : "maximum") + " is at the root, `max = pq[1] = " + top + "`.", "`" + (isMin ? "delMin" : "delMax") + "()`：" + (isMin ? "最小值" : "最大值") + "在根上，`max = pq[1] = " + top + "`。") });
 			const last = n;
 			exch(1, n);
 			const removed = pq[n];
@@ -326,22 +343,22 @@ export function steps(config) {
 			returned = String(removed);
 			push({ k: 1, ghost: { idx: last, key: removed, id: removedId }, swapped: last !== 1 ? [1, last] : null, lines: [23], group: g,
 				msg: n >= 1
-					? "`exch(1, n--)`: the last key `" + pq[1] + "` goes to the root and `" + removed + "` leaves the heap (n is now " + n + ")."
-					: "`exch(1, n--)`: `" + removed + "` was the only key; it leaves and the heap is empty." });
+					? T("`exch(1, n--)`: the last key `" + pq[1] + "` goes to the root and `" + removed + "` leaves the heap (n is now " + n + ").", "`exch(1, n--)`：最后一个键 `" + pq[1] + "` 换到根，`" + removed + "` 离开堆（n 现在是 " + n + "）。")
+					: T("`exch(1, n--)`: `" + removed + "` was the only key; it leaves and the heap is empty.", "`exch(1, n--)`：`" + removed + "` 是唯一的键；它离开后堆变空。") });
 			if (n >= 1) {
-				push({ k: 1, lines: [24, 11], group: g, msg: "`sink(1)`: the new root is probably too " + (isMin ? "large" : "small") + "; sink it." });
+				push({ k: 1, lines: [24, 11], group: g, msg: T("`sink(1)`: the new root is probably too " + (isMin ? "large" : "small") + "; sink it.", "`sink(1)`：新的根多半太" + (isMin ? "大" : "小") + "了，让它下沉。") });
 				sink(1, g);
 			}
-			push({ lines: [25], group: g, msg: "Return `" + removed + "`." });
+			push({ lines: [25], group: g, msg: T("Return `" + removed + "`.", "返回 `" + removed + "`。") });
 		}
 	});
 
 	const map = lineMap(config);
 	frames.forEach(function(f) { f.lines = f.lines.map(function(l) { return map[l]; }).filter(Boolean); });
 	if (ops[ops.length - 1].op === "sortdown") {
-		push({ k: 1, settled: 1, group: ops.length, msg: "Done. Sorted in place: " + pq.slice(1).join(" ") + ". n − 1 exchanges and sinks, each O(log n): O(n log n) overall." });
+		push({ k: 1, settled: 1, group: ops.length, msg: T("Done. Sorted in place: " + pq.slice(1).join(" ") + ". n − 1 exchanges and sinks, each O(log n): O(n log n) overall.", "完成。原地排序的结果：" + pq.slice(1).join(" ") + "。n − 1 次交换和下沉，每次 O(log n)：总共 O(n log n)。") });
 	} else {
-		push({ group: ops.length, msg: "Done. Heap: " + (n ? pq.slice(1, n + 1).join(" ") : "(empty)") + ". Each swim/sink walks one root-to-leaf path: O(log n)." });
+		push({ group: ops.length, msg: T("Done. Heap: " + (n ? pq.slice(1, n + 1).join(" ") : "(empty)") + ". Each swim/sink walks one root-to-leaf path: O(log n).", "完成。堆：" + (n ? pq.slice(1, n + 1).join(" ") : "（空）") + "。每次上浮 / 下沉只走一条从根到叶子的路径：O(log n)。") });
 	}
 	// One drawing size for the whole demo, so the page doesn't jump between steps.
 	const maxTotal = frames.reduce(function(m, f) {

@@ -78,6 +78,16 @@ drawing keeps one size. This is what keeps every demo's size, colours, layout
 and motion the same; a new kind of picture that neither covers gets a shared
 module of its own rather than private drawing code.
 
+**Language.** The player passes the page language as `config._lang` (`"en-US"`
+or `"zh-CN"`; md-viewer is English). Every text a reader sees comes in both
+languages: in `steps()` / `legend(config)` / `code(config)` take
+`const T = tr(config)` from `_core.js` and write `T("English", "中文")`; text
+drawn by `render()` is put on the frame (e.g. `frame.ui`), since `render` gets
+no config. `groupLabel`, switch labels, `input.label` and legend labels may be
+`{ en, zh }` (the player picks one; `pick()` in `_core.js`). Code identifiers
+and code panels stay as they are. The build runs `steps()` in both languages.
+`input.parse` errors are still English only (parse gets no config).
+
 Anything else a component needs (layout around the views, labels) injects its
 own CSS once (`<style id="viz-<name>-style">`) using the player's `--vz-*`
 colour variables, so light and dark themes both work.

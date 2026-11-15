@@ -1,14 +1,14 @@
 // Dijkstra's two-stack algorithm for a fully parenthesized infix expression
 // (Lecture 5, slide 15): values → value stack, operators → operator stack,
 // "(" ignored, ")" pops an operator and two values and pushes the result.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_TOKENS = 31;
 
 export const meta = {
 	name: "two-stack-eval",
 	summary: "Dijkstra's two-stack evaluation of a fully parenthesized infix expression.",
-	groupLabel: "token",
+	groupLabel: { en: "token", zh: "词元" },
 	params: {
 		expression: { type: "string", required: true, desc: "Fully parenthesized infix, e.g. \"( 1 + ( ( 2 + 3 ) * ( 4 * 5 ) ) )\". Integers 0–9999 and + - * /." },
 		code: { type: "enum", values: ["cpp", "none"], default: "cpp", desc: "Code beside the demo." }
@@ -83,15 +83,18 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-cmp", label: "Current token" },
-	{ cls: "is-sorted", label: "Just pushed" },
-	{ cls: "is-swap", label: "Popped" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-cmp", label: T("Current token", "当前词元") },
+		{ cls: "is-sorted", label: T("Just pushed", "刚压入") },
+		{ cls: "is-swap", label: T("Popped", "已弹出") }
+	];
+}
 
 export const input = {
 	key: "expression",
-	label: "Expression",
+	label: { en: "Expression", zh: "表达式" },
 	format: function(config) { return config.expression; },
 	parse: function(text) { return String(text).trim() ? { value: String(text).trim() } : { error: "type an expression like ( ( 2 + 3 ) * 4 )" }; },
 	random: function() {
@@ -104,6 +107,7 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const tokens = plan(config).tokens;
 	const vals = [];
 	const ops = [];
@@ -115,30 +119,33 @@ export function steps(config) {
 			vals: vals.slice(), ops: ops.slice(),
 			newVal: !!f.newVal, newOp: !!f.newOp, popped: f.popped || null,
 			lines: f.lines || [], msg: f.msg, group: f.group,
+			capVals: T("value stack", "值栈"), capOps: T("operator stack", "运算符栈"),
+			bottom: T("bottom", "栈底"), empty: T("empty", "空"),
 			vars: [
 				["tok", f.pos === undefined || f.pos < 0 || f.pos >= tokens.length ? "—" : "\"" + tokens[f.pos] + "\""],
-				["value stack (top last)", vals.length ? vals.join(", ") : "empty"],
-				["operator stack (top last)", ops.length ? ops.join(" ") : "empty"]
+				[T("value stack (top last)", "值栈（栈顶在最后）"), vals.length ? vals.join(", ") : T("empty", "空")],
+				[T("operator stack (top last)", "运算符栈（栈顶在最后）"), ops.length ? ops.join(" ") : T("empty", "空")]
 			]
 		});
 	}
 
-	push({ group: -1, msg: "Start: read the expression left to right with an empty value stack and an empty operator stack." });
+	push({ group: -1, msg: T("Start: read the expression left to right with an empty value stack and an empty operator stack.", "开始：从左到右读表达式，值栈和运算符栈都为空。") });
 	tokens.forEach(function(tok, k) {
-		if (tok === "(") push({ group: k, pos: k, lines: [2], msg: "\"(\": ignore it." });
-		else if ("+-*/".includes(tok)) { ops.push(tok); push({ group: k, pos: k, newOp: true, lines: [3], msg: "Operator " + tok + ": push it onto the operator stack." }); }
+		if (tok === "(") push({ group: k, pos: k, lines: [2], msg: T("\"(\": ignore it.", "`(`：忽略。") });
+		else if ("+-*/".includes(tok)) { ops.push(tok); push({ group: k, pos: k, newOp: true, lines: [3], msg: T("Operator " + tok + ": push it onto the operator stack.", "运算符 `" + tok + "`：压入运算符栈。") }); }
 		else if (tok === ")") {
 			const op = ops.pop();
 			const v1 = vals.pop();
 			const v2 = vals.pop();
 			const r = applyOp(op, v2, v1);
 			push({ group: k, pos: k, popped: { op: op, v1: v1, v2: v2 }, lines: [4, 5, 6, 7],
-				msg: "\")\": pop operator " + op + ", then v1 = " + v1 + " (right operand, popped first) and v2 = " + v2 + " (left operand)." });
+				msg: T("\")\": pop operator " + op + ", then v1 = " + v1 + " (right operand, popped first) and v2 = " + v2 + " (left operand).",
+					"`)`：弹出运算符 `" + op + "`，再弹出 `v1 = " + v1 + "`（右操作数，先弹出）和 `v2 = " + v2 + "`（左操作数）。") });
 			vals.push(r);
-			push({ group: k, pos: k, newVal: true, lines: [8], msg: "Push v2 " + op + " v1 = " + v2 + " " + op + " " + v1 + " = " + r + " onto the value stack." });
-		} else { vals.push(Number(tok)); push({ group: k, pos: k, newVal: true, lines: [10], msg: "Value " + tok + ": push it onto the value stack." }); }
+			push({ group: k, pos: k, newVal: true, lines: [8], msg: T("Push v2 " + op + " v1 = " + v2 + " " + op + " " + v1 + " = " + r + " onto the value stack.", "把 `v2 " + op + " v1 = " + v2 + " " + op + " " + v1 + " = " + r + "` 压入值栈。") });
+		} else { vals.push(Number(tok)); push({ group: k, pos: k, newVal: true, lines: [10], msg: T("Value " + tok + ": push it onto the value stack.", "值 " + tok + "：压入值栈。") }); }
 	});
-	push({ group: tokens.length, pos: tokens.length, lines: [12], msg: "End of input: the value stack holds just the result, " + vals[0] + "." });
+	push({ group: tokens.length, pos: tokens.length, lines: [12], msg: T("End of input: the value stack holds just the result, " + vals[0] + ".", "输入结束：值栈中只剩结果 " + vals[0] + "。") });
 	return frames;
 }
 
@@ -172,13 +179,13 @@ function escapeHtml(t) {
 	});
 }
 
-function stackCol(caption, items, newTop, poppedItems) {
+function stackCol(caption, items, newTop, poppedItems, frame) {
 	let html = '<div class="vz-ev-col"><div class="vz-ev-cap">' + caption + "</div>";
 	(poppedItems || []).forEach(function(p) { html += '<div class="vz-ev-cell is-swap">' + escapeHtml(p) + "</div>"; });
 	for (let k = items.length - 1; k >= 0; k--) {
 		html += '<div class="vz-ev-cell' + (k === items.length - 1 && newTop ? " is-sorted" : "") + '">' + escapeHtml(items[k]) + "</div>";
 	}
-	return html + '<div class="vz-ev-base">' + (items.length ? "bottom" : "empty") + "</div></div>";
+	return html + '<div class="vz-ev-base">' + (items.length ? frame.bottom : frame.empty) + "</div></div>";
 }
 
 export function render(stage, frame) {
@@ -191,8 +198,8 @@ export function render(stage, frame) {
 		html += '<span class="' + cls.join(" ") + '">' + escapeHtml(t) + "</span>";
 	});
 	html += '</div><div class="vz-ev-stacks">' +
-		stackCol("value stack", frame.vals, frame.newVal, frame.popped ? [frame.popped.v1 + " (v1)", frame.popped.v2 + " (v2)"] : null) +
-		stackCol("operator stack", frame.ops, frame.newOp, frame.popped ? [frame.popped.op] : null) +
+		stackCol(frame.capVals, frame.vals, frame.newVal, frame.popped ? [frame.popped.v1 + " (v1)", frame.popped.v2 + " (v2)"] : null, frame) +
+		stackCol(frame.capOps, frame.ops, frame.newOp, frame.popped ? [frame.popped.op] : null, frame) +
 		"</div></div>";
 	stage.innerHTML = html;
 }

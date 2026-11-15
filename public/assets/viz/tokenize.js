@@ -2,14 +2,14 @@
 // character stream one character at a time; alphanumeric characters build up
 // the current token (lower-cased), any space or special character ends it, and
 // only tokens of at least `minLen` characters (3 on the slides) are kept.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_CHARS = 80;
 
 export const meta = {
 	name: "tokenize",
 	summary: "Character stream → token stream: alphanumerics build a token, a space or special character ends it, short tokens are dropped.",
-	groupLabel: "token",
+	groupLabel: { en: "token", zh: "词元" },
 	params: {
 		text: { type: "string", required: true, desc: "Input text, 1–80 characters, e.g. the slide's \"Bigcorp's 2007 bi-annual report showed profits rose 10%.\"" },
 		minLen: { type: "int", default: 3, min: 1, max: 5, desc: "Minimum token length kept (the early methodology uses 3)." },
@@ -54,16 +54,19 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-cmp", label: "Current character · ch" },
-	{ cls: "is-min", label: "In the buffer · buf" },
-	{ cls: "is-sorted", label: "Emitted as a token" },
-	{ cls: "is-swap", label: "Dropped (too short)" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-cmp", label: T("Current character · ch", "当前字符 · ch") },
+		{ cls: "is-min", label: T("In the buffer · buf", "在缓冲区中 · buf") },
+		{ cls: "is-sorted", label: T("Emitted as a token", "已输出为词元") },
+		{ cls: "is-swap", label: T("Dropped (too short)", "已丢弃（太短）") }
+	];
+}
 
 export const input = {
 	key: "text",
-	label: "Text",
+	label: { en: "Text", zh: "文本" },
 	format: function(config) { return config.text; },
 	parse: function(text) {
 		const t = String(text);
@@ -79,15 +82,16 @@ function isAlnum(ch) {
 	return /^[A-Za-z0-9]$/.test(ch);
 }
 
-function show(ch) {
-	if (ch === " ") return "Space";
-	if (ch === "\t") return "Tab";
-	if (ch === "\n") return "Newline";
-	if (ch === "`") return "Backtick";
+function show(ch, T) {
+	if (ch === " ") return T("Space", "空格");
+	if (ch === "\t") return T("Tab", "制表符");
+	if (ch === "\n") return T("Newline", "换行符");
+	if (ch === "`") return T("Backtick", "反引号");
 	return "`" + ch + "`";
 }
 
 export function steps(config) {
+	const T = tr(config);
 	const chars = Array.from(config.text);
 	const minLen = config.minLen;
 	// state per character: "" (unread), "buf", "tok", "drop", "sep"
@@ -110,18 +114,19 @@ export function steps(config) {
 			lines: f.lines || [],
 			msg: f.msg,
 			group: group,
+			ui: { empty: T("empty", "空"), noTokens: T("none yet", "暂无"), dropped: T("dropped", "已丢弃"), noDropped: T("none", "无") },
 			vars: [
 				["ch", f.pos === undefined || f.pos < 0 || f.pos >= chars.length ? "—" : JSON.stringify(chars[f.pos])],
 				["buf", JSON.stringify(buf)],
 				["tokens", tokens.length ? tokens.join(" ") : "[]"],
-				["dropped", dropped.length ? dropped.join(" ") : "none"]
+				[T("dropped", "已丢弃"), dropped.length ? dropped.join(" ") : T("none", "无")]
 			]
 		});
 	}
 
 	function flush(endPos, why) {
 		// returns a sentence describing what happened to buf
-		if (!buf) return why + " `buf` is empty, so there is nothing to emit.";
+		if (!buf) return T(why + " `buf` is empty, so there is nothing to emit.", why + "`buf` 为空，没有可输出的内容。");
 		const word = buf;
 		const kept = buf.length >= minLen;
 		for (let k = bufStart; k < endPos; k++) state[k] = kept ? "tok" : "drop";
@@ -129,11 +134,14 @@ export function steps(config) {
 		else dropped.push(word);
 		buf = "";
 		bufStart = -1;
-		return why + " `buf = \"" + word + "\"` has " + word.length + (kept ? " ≥ " : " < ") + minLen +
-			" characters, so it is " + (kept ? "emitted as token #" + tokens.length + "." : "dropped.");
+		return T(why + " `buf = \"" + word + "\"` has " + word.length + (kept ? " ≥ " : " < ") + minLen +
+			" characters, so it is " + (kept ? "emitted as token #" + tokens.length + "." : "dropped."),
+			why + "`buf = \"" + word + "\"` 有 " + word.length + (kept ? " ≥ " : " < ") + minLen +
+			" 个字符，所以" + (kept ? "作为第 " + tokens.length + " 个词元输出。" : "被丢弃。"));
 	}
 
-	push({ lines: [2, 3], msg: "Start: read the text as a stream of " + chars.length + " characters with an empty buffer. Alphanumerics build a token; anything else ends it. Tokens shorter than " + minLen + " are thrown away." });
+	push({ lines: [2, 3], msg: T("Start: read the text as a stream of " + chars.length + " characters with an empty buffer. Alphanumerics build a token; anything else ends it. Tokens shorter than " + minLen + " are thrown away.",
+		"开始：把文本当作由 " + chars.length + " 个字符组成的流来读取，缓冲区为空。字母和数字用来构成词元；其他任何字符都会结束当前词元。短于 " + minLen + " 个字符的词元会被丢弃。") });
 
 	chars.forEach(function(ch, k) {
 		if (isAlnum(ch)) {
@@ -142,12 +150,14 @@ export function steps(config) {
 			state[k] = "buf";
 			push({
 				pos: k, lines: [4, 5, 6],
-				msg: show(ch) + " is alphanumeric: append " + (ch !== ch.toLowerCase() ? "it lower-cased (`" + ch.toLowerCase() + "`)" : "it") + " to the buffer → `buf = \"" + buf + "\"`."
+				msg: T(show(ch, T) + " is alphanumeric: append " + (ch !== ch.toLowerCase() ? "it lower-cased (`" + ch.toLowerCase() + "`)" : "it") + " to the buffer → `buf = \"" + buf + "\"`.",
+					show(ch, T) + " 是字母或数字：把" + (ch !== ch.toLowerCase() ? "它的小写形式（`" + ch.toLowerCase() + "`）" : "它") + "追加到缓冲区 → `buf = \"" + buf + "\"`。")
 			});
 		} else {
 			const hadBuf = !!buf;
 			const kept = hadBuf && buf.length >= minLen;
-			const sentence = flush(k, show(ch) + (ch === " " ? " is" : " is a special character —") + " a token boundary.");
+			const sentence = flush(k, T(show(ch, T) + (ch === " " ? " is" : " is a special character —") + " a token boundary.",
+				show(ch, T) + (ch === " " ? "是" : "是特殊字符，也是") + "词元边界。"));
 			state[k] = "sep";
 			push({ pos: k, lines: hadBuf ? (kept ? [7, 8, 9, 10] : [7, 8, 10]) : [7, 10], msg: sentence });
 			if (hadBuf) group++;
@@ -157,12 +167,14 @@ export function steps(config) {
 	const hadBuf = !!buf;
 	const kept = hadBuf && buf.length >= minLen;
 	const endSentence = hadBuf
-		? flush(chars.length, "End of the stream: the last token has no boundary after it, so it is checked after the loop.")
-		: "End of the stream: `buf` is empty.";
+		? flush(chars.length, T("End of the stream: the last token has no boundary after it, so it is checked after the loop.", "流结束：最后一个词元后面没有边界，所以在循环结束后再检查它。"))
+		: T("End of the stream: `buf` is empty.", "流结束：`buf` 为空。");
 	push({
 		pos: chars.length, lines: hadBuf ? (kept ? [11, 12, 13] : [11, 13]) : [11, 13],
-		msg: endSentence + " Result: " + tokens.length + " token" + (tokens.length === 1 ? "" : "s") +
-			(tokens.length ? " — \"" + tokens.join(" ") + "\"" : "") + (dropped.length ? "; dropped: " + dropped.join(", ") + "." : ".")
+		msg: T(endSentence + " Result: " + tokens.length + " token" + (tokens.length === 1 ? "" : "s") +
+			(tokens.length ? " — \"" + tokens.join(" ") + "\"" : "") + (dropped.length ? "; dropped: " + dropped.join(", ") + "." : "."),
+			endSentence + "结果：" + tokens.length + " 个词元" +
+			(tokens.length ? "——\"" + tokens.join(" ") + "\"" : "") + (dropped.length ? "；已丢弃：" + dropped.join(", ") + "。" : "。"))
 	});
 	return frames;
 }
@@ -217,11 +229,11 @@ export function render(stage, frame) {
 	});
 	html += '</div><div class="vz-tk-rows">';
 	html += '<span class="vz-tk-cap">buf</span><div class="vz-tk-list">' +
-		(frame.buf ? '<span class="vz-tk-chip is-min">' + escapeHtml(frame.buf) + "</span>" : '<span class="vz-tk-none">empty</span>') + "</div>";
+		(frame.buf ? '<span class="vz-tk-chip is-min">' + escapeHtml(frame.buf) + "</span>" : '<span class="vz-tk-none">' + frame.ui.empty + "</span>") + "</div>";
 	html += '<span class="vz-tk-cap">tokens</span><div class="vz-tk-list">' +
-		(frame.tokens.length ? frame.tokens.map(function(t) { return '<span class="vz-tk-chip is-sorted">' + escapeHtml(t) + "</span>"; }).join("") : '<span class="vz-tk-none">none yet</span>') + "</div>";
-	html += '<span class="vz-tk-cap">dropped</span><div class="vz-tk-list">' +
-		(frame.dropped.length ? frame.dropped.map(function(t) { return '<span class="vz-tk-chip is-swap">' + escapeHtml(t) + "</span>"; }).join("") : '<span class="vz-tk-none">none</span>') + "</div>";
+		(frame.tokens.length ? frame.tokens.map(function(t) { return '<span class="vz-tk-chip is-sorted">' + escapeHtml(t) + "</span>"; }).join("") : '<span class="vz-tk-none">' + frame.ui.noTokens + "</span>") + "</div>";
+	html += '<span class="vz-tk-cap">' + frame.ui.dropped + '</span><div class="vz-tk-list">' +
+		(frame.dropped.length ? frame.dropped.map(function(t) { return '<span class="vz-tk-chip is-swap">' + escapeHtml(t) + "</span>"; }).join("") : '<span class="vz-tk-none">' + frame.ui.noDropped + "</span>") + "</div>";
 	html += "</div></div>";
 	stage.innerHTML = html;
 }

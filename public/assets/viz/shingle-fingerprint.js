@@ -6,7 +6,7 @@
 // fingerprints, against a threshold tau.
 // The default is the slide's example, with the slide's own hash values.
 // Without `hashes`, a demo hash (FNV-1a mod 1000) is used instead.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_WORDS = 40;
 
@@ -136,15 +136,18 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-cmp", label: "Current n-gram" },
-	{ cls: "is-sorted", label: "Selected (h mod p = 0)" },
-	{ cls: "is-min", label: "In both fingerprints" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-cmp", label: T("Current n-gram", "当前 n-gram") },
+		{ cls: "is-sorted", label: T("Selected (h mod p = 0)", "选中（h mod p = 0）") },
+		{ cls: "is-min", label: T("In both fingerprints", "同时在两个指纹中") }
+	];
+}
 
 export const input = {
 	key: "text",
-	label: "Text A",
+	label: { en: "Text A", zh: "文本 A" },
 	format: function(config) { return config.text === undefined ? SLIDE_TEXT : config.text; },
 	parse: function(text) {
 		const ws = words(text);
@@ -154,9 +157,10 @@ export const input = {
 	}
 };
 
-function hashNote(given) { return given ? "the slide's hash values" : "a demo hash (FNV-1a mod 1000, not the slide's)"; }
+function hashNote(given, T) { return given ? T("the slide's hash values", "幻灯片给出的哈希值") : T("a demo hash (FNV-1a mod 1000, not the slide's)", "演示用哈希（FNV-1a mod 1000，不是幻灯片里的值）"); }
 
 export function steps(config) {
+	const T = tr(config);
 	const c = cfg(config);
 	const A = side(c.text, c.n, c.hashes, "text");
 	const given = c.hashes !== undefined;
@@ -178,26 +182,31 @@ export function steps(config) {
 			n: c.n,
 			p: p,
 			final: !!f.final,
+			lbl: { words: T("Words (A)", "词（文档 A）"), grams: T(c.n + "-grams → hash (selected if h mod " + p + " = 0)", c.n + "-gram → 哈希（h mod " + p + " = 0 则选中）") },
 			lines: f.lines || [],
 			msg: f.msg,
 			vars: f.vars || []
 		});
 	}
-	push({ group: 0, phase: 1, lines: [4], msg: "Step 1: parse the document into words — punctuation, HTML tags and extra whitespace go. " + A.words.length + " words." ,
-		vars: [["words", String(A.words.length)]] });
-	push({ group: 0, phase: 2, lines: [5, 6], msg: "Step 2: group the words into overlapping " + c.n + "-grams: " + A.words.length + " − " + c.n + " + 1 = " + A.grams.length + " of them.",
-		vars: [["words", String(A.words.length)], [c.n + "-grams", String(A.grams.length)]] });
+	push({ group: 0, phase: 1, lines: [4], msg: T("Step 1: parse the document into words — punctuation, HTML tags and extra whitespace go. " + A.words.length + " words.",
+			"第 1 步：把文档切分成词——去掉标点、HTML 标签和多余的空白。共 " + A.words.length + " 个词。"),
+		vars: [[T("words", "词数"), String(A.words.length)]] });
+	push({ group: 0, phase: 2, lines: [5, 6], msg: T("Step 2: group the words into overlapping " + c.n + "-grams: " + A.words.length + " − " + c.n + " + 1 = " + A.grams.length + " of them.",
+			"第 2 步：把词组成相互重叠的 " + c.n + "-gram：" + A.words.length + " − " + c.n + " + 1 = " + A.grams.length + " 个。"),
+		vars: [[T("words", "词数"), String(A.words.length)], [T(c.n + "-grams", c.n + "-gram 数"), String(A.grams.length)]] });
 	const fa = [];
 	A.grams.forEach(function(g, i) {
 		const h = A.hashes[i];
 		const keep = h % p === 0;
 		if (keep) fa.push(h);
 		push({ group: 1, phase: 3, cur: i, upto: i, lines: keep ? [9, 10, 17] : [17],
-			msg: "\"" + g + "\" → " + h + "; " + h + " mod " + p + " = " + (h % p) + (keep ? " → selected." : " → not selected."),
-			vars: [["n-gram", g], ["h", String(h)], ["h mod " + p, String(h % p)], ["FA", "{" + fa.join(", ") + "}"]] });
+			msg: T("\"" + g + "\" → " + h + "; " + h + " mod " + p + " = " + (h % p) + (keep ? " → selected." : " → not selected."),
+				"\"" + g + "\" → " + h + "；" + h + " mod " + p + " = " + (h % p) + (keep ? " → 选中。" : " → 未选中。")),
+			vars: [[T("n-gram", "n-gram"), g], ["h", String(h)], ["h mod " + p, String(h % p)], ["FA", "{" + fa.join(", ") + "}"]] });
 	});
 	push({ group: 2, phase: 4, upto: A.grams.length - 1, fa: fa.slice(), lines: [18], final: c.textB === undefined,
-		msg: "Fingerprint FA = {" + fa.join(", ") + "}: " + fa.length + " of " + A.grams.length + " hash values (" + hashNote(given) + ", selected with 0 mod " + p + "). Steps 5–6: store them (typically in an inverted index) and compare documents by overlap.",
+		msg: T("Fingerprint FA = {" + fa.join(", ") + "}: " + fa.length + " of " + A.grams.length + " hash values (" + hashNote(given, T) + ", selected with 0 mod " + p + "). Steps 5–6: store them (typically in an inverted index) and compare documents by overlap.",
+			"指纹 FA = {" + fa.join(", ") + "}：" + A.grams.length + " 个哈希值中选出 " + fa.length + " 个（" + hashNote(given, T) + "，选取 mod " + p + " 为 0 的值）。第 5–6 步：把它们存起来（通常放进倒排索引），再按重叠程度比较文档。"),
 		vars: [["FA", "{" + fa.join(", ") + "}"], ["|FA|", String(fa.length)]] });
 	if (c.textB !== undefined) {
 		const B = side(c.textB, c.n, c.hashesB, "textB");
@@ -205,7 +214,8 @@ export function steps(config) {
 		B.hashes.forEach(function(h) { if (h % p === 0 && !fb.includes(h)) fb.push(h); });
 		const fas = Array.from(new Set(fa));
 		push({ group: 3, phase: 5, upto: A.grams.length - 1, fa: fas, B: B, fb: fb, lines: [16, 17, 18],
-			msg: "Same steps for text B: " + B.grams.length + " " + c.n + "-grams → FB = {" + fb.join(", ") + "}.",
+			msg: T("Same steps for text B: " + B.grams.length + " " + c.n + "-grams → FB = {" + fb.join(", ") + "}.",
+				"对文本 B 做同样的步骤：" + B.grams.length + " 个 " + c.n + "-gram → FB = {" + fb.join(", ") + "}。"),
 			vars: [["FA", "{" + fas.join(", ") + "}"], ["FB", "{" + fb.join(", ") + "}"]] });
 		const inter = fas.filter(function(h) { return fb.includes(h); });
 		const uni = Array.from(new Set(fas.concat(fb)));
@@ -214,8 +224,9 @@ export function steps(config) {
 		const near = uni.length > 0 && S * 100 >= c.tau;
 		push({ group: 3, phase: 6, upto: A.grams.length - 1, fa: fas, B: B, fb: fb, both: inter, final: true, lines: [12, 13, 14, 19],
 			msg: uni.length
-				? "S = |FA ∩ FB| / |FA ∪ FB| = " + inter.length + " / " + uni.length + " = " + pct + "% " + (near ? "≥" : "<") + " τ = " + c.tau + "% → " + (near ? "near duplicates." : "not near duplicates (under this τ).")
-				: "Both fingerprints are empty: nothing to compare (pick another p).",
+				? T("S = |FA ∩ FB| / |FA ∪ FB| = " + inter.length + " / " + uni.length + " = " + pct + "% " + (near ? "≥" : "<") + " τ = " + c.tau + "% → " + (near ? "near duplicates." : "not near duplicates (under this τ)."),
+					"S = |FA ∩ FB| / |FA ∪ FB| = " + inter.length + " / " + uni.length + " = " + pct + "% " + (near ? "≥" : "<") + " τ = " + c.tau + "% → " + (near ? "近似重复。" : "不是近似重复（按这个 τ）。"))
+				: T("Both fingerprints are empty: nothing to compare (pick another p).", "两个指纹都是空的：没有可比较的内容（换一个 p）。"),
 			vars: [["|FA ∩ FB|", String(inter.length)], ["|FA ∪ FB|", String(uni.length)], ["S", pct + "%"], ["τ", c.tau + "%"]] });
 	}
 	return frames;
@@ -261,12 +272,12 @@ export function render(stage, frame) {
 	ensureStyle();
 	let html = '<div class="vz-sf">';
 	const curWords = frame.cur >= 0 ? [frame.cur, frame.cur + frame.n - 1] : null;
-	html += '<div class="vz-sf-lbl">Words (A)</div><div class="vz-sf-words">' + frame.words.map(function(w, i) {
+	html += '<div class="vz-sf-lbl">' + esc(frame.lbl.words) + '</div><div class="vz-sf-words">' + frame.words.map(function(w, i) {
 		const on = curWords && i >= curWords[0] && i <= curWords[1];
 		return '<span class="' + (on ? "is-cmp" : "") + '">' + esc(w) + "</span>";
 	}).join("") + "</div>";
 	if (frame.phase >= 2) {
-		html += '<div class="vz-sf-lbl">' + frame.n + "-grams → hash (selected if h mod " + frame.p + " = 0)</div><div class=\"vz-sf-grid\">";
+		html += '<div class="vz-sf-lbl">' + esc(frame.lbl.grams) + "</div><div class=\"vz-sf-grid\">";
 		frame.grams.forEach(function(g, i) {
 			const seen = i <= frame.upto;
 			const h = frame.hashes[i];

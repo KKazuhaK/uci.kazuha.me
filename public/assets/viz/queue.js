@@ -2,7 +2,7 @@
 // singly linked list with a tail pointer (Lecture 5). Accepts calls —
 // enqueue(x); dequeue() — or the algs4 shorthand from the slides:
 // "to be or not to - be - -", where a word enqueues it and "-" dequeues.
-import { checkParams } from "./_core.js";
+import { checkParams, tr } from "./_core.js";
 
 const MAX_OPS = 24;
 const MAX_LEN = 8;
@@ -10,7 +10,7 @@ const MAX_LEN = 8;
 export const meta = {
 	name: "queue",
 	summary: "Queue on a singly linked list with head (front) and tail (rear): both operations O(1).",
-	groupLabel: "operation",
+	groupLabel: { en: "operation", zh: "操作" },
 	params: {
 		ops: { type: "string", required: true, desc: "enqueue(x); dequeue(); peek() — or shorthand \"to be - or\" (word = enqueue, - = dequeue)." },
 		code: { type: "enum", values: ["cpp", "none"], default: "cpp", desc: "Code beside the demo." }
@@ -111,15 +111,18 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-sorted", label: "Just enqueued" },
-	{ cls: "is-min", label: "Front (peek)" },
-	{ cls: "is-swap", label: "Dequeued" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-sorted", label: T("Just enqueued", "刚入队") },
+		{ cls: "is-min", label: T("Front (peek)", "队首（peek）") },
+		{ cls: "is-swap", label: T("Dequeued", "已出队") }
+	];
+}
 
 export const input = {
 	key: "ops",
-	label: "Operations",
+	label: { en: "Operations", zh: "操作" },
 	format: function(config) { return config.ops; },
 	parse: function(text) {
 		return String(text).trim() ? { value: String(text).trim() } : { error: "type e.g. a b - c - -" };
@@ -137,13 +140,22 @@ export const input = {
 };
 
 export function steps(config) {
+	const T = tr(config);
 	const ops = plan(config).ops;
 	const q = [];
 	const out = [];
 	const frames = [];
 
+	const ui = {
+		empty: "head → nullptr ← tail",
+		head: T("head ↑ front", "head ↑ 队首"),
+		tail: T("tail ↑ rear", "tail ↑ 队尾"),
+		gone: T("dequeued", "已出队")
+	};
+
 	function push(f) {
 		frames.push({
+			ui: ui,
 			items: q.slice(),
 			gone: f.gone === undefined ? null : f.gone,
 			mark: f.mark || "",
@@ -152,32 +164,37 @@ export function steps(config) {
 			group: f.group,
 			vars: [
 				["op", f.op || "—"],
-				["n (size)", String(q.length)],
-				["head (front)", q.length ? "\"" + q[0] + "\"" : "nullptr"],
-				["tail (rear)", q.length ? "\"" + q[q.length - 1] + "\"" : "nullptr"],
-				["dequeued so far", out.length ? out.join(" ") : "—"]
+				[T("n (size)", "n（大小）"), String(q.length)],
+				[T("head (front)", "head（队首）"), q.length ? "\"" + q[0] + "\"" : "nullptr"],
+				[T("tail (rear)", "tail（队尾）"), q.length ? "\"" + q[q.length - 1] + "\"" : "nullptr"],
+				[T("dequeued so far", "已出队"), out.length ? out.join(" ") : "—"]
 			]
 		});
 	}
 
-	push({ group: -1, msg: "Start: an empty queue (`head == tail == nullptr`). Enqueue at the tail, dequeue at the head." });
+	push({ group: -1, msg: T("Start: an empty queue (`head == tail == nullptr`). Enqueue at the tail, dequeue at the head.",
+		"开始：空队列（`head == tail == nullptr`）。在尾部入队，在头部出队。") });
 	ops.forEach(function(o, g) {
 		if (o.kind === "enqueue") {
 			const wasEmpty = q.length === 0;
 			q.push(o.item);
 			push({ group: g, op: o.src, mark: "is-sorted", lines: wasEmpty ? [2, 3, 5] : [2, 4, 5],
-				msg: "enqueue " + o.item + ": " + (wasEmpty ? "the queue was empty, so `head` and `tail` both point at the new node." : "link it after the old tail and move `tail` to it.") + " O(1)." });
+				msg: T("enqueue " + o.item + ": " + (wasEmpty ? "the queue was empty, so `head` and `tail` both point at the new node." : "link it after the old tail and move `tail` to it.") + " O(1).",
+					"入队 " + o.item + "：" + (wasEmpty ? "队列原本为空，所以 `head` 和 `tail` 都指向新节点。" : "把它链接到旧尾节点之后，并把 `tail` 移到它上面。") + "O(1)。") });
 		} else if (o.kind === "peek") {
-			push({ group: g, op: o.src, mark: "is-min", lines: [15], msg: "peek(): return the front item \"" + q[0] + "\" without removing it." });
+			push({ group: g, op: o.src, mark: "is-min", lines: [15], msg: T("peek(): return the front item \"" + q[0] + "\" without removing it.", "peek()：返回队首元素 \"" + q[0] + "\"，但不删除它。") });
 		} else {
 			const item = q.shift();
 			out.push(item);
 			push({ group: g, op: o.src, gone: item, lines: q.length ? [8, 9, 11, 12, 13] : [8, 9, 10, 11, 12, 13],
-				msg: "dequeue(): the front \"" + item + "\" leaves first (first in, first out); `head` moves to the next node." +
-					(q.length ? "" : " The queue is now empty, so `tail = nullptr` too — forget that and `tail` dangles.") + " O(1)." });
+				msg: T("dequeue(): the front \"" + item + "\" leaves first (first in, first out); `head` moves to the next node." +
+					(q.length ? "" : " The queue is now empty, so `tail = nullptr` too — forget that and `tail` dangles.") + " O(1).",
+					"出队 dequeue()：队首 \"" + item + "\" 最先离开（先进先出）；`head` 移到下一个节点。" +
+					(q.length ? "" : "队列现在空了，所以也要令 `tail = nullptr`——忘了这步，`tail` 就会悬空。") + "O(1)。") });
 		}
 	});
-	push({ group: ops.length, msg: "Done. Left in the queue (front → rear): " + (q.length ? q.join(", ") : "nothing") + ". Dequeued in order: " + (out.join(" ") || "nothing") + "." });
+	push({ group: ops.length, msg: T("Done. Left in the queue (front → rear): " + (q.length ? q.join(", ") : "nothing") + ". Dequeued in order: " + (out.join(" ") || "nothing") + ".",
+		"完成。队列中剩下（队首 → 队尾）：" + (q.length ? q.join("、") : "无") + "。按顺序出队的元素：" + (out.join(" ") || "无") + "。") });
 	return frames;
 }
 
@@ -215,7 +232,7 @@ export function render(stage, frame) {
 	ensureStyle();
 	let html = '<div class="vz-q">';
 	if (!frame.items.length) {
-		html += '<div class="vz-q-empty">head → nullptr ← tail</div>';
+		html += '<div class="vz-q-empty">' + frame.ui.empty + "</div>";
 	} else {
 		html += '<div class="vz-q-row">';
 		frame.items.forEach(function(it, k) {
@@ -224,14 +241,14 @@ export function render(stage, frame) {
 			if (k === 0 && frame.mark === "is-min") cls.push("is-min");
 			if (last && frame.mark === "is-sorted") cls.push("is-sorted");
 			const ptrs = [];
-			if (k === 0) ptrs.push("head ↑ front");
-			if (last) ptrs.push("tail ↑ rear");
+			if (k === 0) ptrs.push(frame.ui.head);
+			if (last) ptrs.push(frame.ui.tail);
 			html += '<div class="vz-q-node"><div class="' + cls.join(" ") + '">' + escapeHtml(it) + '</div><div class="vz-q-ptrs">' +
 				ptrs.map(function(p) { return "<span>" + p + "</span>"; }).join("") + "</div></div>";
 			if (!last) html += '<span class="vz-q-arrow">→</span>';
 		});
 		html += "</div>";
 	}
-	if (frame.gone !== null) html += '<div class="vz-q-gone"><div class="vz-q-cap">dequeued</div><div class="vz-q-box is-swap">' + escapeHtml(frame.gone) + "</div></div>";
+	if (frame.gone !== null) html += '<div class="vz-q-gone"><div class="vz-q-cap">' + frame.ui.gone + '</div><div class="vz-q-box is-swap">' + escapeHtml(frame.gone) + "</div></div>";
 	stage.innerHTML = html + "</div>";
 }

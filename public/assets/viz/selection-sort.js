@@ -1,12 +1,12 @@
 // Selection sort, step by step: each pass scans the unsorted part for the
 // minimum, then swaps it to the front of that part.
 import { arrayView } from "./_array.js";
-import { checkParams, parseIntList, randomInts } from "./_core.js";
+import { checkParams, parseIntList, randomInts, tr } from "./_core.js";
 
 export const meta = {
 	name: "selection-sort",
 	summary: "Selection sort on an array: scan for minIdx, swap into place, one pass at a time.",
-	groupLabel: "pass",
+	groupLabel: { en: "pass", zh: "趟" },
 	params: {
 		array: { type: "int[]", required: true, minLength: 2, maxLength: 12, minValue: -99, maxValue: 999, desc: "Values to sort (2–12 integers, -99…999)." },
 		code: { type: "enum", values: ["cpp", "none"], default: "cpp", desc: "Code shown beside the demo, with the running line highlighted." }
@@ -31,16 +31,19 @@ export const code = {
 	]
 };
 
-export const legend = [
-	{ cls: "is-sorted", label: "Sorted (left part)" },
-	{ cls: "is-min", label: "Current minimum · minIdx" },
-	{ cls: "is-cmp", label: "Being compared · j" },
-	{ cls: "is-swap", label: "Just swapped" }
-];
+export function legend(config) {
+	const T = tr(config);
+	return [
+		{ cls: "is-sorted", label: T("Sorted (left part)", "已有序（左侧部分）") },
+		{ cls: "is-min", label: T("Current minimum · minIdx", "当前最小值 · minIdx") },
+		{ cls: "is-cmp", label: T("Being compared · j", "正在比较 · j") },
+		{ cls: "is-swap", label: T("Just swapped", "刚交换") }
+	];
+}
 
 export const input = {
 	key: "array",
-	label: "Array",
+	label: { en: "Array", zh: "数组" },
 	format: function(config) { return config.array.join(", "); },
 	parse: function(text) {
 		const r = parseIntList(text);
@@ -52,6 +55,7 @@ export const input = {
 // Build the full list of frames. Each frame is a snapshot the player can show
 // on its own: array contents, markers, highlighted code lines, message, vars.
 export function steps(config) {
+	const T = tr(config);
 	const a = config.array.slice();
 	const n = a.length;
 	// Which original element sits in each slot, so a swap is drawn as two cells moving.
@@ -74,12 +78,12 @@ export function steps(config) {
 			msg: f.msg,
 			group: f.group,
 			vars: [
-				["pass", f.i === undefined ? "—" : (f.i + 1) + " / " + (n - 1)],
+				[T("pass", "趟"), f.i === undefined ? "—" : (f.i + 1) + " / " + (n - 1)],
 				["i", f.i === undefined ? "—" : String(f.i)],
 				["j", f.j === undefined ? "—" : String(f.j)],
-				["minIdx", minIdx === undefined ? "—" : minIdx + " (value " + a[minIdx] + ")"],
-				["comparisons", String(comparisons)],
-				["swaps", String(swaps)]
+				["minIdx", minIdx === undefined ? "—" : T(minIdx + " (value " + a[minIdx] + ")", minIdx + "（值 " + a[minIdx] + "）")],
+				[T("comparisons", "比较次数"), String(comparisons)],
+				[T("swaps", "交换次数"), String(swaps)]
 			]
 		});
 	}
@@ -87,14 +91,16 @@ export function steps(config) {
 	push({
 		sorted: 0,
 		group: 0,
-		msg: "Start: n = " + n + ". Each pass finds the smallest value in the unsorted part and swaps it to the front of that part."
+		msg: T("Start: n = " + n + ". Each pass finds the smallest value in the unsorted part and swaps it to the front of that part.",
+			"开始：n = " + n + "。每一趟在未排序部分中找出最小值，并把它交换到该部分的最前面。")
 	});
 
 	for (let i = 0; i < n - 1; i++) {
 		let minIdx = i;
 		push({
 			sorted: i, i: i, minIdx: minIdx, lines: [1, 2], group: i,
-			msg: "Pass " + (i + 1) + ": i = " + i + ". Assume `a[" + i + "] = " + a[i] + "` is the smallest so far, so `minIdx = " + i + "`."
+			msg: T("Pass " + (i + 1) + ": i = " + i + ". Assume `a[" + i + "] = " + a[i] + "` is the smallest so far, so `minIdx = " + i + "`.",
+				"第 " + (i + 1) + " 趟：i = " + i + "。先假设 `a[" + i + "] = " + a[i] + "` 是目前最小的，所以 `minIdx = " + i + "`。")
 		});
 
 		for (let j = i + 1; j < n; j++) {
@@ -102,14 +108,16 @@ export function steps(config) {
 			const smaller = a[j] < a[minIdx];
 			push({
 				sorted: i, i: i, j: j, minIdx: minIdx, lines: [3, 4], group: i,
-				msg: "Compare `a[" + j + "] = " + a[j] + "` with the current min `a[" + minIdx + "] = " + a[minIdx] + "`: " +
-					(smaller ? a[j] + " is smaller." : a[j] + " is not smaller, so `minIdx` stays " + minIdx + ".")
+				msg: T("Compare `a[" + j + "] = " + a[j] + "` with the current min `a[" + minIdx + "] = " + a[minIdx] + "`: " +
+					(smaller ? a[j] + " is smaller." : a[j] + " is not smaller, so `minIdx` stays " + minIdx + "."),
+					"比较 `a[" + j + "] = " + a[j] + "` 与当前最小值 `a[" + minIdx + "] = " + a[minIdx] + "`：" +
+					(smaller ? a[j] + " 更小。" : a[j] + " 不更小，所以 `minIdx` 保持为 " + minIdx + "。"))
 			});
 			if (smaller) {
 				minIdx = j;
 				push({
 					sorted: i, i: i, j: j, minIdx: minIdx, lines: [5], group: i,
-					msg: "New minimum found: `minIdx = " + j + "` (value " + a[j] + ")."
+					msg: T("New minimum found: `minIdx = " + j + "` (value " + a[j] + ").", "找到新的最小值：`minIdx = " + j + "`（值 " + a[j] + "）。")
 				});
 			}
 		}
@@ -121,20 +129,24 @@ export function steps(config) {
 			swaps++;
 			push({
 				sorted: i + 1, i: i, minIdx: minIdx, swap: [i, minIdx], lines: [7], group: i,
-				msg: "`swap(a[" + i + "], a[" + minIdx + "])`: " + before[0] + " ↔ " + before[1] + ". Now `a[" + i + "] = " + a[i] + "` is in its final place."
+				msg: T("`swap(a[" + i + "], a[" + minIdx + "])`: " + before[0] + " ↔ " + before[1] + ". Now `a[" + i + "] = " + a[i] + "` is in its final place.",
+					"`swap(a[" + i + "], a[" + minIdx + "])`：" + before[0] + " ↔ " + before[1] + "。现在 `a[" + i + "] = " + a[i] + "` 已在最终位置。")
 			});
 		} else {
 			push({
 				sorted: i + 1, i: i, minIdx: i, lines: [7], group: i,
-				msg: "`minIdx == i`, so `a[" + i + "] = " + a[i] + "` was already the smallest; the swap changes nothing. It is in its final place."
+				msg: T("`minIdx == i`, so `a[" + i + "] = " + a[i] + "` was already the smallest; the swap changes nothing. It is in its final place.",
+					"`minIdx == i`，所以 `a[" + i + "] = " + a[i] + "` 本来就是最小的；交换不改变任何东西。它已在最终位置。")
 			});
 		}
 	}
 
 	push({
 		sorted: n, group: n - 1,
-		msg: "Done. After n − 1 = " + (n - 1) + " passes the last element is in place automatically. Comparisons = n(n − 1)/2 = " +
-			comparisons + " no matter the input; swaps = " + swaps + " (at most n − 1)."
+		msg: T("Done. After n − 1 = " + (n - 1) + " passes the last element is in place automatically. Comparisons = n(n − 1)/2 = " +
+			comparisons + " no matter the input; swaps = " + swaps + " (at most n − 1).",
+			"完成。经过 n − 1 = " + (n - 1) + " 趟后，最后一个元素自动就位。无论输入如何，比较次数 = n(n − 1)/2 = " +
+			comparisons + "；交换次数 = " + swaps + "（至多 n − 1）。")
 	});
 	return frames;
 }
