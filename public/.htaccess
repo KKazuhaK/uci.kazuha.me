@@ -6,6 +6,14 @@ RewriteRule ^tools/md-viewer/viz/(.+)$ https://ics.uci.edu/~kazuhak/assets/viz/$
 AddType "text/markdown; charset=utf-8" .md
 AddType "text/javascript; charset=utf-8" .mjs
 
+# Pages and viz modules: the browser asks again on every load (a cheap 304 when
+# unchanged), so a deploy is seen at once and a new page never meets an old module.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|mjs)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
 <FilesMatch "^(README(\..*)?|SITE_DOCS\.md|CLAUDE\.md)$">
   Require all denied
 </FilesMatch>
