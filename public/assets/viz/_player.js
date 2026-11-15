@@ -158,11 +158,11 @@ html.viz-modal-open { overflow: hidden; }
 
 /* Array cells, shared by array-based components. */
 .vz-row { display: flex; justify-content: center; gap: 0.45rem; }
-.vz-col { flex: 0 1 3.6rem; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+.vz-col { flex: 0 1 2.9rem; min-width: 0; display: flex; flex-direction: column; align-items: center; }
 .vz-cell {
 	position: relative; width: 100%; aspect-ratio: 1 / 1.05; display: grid; place-items: center;
 	border: 1.5px solid var(--vz-border); border-radius: 0.6rem; background: var(--vz-surface);
-	font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums;
+	font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums;
 	transition: background-color 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.25s;
 }
 .vz-cell.is-sorted { background: var(--vz-sorted-bg); color: var(--vz-sorted-fg); border-color: var(--vz-sorted-bd); }

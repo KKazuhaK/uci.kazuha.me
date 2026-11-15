@@ -317,9 +317,9 @@ const STYLE = `
 .vz-al { display: flex; flex-direction: column; align-items: center; overflow-x: auto; }
 .vz-al .vz-row { flex-wrap: nowrap; }
 /* Items are strings ("ROCKS", "Throws"): every column is as wide as the widest item. */
-.vz-al .vz-col { flex: 0 0 var(--al-col, 3.2rem); }
+.vz-al .vz-col { flex: 0 0 var(--al-col, 2.9rem); }
 .vz-al .vz-cell { width: 100%; aspect-ratio: auto; height: 3.35rem; padding: 0 0.2rem; white-space: nowrap; }
-@media (max-width: 736px) { .vz-al .vz-col { flex-basis: calc(var(--al-col, 3.2rem) * 0.8); } .vz-al .vz-cell { height: 2.5rem; } }
+@media (max-width: 736px) { .vz-al .vz-col { flex-basis: calc(var(--al-col, 2.9rem) * 0.8); } .vz-al .vz-cell { height: 2.5rem; } }
 .vz-al .vz-arr.is-old { opacity: 0.55; }
 .viz-legend .vz-swatch.is-unused { border-style: dashed; color: var(--vz-muted); background: transparent; }
 `;
@@ -351,7 +351,7 @@ export function render(stage, frame) {
 		box.className = "vz-al";
 		stage.appendChild(box);
 	}
-	box.style.setProperty("--al-col", Math.max(3.2, frame.width * 0.85 + 1.2) + "rem");
+	box.style.setProperty("--al-col", Math.max(2.9, frame.width * 0.85 + 1.2) + "rem");
 
 	const ptrs = frame.data.map(function() { return []; });
 	if (!frame.newBuf && frame.n < frame.cap) ptrs[frame.n] = [{ name: "n_" }];

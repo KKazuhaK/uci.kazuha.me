@@ -34,6 +34,7 @@ const CSS = `
 .vz-cell.is-ghost { background: none; }
 .vz-cell.is-dim { color: var(--vz-muted); }
 .vz-cell.is-dashed { border-style: dashed; }
+.vz-arr .vz-cell.is-long { font-size: 0.78rem; letter-spacing: -0.02em; } /* 4+ characters still fit the cell */
 `;
 
 // role may be one state or several ("cmp sorted", or an array): each becomes an is-* class.
@@ -118,7 +119,7 @@ function createView(host) {
 				cols.set(id, c);
 			}
 			c.cell.textContent = d.label === undefined || d.label === null ? "" : String(d.label);
-			c.cell.className = "vz-cell" + roleClasses(d.role) + (d.dashed ? " is-dashed" : "");
+			c.cell.className = "vz-cell" + roleClasses(d.role) + (d.dashed ? " is-dashed" : "") + (c.cell.textContent.length >= 4 ? " is-long" : "");
 			// hidden: the slot keeps its place in the row but shows nothing.
 			c.col.style.visibility = d.hidden ? "hidden" : "";
 			if (d.title) c.cell.title = d.title; else c.cell.removeAttribute("title");

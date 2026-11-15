@@ -27,10 +27,10 @@
 // `at: [col1, depth1, col2, depth2]` and a `key` instead: a fixed line.
 // This file only touches the DOM inside treeView(); importing it is DOM-free.
 
-export const NODE_R = 16;
-export const COL_W = 44;
-export const ROW_H = 56;
-const PAD = 24;
+export const NODE_R = 20;
+export const COL_W = 50;
+export const ROW_H = 62;
+const PAD = 28;
 const MOVE_MS = 450;
 
 const CSS = `
@@ -42,7 +42,7 @@ const CSS = `
 .vz-te.is-dashed { stroke-dasharray: 4 3; }
 .vz-tn { transition: opacity .3s; }
 .vz-tn circle { fill: var(--vz-surface); stroke: var(--vz-border); stroke-width: 1.6; transition: fill .3s, stroke .3s, stroke-width .3s; }
-.vz-tn text { fill: var(--vz-ink); font-weight: 600; text-anchor: middle; dominant-baseline: central; font-size: 13px; transition: fill .3s; }
+.vz-tn text { fill: var(--vz-ink); font-weight: 600; text-anchor: middle; dominant-baseline: central; font-size: 15px; transition: fill .3s; }
 .vz-tn .vz-tn-val { fill: var(--vz-blue); font-size: 10px; font-weight: 700; text-anchor: start; }
 .vz-tn .vz-tn-badge { fill: var(--vz-blue); font-size: 10px; font-weight: 700; text-anchor: end; }
 .vz-tn.is-cmp circle { fill: var(--vz-cmp-bg); stroke: var(--vz-cmp-bd); stroke-width: 3; }

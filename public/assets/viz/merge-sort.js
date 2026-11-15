@@ -334,7 +334,7 @@ export function steps(config) {
 const STYLE = `
 .vz-ms { display: flex; flex-direction: column; }
 .vz-ms .vz-row { flex: 0 1 auto; min-width: 0; gap: 0.3rem; }
-.vz-ms .vz-col { flex: 0 1 auto; width: 3.2rem; }
+.vz-ms .vz-col { flex: 0 1 auto; width: 2.9rem; }
 .vz-ms .vz-cell { width: 100%; aspect-ratio: auto; height: 2.5rem; font-size: 1.05rem; border-radius: 0.5rem; }
 .vz-ms .vz-idx { margin-top: 0.15rem; }
 .vz-ms .vz-arr { align-items: center; }
