@@ -1074,7 +1074,7 @@ for (int k = n/2; k >= 1; k--)        // skip the leaves; sink every internal no
 Step through it below (← / → keys work when the demo is focused):
 
 ```viz binary-heap
-{"title": "Lec 12 Activity: heap construction on 2 9 7 6 5 8", "heap": "2, 9, 7, 6, 5, 8", "ops": "sink(3); sink(2); sink(1)", "interactive": true}
+{"title": "Lec 12 Activity: heap construction on 2 9 7 6 5 8", "heap": "2, 9, 7, 6, 5, 8", "ops": "heapify()", "interactive": true}
 ```
 
 **Part 2 — naive construction** (insert one at a time, each swims): n inserts × O(log n) = **O(n log n)**.
@@ -1111,7 +1111,7 @@ Step through it below (← / → keys work when the demo is focused):
 delMax returns 50. The answer key accepts the "initial exchange" drawing with or without 50 still shown at index 9.
 
 ```viz binary-heap
-{"title": "Quiz 4 Q4: build a max-heap, then delMax", "heap": "50, 36, 17, 2, 0, 3, 28, 30, 1", "ops": "sink(4); sink(3); sink(2); sink(1); delMax()"}
+{"title": "Quiz 4 Q4: build a max-heap, then delMax", "heap": "50, 36, 17, 2, 0, 3, 28, 30, 1", "ops": "heapify(); delMax()"}
 ```
 
 (Q2's last part, heap sort with a min-heap, is in the folded [§12](#12-heap-sort-not-on-the-midterm).)

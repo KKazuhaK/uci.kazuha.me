@@ -159,7 +159,7 @@ Slide 17–18's trace on `S O R T E X A M P L E` (n = 11):
 | f) | sink(1, 11) | S swaps with X, stops above R and A | X T S P L R A M O E E |
 
 ```viz binary-heap
-{"title": "Slides 17–18: bottom-up heap construction", "heap": "S, O, R, T, E, X, A, M, P, L, E", "ops": "sink(5); sink(4); sink(3); sink(2); sink(1)", "interactive": true}
+{"title": "Slides 17–18: bottom-up heap construction", "heap": "S, O, R, T, E, X, A, M, P, L, E", "ops": "heapify()", "interactive": true}
 ```
 
 > ➡️ **Continued in [Lecture 12](lec-12.en-US.md)**: the heap construction activity (naive vs optimized cost), the O(n) construction analysis, sortdown, heap sort analysis, the sorting summary and binary search trees — the Lecture 12 deck repeats them.

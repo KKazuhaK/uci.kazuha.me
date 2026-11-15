@@ -9,11 +9,11 @@ const MAXN = 15;
 
 export const meta = {
 	name: "binary-heap",
-	summary: "Array-backed binary heap: insert (swim up), swim(k), sink(k), delMax(), and heap sort's sortdown(), shown as tree and array.",
+	summary: "Array-backed binary heap: insert (swim up), swim(k), sink(k), delMax(), bottom-up construction heapify(), heap sort's sortdown(), and the whole heapsort(), shown as tree and array.",
 	groupLabel: { en: "operation", zh: "操作" },
 	params: {
 		heap: { type: "string", default: "", desc: "Starting keys pq[1..n] in level order, comma-separated (ints or 1–3 char words; at most 15). Need not be heap-ordered when the first op is swim/sink." },
-		ops: { type: "string", required: true, desc: "Operations separated by ';': insert(x), swim(k), sink(k), delMax(). delMin() on a min-heap. sortdown() (heap sort's second phase; must be the last op) keeps each removed max in the array, sorted. At most 16." },
+		ops: { type: "string", required: true, desc: "Operations separated by ';': insert(x), swim(k), sink(k), delMax(). delMin() on a min-heap. heapify() = bottom-up construction (for k = n/2 down to 1: sink(k)). sortdown() (heap sort's second phase) keeps each removed max in the array, sorted. heapsort() = heapify + sortdown as one function. sortdown() and heapsort() must be the last op. At most 16." },
 		order: { type: "enum", values: ["max", "min"], default: "max", desc: "Max-heap (parent ≥ children) or min-heap (parent ≤ children; less() is flipped, use delMin())." },
 		code: { type: "enum", values: ["cpp", "none"], default: "cpp", desc: "Code shown beside the demo, with the running line highlighted." }
 	},
@@ -43,8 +43,8 @@ function parseOps(text) {
 		if ((m = /^insert\(\s*"?([^"),\s]{1,3})"?\s*\)$/.exec(p))) ops.push({ op: "insert", x: m[1] });
 		else if ((m = /^(swim|sink)\(\s*(\d+)\s*\)$/.exec(p))) ops.push({ op: m[1], k: Number(m[2]) });
 		else if ((m = /^del(Max|Min)\(\s*\)$/.exec(p))) ops.push({ op: "delMax", name: "del" + m[1] });
-		else if (/^sortdown\(\s*\)$/.test(p)) ops.push({ op: "sortdown" });
-		else return { error: "\"ops\": can't read \"" + p + "\" (use insert(x), swim(k), sink(k), delMax(), sortdown())" };
+		else if ((m = /^(sortdown|heapify|heapsort)\(\s*\)$/i.exec(p))) ops.push({ op: m[1].toLowerCase() === "heapsort" ? "heapsort" : m[1].toLowerCase() });
+		else return { error: "\"ops\": can't read \"" + p + "\" (use insert(x), swim(k), sink(k), delMax(), heapify(), sortdown(), heapsort())" };
 	}
 	return { ops: ops };
 }
@@ -71,11 +71,12 @@ export function validate(config) {
 	let n = h.items.length;
 	for (let i = 0; i < o.ops.length; i++) {
 		const x = o.ops[i];
-		if (x.op === "sortdown") {
-			if (i !== o.ops.length - 1) return ["\"ops\": sortdown() must be the last operation"];
-			if (n < 1) return ["\"ops\": sortdown() on an empty heap"];
+		if (x.op === "sortdown" || x.op === "heapsort") {
+			if (i !== o.ops.length - 1) return ["\"ops\": " + x.op + "() must be the last operation"];
+			if (n < 1) return ["\"ops\": " + x.op + "() on an empty heap"];
 			continue;
 		}
+		if (x.op === "heapify") { if (n < 1) return ["\"ops\": heapify() on an empty heap"]; continue; }
 		if (x.op === "insert") { n++; if (n > MAXN) return ["\"ops\": insert would make the heap bigger than " + MAXN]; }
 		else if (x.op === "delMax") { if (n === 0) return ["\"ops\": delMax() on an empty heap"]; n--; }
 		else if (x.k < 1 || x.k > n) return ["\"ops\": " + x.op + "(" + x.k + ") is out of range (heap has n = " + n + ")"];
@@ -116,19 +117,32 @@ const CODE_LINES = [
 	"        exch(1, n--);",              // 29
 	"        sink(1);",                   // 30
 	"    }",                              // 31
-	"}"                                   // 32
+	"}",                                  // 32
+	"void heapify() {",                   // 33
+	"    for (int k = n/2; k >= 1; k--)", // 34
+	"        sink(k);",                   // 35
+	"}",                                  // 36
+	"void heapSort() {",                  // 37
+	"    for (int k = n/2; k >= 1; k--)", // 38
+	"        sink(k);       // 1: heapify",// 39
+	"    while (n > 1) {   // 2: sortdown",// 40
+	"        exch(1, n--);",              // 41
+	"        sink(1);",                   // 42
+	"    }",                              // 43
+	"}"                                   // 44
 ];
 
 // Sections of CODE_LINES (1-based, inclusive); show only the ones the ops use.
-const SECTIONS = { insert: [1, 4], swim: [5, 10], sink: [11, 20], delMax: [21, 26], sortdown: [27, 32] };
+const SECTIONS = { insert: [1, 4], swim: [5, 10], sink: [11, 20], delMax: [21, 26], sortdown: [27, 32], heapify: [33, 36], heapsort: [37, 44] };
+const ORDER = ["insert", "swim", "sink", "delMax", "heapify", "sortdown", "heapsort"];
 
 function usedSections(config) {
 	const r = parseOps(config.ops || "");
-	const used = { insert: false, swim: false, sink: false, delMax: false, sortdown: false };
+	const used = { insert: false, swim: false, sink: false, delMax: false, sortdown: false, heapify: false, heapsort: false };
 	(r.ops || []).forEach(function(o) {
 		used[o.op] = true;
 		if (o.op === "insert") used.swim = true;
-		if (o.op === "delMax" || o.op === "sortdown") used.sink = true;
+		if (o.op !== "insert" && o.op !== "swim") used.sink = true;
 	});
 	if (!r.ops) for (const k in used) used[k] = true;
 	return used;
@@ -139,7 +153,7 @@ function lineMap(config) {
 	const used = usedSections(config);
 	const map = {};
 	let shown = 0;
-	for (const name of ["insert", "swim", "sink", "delMax", "sortdown"]) {
+	for (const name of ORDER) {
 		const sec = SECTIONS[name];
 		for (let l = sec[0]; l <= sec[1]; l++) map[l] = used[name] ? ++shown : 0;
 	}
@@ -299,6 +313,43 @@ export function steps(config) {
 		}
 	}
 
+	// Bottom-up construction: sink every internal node, right to left.
+	function heapify(g, L) {
+		const start = Math.floor(n / 2);
+		if (start === 0) {
+			push({ k: 0, lines: L.head, group: g + ":intro", msg: T("n = 1: n/2 = 0, so the loop doesn't run; one key is already a heap.", "n = 1：n/2 = 0，循环一次也不执行；一个键本身就是堆。") });
+			return;
+		}
+		push({ k: 0, lines: L.head, group: g + ":intro",
+			msg: T("Bottom-up construction: a[" + (start + 1) + ".." + n + "] are leaves, already one-key heaps, so skip them. Sink each internal node from k = n/2 = " + start + " down to 1; when k is sunk, both of its subtrees are already heaps.",
+				"自底向上建堆：a[" + (start + 1) + ".." + n + "] 是叶子，本身就是只有一个键的堆，跳过它们。从 k = n/2 = " + start + " 递减到 1，逐个下沉内部节点；下沉 k 时，它的两棵子树都已经是堆。") });
+		for (let k = start; k >= 1; k--) {
+			const gk = g + ":k" + k;
+			push({ k: k, lines: L.loop, group: gk, msg: T("k = " + k + ": `sink(" + k + ")`, `" + pq[k] + "` may be " + oppWord + " than a child.", "k = " + k + "：`sink(" + k + ")`，`" + pq[k] + "` 可能比某个孩子" + oppWordZh + "。") });
+			push({ k: k, lines: L.sink, group: gk, msg: T("`sink(" + k + ")` on the subtree rooted at " + k + ".", "对以 " + k + " 为根的子树执行 `sink(" + k + ")`。") });
+			sink(k, gk);
+		}
+	}
+
+	// Phase 2 of heap sort: the maximum to the back, shrink the heap, sink the new root.
+	function sortdown(g, L) {
+		let round = 0;
+		while (n > 1) {
+			const gr = g + ":r" + (++round);
+			const top = pq[1];
+			exch(1, n);
+			n--;
+			push({ k: 1, swapped: n + 1 !== 1 ? [1, n + 1] : null, lines: L.exch, group: gr,
+				msg: T("`exch(1, n--)`: max `" + top + "` goes to a[" + (n + 1) + "], its final place; n is now " + n + ". The array is a heap a[1.." + n + "] followed by the sorted part a[" + (n + 1) + ".." + (pq.length - 1) + "].",
+				"`exch(1, n--)`：最大值 `" + top + "` 换到 a[" + (n + 1) + "]，这是它的最终位置；n 现在是 " + n + "。数组由堆 a[1.." + n + "] 和后面的有序部分 a[" + (n + 1) + ".." + (pq.length - 1) + "] 组成。") });
+			if (n > 1) {
+				push({ k: 1, lines: L.sink, group: gr, msg: T("`sink(1)`: restore heap order on a[1.." + n + "].", "`sink(1)`：恢复 a[1.." + n + "] 上的堆序。") });
+				sink(1, gr);
+			}
+		}
+		push({ k: 1, settled: 1, lines: L.loop, group: g + ":end", msg: T("n = 1: a single key is already in place, so the loop stops. Sorted: " + pq.slice(1).join(" ") + ".", "n = 1：只剩一个键，已在正确位置，循环结束。排序结果：" + pq.slice(1).join(" ") + "。") });
+	}
+
 	ops.forEach(function(o, idx) {
 		const g = idx + 1;
 		if (o.op === "insert") {
@@ -315,21 +366,17 @@ export function steps(config) {
 		} else if (o.op === "sink") {
 			push({ k: o.k, lines: [11], group: g, msg: T("`sink(" + o.k + ")`: `" + pq[o.k] + "` may be " + oppWord + " than a child.", "`sink(" + o.k + ")`：`" + pq[o.k] + "` 可能比某个孩子" + oppWordZh + "。") });
 			sink(o.k, g);
+		} else if (o.op === "heapify") {
+			heapify(g, { head: [33, 34], loop: [34], sink: [35, 11] });
+			push({ k: 0, lines: [34, 36], group: g + ":end", msg: T("k = 0: the loop ends. Every subtree is a heap, so the whole array is one: " + pq.slice(1, n + 1).join(" ") + ".", "k = 0：循环结束。每棵子树都是堆，所以整个数组就是一个堆：" + pq.slice(1, n + 1).join(" ") + "。") });
+		} else if (o.op === "heapsort") {
+			push({ lines: [37], group: g + ":intro", msg: T("`heapSort()`: phase 1 builds a heap bottom-up (O(n)), phase 2 (sortdown) moves the maximum to the back n − 1 times (O(n log n)).", "`heapSort()`：第一阶段自底向上建堆（O(n)），第二阶段（sortdown）把最大值换到后面，共 n − 1 次（O(n log n)）。") });
+			heapify(g, { head: [38], loop: [38], sink: [39, 11] });
+			push({ k: 0, lines: [38], group: g + ":p1", msg: T("Phase 1 done: the array is a heap, " + pq.slice(1, n + 1).join(" ") + ". Now phase 2.", "第一阶段完成：数组已是堆，" + pq.slice(1, n + 1).join(" ") + "。接下来是第二阶段。") });
+			sortdown(g, { loop: [40], exch: [41], sink: [42, 11] });
 		} else if (o.op === "sortdown") {
 			push({ lines: [27, 28], group: g, msg: T("`sortdown()`: repeatedly move the maximum to the end of the heap and shrink n; the removed keys stay in the array, sorted.", "`sortdown()`：反复把最大值换到堆的末尾并缩小 n；被移出的键留在数组里，保持有序。") });
-			while (n > 1) {
-				const top = pq[1];
-				exch(1, n);
-				n--;
-				push({ k: 1, swapped: n + 1 !== 1 ? [1, n + 1] : null, lines: [29], group: g,
-					msg: T("`exch(1, n--)`: max `" + top + "` goes to a[" + (n + 1) + "], its final place; n is now " + n + ". The array is a heap a[1.." + n + "] followed by the sorted part a[" + (n + 1) + ".." + (pq.length - 1) + "].",
-					"`exch(1, n--)`：最大值 `" + top + "` 换到 a[" + (n + 1) + "]，这是它的最终位置；n 现在是 " + n + "。数组由堆 a[1.." + n + "] 和后面的有序部分 a[" + (n + 1) + ".." + (pq.length - 1) + "] 组成。") });
-				if (n > 1) {
-					push({ k: 1, lines: [30, 11], group: g, msg: T("`sink(1)`: restore heap order on a[1.." + n + "].", "`sink(1)`：恢复 a[1.." + n + "] 上的堆序。") });
-					sink(1, g);
-				}
-			}
-			push({ k: 1, settled: 1, lines: [28], group: g, msg: T("n = 1: a single key is already in place, so the loop stops. Sorted: " + pq.slice(1).join(" ") + ".", "n = 1：只剩一个键，已在正确位置，循环结束。排序结果：" + pq.slice(1).join(" ") + "。") });
+			sortdown(g, { loop: [28], exch: [29], sink: [30, 11] });
 		} else {
 			const top = pq[1];
 			push({ k: 1, lines: [21, 22], group: g, msg: T("`" + (isMin ? "delMin" : "delMax") + "()`: the " + (isMin ? "minimum" : "maximum") + " is at the root, `max = pq[1] = " + top + "`.", "`" + (isMin ? "delMin" : "delMax") + "()`：" + (isMin ? "最小值" : "最大值") + "在根上，`max = pq[1] = " + top + "`。") });
@@ -355,8 +402,13 @@ export function steps(config) {
 
 	const map = lineMap(config);
 	frames.forEach(function(f) { f.lines = f.lines.map(function(l) { return map[l]; }).filter(Boolean); });
-	if (ops[ops.length - 1].op === "sortdown") {
+	const lastOp = ops[ops.length - 1].op;
+	if (lastOp === "heapsort") {
+		push({ k: 1, settled: 1, group: ops.length, msg: T("Done. Sorted in place: " + pq.slice(1).join(" ") + ". " + compares + " compares, " + exchanges + " exchanges. Phase 1 is O(n), phase 2 is O(n log n), so heap sort is O(n log n), with no extra array.", "完成。原地排序的结果：" + pq.slice(1).join(" ") + "。共 " + compares + " 次比较、" + exchanges + " 次交换。第一阶段 O(n)，第二阶段 O(n log n)，所以堆排序是 O(n log n)，且不需要额外数组。") });
+	} else if (lastOp === "sortdown") {
 		push({ k: 1, settled: 1, group: ops.length, msg: T("Done. Sorted in place: " + pq.slice(1).join(" ") + ". n − 1 exchanges and sinks, each O(log n): O(n log n) overall.", "完成。原地排序的结果：" + pq.slice(1).join(" ") + "。n − 1 次交换和下沉，每次 O(log n)：总共 O(n log n)。") });
+	} else if (lastOp === "heapify" && ops.every(function(x) { return x.op === "heapify"; })) {
+		push({ group: ops.length, msg: T("Done. Heap: " + pq.slice(1, n + 1).join(" ") + ". " + compares + " compares, " + exchanges + " exchanges: bottom-up construction is O(n), because most nodes are near the bottom and sink only a little.", "完成。堆：" + pq.slice(1, n + 1).join(" ") + "。共 " + compares + " 次比较、" + exchanges + " 次交换：自底向上建堆是 O(n)，因为大多数节点靠近底部，只下沉一小段。") });
 	} else {
 		push({ group: ops.length, msg: T("Done. Heap: " + (n ? pq.slice(1, n + 1).join(" ") : "(empty)") + ". Each swim/sink walks one root-to-leaf path: O(log n).", "完成。堆：" + (n ? pq.slice(1, n + 1).join(" ") : "（空）") + "。每次上浮 / 下沉只走一条从根到叶子的路径：O(log n)。") });
 	}

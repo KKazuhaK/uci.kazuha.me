@@ -1074,7 +1074,7 @@ for (int k = n/2; k >= 1; k--)        // skip the leaves; sink every internal no
 可在下方逐步演示（演示获得焦点时，← / → 键可用）：
 
 ```viz binary-heap
-{"title": "第 12 讲活动：对 2 9 7 6 5 8 建堆", "heap": "2, 9, 7, 6, 5, 8", "ops": "sink(3); sink(2); sink(1)", "interactive": true}
+{"title": "第 12 讲活动：对 2 9 7 6 5 8 建堆", "heap": "2, 9, 7, 6, 5, 8", "ops": "heapify()", "interactive": true}
 ```
 
 **第 2 部分——朴素建堆**（逐个插入，每个都上浮）：n 次插入 × O(log n) = **O(n log n)**。
@@ -1111,7 +1111,7 @@ for (int k = n/2; k >= 1; k--)        // skip the leaves; sink every internal no
 delMax 返回 50。评分标准接受“初始交换”图示中下标 9 处保留或不保留 50 的两种画法。
 
 ```viz binary-heap
-{"title": "Quiz 4 Q4：建立最大堆，然后 delMax", "heap": "50, 36, 17, 2, 0, 3, 28, 30, 1", "ops": "sink(4); sink(3); sink(2); sink(1); delMax()"}
+{"title": "Quiz 4 Q4：建立最大堆，然后 delMax", "heap": "50, 36, 17, 2, 0, 3, 28, 30, 1", "ops": "heapify(); delMax()"}
 ```
 
 （Q2 的最后一问，即用最小堆做堆排序，见折叠的 [§12](#12-堆排序期中不考)。）

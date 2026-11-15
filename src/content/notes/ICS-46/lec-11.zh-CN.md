@@ -159,7 +159,7 @@ for ( int k = n/2; k >= 1; k-- )
 | f) | sink(1, 11) | S 与 X 交换，停在 R 和 A 之上 | X T S P L R A M O E E |
 
 ```viz binary-heap
-{"title": "幻灯片 17–18：自底向上建堆", "heap": "S, O, R, T, E, X, A, M, P, L, E", "ops": "sink(5); sink(4); sink(3); sink(2); sink(1)", "interactive": true}
+{"title": "幻灯片 17–18：自底向上建堆", "heap": "S, O, R, T, E, X, A, M, P, L, E", "ops": "heapify()", "interactive": true}
 ```
 
 > ➡️ **接续见 [第 12 讲](lec-12.zh-CN.md)**：建堆活动（朴素与优化的代价对比）、O(n) 建堆分析、sortdown、堆排序分析、排序总结和二叉搜索树——第 12 讲的讲义会重复这些内容。

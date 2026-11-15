@@ -34,17 +34,44 @@ summary: "Heap construction (naive O(n log n) vs bottom-up O(n)), sortdown, heap
 
 ## 1. Heap Construction: Naive vs Bottom-Up
 
-Heap sort's first phase turns an arbitrary array `a[1..n]` into a max-heap. There are two ways to do it:
+Heap sort has two phases. **Phase 1** turns an arbitrary array `a[1..n]` into a max-heap; **phase 2** (sortdown, [§3](#3-sortdown)) then moves the maximum to the back n − 1 times. Phase 2 is always the same. Phase 1 can be done in **two ways**, and they are easy to mix up because both end with a heap. They differ in direction, in the operation they use (swim vs sink), and in cost. Both are shown below on the slide's array `[2, 9, 7, 6, 5, 8]` (n = 6).
 
-- **Naive (top-down):** insert the keys one at a time — each insert is an append plus a swim, O(log n). n insertions → **O(n log n)**.
-- **Optimized (bottom-up):** treat the array as a complete binary tree, skip the leaves, and sink every internal node from `k = n/2` down to `k = 1` (introduced in [Lecture 11](lec-11.en-US.md#8-optimal-bottom-up-heap-construction)):
+### 1.1 Method A: Naive (Top-Down), Insert One Key at a Time
+
+The heap **grows from the left**. At first only `a[1]` is a heap; each step lets the next key join at the end of the heap and **swims** it up while it is larger than its parent. This is n `insert`s done in place (inserting into an empty heap moves nothing, so the loop starts at k = 2):
+
+```cpp
+for (int k = 2; k <= n; k++)   // a[1..k-1] is already a heap
+    swim(a, k);                // a[k] joins it: swim up past smaller parents
+```
+
+| Step | New key | Swim | Heap after |
+|---|---|---|---|
+| k = 1 | 2 | — (alone) | 2 |
+| k = 2 | 9 | 9 > 2 → swap | 9 2 |
+| k = 3 | 7 | 7 < 9 → stays | 9 2 7 |
+| k = 4 | 6 | 6 > 2 → swap; 6 < 9 → stop | 9 6 7 2 |
+| k = 5 | 5 | 5 < 6 → stays | 9 6 7 2 5 |
+| k = 6 | 8 | 8 > 7 → swap; 8 < 9 → stop | 9 6 8 2 5 7 |
+
+The demo writes each step as `insert(x)`, which is the same append + swim:
+
+```viz binary-heap
+{"title": "Method A: insert 2, 9, 7, 6, 5, 8 one at a time", "ops": "insert(2); insert(9); insert(7); insert(6); insert(5); insert(8)"}
+```
+
+**Cost:** the k-th key can swim up to log k levels. In the worst case (ascending input: every new key is the new maximum and swims all the way to the root) that is log 1 + log 2 + … + log n = **O(n log n)**.
+
+### 1.2 Method B: Bottom-Up, Sink from n/2 Down to 1
+
+Take the whole array **as it is** as a complete binary tree. Leaves (`a[n/2+1..n]`) are already one-key heaps, so skip them. Go **right to left** over the internal nodes and **sink** each one (introduced in [Lecture 11](lec-11.en-US.md#8-optimal-bottom-up-heap-construction)):
 
 ```cpp
 for (int k = n/2; k >= 1; k--)
     sink(a, k, n);
 ```
 
-Slide 6's worked answer on `[2, 9, 7, 6, 5, 8]` (n = 6, so the loop starts at k = 6/2 = 3):
+When k is sunk, both of its subtrees are already heaps (they were fixed earlier in the loop), so afterwards the subtree rooted at k is a heap. At k = 1 the whole array is one. Slide 6's worked answer (n = 6, so the loop starts at k = 6/2 = 3):
 
 | Step | Call | What moves | Array after |
 |---|---|---|---|
@@ -53,13 +80,54 @@ Slide 6's worked answer on `[2, 9, 7, 6, 5, 8]` (n = 6, so the loop starts at k 
 | k = 2 | sink(2, 6) | 9 ≥ 6 and 5 → no move | 2 9 8 6 5 7 |
 | k = 1 | sink(1, 6) | 2 swaps with 9, then with 6 | 9 6 8 2 5 7 |
 
-Step through it below (← / → keys work when the demo is focused):
+Step through it below. The code panel follows the `for` loop and the `sink` it calls (← / → keys work when the demo is focused; the skip button ⏭ jumps to the next k):
 
 ```viz binary-heap
-{"title": "Slide 6: bottom-up construction on [2, 9, 7, 6, 5, 8]", "heap": "2, 9, 7, 6, 5, 8", "ops": "sink(3); sink(2); sink(1)", "interactive": true}
+{"title": "Method B (slide 6): bottom-up construction on [2, 9, 7, 6, 5, 8]", "heap": "2, 9, 7, 6, 5, 8", "ops": "heapify()", "interactive": true}
 ```
 
-> ⚠️ **Pitfall**: The loop runs **right to left** (n/2 down to 1). Going left to right breaks it: when you sink k, its children's subtrees must already be heaps.
+**Cost:** **O(n)** — most nodes sit near the bottom and can sink only a little; [§2](#2-why-bottom-up-construction-is-on) adds it up.
+
+### 1.3 The Two Methods Side by Side
+
+| | A: naive (top-down) | B: bottom-up |
+|---|---|---|
+| Idea | n inserts: the heap grows from the left, one key at a time | fix the whole array in place, from the last internal node back to the root |
+| Loop | `for k = 2 … n: swim(a, k)` | `for k = n/2 … 1: sink(a, k, n)` |
+| A key moves | **up** (swim, toward the root) | **down** (sink, toward the leaves) |
+| Leaves | every key is swum, leaves included | leaves are skipped (already heaps) |
+| Worst case | O(n log n) | **O(n)** |
+| On `[2, 9, 7, 6, 5, 8]` | 9 6 8 2 5 7 (3 exchanges) | 9 6 8 2 5 7 (3 exchanges) |
+| On `[1, 2, 3, 4, 5, 6, 7]` | 7 4 6 1 3 2 5 (10 exchanges) | 7 5 6 4 2 1 3 (4 exchanges) |
+| Typical use | a priority queue whose keys arrive over time | heap sort's phase 1 (all keys are there up front) |
+
+On the slide's array both methods happen to produce the same heap. In general they don't (the last row): both results are valid heaps, just different ones. So a question asking for the "bottom-up" result must be answered with method B.
+
+> ⚠️ **Pitfall**: Method B's loop runs **right to left** (n/2 down to 1). Going left to right breaks it: when you sink k, its children's subtrees must already be heaps.
+
+> ⚠️ **Pitfall**: Don't swap the operations. Construction A **swims** (each new key moves up); construction B **sinks** (each internal node moves down). Swimming the keys from n/2 down to 1 is neither method and doesn't build a heap.
+
+### 1.4 The Complete Heap Sort
+
+Heap sort = phase 1 (method B) + phase 2 (sortdown, [§3](#3-sortdown)), both on the same array:
+
+```cpp
+void heapSort(std::vector<int>& a) {     // keys in a[1..n]; a[0] unused
+    int n = a.size() - 1;
+    for (int k = n/2; k >= 1; k--)       // phase 1: bottom-up construction, O(n)
+        sink(a, k, n);
+    while (n > 1) {                      // phase 2: sortdown, O(n log n)
+        exch(a, 1, n--);                 //   max to the back; the heap shrinks
+        sink(a, 1, n);                   //   repair the new root
+    }
+}
+```
+
+Both phases call the **same `sink`**, but with different arguments. Phase 1 sinks **every internal k** with the **full n**. Phase 2 always sinks the **root 1**, with an n that **shrinks** by one each round. (`less`, `exch` and `sink` are in [§12](#12-complete-implementation).) The whole sort on `[2, 9, 7, 6, 5, 8]`:
+
+```viz binary-heap
+{"title": "Whole heap sort on [2, 9, 7, 6, 5, 8]: phase 1, then phase 2", "heap": "2, 9, 7, 6, 5, 8", "ops": "heapsort()"}
+```
 
 > 📝 **Practice**: [Activity: Heap Construction](#131-activity-heap-construction-slide-5) — run it by hand, then name the naive and optimized worst cases.
 
@@ -583,14 +651,8 @@ remove 21: 70(10 79(73(71 74) 95))
 
 Try each one before reading the solution. The activities use one BST several times:
 
-```text
-        8
-      /   \
-     3     10
-    / \      \
-   1   6      14
-      / \     /
-     4   7   13
+```viz binary-tree
+{"title": "The BST used in Activities 2–4", "tree": "8, 3, 10, 1, 6, -, 14, -, -, 4, 7, -, -, 13"}
 ```
 
 ### 13.1 Activity: Heap Construction (slide 5)
