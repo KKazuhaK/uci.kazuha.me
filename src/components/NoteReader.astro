@@ -8,7 +8,7 @@ import { validateViz } from "../lib/viz-validate";
 import { noteLinkResolver } from "../lib/note-links";
 import { formatLastModified, lastModified } from "../lib/git";
 import { otherLang, LANG_LABEL, LANG_SHORT, type Lang } from "../lib/i18n";
-import { pickVersion, unitLabel, type CourseEntry, type NoteGroup } from "../lib/notes";
+import { getNoteGroups, pickVersion, unitLabel, type CourseEntry, type NoteGroup } from "../lib/notes";
 import { courseUrl, noteSourceUrl, noteUrl, url } from "../lib/urls";
 import Icon from "./Icon.astro";
 
@@ -48,12 +48,17 @@ function pagerLink(target: NoteGroup | null) {
 const prevLink = pagerLink(prev);
 const nextLink = pagerLink(next);
 const hubUrl = courseUrl(group.courseSlug);
+// Every note of this course, for the reading bar's jump menu (this language when it exists).
+const courseNotes = ((await getNoteGroups()).get(group.course) ?? []).map((g) => {
+  const { lang: l, note: n } = pickVersion(g, lang);
+  return { href: noteUrl(g.courseSlug, g.slug, l), label: unitLabel(g, lang), title: n.data.title, current: g.slug === group.slug };
+});
 // Changes every build, so viz components are re-fetched after each deploy.
 const VIZ_VERSION = String(Math.floor(Date.now() / 1000));
 
 const S = zh
-  ? { prev: "上一篇", next: "下一篇", headings: "目录", edit: "在编辑器中打开", switchTo: "切换到", toc: "目录", top: "顶部", backToTop: "回到顶部", hub: "课程主页", shortcuts: "快捷键", lang: "切换语言" }
-  : { prev: "Previous", next: "Next", headings: "Headings", edit: "Open in Editor", switchTo: "Switch to", toc: "Table of Contents", top: "Top", backToTop: "Back to top", hub: "Course hub", shortcuts: "Shortcuts", lang: "Switch language" };
+  ? { prev: "上一篇", next: "下一篇", headings: "目录", edit: "在编辑器中打开", switchTo: "切换到", toc: "目录", top: "顶部", backToTop: "回到顶部", hub: "课程主页", jumpTo: "跳到其他讲", shortcuts: "快捷键", lang: "切换语言" }
+  : { prev: "Previous", next: "Next", headings: "Headings", edit: "Open in Editor", switchTo: "Switch to", toc: "Table of Contents", top: "Top", backToTop: "Back to top", hub: "Course hub", jumpTo: "Jump to another note", shortcuts: "Shortcuts", lang: "Switch language" };
 ---
 
 <main
@@ -76,10 +81,18 @@ const S = zh
           <a class="rb-btn rb-prev rb-side-prev" href={prevLink.href} title={`${S.prev}: ${prevLink.title} ([)`} aria-label={`${S.prev}: ${prevLink.label}`}>
             <Icon name="chevron-left" /><span class="rb-text">{prevLink.label}</span>
           </a>
-        ) : <span class="rb-btn rb-disabled rb-side-prev" aria-hidden="true"><Icon name="chevron-left" /></span>}
-        <button type="button" class="rb-title" data-scroll-top title={S.backToTop}>
-          <span class="rb-course">{course.data.name}</span><span class="rb-dot">·</span><span class="rb-label">{label}</span>
-        </button>
+        ) : (
+          <a class="rb-btn rb-hub rb-side-prev" href={hubUrl} title={S.hub}>
+            <Icon name="list" /><span class="rb-text">{S.hub}</span>
+          </a>
+        )}
+        <label class="rb-title" title={S.jumpTo}>
+          <span class="rb-course">{course.data.name}</span><span class="rb-dot">·</span><span class="rb-label">{label}</span><Icon name="chevrons-up-down" />
+          {/* A native select laid over the title: the OS menu on desktop, the picker on phones. */}
+          <select class="rb-jump" data-rb-jump aria-label={S.jumpTo} autocomplete="off">
+            {courseNotes.map((o) => <option value={o.href} selected={o.current}>{o.label} — {o.title}</option>)}
+          </select>
+        </label>
         {altUrl && (
           <a class="rb-btn rb-lang" href={altUrl} data-lang-switch hreflang={alt} lang={alt} title={`${S.switchTo} ${LANG_LABEL[alt]} (L)`}>
             <Icon name="languages" /><span>{LANG_SHORT[alt]}</span>
@@ -89,7 +102,11 @@ const S = zh
           <a class="rb-btn rb-next rb-side-next" href={nextLink.href} title={`${S.next}: ${nextLink.title} (])`} aria-label={`${S.next}: ${nextLink.label}`}>
             <span class="rb-text">{nextLink.label}</span><Icon name="chevron-right" />
           </a>
-        ) : <span class="rb-btn rb-disabled rb-side-next" aria-hidden="true"><Icon name="chevron-right" /></span>}
+        ) : prevLink ? (
+          <a class="rb-btn rb-hub rb-side-next" href={hubUrl} title={S.hub}>
+            <span class="rb-text">{S.hub}</span><Icon name="list" />
+          </a>
+        ) : <span class="rb-side-next" aria-hidden="true"></span>}
         <span class="rb-progress" data-reading-progress></span>
       </nav>
 
@@ -456,7 +473,6 @@ const S = zh
   .rb-title:hover { background: var(--uci-blue-soft); color: var(--uci-blue); }
   :global(html[data-theme="dark"]) .rb-btn:hover,
   :global(html[data-theme="dark"]) .rb-title:hover { color: #58a6ff; }
-  .rb-disabled { opacity: 0.3; pointer-events: none; }
   .rb-side-prev { grid-column: 1; justify-self: start; }
   .rb-title { grid-column: 2; }
   .rb-lang { grid-column: 3; }
@@ -473,6 +489,20 @@ const S = zh
     font-family: inherit;
     cursor: pointer;
   }
+  /* The title opens the jump menu: a transparent native select covers it. */
+  .rb-title { position: relative; }
+  .rb-title :global(svg) { width: 14px; height: 14px; flex-shrink: 0; margin-left: 2px; opacity: 0.55; }
+  .rb-jump {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    font-size: 16px; /* no zoom on focus in iOS Safari */
+    appearance: none;
+  }
+  .rb-title:has(.rb-jump:focus-visible) { outline: 2px solid var(--uci-blue); outline-offset: 2px; }
   .rb-course { font-weight: 700; }
   .rb-dot { opacity: 0.4; margin: 0 2px; }
   .rb-label { overflow: hidden; text-overflow: ellipsis; }

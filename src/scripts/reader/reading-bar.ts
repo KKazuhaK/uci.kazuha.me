@@ -2,9 +2,10 @@
 //   [ / ]  previous / next note      L  switch language
 // The bar sits in the intro card (placed by the inline script after the intro in
 // NoteReader.astro) and is sticky: once it reaches the top of the screen it stays
-// there as a floating pill (.is-floating) with the course, language and a middle
-// button that scrolls back to the top. After a jump with its ‹ › (or [ ]), the next
-// note opens scrolled so the bar is at the same spot on screen, under the pointer.
+// there as a floating pill (.is-floating) with the course, language and a title that
+// opens a menu of every note in the course. After a jump with its ‹ › or that menu,
+// the next note opens scrolled so the bar is at the same spot on screen, under the
+// pointer ([ ] don't: there's no pointer to keep in place).
 import { detailsCount, openDetailsAt, openDetailsIndexes } from "./details";
 import { HEADING_SELECTOR } from "./toc";
 
@@ -154,7 +155,31 @@ export function setupReadingBar(opts: {
   window.addEventListener("load", relayout);
   updateFloating();
 
-  bar.querySelector("[data-scroll-top]")?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  // The title's jump menu: go straight to any note of the course, keeping the bar in
+  // place. A pick with the mouse or a finger goes at once. From the keyboard, arrows
+  // only move the choice (some browsers change a closed select's value on each press):
+  // Enter or leaving the menu goes there, Escape puts it back.
+  const jump = bar.querySelector<HTMLSelectElement>("[data-rb-jump]");
+  if (jump) {
+    const current = (): number => [...jump.options].findIndex((o) => o.defaultSelected);
+    const reset = (): void => { jump.selectedIndex = current(); };
+    const go = (): void => {
+      if (jump.selectedIndex === current() || !jump.value) return;
+      markJump(jump.value);
+      location.href = jump.value;
+    };
+    let byKey = false;
+    jump.addEventListener("pointerdown", () => { byKey = false; });
+    jump.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); go(); }
+      else if (e.key === "Escape") { reset(); byKey = false; }
+      else if (e.key !== "Tab" && e.key !== "Shift") byKey = true;
+    });
+    jump.addEventListener("change", () => { if (!byKey) go(); });
+    jump.addEventListener("blur", () => { if (byKey) go(); byKey = false; });
+    // Back/forward from the page cache brings the select back as it was left.
+    window.addEventListener("pageshow", reset);
+  }
 
   let ticking = false;
   window.addEventListener("scroll", () => {
