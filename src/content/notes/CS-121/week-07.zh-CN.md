@@ -482,6 +482,8 @@ end procedure
 
 这就是 L18 p51 和 p53 的架构图：多了一个小的 **Index** 方框，旁边是一个 **"Deleted Pages!"** 存储。
 
+> 🗣️ **课堂**（L20.5 p28–30）：课堂版本把它称为**延迟更新策略**：为**更新的页面**（"Index n.."）和**删除的页面**（"Deleted Pages"）各建立**临时（且小得多）的辅助索引结构**，它们与排序模块之间设有**否决系统**（veto system），因此被删除的页面会在结果到达 UI 之前就被过滤掉。
+
 > 🔗 **延伸阅读**：[Croft §5.6.4 Update（书中第 164 页）](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf) · [IIR 第 4 章（动态索引）](https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf)
 
 ---
