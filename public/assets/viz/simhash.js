@@ -245,7 +245,7 @@ export function steps(config) {
 }
 
 const STYLE = `
-.vz-sh { overflow-x: auto; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.vz-sh { overflow-x: auto; display: flex; flex-direction: column; align-items: center; align-items: safe center; gap: 0.5rem; }
 .vz-sh table { border-collapse: collapse; font: 0.76rem/1.25 "Consolas", "Menlo", monospace; }
 .vz-sh th, .vz-sh td { border: 1px solid var(--vz-border); padding: 0.18rem 0.32rem; text-align: center; min-width: 1.6rem; }
 .vz-sh thead th { font: 600 0.68rem/1.2 system-ui, sans-serif; color: var(--vz-muted); background: var(--vz-surface); }

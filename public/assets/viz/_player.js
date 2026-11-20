@@ -112,10 +112,20 @@ html.viz-modal-open { overflow: hidden; }
 .viz-btn:hover:not(:disabled) { background: var(--vz-btn-hover); }
 .viz-btn:disabled { opacity: 0.4; cursor: default; }
 .viz-btn.is-icon { padding: 0.4rem 0.55rem; }
-.viz-switch { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.1rem 0 0.6rem; }
-.viz-switch-label { color: var(--vz-muted); font-size: 0.85rem; margin-right: 0.15rem; }
-.viz-btn.is-on { background: var(--vz-cmp-bg); border-color: var(--vz-cmp-bd); color: var(--vz-ink); font-weight: 600; }
+.viz-switch { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; margin: 0.75rem 0 0.2rem; }
+.viz-switch-label { color: var(--vz-muted); font-size: 0.82rem; }
+.viz-block.is-static > .viz-switch { margin-top: 0; }
+/* A segmented selector, so the view switch doesn't read as another action button. */
+.viz-seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border: 1px solid var(--vz-border); border-radius: 0.6rem; background: var(--vz-soft); }
+.viz-seg-opt {
+	padding: 0.28rem 0.75rem; border: 0; border-radius: 0.42rem; background: transparent; color: var(--vz-muted);
+	font: inherit; font-size: 0.82rem; line-height: 1.2; cursor: pointer; transition: background-color 0.15s, color 0.15s;
+}
+.viz-seg-opt:hover:not(.is-on) { color: var(--vz-ink); background: var(--vz-btn-hover); }
+.viz-seg-opt.is-on { background: var(--vz-surface); color: var(--vz-ink); font-weight: 600; box-shadow: 0 0 0 1px var(--vz-cmp-bd), 0 1px 2px rgba(0, 0, 0, 0.12); }
+.viz-seg-opt:focus-visible { outline: 2px solid var(--vz-blue); outline-offset: 1px; }
 .viz-spacer { flex: 1; }
+.viz-meta { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.8rem; }
 .viz-step { color: var(--vz-muted); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
 .viz-speed { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--vz-muted); font-size: 0.82rem; }
 .viz-speed input { width: 5.5rem; accent-color: var(--vz-blue); }
@@ -157,7 +167,7 @@ html.viz-modal-open { overflow: hidden; }
 .viz-input-err:empty { display: none; }
 
 /* Array cells, shared by array-based components. */
-.vz-row { display: flex; justify-content: center; gap: 0.45rem; }
+.vz-row { display: flex; justify-content: center; justify-content: safe center; gap: 0.45rem; }
 .vz-col { flex: 0 1 2.9rem; min-width: 0; display: flex; flex-direction: column; align-items: center; }
 .vz-cell {
 	position: relative; width: 100%; aspect-ratio: 1 / 1.05; display: grid; place-items: center;
@@ -317,13 +327,13 @@ export function mount(wrapper, mod, rawConfig, source, lang) {
 			(hasGroups ? '<button type="button" class="viz-btn" data-act="group" title="' + escapeHtml(ui.endTitle(groupLabel)) + '">' + icon("skip") + '<span class="vz-label-long">' + escapeHtml(ui.endOf(groupLabel)) + "</span></button>" : "") +
 			'<button type="button" class="viz-btn is-icon" data-act="reset" title="' + ui.reset + '" aria-label="' + ui.reset + '">' + icon("reset") + "</button>" +
 			'<span class="viz-spacer"></span>' +
-			'<span class="viz-step" aria-live="off"></span>' +
-			'<label class="viz-speed">' + ui.speed + ' <input type="range" min="1" max="5" step="1" value="3" data-act="speed"></label>' +
+			'<span class="viz-meta"><span class="viz-step" aria-live="off"></span>' +
+			'<label class="viz-speed">' + ui.speed + ' <input type="range" min="1" max="5" step="1" value="3" data-act="speed"></label></span>' +
 		"</div>" +
-		(sw ? '<div class="viz-switch" role="group" aria-label="' + escapeHtml(pick(sw.label, lang)) + '"><span class="viz-switch-label">' + escapeHtml(pick(sw.label, lang)) + "</span>" +
+		(sw ? '<div class="viz-switch"><span class="viz-switch-label">' + escapeHtml(pick(sw.label, lang)) + '</span><span class="viz-seg" role="group" aria-label="' + escapeHtml(pick(sw.label, lang)) + '">' +
 			sw.options.map(function(o) {
-				return '<button type="button" class="viz-btn" data-act="switch" data-val="' + escapeHtml(o.value) + '" aria-pressed="false">' + escapeHtml(pick(o.label, lang)) + "</button>";
-			}).join("") + "</div>" : "") +
+				return '<button type="button" class="viz-seg-opt" data-act="switch" data-val="' + escapeHtml(o.value) + '" aria-pressed="false">' + escapeHtml(pick(o.label, lang)) + "</button>";
+			}).join("") + "</span></div>" : "") +
 		(msgTop ? '<div class="viz-msg is-top" aria-live="polite"></div>' : "") +
 		'<div class="viz-stage"></div>' +
 		(legend && legend.length ? '<div class="viz-legend">' + legend.map(function(l) {

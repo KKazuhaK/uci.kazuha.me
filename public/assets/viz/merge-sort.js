@@ -337,10 +337,10 @@ const STYLE = `
 .vz-ms .vz-col { flex: 0 1 auto; width: 2.9rem; }
 .vz-ms .vz-cell { width: 100%; aspect-ratio: auto; height: 2.5rem; font-size: 1.05rem; border-radius: 0.5rem; }
 .vz-ms .vz-idx { margin-top: 0.15rem; }
-.vz-ms .vz-arr { align-items: center; }
+.vz-ms .vz-arr { align-items: stretch; } /* rows take the full width, so their cells shrink to fit instead of overflowing */
 .vz-cell.is-out, .viz-legend .vz-swatch.is-out { opacity: 0.4; border-style: dashed; }
 .vz-cell.is-empty { color: transparent; border-style: dashed; }
-.vz-mt { display: grid; gap: 0.55rem 0; justify-content: center; }
+.vz-mt { display: grid; gap: 0.55rem 0; justify-content: center; justify-content: safe center; overflow-x: auto; }
 .vz-mt-idx { text-align: center; color: var(--vz-muted); font-size: 0.72rem; font-variant-numeric: tabular-nums; }
 .vz-mt-node { display: flex; gap: 0.2rem; padding: 0.2rem; margin: 0 0.15rem; border: 1.5px solid transparent; border-radius: 0.7rem; transition: opacity 0.25s, border-color 0.25s; }
 .vz-mt-node.is-hidden { visibility: hidden; }

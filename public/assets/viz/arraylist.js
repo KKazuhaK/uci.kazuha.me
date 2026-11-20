@@ -314,7 +314,7 @@ export function steps(config) {
 }
 
 const STYLE = `
-.vz-al { display: flex; flex-direction: column; align-items: center; overflow-x: auto; }
+.vz-al { display: flex; flex-direction: column; align-items: center; align-items: safe center; overflow-x: auto; }
 .vz-al .vz-row { flex-wrap: nowrap; }
 /* Items are strings ("ROCKS", "Throws"): every column is as wide as the widest item. */
 .vz-al .vz-col { flex: 0 0 var(--al-col, 2.9rem); }

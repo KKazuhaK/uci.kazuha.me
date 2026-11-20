@@ -199,7 +199,7 @@ export function steps(config) {
 }
 
 const STYLE = `
-.vz-q { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; overflow-x: auto; padding-bottom: 0.2rem; }
+.vz-q { display: flex; flex-direction: column; align-items: center; align-items: safe center; gap: 0.8rem; overflow-x: auto; padding-bottom: 0.2rem; }
 .vz-q-row { display: flex; align-items: flex-start; gap: 0.15rem; }
 .vz-q-node { display: flex; flex-direction: column; align-items: center; }
 .vz-q-box { padding: 0.45rem 0.65rem; border: 1.5px solid var(--vz-border); border-radius: 0.55rem; background: var(--vz-surface); font-weight: 600; white-space: nowrap;

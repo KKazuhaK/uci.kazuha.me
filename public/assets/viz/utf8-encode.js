@@ -194,7 +194,7 @@ export function steps(config) {
 }
 
 const STYLE = `
-.vz-u8 { display: flex; flex-direction: column; gap: 0.7rem; align-items: center; overflow-x: auto; }
+.vz-u8 { display: flex; flex-direction: column; gap: 0.7rem; align-items: center; align-items: safe center; overflow-x: auto; }
 .vz-u8 table { border-collapse: collapse; font: 0.76rem/1.3 "Consolas", "Menlo", monospace; }
 .vz-u8 th, .vz-u8 td { border: 1px solid var(--vz-border); padding: 0.22rem 0.4rem; text-align: left; white-space: nowrap; }
 .vz-u8 thead th { font: 600 0.7rem/1.2 system-ui, sans-serif; color: var(--vz-muted); background: var(--vz-surface); }

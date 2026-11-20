@@ -194,7 +194,7 @@ export function steps(config) {
 }
 
 const STYLE = `
-.vz-dll { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; overflow-x: auto; padding-bottom: 0.2rem; }
+.vz-dll { display: flex; flex-direction: column; align-items: center; align-items: safe center; gap: 0.8rem; overflow-x: auto; padding-bottom: 0.2rem; }
 .vz-dll-row { display: flex; align-items: flex-start; gap: 0.1rem; }
 .vz-dll-node { display: flex; flex-direction: column; align-items: center; }
 .vz-dll-box { display: flex; border: 1.5px solid var(--vz-border); border-radius: 0.55rem; background: var(--vz-surface); overflow: hidden;
