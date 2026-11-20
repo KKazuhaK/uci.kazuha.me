@@ -145,11 +145,18 @@ html.viz-modal-open { overflow: hidden; }
    so a long demo doesn't need scrolling between the picture and the code. */
 .viz-block { container: viz-block / inline-size; }
 @container viz-block (min-width: 1040px) {
-	.viz-body.has-code { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem); gap: 1.1rem; align-items: start; }
-	.viz-body.has-code > .viz-panels { grid-template-columns: minmax(0, 1fr); margin-top: 1.1rem; position: sticky; top: 4.75rem; }
-	.viz-body.has-code .viz-code { max-height: 28rem; overflow-y: auto; }
-	.viz-modal .viz-body.has-code > .viz-panels { top: 1rem; }
-	.viz-modal .viz-body.has-code .viz-code { max-height: min(60vh, calc(94vh - 16rem)); }
+	/* Both columns end at the same height. The code panel shows up to 21rem of
+	   code; if the drawing is taller, the variables box grows to fill the
+	   column; if the code side is taller, the drawing is centred in the
+	   taller column. */
+	.viz-body.has-code { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem); gap: 1.1rem; align-items: stretch; }
+	.viz-body.has-code > .viz-main { display: flex; flex-direction: column; min-width: 0; }
+	.viz-body.has-code > .viz-main > .viz-stage { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: center; }
+	.viz-body.has-code > .viz-panels { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.1rem; }
+	.viz-body.has-code > .viz-panels > .viz-code { flex: 0 1 auto; max-height: 21rem; overflow-y: auto; }
+	.viz-body.has-code > .viz-panels > .viz-vars { flex: 1 0 auto; }
+	.viz-body.has-code > .viz-panels.is-single > .viz-code { flex: 1 1 0; max-height: none; min-height: 12rem; contain: size; }
+	.viz-modal .viz-body.has-code > .viz-panels > .viz-code { max-height: min(60vh, calc(94vh - 16rem)); }
 }
 .viz-code {
 	position: relative; margin: 0; padding: 0.7rem 0; border-radius: 0.75rem; overflow-x: auto;

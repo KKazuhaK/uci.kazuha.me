@@ -110,7 +110,7 @@ Rules:
 
 ## 8. Checking
 
-- `check_md.py` (in the `uci-ics46-notes-maker` skill, and for IN4MATX 133 in this repo at `docs/skills/in4matx133-notes/scripts/`, which also requires every tag in prose to be in backticks; skills whose procedure lives under `docs/skills/` are updated by committing there, not by re-uploading). The fold check and the exemption of the fold tags from the tag rule arrived in the versions uploaded on 2026-11-10; an older copy reports every `<details>` line as an ERROR, so re-sync the skill rather than removing folds:
+- `check_md.py` (for ICS 46 in this repo at `docs/skills/ics46-notes/scripts/`, for IN4MATX 133 at `docs/skills/in4matx133-notes/scripts/`, which also requires every tag in prose to be in backticks; skills whose procedure lives under `docs/skills/` are updated by committing there, not by re-uploading). Copies of a skill older than 2026-11-10 report every `<details>` line as an ERROR; pull the repo (or re-sync an uploaded skill) rather than removing folds:
 
   ```bash
   python3 -I <skill>/scripts/check_md.py src/content/notes/<COURSE>/<slug>.<lang>.md --course <COURSE> --site-repo .
