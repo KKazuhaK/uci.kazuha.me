@@ -202,6 +202,26 @@ void flipColors(Node* h) {
 }
 ```
 
+下面把三个操作逐句拆开，一步一条语句（h 和 x 是局部指针；节点的填充色就是来自父节点那条链接的颜色）。演示省略了上面代码里那两行 `size`，它们只负责维护子树大小。第一个演示可以输入你自己的树：
+
+```viz rb-rotation
+{"title": "幻灯片 13：rotateLeft(h)，h = E，右孩子 S 为红", "op": "rotateLeft", "interactive": true}
+```
+
+用文字说 `rotateLeft`：x = h 的右孩子；h 的右链接接走 x 的左子树（介于 h 和 x 之间的键，这里是 H）；x 的左链接指向 h；x 继承 h 的颜色；h 变红；返回 x，由调用者重新挂上。
+
+```viz rb-rotation
+{"title": "幻灯片 14：rotateRight(h)，h = S，左孩子 E 为红", "op": "rotateRight"}
+```
+
+`rotateRight` 是镜像：x = h 的左孩子，h 的左链接接走 x 的右子树，x 的右链接指向 h，然后是同样的两行改颜色和 `return x`。
+
+```viz rb-rotation
+{"title": "幻灯片 15：flipColors(h)，h = E，两个孩子都为红", "op": "flipColors"}
+```
+
+`flipColors` 一个指针都不动：h 变红，两个孩子变黑。
+
 > 📘 **课外补充**：旋转改变三个指针，并保持对称序——三棵子树（小于 E、介于 E 与 S 之间、大于 S）从左到右的顺序保持不变。旋转和翻转都不会改变任何从根到空链接的路径上的黑链接数量，这就是它们能保持完美黑平衡的原因。（algs4 §3.3；Thornton 的 AVL 笔记使用了相同的旋转。）
 
 ## 10. LLRB 插入

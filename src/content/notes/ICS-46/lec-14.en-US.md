@@ -202,6 +202,26 @@ void flipColors(Node* h) {
 }
 ```
 
+Each operation step by step, one statement per step (h and x are the local pointers; a node's fill is the color of the link from its parent). The demos leave out the two `size` lines of the code above, which only keep the subtree counts right. You can type your own tree into the first one:
+
+```viz rb-rotation
+{"title": "Slide 13: rotateLeft(h), h = E with red right child S", "op": "rotateLeft", "interactive": true}
+```
+
+`rotateLeft` in words: x = h's right child; h's right link takes x's left subtree (the keys between h and x — here H); x's left link takes h; x inherits h's color; h turns red; return x so the caller re-links it.
+
+```viz rb-rotation
+{"title": "Slide 14: rotateRight(h), h = S with red left child E", "op": "rotateRight"}
+```
+
+`rotateRight` is the mirror image: x = h's left child, h's left link takes x's right subtree, x's right link takes h, then the same two color lines and `return x`.
+
+```viz rb-rotation
+{"title": "Slide 15: flipColors(h), h = E with two red children", "op": "flipColors"}
+```
+
+`flipColors` moves no pointer at all: h turns red and both children turn black.
+
 > 📘 **Beyond the lecture**: A rotation changes three pointers and keeps symmetric order — the three subtrees (less than E, between E and S, greater than S) stay in the same left-to-right order. Neither a rotation nor a flip changes the number of black links on any root-to-null path, which is why they preserve perfect black balance. (algs4 §3.3; Thornton's AVL notes use the same rotations.)
 
 ## 10. LLRB Insertion

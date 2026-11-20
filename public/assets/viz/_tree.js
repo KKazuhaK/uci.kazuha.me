@@ -8,7 +8,7 @@
 //   import { treeView } from "./_tree.js";
 //   export function render(stage, frame) {
 //     treeView(stage).update({
-//       nodes: [{ id, label, col, depth, role, val, badge, dashed }],
+//       nodes: [{ id, label, col, depth, role, val, badge, tag, dashed }],
 //       edges: [{ from, to, role, dashed }],
 //       cols, rows,          // optional: fixed grid size, so the drawing doesn't resize between frames
 //       empty: "(empty tree)"
@@ -21,6 +21,9 @@
 // state names (the same as the array cells and the legend swatches):
 //   cmp (being compared), min (chosen / successor), swap (moved / changed),
 //   sorted (done / hit), ghost (placeholder), out (left the structure), dim.
+// Red-black node colours: role rbred / rbblack fill the node (they combine with a
+// state, e.g. "cmp rbred"). `tag` is a pointer name drawn as a pill above the
+// node ("h", "x", "h, x"); leave room for it with a top offset (depth + 0.6).
 // Edge roles: path (the path just taken), active (being followed), red (a red
 // link in a red-black tree), glue (keys of one multi-key node, e.g. a 2-3 node).
 // An edge joins two nodes by id and follows them as they move. For structures
@@ -60,6 +63,19 @@ const CSS = `
 .vz-tn.is-ghost text, .vz-tn.is-dim text { fill: var(--vz-muted); }
 .vz-tn.is-dim circle { stroke-dasharray: 2 3; }
 .vz-tn .vz-tn-val, .vz-tn .vz-tn-badge { transition: fill .3s; }
+.vz-tn.is-rbred circle { fill: #d1453b; }
+.vz-tn.is-rbblack circle { fill: #2b3445; }
+.vz-tn.is-rbred:not(.is-cmp):not(.is-swap) circle { stroke: #a8322a; }
+.vz-tn.is-rbblack:not(.is-cmp):not(.is-swap) circle { stroke: #1b2230; }
+.vz-tn.is-rbred .vz-tn-lbl, .vz-tn.is-rbblack .vz-tn-lbl { fill: #fff; }
+.viz-legend .vz-swatch.is-rbred { background: #d1453b; border-color: #a8322a; border-radius: 50%; }
+.viz-legend .vz-swatch.is-rbchanged { background: none; border: 2.5px solid var(--vz-swap-bd); border-radius: 50%; }
+.viz-legend .vz-swatch.is-rbblack { background: #2b3445; border-color: #1b2230; border-radius: 50%; }
+.vz-tn-tag { transition: opacity .3s; }
+.vz-tn-tag rect { fill: var(--vz-blue); }
+.vz-tn-tag line { stroke: var(--vz-blue); stroke-width: 1.6; }
+.vz-tree .vz-tn .vz-tn-tag text { fill: #fff; font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+.vz-tn-tag.is-empty { opacity: 0; }
 .vz-tn.is-entering, .vz-te.is-entering, .vz-tn.is-leaving, .vz-te.is-leaving { opacity: 0; }
 .vz-tree-empty { fill: var(--vz-muted); font-size: 13px; text-anchor: middle; }
 @media (prefers-reduced-motion: reduce) {
@@ -163,6 +179,20 @@ function createView(host) {
 		});
 	}
 
+	function setTag(n, tag) {
+		const t = tag === undefined || tag === null ? "" : String(tag);
+		if (n.tagText === t) return;
+		n.tagText = t;
+		if (!t) { n.tag.setAttribute("class", "vz-tn-tag is-empty"); return; }
+		while (n.tag.firstChild) n.tag.removeChild(n.tag.firstChild);
+		const w = Math.max(18, t.length * 7 + 10), top = -NODE_R - 26;
+		el("line", { x1: 0, y1: top + 17, x2: 0, y2: -NODE_R }, n.tag);
+		el("rect", { x: -w / 2, y: top, width: w, height: 17, rx: 4 }, n.tag);
+		const tx = el("text", { x: 0, y: top + 8.5 }, n.tag);
+		tx.textContent = t;
+		n.tag.setAttribute("class", "vz-tn-tag");
+	}
+
 	function placeNode(n) {
 		n.g.setAttribute("transform", "translate(" + n.cur.x + "," + n.cur.y + ")");
 	}
@@ -209,9 +239,10 @@ function createView(host) {
 				n = {
 					g: g,
 					circle: el("circle", { r: NODE_R, cx: 0, cy: 0 }, g),
-					text: el("text", { x: 0, y: 0 }, g),
+					text: el("text", { "class": "vz-tn-lbl", x: 0, y: 0 }, g),
 					val: el("text", { "class": "vz-tn-val", x: NODE_R + 1, y: -NODE_R + 2 }, g),
 					badge: el("text", { "class": "vz-tn-badge", x: -NODE_R + 1, y: -NODE_R - 1 }, g),
+					tag: el("g", { "class": "vz-tn-tag is-empty" }, g),
 					cur: to, from: null
 				};
 				nodes.set(id, n);
@@ -228,6 +259,7 @@ function createView(host) {
 			n.text.textContent = d.label === undefined || d.label === null ? "" : String(d.label);
 			n.val.textContent = d.val === undefined || d.val === null ? "" : String(d.val);
 			n.badge.textContent = d.badge === undefined || d.badge === null ? "" : String(d.badge);
+			setTag(n, d.tag);
 			n.g.setAttribute("class", "vz-tn" + roleClasses(d.role) + (d.dashed ? " is-dashed" : "") + (n.g.classList.contains("is-entering") ? " is-entering" : ""));
 			if (n.cur.x !== to.x || n.cur.y !== to.y) {
 				if (animate) {
