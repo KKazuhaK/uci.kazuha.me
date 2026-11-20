@@ -30,7 +30,7 @@ summary: "部分索引与多路合并、跳表指针与查询顺序、用双词�
 - [21. 速查与必记的 5 件事](#21-速查与必记的-5-件事)
 
 > UCI CS 121 / IN4MATX 141: Information Retrieval — Prof. Alberto Krone-Martins, Fall 2026, week of Nov 11
-> 整理自 Lecture 17、18、19 和 20 的幻灯片（YuJa 视频未收录；本周没有线下课，课堂用的 Lecture 17.5 幻灯片不在 Canvas 上）。按概念组织，而不是按讲次组织。
+> 整理自 Lecture 17、18、19 和 20 的幻灯片，外加 Lecture 20.5——11 月 18 日课上对这些内容的回顾，在课程安排中列于第 8 周下（YuJa 视频未收录；本周没有线下课，因此没有 Lecture 17.5）。按概念组织，而不是按讲次组织。
 > 📖 本周阅读：[Croft et al.，第 5 章 Ranking with Indexes 与第 7 章 Retrieval Models](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf) · [Manning, Raghavan & Schütze，*Introduction to IR*，第 2 和第 4 章](https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf)
 
 > 📅 **课程安排**：**11 月 11 日（周三）没有线下课**（退伍军人节）——本周的讲课以视频为准。
@@ -47,6 +47,8 @@ summary: "部分索引与多路合并、跳表指针与查询顺序、用双词�
 - **查询过程**（L17 p21–49，L19）：使用索引——布尔 AND、短语，然后是分布式与优化过的求值。"How do we process a query? Later — what kinds of complex queries can we process?"（L17 p22）
 - **索引更新**（L18 p47–53）：架构图在主索引旁边多了一个小索引，以及一个 **"Deleted Pages!"** 存储。
 - **排序**（L20）："Evolving from Boolean retrieval"——用分数代替是/否。
+
+课堂回顾的议程（L20.5 p5–37）按顺序列出了本周视频的内容：索引工程问题（索引大于内存、辅助数据结构）、分布式索引（MapReduce）、更新索引、分布式查询求值、查询缓存、查询处理（按文档处理、按词项处理）、合取处理、阈值方法、排序检索，以及 Jaccard 系数。
 
 L17 p3–6 重放了第 6 周的结尾：简单的内存版 `BuildIndex`，其中 `I ← HashTable()`（"Could this be a file, directly?"），以及 Jeff Dean 的延迟表。见[第 6 周第 9 节](week-06.zh-CN.md#9-简单的内存索引器与-docid)和[第 10 节](week-06.zh-CN.md#10-扩展索引构建硬件基础)。新的幻灯片是 L17 p6：
 
@@ -294,7 +296,7 @@ be: 1:17,19; 4:17,191,291,430,434; 5:14,19,101; ...
 
 ## 6. 索引工程：读取比内存更大的索引
 
-在磁盘上构建索引只是一半；在**查询时**你还得找到 postings（L18 p6–28，"Index engineering issues"）。
+在磁盘上构建索引只是一半；在**查询时**你还得找到 postings（L18 p6–28 · L20.5 p6–23，"Index engineering issues"）。
 
 **小索引**（L18 p7–8）：把它**整个载入内存**，作为哈希表 / 字典，按键查找 postings。*如果索引比可用内存还大呢？*
 
@@ -779,7 +781,7 @@ end procedure
 
 ## 15. 第一种尝试：Jaccard 系数
 
-衡量两个集合 $A$ 和 $B$ **重叠程度**的常用指标（L20 p27–30）：
+衡量两个集合 $A$ 和 $B$ **重叠程度**的常用指标（L20 p27–30 · L20.5 p38）：
 
 $$J(A, B) = \frac{|A \cap B|}{|A \cup B|}$$
 
@@ -806,7 +808,7 @@ $$\frac{|A \cap B|}{\sqrt{|A \cup B|}}$$
 
 回忆**词项-文档关联矩阵**（[第 5 周第 13 节](week-05.zh-CN.md#13-词项-文档关联矩阵)，L20 p35）：每个文档是一个**二值向量** $\in \{0,1\}^{|V|}$。
 
-**词项-文档计数矩阵**（L20 p36）：考虑一个词项在文档中出现的**次数**。每个文档是 $\mathbb{N}^{|V|}$ 中的一个**计数向量**——即下表中的一列：
+**词项-文档计数矩阵**（L20 p36 · L20.5 p40）：考虑一个词项在文档中出现的**次数**。每个文档是 $\mathbb{N}^{|V|}$ 中的一个**计数向量**——即下表中的一列：
 
 | | Antony and Cleopatra | Julius Caesar | The Tempest | Hamlet | Othello | Macbeth |
 |---|---|---|---|---|---|---|
@@ -891,7 +893,7 @@ $$\mathrm{idf}_t = \log_{10}\left(N / \mathrm{df}_t\right)$$
 
 ### 18.3 tf-idf
 
-一个词项的 **tf-idf 权重**是它的 tf 权重与 idf 权重的**乘积**（L20 p58–59）：
+一个词项的 **tf-idf 权重**是它的 tf 权重与 idf 权重的**乘积**（L20 p58–59 · L20.5 p43）：
 
 $$w_{t,d} = \left(1 + \log \mathrm{tf}_{t,d}\right) \times \log\left(N / \mathrm{df}_t\right)$$
 
@@ -899,9 +901,11 @@ $$w_{t,d} = \left(1 + \log \mathrm{tf}_{t,d}\right) \times \log\left(N / \mathrm
 - tf-idf 中的 "-" 是**连字符，不是减号！** 其他写法：tf.idf、tf × idf、tfidf。
 - **好的性质**：它**随文档内出现次数增加而增大**，也**随词项在集合中的稀有程度增加而增大**。
 
-文档 $d$ 对查询 $q$ 的分数（L20 p60–61）：
+文档 $d$ 对查询 $q$ 的分数（L20 p60–61 · L20.5 p44）：
 
 $$\mathrm{Score}(q, d) = \sum_{t \in q \cap d} \mathrm{tf.idf}_{t,d}$$
+
+课堂版本的这张幻灯片（L20.5 p44）标出了三个部分：$\mathrm{Score}(q, d)$ 是**文档在给定查询下的相关性分数**，求和遍历的是**查询与文档交集中的词项**，每个求和项 $w_{t,d}$ 是 **tf-idf** 权重。
 
 可以构造**许多变体**："tf" 怎么算（取不取对数）、查询里的词项是否也加权……**选择和/或设计你自己的启发式方法**。
 
@@ -940,7 +944,7 @@ the       idf = 0
 
 "On Assignment 3"（L18 p2–5）重复了[第 6 周第 11 节](week-06.zh-CN.md#11-课堂笔记与作业提示)的三个里程碑（MS1 索引器；MS2 只支持 AND、文本界面；MS3 排序检索，**300 ms** 以内，带计时器）。L18 p5 新增：MS3 **"may benefit from positional information; come back to these lectures"**——位置见第 5 节，快速打分见第 11–13 节。
 
-**Project 3 里真的需要"为索引建索引"吗？**（L18 p24–25）**Maybe!（mostly yes… ☺）** 记住 MS3 中查询处理的 **300 ms** 预算，也记住**你不能把整个索引对象载入内存**。所以查询端需要第 6 节的内容：一张内存中的偏移量表（或按字母拆分的文件），加上 `seek()`。
+**Project 3 里真的需要"为索引建索引"吗？**（L18 p24–25 · L20.5 p24）**Maybe!（mostly yes… ☺）** 记住 MS3 中查询处理的 **300 ms** 预算，也记住**你不能把整个索引对象载入内存**。所以查询端需要第 6 节的内容：一张内存中的偏移量表（或按字母拆分的文件），加上 `seek()`。
 
 > 💡 **关键见解**：这一周几乎逐条对应 MS3：用部分索引 + 合并来构建（第 2 节），用为索引建索引 + seek 来查找（第 6 节），按 df 递增的顺序和合取处理来保证速度（第 3、12 节），用 tf-idf 来排序（第 18 节）。
 

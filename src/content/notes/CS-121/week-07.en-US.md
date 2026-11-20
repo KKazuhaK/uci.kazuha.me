@@ -30,7 +30,7 @@ summary: "Partial indexes and multi-way merging, skip pointers and query order, 
 - [21. Quick Reference & Top 5 Things to Remember](#21-quick-reference--top-5-things-to-remember)
 
 > UCI CS 121 / IN4MATX 141: Information Retrieval — Prof. Alberto Krone-Martins, Fall 2026, week of Nov 11
-> Built from the Lecture 17, 18, 19 and 20 slides (the YuJa videos are not included; the in-class Lecture 17.5 deck isn't on Canvas — there was no in-person class this week). Organized by concept, not by lecture.
+> Built from the Lecture 17, 18, 19 and 20 slides, plus Lecture 20.5 — the in-class recap of this material on Nov 18, listed under Week 8 in the Schedule (the YuJa videos are not included; there was no in-person class this week, so there is no Lecture 17.5). Organized by concept, not by lecture.
 > 📖 Readings this week: [Croft et al., Ch 5 Ranking with Indexes and Ch 7 Retrieval Models](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf) · [Manning, Raghavan & Schütze, *Introduction to IR*, Ch 2 and 4](https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf)
 
 > 📅 **Class logistics**: **No in-person class on Wednesday, Nov 11** (Veterans Day) — the lectures are the videos.
@@ -47,6 +47,8 @@ The architecture map ([Week 1 §10](week-01.en-US.md#10-search-engine-architectu
 - **Querying Process** (L17 p21–49, L19): using the index — Boolean AND, phrases, then distributed and optimized evaluation. "How do we process a query? Later — what kinds of complex queries can we process?" (L17 p22).
 - **Index updates** (L18 p47–53): the map gains a second, small index and a **"Deleted Pages!"** store next to the main one.
 - **Ranking** (L20): "Evolving from Boolean retrieval" — scores instead of yes/no.
+
+The in-class recap's agenda (L20.5 p5–37) lists this week's videos in order: index engineering issues (indexes too large for memory, auxiliary data structures), distributed index (MapReduce), updating the index, distributed query evaluation, query caching, query processing (document-at-a-time, term-at-a-time), conjunctive processing, threshold methods, ranked retrieval, and the Jaccard coefficient.
 
 L17 p3–6 replays the end of Week 6: the simple in-memory `BuildIndex` with `I ← HashTable()` ("Could this be a file, directly?") and Jeff Dean's latency table. See [Week 6 §9](week-06.en-US.md#9-the-simple-in-memory-indexer-and-docids) and [§10](week-06.en-US.md#10-scaling-index-construction-hardware-basics). The new slide is L17 p6:
 
@@ -294,7 +296,7 @@ In doc 4, *to* at 429 and 433 and *be* at 430 and 434 line up: the phrase can st
 
 ## 6. Index Engineering: Reading an Index Bigger Than Memory
 
-Building the index on disk is half of it; at **query time** you also have to find postings (L18 p6–28, "Index engineering issues").
+Building the index on disk is half of it; at **query time** you also have to find postings (L18 p6–28 · L20.5 p6–23, "Index engineering issues").
 
 **Small index** (L18 p7–8): load it **entirely into memory** as a hash table / dictionary and find the postings by key. *What if the index is larger than available memory?*
 
@@ -779,7 +781,7 @@ It takes skill to write a query with a manageable number of hits: **AND gives to
 
 ## 15. Take 1: The Jaccard Coefficient
 
-A commonly used measure of the **overlap of two sets** $A$ and $B$ (L20 p27–30):
+A commonly used measure of the **overlap of two sets** $A$ and $B$ (L20 p27–30 · L20.5 p38):
 
 $$J(A, B) = \frac{|A \cap B|}{|A \cup B|}$$
 
@@ -806,7 +808,7 @@ $$\frac{|A \cap B|}{\sqrt{|A \cup B|}}$$
 
 Recall the **term-document incidence matrix** ([Week 5 §13](week-05.en-US.md#13-the-term-document-incidence-matrix), L20 p35): each document is a **binary vector** $\in \{0,1\}^{|V|}$.
 
-**Term-document count matrices** (L20 p36): consider the **number** of occurrences of a term in a document. Each document is a **count vector** in $\mathbb{N}^{|V|}$ — a column below:
+**Term-document count matrices** (L20 p36 · L20.5 p40): consider the **number** of occurrences of a term in a document. Each document is a **count vector** in $\mathbb{N}^{|V|}$ — a column below:
 
 | | Antony and Cleopatra | Julius Caesar | The Tempest | Hamlet | Othello | Macbeth |
 |---|---|---|---|---|---|---|
@@ -892,7 +894,7 @@ where $N$ is the number of documents in the collection. We use $\log(N/\mathrm{d
 
 ### 18.3 tf-idf
 
-The **tf-idf weight** of a term is the **product** of its tf weight and its idf weight (L20 p58–59):
+The **tf-idf weight** of a term is the **product** of its tf weight and its idf weight (L20 p58–59 · L20.5 p43):
 
 $$w_{t,d} = \left(1 + \log \mathrm{tf}_{t,d}\right) \times \log\left(N / \mathrm{df}_t\right)$$
 
@@ -900,9 +902,11 @@ $$w_{t,d} = \left(1 + \log \mathrm{tf}_{t,d}\right) \times \log\left(N / \mathrm
 - The "-" in tf-idf is a **hyphen, not a minus sign!** Alternative names: tf.idf, tf × idf, tfidf.
 - **Good properties**: it **increases with the number of occurrences** within a document, and **increases with the rarity** of the term in the collection.
 
-The score of a document $d$ for a query $q$ (L20 p60–61):
+The score of a document $d$ for a query $q$ (L20 p60–61 · L20.5 p44):
 
 $$\mathrm{Score}(q, d) = \sum_{t \in q \cap d} \mathrm{tf.idf}_{t,d}$$
+
+The in-class version of this slide (L20.5 p44) labels the three parts: $\mathrm{Score}(q, d)$ is the **relevance score of a document given a query**, the sum runs over the **terms in the intersection of query and document**, and each summand $w_{t,d}$ is the **tf-idf** weight.
 
 **Many variants** can be constructed: how "tf" is computed (with or without logs), whether the terms in the query are also weighted, … **pick and/or design your heuristics**.
 
@@ -941,7 +945,7 @@ the       idf = 0
 
 "On Assignment 3" (L18 p2–5) repeats the milestones of [Week 6 §11](week-06.en-US.md#11-in-class-notes--assignment-tips) (MS1 indexer, MS2 AND-only with a text interface, MS3 ranked under **300 ms** with a timer). New on L18 p5: MS3 **"may benefit from positional information; come back to these lectures"** — §5 for positions, §11–13 for fast scoring.
 
-**Do you really need "index the index" in Project 3?** (L18 p24–25) **Maybe! (mostly yes… ☺)** Remember the **300 ms** budget for query processing in MS3, and remember that **you cannot load your entire index object into memory**. So the query side needs §6: an in-memory offset table (or alphabet-split files) and `seek()`.
+**Do you really need "index the index" in Project 3?** (L18 p24–25 · L20.5 p24) **Maybe! (mostly yes… ☺)** Remember the **300 ms** budget for query processing in MS3, and remember that **you cannot load your entire index object into memory**. So the query side needs §6: an in-memory offset table (or alphabet-split files) and `seek()`.
 
 > 💡 **Key Insight**: The week maps onto MS3 almost line by line: partial indexes + merge to build (§2), index-the-index + seek to look up (§6), process terms in order of increasing df and conjunctive processing to keep it fast (§3, §12), and tf-idf to rank (§18).
 
