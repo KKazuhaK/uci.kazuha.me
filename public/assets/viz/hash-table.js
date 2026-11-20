@@ -94,7 +94,7 @@ const CHAIN_CODE = [
 	"}",                                               // 15
 	"void remove(const Key& key) {",                   // 16
 	"    int i = hashFunction(key);",                  // 17
-	"    Node p = &dict[i];  // link to fix",        // 18
+	"    Node** p = &dict[i];  // link to fix",        // 18
 	"    while (*p && (*p)->key != key)",              // 19
 	"        p = &(*p)->next;",                        // 20
 	"    if (*p) { Node* x = *p;",                     // 21

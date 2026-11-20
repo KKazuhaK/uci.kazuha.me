@@ -202,25 +202,25 @@ void flipColors(Node* h) {
 }
 ```
 
-Each operation step by step, one statement per step, on a state that `put()` really reaches (h and x are the local pointers; a node's fill is the color of the link from its parent; numbers instead of the slides' letters). Every demo ends by checking that the tree is a legal LLRB again. The demos leave out the two `size` lines of the code above, which only keep the subtree counts right. You can type your own tree into the first one:
+Each operation step by step, one statement per step (h and x are the local pointers; a node's fill is the color of the link from its parent; numbers instead of the slides' letters). The three demos are one story, the end of `put(35)` into this LLRB: as a 2-3 tree, root **[20 60]** with children **10**, **[30 40]**, **70**. 35 lands between 30 and 40, that 3-node splits, and 35 moves up into **[20 60]** — so the demos start right after that split, with every subtree non-empty: x's inner subtree is a real node (30, then 40) that has to move, and h is red in the first rotation, so x inherits **red**. The demos leave out the two `size` lines of the code above, which only keep the subtree counts right. You can type your own tree into the first one:
 
 ```viz rb-rotation
-{"title": "rotateLeft(h): the 3-node 20 40 leans right (slide 13)", "op": "rotateLeft", "interactive": true}
+{"title": "put(35), after the split below: rotateLeft(20) — h is red and has a parent (slide 13)", "op": "rotateLeft", "interactive": true}
 ```
 
-`rotateLeft` in words: x = h's right child; h's right link takes x's left subtree (the keys between h and x — here 30); x's left link takes h; x inherits h's color; h turns red; return x so `put()` re-links it. Here the result is already legal.
+`rotateLeft` in words: x = h's right child (35); h's right link takes x's left subtree (30, the keys between 20 and 35); x's left link takes h; x inherits h's color — **red** here, because 20 was the red left key of the 3-node; h turns red; `return x` and 60's left link now points at 35. The tree isn't legal yet: 60 → 35 → 20 are two red left links in a row.
 
 ```viz rb-rotation
-{"title": "put(10) into the 3-node 20 30: rotateRight, then flipColors (slide 14)", "op": "rotateRight, flipColors"}
+{"title": "then rotateRight(60) — x's right subtree 40 moves over (slide 14)", "op": "rotateRight"}
 ```
 
-`rotateRight` is the mirror image: x = h's left child, h's left link takes x's right subtree, x's right link takes h, then the same two color lines and `return x`. On its own it leaves a right-leaning red link (20 with two red children), which is why `put()` always follows it with a color flip.
+`rotateRight` is the mirror image: x = h's left child (35); h's left link takes x's right subtree (40, the keys between 35 and 60); x's right link takes h; x inherits h's color (black this time); h turns red. Now 35 has two red children: a temporary 4-node 20 35 60.
 
 ```viz rb-rotation
-{"title": "flipColors(h): the 4-node 10 20 30 under 40 (slide 15)", "op": "flipColors"}
+{"title": "then flipColors(35), and put() blackens the root (slide 15)", "op": "flipColors"}
 ```
 
-`flipColors` moves no pointer at all: h turns red and both children turn black, so the middle key 20 joins its parent 40 as a 3-node.
+`flipColors` moves no pointer at all: h turns red and both children turn black, which splits the 4-node. 35 is the root here, so `put()`'s `root->color = BLACK` recolors it and the tree grows one level: 2-3 tree [35] / [20] [60] / 10, 30, 40, 70 — a legal LLRB.
 
 > 📘 **Beyond the lecture**: A rotation changes three pointers and keeps symmetric order — the three subtrees (less than E, between E and S, greater than S) stay in the same left-to-right order. Neither a rotation nor a flip changes the number of black links on any root-to-null path, which is why they preserve perfect black balance. (algs4 §3.3; Thornton's AVL notes use the same rotations.)
 
@@ -261,10 +261,10 @@ Slide bug: the slide 12 `Node` is a plain class with no constructor (and no temp
 
 **The order of the three checks matters** (slides 19–20): each fix produces exactly the situation the next check looks for — a left rotation can create two left reds in a row, which the right rotation turns into a node with two red children, which the color flip splits. Three `if`s in that order handle every case in one pass per level.
 
-Slide 20 asks for an example where doing the checks out of order needs extra work: insert a key **between** the two keys of a 3-node, e.g. 20 into the 3-node 10 30 (30 with red left child 10). 20 lands as 10's red right child: rotate left at 10 (now 30–20–10 is left-left red), rotate right at 30 (20 with red children 10 and 30), flip colors. Now suppose the flip were checked **before** the right rotation: at 30 the left child is red but the right child is null, so no flip; then the right rotation leaves 20 with two red children — an unsplit temporary 4-node that stays broken until some later pass reaches it. Checked in the slide's order, each fix sets up the next one at the same node:
+Slide 20 asks for an example where doing the checks out of order needs extra work: insert a key **between** the two keys of a 3-node, e.g. 35 into the 3-node 30 40 (40 with red left child 30). 35 lands as 30's red right child: rotate left at 30 (now 40–35–30 is left-left red), rotate right at 40 (35 with red children 30 and 40), flip colors. Now suppose the flip were checked **before** the right rotation: at 40 the left child is red but the right child is null, so no flip; then the right rotation leaves 35 with two red children — an unsplit temporary 4-node that stays broken until some later pass reaches it. Checked in the slide's order, each fix sets up the next one at the same node. The whole `put(35)` from §9, from the new red node up — the same three fixes run again one level up, at 20 and 60:
 
 ```viz rb-rotation
-{"title": "Slide 20: put(20) between 10 and 30 — all three fixes in order", "op": "rotateLeft(10), rotateRight(30), flipColors"}
+{"title": "Slide 20: the whole put(35), fixes in order at 30 / 40, then at 20 / 60", "op": "rotateLeft(30), rotateRight(40), flipColors, rotateLeft(20), rotateRight(60), flipColors"}
 ```
 
 Step through it on the slide 21 trace (S E A R C H X M P L), in either view:

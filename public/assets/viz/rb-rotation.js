@@ -15,11 +15,15 @@ const OPS = ["rotateLeft", "rotateRight", "flipColors"];
 
 // Default trees: states put() really reaches, so the result is a legal LLRB.
 const DEFAULTS = {
-	"rotateLeft": { tree: "20, 10, *40, -, -, 30, 50" },           // 3-node 20 40 leaning right (a flip below made 40 red)
-	"rotateRight": { tree: "30, *20, -, *10" },                    // put(10) into the 3-node 20 30
-	"rotateRight, flipColors": { tree: "30, *20, -, *10" },
-	"flipColors": { tree: "40, 20, 50, *10, *30", h: "20" },       // 4-node 10 20 30 below the 2-node 40
-	"rotateLeft(10), rotateRight(30), flipColors": { tree: "30, *10, -, -, *20" } // put(20) between 10 and 30
+	// One put(35) told in stages, with every subtree non-empty: the 3-node 30 40
+	// below has just split (35 went up), so the 3-node 20 60 now holds 35 as well.
+	"rotateLeft": { tree: "60, *20, 70, 10, *35, -, -, -, -, 30, 40", h: "20" }, // h red, under a parent, x->left = 30
+	"rotateRight": { tree: "60, *35, 70, *20, 40, -, -, 10, 30" },                // x->right = 40, h black
+	"rotateRight, flipColors": { tree: "60, *35, 70, *20, 40, -, -, 10, 30" },
+	"flipColors": { tree: "35, *20, *60, 10, 30, 40, 70" },
+	"rotateLeft(20), rotateRight(60), flipColors": { tree: "60, *20, 70, 10, *35, -, -, -, -, 30, 40" },
+	// the whole put(35): bottom fix-ups at 30 / 40, then the same three one level up
+	"rotateLeft(30), rotateRight(40), flipColors, rotateLeft(20), rotateRight(60), flipColors": { tree: "60, *20, 70, 10, 40, -, -, -, -, *30, -, -, -, -, -, -, -, -, -, -, *35" }
 };
 
 export const meta = {
@@ -27,8 +31,8 @@ export const meta = {
 	summary: "Red-black fix-ups statement by statement: rotateLeft / rotateRight / flipColors, alone or chained as put() runs them (then root->color = BLACK), with h / x pointer tags, red and black nodes, the real in-between states and a final LLRB check.",
 	groupLabel: { en: "statement", zh: "语句" },
 	params: {
-		op: { type: "string", required: true, desc: "rotateLeft, rotateRight or flipColors, or several in put()'s order separated by commas (\"rotateRight, flipColors\"). An op works on the node the previous one returned, or on the key in parentheses (\"rotateLeft(10), rotateRight(30), flipColors\")." },
-		tree: { type: "string", default: "", desc: "Tree by heap positions (\"20, 10, *40, -, -, 30, 50\"): \"-\" = empty, \"*key\" = red (the link from its parent is red). Default: a state put() reaches for that op." },
+		op: { type: "string", required: true, desc: "rotateLeft, rotateRight or flipColors, or several in put()'s order separated by commas (\"rotateRight, flipColors\"), at most 6. An op works on the node the previous one returned, or on the key in parentheses (\"rotateLeft(20), rotateRight(60), flipColors\")." },
+		tree: { type: "string", default: "", desc: "Tree by heap positions (\"60, *20, 70, 10, *35, -, -, -, -, 30, 40\"): \"-\" = empty, \"*key\" = red (the link from its parent is red). Default: a state put() reaches for that op." },
 		h: { type: "string", default: "", desc: "Key of the node passed as h to the first op. Default: the root (or the default tree's h)." },
 		code: { type: "enum", values: ["cpp", "none"], default: "cpp", desc: "Code panel: just the functions used." }
 	},
@@ -40,7 +44,7 @@ const KEY = "[^\\s,;:()\"*\\-]{1,3}";
 function parseOps(text) {
 	const list = String(text || "").split(/\s*[,;]\s*/).map(function(s) { return s.trim(); }).filter(Boolean);
 	if (!list.length) return { error: "\"op\" is empty" };
-	if (list.length > 4) return { error: "\"op\": at most 4 operations" };
+	if (list.length > 6) return { error: "\"op\": at most 6 operations" };
 	const ops = [], at = [];
 	for (const o of list) {
 		const m = /^(\w+)(?:\(\s*([^()\s]{1,3})\s*\))?$/.exec(o);
@@ -283,10 +287,10 @@ function run(config, T) {
 		if (o === "rotateLeft") return T("`" + h.key + "`'s right link (to `" + c.key + "`) is " + (c.red ? "red" : "black") + (h.left && h.left.red ? "" : " and its left link is black") + ": it leans the wrong way.", "`" + h.key + "` 的右链接（指向 `" + c.key + "`）是" + (c.red ? "红" : "黑") + "的" + (h.left && h.left.red ? "" : "、左链接是黑的") + "：倾向错了。");
 		return c.left ? T("`" + h.key + "` → `" + c.key + "` → `" + c.left.key + "` are two red left links in a row.", "`" + h.key + "` → `" + c.key + "` → `" + c.left.key + "` 是连续两条红色左链接。") : "";
 	}
-	const opName = function(o) { return o === "flipColors" ? "flipColors(h)" : "h = " + o + "(h)"; };
+	const opName = function(o, i) { const k = parsed.at[i]; return o + "(" + (k || "h") + ")"; };
 
 	push({ msg: (ops.length > 1
-		? T("put() runs, at h = `" + h.key + "`: " + ops.map(opName).join(" → ") + ". ", "put() 在 h = `" + h.key + "` 处依次执行：" + ops.map(opName).join(" → ") + "。")
+		? T("put() runs, from h = `" + h.key + "` upward: " + ops.map(opName).join(" → ") + ". ", "put() 从 h = `" + h.key + "` 往上依次执行：" + ops.map(opName).join(" → ") + "。")
 		: T(ops[0] + "(h) with h = `" + h.key + "`. ", ops[0] + "(h)，h = `" + h.key + "`。")) + describeStart(ops[0]) });
 
 	ops.forEach(function(o, oi) {
@@ -334,10 +338,10 @@ function run(config, T) {
 				"`x->" + L + " = h;`——`" + h.key + "` 成为 `" + x.key + "` 的" + otherWord + "孩子" + (par ? "。父节点 `" + par.node.key + "` 仍指向 `" + h.key + "`，直到函数返回，所以图在那之前先不动。" : "，所以 `" + x.key + "` 画到上面。上面还没有指针指向 `" + x.key + "`：由 put() 保存返回值。")) });
 
 		x.red = h.red; group++;
-		push({ lines: [lineOf(o, 5)], changed: [x], msg: T("`x->color = h->color;` — `" + x.key + "` takes over h's old link and its color: " + (x.red ? "RED" : "BLACK") + ".", "`x->color = h->color;`——`" + x.key + "` 接管 h 原来的链接和它的颜色：" + (x.red ? "红" : "黑") + "。") });
+		push({ lines: [lineOf(o, 5)], changed: [x], msg: T("`x->color = h->color;` — `" + x.key + "` takes over h's old link and its color: " + (x.red ? "RED, because h was red (x is not always black)." : "BLACK (h's color, not a constant)."), "`x->color = h->color;`——`" + x.key + "` 接管 h 原来的链接和它的颜色：" + (x.red ? "红，因为 h 是红的（x 不一定是黑的）。" : "黑（这是 h 的颜色，不是写死的常量）。")) });
 
 		h.red = true; group++;
-		push({ lines: [lineOf(o, 6)], changed: [h], msg: T("`h->color = RED;` — the link from `" + x.key + "` down to `" + h.key + "` is the red link now, leaning " + otherWord + "." + (xWasRed && isL ? " Same keys, same 2-3 node." : ""), "`h->color = RED;`——现在从 `" + x.key + "` 到 `" + h.key + "` 的是红链接，" + otherWord + "倾。" + (xWasRed && isL ? "键相同，2-3 节点也相同。" : "")) });
+		push({ lines: [lineOf(o, 6)], changed: [h], msg: T("`h->color = RED;` — the link from `" + x.key + "` down to `" + h.key + "` is the red link now, leaning " + otherWord + "." + (xWasRed && isL ? (x.red ? " The keys still form the same temporary 4-node." : " Same keys, same 2-3 node.") : ""), "`h->color = RED;`——现在从 `" + x.key + "` 到 `" + h.key + "` 的是红链接，" + otherWord + "倾。" + (xWasRed && isL ? (x.red ? "这些键仍是同一个临时 4-节点。" : "键相同，2-3 节点也相同。") : "")) });
 
 		if (par) par.node[par.side] = x; else root = x;
 		freeze = false; group++;

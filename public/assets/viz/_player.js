@@ -141,8 +141,18 @@ html.viz-modal-open { overflow: hidden; }
 .viz-msg code { font-size: 0.9em; }
 .viz-panels { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 0.75rem; margin-top: 0.75rem; }
 .viz-panels.is-single { grid-template-columns: minmax(0, 1fr); }
+/* Wide blocks: drawing + message on the left, code + variables on the right,
+   so a long demo doesn't need scrolling between the picture and the code. */
+.viz-block { container: viz-block / inline-size; }
+@container viz-block (min-width: 1040px) {
+	.viz-body.has-code { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem); gap: 1.1rem; align-items: start; }
+	.viz-body.has-code > .viz-panels { grid-template-columns: minmax(0, 1fr); margin-top: 1.1rem; position: sticky; top: 4.75rem; }
+	.viz-body.has-code .viz-code { max-height: 28rem; overflow-y: auto; }
+	.viz-modal .viz-body.has-code > .viz-panels { top: 1rem; }
+	.viz-modal .viz-body.has-code .viz-code { max-height: min(60vh, calc(94vh - 16rem)); }
+}
 .viz-code {
-	margin: 0; padding: 0.7rem 0; border-radius: 0.75rem; overflow-x: auto;
+	position: relative; margin: 0; padding: 0.7rem 0; border-radius: 0.75rem; overflow-x: auto;
 	background: #1e1e1e; color: #d4d4d4; border: 1px solid rgba(255, 255, 255, 0.08);
 	font: 0.84em/1.65 "Consolas", "Cascadia Code", "Fira Code", "Menlo", monospace;
 }
@@ -334,18 +344,21 @@ export function mount(wrapper, mod, rawConfig, source, lang) {
 			sw.options.map(function(o) {
 				return '<button type="button" class="viz-seg-opt" data-act="switch" data-val="' + escapeHtml(o.value) + '" aria-pressed="false">' + escapeHtml(pick(o.label, lang)) + "</button>";
 			}).join("") + "</span></div>" : "") +
+		'<div class="viz-body' + (codeLines ? " has-code" : "") + '"><div class="viz-main">' +
 		(msgTop ? '<div class="viz-msg is-top" aria-live="polite"></div>' : "") +
 		'<div class="viz-stage"></div>' +
 		(legend && legend.length ? '<div class="viz-legend">' + legend.map(function(l) {
 			return '<span><i class="vz-swatch ' + l.cls + '"></i>' + escapeHtml(pick(l.label, lang)) + "</span>";
 		}).join("") + "</div>" : "") +
 		(msgTop ? "" : '<div class="viz-msg" aria-live="polite"></div>') +
+		"</div>" +
 		(codeLines || hasVars ? '<div class="viz-panels' + (codeLines && hasVars ? "" : " is-single") + '">' +
 			(codeLines ? '<div class="viz-code">' + codeLines.map(function(line, k) {
 				return '<div class="viz-line"><span class="viz-ln">' + (k + 1) + "</span><span>" + (highlightCpp(line) || " ") + "</span></div>";
 			}).join("") + "</div>" : "") +
 			(hasVars ? '<div class="viz-vars"></div>' : "") +
 		"</div>" : "") +
+		"</div>" +
 		(config.interactive && mod.input ?
 			'<div class="viz-input">' +
 				"<label>" + escapeHtml(pick(mod.input.label, lang)) + "</label>" +
@@ -396,9 +409,20 @@ export function mount(wrapper, mod, rawConfig, source, lang) {
 		shown = idx;
 		msgEl.innerHTML = formatMessage(frame.msg || "");
 		stepEl.textContent = ui.step(idx + 1, frames.length);
+		let firstActive = null;
 		lineEls.forEach(function(el, k) {
-			el.classList.toggle("is-active", (frame.lines || []).includes(k + 1));
+			const on = (frame.lines || []).includes(k + 1);
+			el.classList.toggle("is-active", on);
+			if (on && !firstActive) firstActive = el;
 		});
+		// A height-capped code panel (side-by-side layout) scrolls itself, never the page.
+		const codeBox = firstActive && firstActive.parentElement;
+		if (codeBox && codeBox.scrollHeight > codeBox.clientHeight + 1) {
+			const top = firstActive.offsetTop, bottom = top + firstActive.offsetHeight;
+			if (top < codeBox.scrollTop || bottom > codeBox.scrollTop + codeBox.clientHeight) {
+				codeBox.scrollTop = Math.max(0, top - codeBox.clientHeight / 3);
+			}
+		}
 		if (varsEl) {
 			const before = new Map(prev && prev.vars ? prev.vars : []);
 			varsEl.innerHTML = (frame.vars || []).map(function(pair) {
