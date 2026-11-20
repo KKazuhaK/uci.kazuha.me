@@ -374,7 +374,7 @@ update by hand.
 with access `push`) — publishing is "push to main": GitHub Actions (workflow
 `site`) runs `astro check` and the build, which validates viz configs, note
 links and frontmatter, then force-pushes the build to the `deploy` branch,
-and the server pulls it every 5 minutes. A failed build publishes nothing.
+and the `uci-ics-deploy` job publishes it on ics.uci.edu right after `publish` (an hourly catch-up workflow covers a missed deploy). A failed build publishes nothing.
 
 1. `git -C /home/claude/uci.kazuha.me pull` before writing, so links and the
    build see the latest notes.
@@ -432,7 +432,7 @@ viz: <k> web-demo blocks, all valid, previewed | wanted: <missing components, or
 New components: <files in public/assets/viz/ + README.md row, or "none">
 Figures to add to KKazuhaK/assets: <ics.uci.edu/in4matx-133/lec-NN/<name>.png …, or "none">
 Check against slides: <anything unreadable or uncertain, with page numbers>
-Published: <commit> on main · CI <passed/failed> · live within ~5 min at https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-NN/en-US/
+Published: <commit> on main · CI <passed/failed> · live once `uci-ics-deploy` passes, at https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-NN/en-US/
 ```
 
 Without push access, the last line is the `Save as: … (push to main to publish)`
