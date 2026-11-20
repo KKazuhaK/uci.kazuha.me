@@ -325,10 +325,10 @@ export function steps(config) {
 		// ---- put, recursive with frames ----
 		const key = o.key;
 		result = "—";
-		function put(h, parentKey, dir) {
+		function put(h, parent, pside) {
 			if (!h) {
 				const nd = mk(key);
-				return { node: nd, created: true, parentKey: parentKey, dir: dir };
+				return { node: nd, created: true };
 			}
 			const c = cmp(key, h.key);
 			if (c === 0) {
@@ -340,22 +340,24 @@ export function steps(config) {
 				msg: T("`" + key + "` " + (c < 0 ? "<" : ">") + " `" + h.key + "`: recurse " + (c < 0 ? "left" : "right") + ", like a BST.",
 					"`" + key + "` " + (c < 0 ? "<" : ">") + " `" + h.key + "`：像 BST 一样递归到" + (c < 0 ? "左" : "右") + "子树。") });
 			const side = c < 0 ? "left" : "right";
-			const r = put(h[side], h.key, side);
+			const r = put(h[side], h, side);
 			h[side] = r.node;
 			if (r.created) {
 				push({ key: key, h: r.node, marks: mark(r.node.id, "is-swap"), lines: [7, 8], group: g,
 					msg: T("Null link: `new Node(" + key + ", val, RED, 1)` becomes " + h.key + "'s " + side + " child, joined by a red link (it joins " + h.key + "'s 2-3 node).",
 						"空链接：`new Node(" + key + ", val, RED, 1)` 成为 " + h.key + " 的" + (side === "left" ? "左" : "右") + "孩子，用红链接相连（并入 " + h.key + " 所在的 2-3 节点）。") });
 			}
-			return { node: fixUp(h) };
+			return { node: fixUp(h, parent, pside) };
 		}
-		function fixUp(h) {
+		function fixUp(h, parent, pside) {
+			// Re-link the new subtree root right away, so every frame shows the whole tree.
+			const relink = function(x) { if (parent) parent[pside] = x; else root = x; };
 			let fixed = false;
 			if (isRed(h.right) && !isRed(h.left)) {
 				push({ key: key, h: h, marks: marks2(h, "is-cmp", h.right, "is-min"), lines: [14], group: g,
 					msg: T("Back at `" + h.key + "`: its right link is red and its left link is black → rotate left.",
 						"回到 `" + h.key + "`：右链接是红的、左链接是黑的 → 左旋。") });
-				const x = rotL(h); rotations++; h = x; fixed = true;
+				const x = rotL(h); rotations++; h = x; relink(h); fixed = true;
 				push({ key: key, h: h, marks: marks2(h, "is-swap", h.left, "is-swap"), lines: [15, 24, 25, 26, 27, 28, 29, 30], group: g,
 					msg: T("`rotateLeft`: `" + h.key + "` moves up, `" + h.left.key + "` becomes its red left child. Same keys, same 2-3 node, now leaning left.",
 						"`rotateLeft`：`" + h.key + "` 上移，`" + h.left.key + "` 成为它的红色左孩子。键相同、2-3 节点相同，只是改为左倾。") });
@@ -364,7 +366,7 @@ export function steps(config) {
 				push({ key: key, h: h, marks: marks2(h, "is-cmp", h.left, "is-min"), lines: [16], group: g,
 					msg: T("At `" + h.key + "`: two left red links in a row (`" + h.left.key + "`, `" + h.left.left.key + "`), a temporary 4-node → rotate right.",
 						"在 `" + h.key + "`：连续两条左红链接（`" + h.left.key + "`、`" + h.left.left.key + "`），是临时 4-节点 → 右旋。") });
-				const x = rotR(h); rotations++; h = x; fixed = true;
+				const x = rotR(h); rotations++; h = x; relink(h); fixed = true;
 				push({ key: key, h: h, marks: marks2(h, "is-swap", h.right, "is-swap"), lines: [17, 32, 33, 34, 35, 36, 37, 38], group: g,
 					msg: T("`rotateRight`: `" + h.key + "` moves up with two red children — the 4-node is now balanced, ready to split.",
 						"`rotateRight`：`" + h.key + "` 上移，有两个红孩子——4-节点现在是平衡的，可以分裂了。") });
