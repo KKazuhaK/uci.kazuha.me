@@ -21,7 +21,8 @@
 // state names (the same as the array cells and the legend swatches):
 //   cmp (being compared), min (chosen / successor), swap (moved / changed),
 //   sorted (done / hit), ghost (placeholder), out (left the structure), dim.
-// Edge roles: path (the path just taken), active (being followed).
+// Edge roles: path (the path just taken), active (being followed), red (a red
+// link in a red-black tree), glue (keys of one multi-key node, e.g. a 2-3 node).
 // An edge joins two nodes by id and follows them as they move. For structures
 // whose links belong to positions, not elements (a heap's slots), give
 // `at: [col1, depth1, col2, depth2]` and a `key` instead: a fixed line.
@@ -40,6 +41,8 @@ const CSS = `
 .vz-te.is-path { stroke: var(--vz-swap-bd); stroke-width: 3.5; }
 .vz-te.is-active { stroke: var(--vz-cmp-bd); stroke-width: 3; }
 .vz-te.is-dashed { stroke-dasharray: 4 3; }
+.vz-te.is-red { stroke: #d1453b; stroke-width: 5; }
+.vz-te.is-glue { stroke: var(--vz-border); stroke-width: 7; stroke-linecap: round; opacity: .55; }
 .vz-tn { transition: opacity .3s; }
 .vz-tn circle { fill: var(--vz-surface); stroke: var(--vz-border); stroke-width: 1.6; transition: fill .3s, stroke .3s, stroke-width .3s; }
 .vz-tn text { fill: var(--vz-ink); font-weight: 600; text-anchor: middle; dominant-baseline: central; font-size: 15px; transition: fill .3s; }
