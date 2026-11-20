@@ -22,7 +22,8 @@ export const meta = {
 	params: {
 		op: { type: "enum", values: ["rotateLeft", "rotateRight", "flipColors"], required: true, desc: "Which operation to step through." },
 		tree: { type: "string", default: "", desc: "Tree by heap positions (\"E, A, *S, -, -, H, X\"): \"-\" = empty, \"*key\" = red (the link from its parent is red). Default: a small example for the op." },
-		h: { type: "string", default: "", desc: "Key of the node passed as h. Default: the root." }
+		h: { type: "string", default: "", desc: "Key of the node passed as h. Default: the root." },
+		code: { type: "enum", values: ["cpp", "none"], default: "cpp", desc: "Code panel: just this function." }
 	},
 	example: { op: "rotateLeft" }
 };
