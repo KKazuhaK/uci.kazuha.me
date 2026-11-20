@@ -1,0 +1,794 @@
+<!DOCTYPE html><html lang="en-US"><head><title>ICS 46 2-3 Trees &amp; Red-Black BSTs | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Balanced search trees: 2-3 tree search, insertion with 4-node splits and height bounds; left-leaning red-black BSTs (1-1 correspondence, definition, rotations, color flips, insertion and its order of checks, 2 lg n height); then hash tables: buckets, hash code + compression, collisions."><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/ics-46/lec-14/en-US/"><link rel="icon" href="/~kazuhak/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/~kazuhak/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/ics-46/lec-14/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/ics-46/lec-14/zh-CN/"><link rel="stylesheet" href="/~kazuhak/_astro/BaseLayout.D6FvEM2t.css"><link rel="stylesheet" href="/~kazuhak/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/~kazuhak/_astro/katex.D1M0OS0E.css"><link rel="stylesheet" href="/~kazuhak/_astro/index.BWdCFSBs.css"></head><body data-nav-path="/~kazuhak/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/~kazuhak/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/~kazuhak/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/~kazuhak/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/~kazuhak/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/~kazuhak/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="en-US" data-viz-base="/~kazuhak/assets/viz/" data-viz-version="1795162308" data-source-url="/~kazuhak/notes/ics-46/lec-14/en-US/source.md" data-editor-url="/~kazuhak/tools/md-editor/" data-alt-url="/~kazuhak/notes/ics-46/lec-14/zh-CN/" data-prev-url="/~kazuhak/notes/ics-46/lec-12/en-US/" data-next-url="/~kazuhak/notes/ics-46/lec-15/en-US/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="Previous / next note" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/~kazuhak/notes/ics-46/lec-12/en-US/" title="Previous: Heap Sort &amp; BSTs ([)" aria-label="Previous: Lecture 12" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>Lecture 12</span></a><label class="rb-title" title="Jump to another note" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>ICS 46</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>Lecture 14</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg><select class="rb-jump" data-rb-jump aria-label="Jump to another note" autocomplete="off" data-astro-cid-gxyjxt6l><option value="/~kazuhak/notes/ics-46/lec-00/en-US/" data-astro-cid-gxyjxt6l>Lecture 0 — Course Intro, Unit Tests &amp; Templates</option><option value="/~kazuhak/notes/ics-46/lec-01/en-US/" data-astro-cid-gxyjxt6l>Lecture 1 — Randomness, References &amp; Pointers</option><option value="/~kazuhak/notes/ics-46/lec-02/en-US/" data-astro-cid-gxyjxt6l>Lecture 2 — Smart Pointers, Arrays &amp; Empirical Analysis</option><option value="/~kazuhak/notes/ics-46/lec-03/en-US/" data-astro-cid-gxyjxt6l>Lecture 3 — Algorithm Analysis &amp; ArrayList</option><option value="/~kazuhak/notes/ics-46/lec-04/en-US/" data-astro-cid-gxyjxt6l>Lecture 4 — Linked Lists &amp; Stacks</option><option value="/~kazuhak/notes/ics-46/lec-05/en-US/" data-astro-cid-gxyjxt6l>Lecture 5 — Queues, Deques &amp; Stack Applications</option><option value="/~kazuhak/notes/ics-46/lec-06/en-US/" data-astro-cid-gxyjxt6l>Lecture 6 — Analysis of Recursion</option><option value="/~kazuhak/notes/ics-46/lec-07/en-US/" data-astro-cid-gxyjxt6l>Lecture 7 — Sorting</option><option value="/~kazuhak/notes/ics-46/lec-08/en-US/" data-astro-cid-gxyjxt6l>Lecture 8 — Merge Sort, Quick Sort</option><option value="/~kazuhak/notes/ics-46/lec-09/en-US/" data-astro-cid-gxyjxt6l>Lecture 9 — Quick Sort</option><option value="/~kazuhak/notes/ics-46/lec-10/en-US/" data-astro-cid-gxyjxt6l>Lecture 10 — Trees</option><option value="/~kazuhak/notes/ics-46/lec-11/en-US/" data-astro-cid-gxyjxt6l>Lecture 11 — Heaps &amp; Priority Queues</option><option value="/~kazuhak/notes/ics-46/lec-12/en-US/" data-astro-cid-gxyjxt6l>Lecture 12 — Heap Sort &amp; BSTs</option><option value="/~kazuhak/notes/ics-46/lec-14/en-US/" selected data-astro-cid-gxyjxt6l>Lecture 14 — 2-3 Trees &amp; Red-Black BSTs</option><option value="/~kazuhak/notes/ics-46/lec-15/en-US/" data-astro-cid-gxyjxt6l>Lecture 15 — Hash Tables</option><option value="/~kazuhak/notes/ics-46/midterm-review/en-US/" data-astro-cid-gxyjxt6l>Midterm Review — Midterm Review</option></select></label><a class="rb-btn rb-lang" href="/~kazuhak/notes/ics-46/lec-14/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>中</span></a><a class="rb-btn rb-next rb-side-next" href="/~kazuhak/notes/ics-46/lec-15/en-US/" title="Next: Hash Tables (])" aria-label="Next: Lecture 15" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>Lecture 15</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/~kazuhak/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/~kazuhak/notes/ics-46/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>ICS 46</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>Lecture 14</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/~kazuhak/notes/ics-46/lec-14/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>中文</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>Headings</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>Open in Editor</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>Lecture 14 · Data Structures Reading Notes</h2><p id="reader-description" data-astro-cid-gxyjxt6l>This page presents ICS 46 Lecture 14 notes in a structured reading format so you can review C++ templates, pointers and ownership, algorithm analysis, and data structure implementations lecture by lecture. The path below takes you back to Notes, Course Notes, the course page, or this note file. Hover over the ≡ icon on the right side to open the Table of Contents.</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>Last edited on November 19, 2026</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="information-and-computer-science-46--lecture-14-balanced-bsts-2-3-trees-llrb--hash-tables">Information and Computer Science 46 — Lecture 14: Balanced BSTs (2-3 Trees, LLRB) + Hash Tables</h1>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-the-goal-log-n-in-the-worst-case">1. The Goal: log n in the Worst Case</a></li>
+<li><a href="#2-2-3-trees">2. 2-3 Trees</a></li>
+<li><a href="#3-2-3-tree-search">3. 2-3 Tree Search</a></li>
+<li><a href="#4-2-3-tree-insertion">4. 2-3 Tree Insertion</a></li>
+<li><a href="#5-2-3-tree-performance">5. 2-3 Tree Performance</a></li>
+<li><a href="#6-left-leaning-red-black-bsts-2-3-trees-as-bsts">6. Left-Leaning Red-Black BSTs: 2-3 Trees as BSTs</a></li>
+<li><a href="#7-the-llrb-definition">7. The LLRB Definition</a></li>
+<li><a href="#8-search-and-the-node-class">8. Search and the Node Class</a></li>
+<li><a href="#9-rotations-and-color-flips">9. Rotations and Color Flips</a></li>
+<li><a href="#10-llrb-insertion">10. LLRB Insertion</a></li>
+<li><a href="#11-llrb-time-analysis-and-the-dictionary-summary">11. LLRB Time Analysis and the Dictionary Summary</a></li>
+<li><a href="#12-hash-tables-the-idea">12. Hash Tables: the Idea</a></li>
+<li><a href="#13-hash-functions-hash-code--compression">13. Hash Functions: Hash Code + Compression</a></li>
+<li><a href="#14-collisions">14. Collisions</a></li>
+<li><a href="#15-complete-implementation">15. Complete Implementation</a></li>
+<li><a href="#16-in-class-activities-with-solutions">16. In-class Activities (with Solutions)</a></li>
+<li><a href="#17-quick-reference--top-5-things-to-remember">17. Quick Reference &amp; Top 5 Things to Remember</a></li>
+</ul>
+<blockquote>
+<p>UCI ICS 46: Data Structure Implementation and Analysis — Prof. Tom Yeh, Fall 2026, 11/10/26 and 11/17/26 (both decks are titled &quot;Lecture 14&quot;)<br>Built from the 11/10 deck &quot;Balanced BST + Review&quot; (2-3 trees) and the 11/17 deck &quot;LLRB + Hash Tables&quot;, with algs4 §3.3 Balanced Search Trees, algs4 §3.4 Hash Tables and Thornton&#39;s ICS 46 notes (Hash Tables; AVL Trees for rotations) as supplements. The 11/17 deck&#39;s separate-chaining slides are repeated in Lecture 15, so they are covered there. Organized by concept, not by source.</p>
+</blockquote>
+<blockquote>
+<p>📅 <strong>Class logistics</strong>: (11/10) Midterm Thu 11/12 · Quiz 4: Sorting, Trees, Heaps · new HW/Lab released after the midterm<br>(11/17) Quiz 5 Fri 11/20 (BST and balanced BST) · HW 6 &amp; Lab 5 due Fri 11/20 · midterms still being graded<br>Course-approved AI tool: submit the two-part consent form (data storage for tool access — not used for academic-integrity cases; optional research use for 1% extra credit, with an alternative EC method)<br>The 11/10 deck ended with two midterm-review problems (circular SLL <code>removeLast</code>, a stack built from one queue); they&#39;re worked in the <a href="/~kazuhak/notes/ics-46/midterm-review/en-US/">midterm review notes</a>.</p>
+</blockquote>
+<hr>
+<h2 id="1-the-goal-log-n-in-the-worst-case">1. The Goal: log n in the Worst Case</h2>
+<p>A plain BST is only fast when it happens to be balanced. Slide 5 (11/10) puts the problem in one table:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Search (worst)</th>
+<th>Insert (worst)</th>
+<th>Delete (worst)</th>
+<th>Search (avg)</th>
+<th>Insert (avg)</th>
+<th>Delete (avg)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BST</td>
+<td>n</td>
+<td>n</td>
+<td>n</td>
+<td>log n</td>
+<td>log n</td>
+<td>√n</td>
+</tr>
+<tr>
+<td><strong>Goal</strong></td>
+<td><strong>log n</strong></td>
+<td><strong>log n</strong></td>
+<td><strong>log n</strong></td>
+<td><strong>log n</strong></td>
+<td><strong>log n</strong></td>
+<td><strong>log n</strong></td>
+</tr>
+</tbody></table>
+<p>The worst case is the &quot;stick&quot; from sorted input (A C E H R S X); random input gives log n, but Hibbard deletion drifts the average delete to √n. <strong>Balanced search trees</strong> guarantee log n for every operation. Red-black trees are the ones used as system symbol tables (e.g. C++ <code>std::map</code>); AVL, splay and randomized BSTs are other balanced BSTs. Yeh teaches the <strong>left-leaning red-black tree (LLRB)</strong>, and to understand it we start with the 2-3 tree.</p>
+<h2 id="2-2-3-trees">2. 2-3 Trees</h2>
+<p>A 2-3 tree lets a node hold <strong>one or two keys</strong>:</p>
+<ul>
+<li><strong>2-node</strong>: 1 key (and value), <strong>2 links</strong> — left subtree smaller, right subtree larger (a normal BST node).</li>
+<li><strong>3-node</strong>: 2 keys (and values), <strong>3 links</strong> — left (&lt; key1), middle (between key1 and key2), right (&gt; key2).</li>
+</ul>
+<p>Two properties hold at all times:</p>
+<ul>
+<li><strong>Symmetric order</strong>: an in-order traversal yields all keys in ascending order.</li>
+<li><strong>Perfect balance</strong>: every path from the root to a null link has exactly the same length.</li>
+</ul>
+<p>The &quot;anatomy&quot; tree used all lecture (root M; E J and R below; A C, H, L, P, S X at the bottom):</p>
+<pre data-language="viz" data-viz="two-three-tree"><code>{&quot;title&quot;: &quot;Anatomy of a 2-3 search tree (slides 8, 11): search for H&quot;, &quot;keys&quot;: &quot;R, C, X, E, S, P, M, L, A, H, J&quot;, &quot;ops&quot;: &quot;get(H)&quot;}</code></pre><p>(The demo builds that tree by inserting the keys in a suitable order; keys of one node are joined by a thick bar.)</p>
+<h2 id="3-2-3-tree-search">3. 2-3 Tree Search</h2>
+<p>Compare the search key against <strong>every key in the node</strong>, find the interval that contains it (left, middle if it&#39;s a 3-node, or right), follow that link, and repeat (slides 9–12). Slides 9–10 search for <strong>H</strong>: H &lt; M → left; H is between E and J → middle; H found → return its value (search hit). A miss ends at a null link.</p>
+<h2 id="4-2-3-tree-insertion">4. 2-3 Tree Insertion</h2>
+<p>Search for the key; the search ends at a node at the bottom. Then (slides 14–18):</p>
+<ol>
+<li><strong>Into a 2-node</strong>: add the key, making it a 3-node. Done. (Slide 14: insert K → the 2-node L becomes K L.)</li>
+<li><strong>Into a 3-node</strong>: add the key to make a <strong>temporary 4-node</strong> (3 keys, 4 links), then split it into two 2-nodes and <strong>pass the middle key up to the parent</strong>:<ul>
+<li>tree is a single 3-node (slide 15, insert S into A E → A E S): the middle key E becomes a new root with children A and S. <strong>Height went up by 1</strong>.</li>
+<li>parent is a 2-node (slide 16, insert Z into S X → S X Z): X goes up, the parent R becomes the 3-node R X. Done.</li>
+<li>parent is a 3-node (slide 17, insert D into A C → A C D): C goes up, the parent E J becomes the temporary 4-node C E J; split again, E goes up to M. <strong>Repeat up the tree as necessary.</strong></li>
+</ul>
+</li>
+<li><strong>Splitting the root</strong> (slide 18): if the root ends up a temporary 4-node, split it into <strong>three 2-nodes</strong>. The height grows by 1 but perfect balance is preserved — 2-3 trees grow at the <strong>top</strong>, not at the bottom.</li>
+</ol>
+<p>Step through the slide examples on the anatomy tree (← / → keys work when the demo is focused):</p>
+<pre data-language="viz" data-viz="two-three-tree"><code>{&quot;title&quot;: &quot;Slides 14–17: insert K, Z, D&quot;, &quot;keys&quot;: &quot;R, C, X, E, S, P, M, L, A, H, J&quot;, &quot;ops&quot;: &quot;insert(K); insert(Z); insert(D)&quot;, &quot;interactive&quot;: true}</code></pre><p>Each transformation is <strong>local</strong>: it changes a constant number of links and passes one key up; no other part of the tree is touched. That&#39;s why order and balance survive every insert. (Slide 13 links the algs4 <em>3.3 2-3 Tree Demo</em>.)</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: A new key never goes into a new node at the bottom — that would break perfect balance. It always joins an existing bottom node; only a root split adds a level.</p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#161-activity-1-construction-1110-deck-slide-19">Activity 1 (11/10)</a> — build a 2-3 tree from E A S Y Q U T I O N.</p>
+</blockquote>
+<h2 id="5-2-3-tree-performance">5. 2-3 Tree Performance</h2>
+<p>Slide 20 asks for the height of a 2-3 tree with n keys:</p>
+<ul>
+<li><strong>Worst case: lg n</strong> — all 2-nodes (a perfect binary tree).</li>
+<li><strong>Best case: log₃ n ≈ 0.631 lg n</strong> — all 3-nodes.</li>
+</ul>
+<p>So search and insert visit at most about lg n nodes: guaranteed <strong>O(log n)</strong>, and slide 21 puts 2-3 trees at log n in every column of the table. For a million keys that&#39;s between 12 and 20 levels.</p>
+<p>The catch is the code: two node types, converting 2-nodes into 3-nodes, splitting 4-nodes, many cases. That difficulty is what the LLRB solves.</p>
+<h2 id="6-left-leaning-red-black-bsts-2-3-trees-as-bsts">6. Left-Leaning Red-Black BSTs: 2-3 Trees as BSTs</h2>
+<p><strong>Use a plain BST to represent a 2-3 tree</strong> (slides 5–7, 9 of the 11/17 deck):</p>
+<ul>
+<li>Start with a standard BST, made of 2-nodes.</li>
+<li><strong>Red links &quot;glue&quot; two 2-nodes into one logical 3-node.</strong> A 3-node (a, b) becomes b with a as its left child, joined by a red link: less than a hangs left of a, between a and b hangs right of a, greater than b hangs right of b.</li>
+<li><strong>Black links</strong> bind the 2-3 tree together.</li>
+<li>Red links are internal and <strong>lean left</strong>.</li>
+</ul>
+<p>This is a <strong>1-1 correspondence</strong>: draw the red links horizontally and collapse the nodes they join, and you get the 2-3 tree back. Since the black links are exactly the 2-3 tree&#39;s links, the LLRB keeps <strong>perfect black balance</strong>. The advantage: <strong>BST code works with minimal changes</strong>. Use the View switch to flip between the LLRB and the 2-3 view (red links flat):</p>
+<pre data-language="viz" data-viz="llrb"><code>{&quot;title&quot;: &quot;Slides 6–7: the anatomy tree as an LLRB&quot;, &quot;tree&quot;: &quot;M, J, R, *E, L, P, X, C, H, -, -, -, -, *S, -, *A&quot;}</code></pre><h2 id="7-the-llrb-definition">7. The LLRB Definition</h2>
+<p>A left-leaning red-black tree is a BST such that (slide 10):</p>
+<ol>
+<li><strong>No two consecutive red links</strong>: no node has two red links connected to it.</li>
+<li><strong>Left-leaning</strong>: every red link leans left.</li>
+<li><strong>Perfect black balance</strong>: every path from the root to a null link has the same number of black links.</li>
+</ol>
+<p>Rule 1 means there are no 4-nodes; rule 2 means each 3-node has one fixed shape; rule 3 is the 2-3 tree&#39;s perfect balance.</p>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#162-activity-1-legal-llrbs-1117-deck-slide-8">Activity 1 (11/17)</a> — which trees are legal LLRBs?</p>
+</blockquote>
+<h2 id="8-search-and-the-node-class">8. Search and the Node Class</h2>
+<p><strong>Search is exactly the BST search</strong> — colors are ignored — but it runs faster because the tree is balanced (slide 11):</p>
+<div class="code-wrap"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#4EC9B0">Value</span><span style="color:#DCDCAA"> get</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4">{</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#DCDCAA"> get</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">root</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#4EC9B0">Value</span><span style="color:#DCDCAA"> get</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    while</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#C586C0">        if</span><span style="color:#D4D4D4">      (</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">        else</span><span style="color:#C586C0"> if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> > </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">        else</span><span style="color:#C586C0">                   return</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> Value</span><span style="color:#D4D4D4">{};</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>There are no link objects, so <strong>each node stores the color of the link from its parent</strong> (slide 12): <code>true</code> = red, <code>false</code> = black, and null links are always black.</p>
+<div class="code-wrap"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">static</span><span style="color:#569CD6"> const</span><span style="color:#569CD6"> bool</span><span style="color:#9CDCFE"> RED</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">static</span><span style="color:#569CD6"> const</span><span style="color:#569CD6"> bool</span><span style="color:#9CDCFE"> BLACK</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// BST helper node data type</span></span>
+<span class="line"><span style="color:#569CD6">class</span><span style="color:#4EC9B0"> Node</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">public:</span></span>
+<span class="line"><span style="color:#4EC9B0">Key</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955"> // key</span></span>
+<span class="line"><span style="color:#4EC9B0">     Value</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955"> // associated data</span></span>
+<span class="line"><span style="color:#4EC9B0">     Node</span><span style="color:#569CD6"> *</span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">, *</span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955"> // links to left and right subtrees</span></span>
+<span class="line"><span style="color:#569CD6">     bool</span><span style="color:#9CDCFE"> color</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955"> // color of parent link</span></span>
+<span class="line"><span style="color:#569CD6">     int</span><span style="color:#9CDCFE"> size</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955"> // subtree count</span></span>
+<span class="line"><span style="color:#D4D4D4">};</span></span>
+<span class="line"><span style="color:#569CD6">bool</span><span style="color:#DCDCAA"> isRed</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#C586C0">     if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> == </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#569CD6"> false</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955"> // null links are black</span></span>
+<span class="line"><span style="color:#C586C0">     return</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">RED</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>In the slide&#39;s picture, <code>h-&gt;left-&gt;color</code> is RED (E–C is red) and <code>h-&gt;right-&gt;color</code> is BLACK (E–J is black).</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: The color is a property of the <em>link into</em> a node, not of the node &quot;itself&quot;. &quot;C is red&quot; means &quot;the link from C&#39;s parent to C is red&quot;. The root has no parent link, so it is always black.</p>
+</blockquote>
+<h2 id="9-rotations-and-color-flips">9. Rotations and Color Flips</h2>
+<p>Insertion may temporarily break the color rules; three O(1) operations fix them (slides 13–15). The slides show them as pictures; the code below is the standard algs4 version in Yeh&#39;s C++ style (<code>size</code> updates included so the counts stay right):</p>
+<ul>
+<li><strong>Left rotation</strong>: turn a (temporarily) right-leaning red link between h and its right child x into a left-leaning one. x takes h&#39;s place and h&#39;s color; h becomes x&#39;s red left child; x&#39;s old left subtree (keys between h and x) becomes h&#39;s right subtree.</li>
+<li><strong>Right rotation</strong>: the mirror image — turn a left-leaning red link to (temporarily) lean right.</li>
+<li><strong>Color flip</strong>: a node with two red children is a temporary 4-node. Make both children black and the node&#39;s own link red: the middle key moves up into its parent&#39;s 2-3 node — this is the 4-node split.</li>
+</ul>
+<div class="code-wrap"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#DCDCAA"> rotateLeft</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#4EC9B0">    Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">RED</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">size</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">size</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">size</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">) + </span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">) + </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"><span style="color:#6A9955">// rotateRight: same code with left and right swapped</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">void</span><span style="color:#DCDCAA"> flipColors</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#9CDCFE">    h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">RED</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">BLACK</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">BLACK</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Each operation step by step, one statement per step (h and x are the local pointers; a node&#39;s fill is the color of the link from its parent; numbers instead of the slides&#39; letters). The three demos are one story, the end of <code>put(35)</code> into this LLRB: as a 2-3 tree, root <strong>[20 60]</strong> with children <strong>10</strong>, <strong>[30 40]</strong>, <strong>70</strong>. 35 lands between 30 and 40, that 3-node splits, and 35 moves up into <strong>[20 60]</strong> — so the demos start right after that split, with every subtree non-empty: x&#39;s inner subtree is a real node (30, then 40) that has to move, and h is red in the first rotation, so x inherits <strong>red</strong>. The demos leave out the two <code>size</code> lines of the code above, which only keep the subtree counts right. You can type your own tree into the first one:</p>
+<pre data-language="viz" data-viz="rb-rotation"><code>{&quot;title&quot;: &quot;put(35), after the split below: rotateLeft(20) — h is red and has a parent (slide 13)&quot;, &quot;op&quot;: &quot;rotateLeft&quot;, &quot;interactive&quot;: true}</code></pre><p><code>rotateLeft</code> in words: x = h&#39;s right child (35); h&#39;s right link takes x&#39;s left subtree (30, the keys between 20 and 35); x&#39;s left link takes h; x inherits h&#39;s color — <strong>red</strong> here, because 20 was the red left key of the 3-node; h turns red; <code>return x</code> and 60&#39;s left link now points at 35. The tree isn&#39;t legal yet: 60 → 35 → 20 are two red left links in a row.</p>
+<pre data-language="viz" data-viz="rb-rotation"><code>{&quot;title&quot;: &quot;then rotateRight(60) — x&#39;s right subtree 40 moves over (slide 14)&quot;, &quot;op&quot;: &quot;rotateRight&quot;}</code></pre><p><code>rotateRight</code> is the mirror image: x = h&#39;s left child (35); h&#39;s left link takes x&#39;s right subtree (40, the keys between 35 and 60); x&#39;s right link takes h; x inherits h&#39;s color (black this time); h turns red. Now 35 has two red children: a temporary 4-node 20 35 60.</p>
+<pre data-language="viz" data-viz="rb-rotation"><code>{&quot;title&quot;: &quot;then flipColors(35), and put() blackens the root (slide 15)&quot;, &quot;op&quot;: &quot;flipColors&quot;}</code></pre><p><code>flipColors</code> moves no pointer at all: h turns red and both children turn black, which splits the 4-node. 35 is the root here, so <code>put()</code>&#39;s <code>root-&gt;color = BLACK</code> recolors it and the tree grows one level: 2-3 tree [35] / [20] [60] / 10, 30, 40, 70 — a legal LLRB.</p>
+<blockquote>
+<p>📘 <strong>Beyond the lecture</strong>: A rotation changes three pointers and keeps symmetric order — the three subtrees (less than E, between E and S, greater than S) stay in the same left-to-right order. Neither a rotation nor a flip changes the number of black links on any root-to-null path, which is why they preserve perfect black balance. (algs4 §3.3; Thornton&#39;s AVL notes use the same rotations.)</p>
+</blockquote>
+<h2 id="10-llrb-insertion">10. LLRB Insertion</h2>
+<p><strong>Strategy</strong>: keep the 1-1 correspondence with 2-3 trees. Symmetric order and perfect black balance are maintained during every step, but the color invariants may be violated temporarily (slide 16): a right-leaning red link, two red children (temporary 4-node), left-left red, or left-right red (both temporary 4-nodes). Rotations and color flips restore them.</p>
+<p>The algorithm (slide 17):</p>
+<ol>
+<li>Do a standard BST insertion and <strong>color the new link red</strong> (the new key joins an existing 2-3 node).</li>
+<li>Repeat until the color invariants are restored, on the way back up:<ul>
+<li>right link red (left black)? → <strong>rotate left</strong>;</li>
+<li>two left reds in a row? → <strong>rotate right</strong>;</li>
+<li>both children red? → <strong>flip colors</strong>.</li>
+</ul>
+</li>
+</ol>
+<p>The code (slide 19):</p>
+<div class="code-wrap"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// insert the key-value pair in the subtree rooted at h</span></span>
+<span class="line"><span style="color:#569CD6">template</span><span style="color:#D4D4D4"> &#x3C;</span><span style="color:#569CD6">typename</span><span style="color:#4EC9B0"> Key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">typename</span><span style="color:#4EC9B0"> Value</span><span style="color:#D4D4D4">></span></span>
+<span class="line"><span style="color:#4EC9B0">Node</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">Key</span><span style="color:#D4D4D4">, </span><span style="color:#4EC9B0">Value</span><span style="color:#D4D4D4">></span><span style="color:#569CD6">*</span><span style="color:#DCDCAA"> put</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">Key</span><span style="color:#D4D4D4">, </span><span style="color:#4EC9B0">Value</span><span style="color:#D4D4D4">></span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Value</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4"> == </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#C586C0"> new</span><span style="color:#DCDCAA"> Node</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">Key</span><span style="color:#D4D4D4">,</span><span style="color:#4EC9B0">Value</span><span style="color:#D4D4D4">>(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">RED</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955">  // Insert at bottom, color red</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">,  </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955">  // Compare as before to traverse tree</span></span>
+<span class="line"><span style="color:#C586C0">    else</span><span style="color:#C586C0"> if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> > </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">    else</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">    = </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> (</span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">) &#x26;&#x26;  !</span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">))       </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">rotateLeft</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955"> // Fix any right-leaning links</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> (</span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">)  &#x26;&#x26;   </span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">)) </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">rotateRight</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955">// 2 left red links</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> (</span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">)  &#x26;&#x26;   </span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">))      </span><span style="color:#DCDCAA">flipColors</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955">     // 4-node</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">    h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">size</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">) + </span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">) + </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Slide bug: the slide 12 <code>Node</code> is a plain class with no constructor (and no template parameters), so <code>new Node&lt;Key,Value&gt;(key, val, RED, 1)</code> doesn&#39;t compile as shown — give <code>Node</code> a constructor <code>Node(key, val, color, size)</code> that sets both links to <code>nullptr</code>, as in <a href="#15-complete-implementation">§15</a>.</p>
+<p><strong>The order of the three checks matters</strong> (slides 19–20): each fix produces exactly the situation the next check looks for — a left rotation can create two left reds in a row, which the right rotation turns into a node with two red children, which the color flip splits. Three <code>if</code>s in that order handle every case in one pass per level.</p>
+<p>Slide 20 asks for an example where doing the checks out of order needs extra work: insert a key <strong>between</strong> the two keys of a 3-node, e.g. 35 into the 3-node 30 40 (40 with red left child 30). 35 lands as 30&#39;s red right child: rotate left at 30 (now 40–35–30 is left-left red), rotate right at 40 (35 with red children 30 and 40), flip colors. Now suppose the flip were checked <strong>before</strong> the right rotation: at 40 the left child is red but the right child is null, so no flip; then the right rotation leaves 35 with two red children — an unsplit temporary 4-node that stays broken until some later pass reaches it. Checked in the slide&#39;s order, each fix sets up the next one at the same node. The whole <code>put(35)</code> from §9, from the new red node up — the same three fixes run again one level up, at 20 and 60:</p>
+<pre data-language="viz" data-viz="rb-rotation"><code>{&quot;title&quot;: &quot;Slide 20: the whole put(35), fixes in order at 30 / 40, then at 20 / 60&quot;, &quot;op&quot;: &quot;rotateLeft(30), rotateRight(40), flipColors, rotateLeft(20), rotateRight(60), flipColors&quot;}</code></pre><p>Step through it on the slide 21 trace (S E A R C H X M P L), in either view:</p>
+<pre data-language="viz" data-viz="llrb"><code>{&quot;title&quot;: &quot;Slide 21: put S E A R C H X M P L&quot;, &quot;ops&quot;: &quot;put(S); put(E); put(A); put(R); put(C); put(H); put(X); put(M); put(P); put(L)&quot;, &quot;interactive&quot;: true}</code></pre><blockquote>
+<p>📘 <strong>Beyond the lecture</strong>: Slide 19 shows only the recursive <code>put</code>. The public <code>put</code> must also <strong>color the root black</strong> after each insertion: <code>root = put(root, key, val); root-&gt;color = BLACK;</code>. A flip can turn the root&#39;s link red; recoloring it black is how the tree grows taller — exactly the 2-3 root split. (algs4 §3.3, &quot;Keeping the root black&quot;)</p>
+</blockquote>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: <code>h = rotateLeft(h);</code> — the rotation returns the new subtree root and you must store it (and return <code>h</code> at the end), the same way BST <code>put</code> returns its link. Calling <code>rotateLeft(h);</code> alone leaves the parent pointing at the wrong node.</p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#163-activity-2-construct-an-llrb-1117-deck-slide-21">Activity 2 (11/17)</a> — insert S E A R C H X M P L, then A C E H L M P R S X.</p>
+</blockquote>
+<h2 id="11-llrb-time-analysis-and-the-dictionary-summary">11. LLRB Time Analysis and the Dictionary Summary</h2>
+<p><strong>Height of an LLRB is ≤ 2 lg n</strong> in the worst case (slide 22). The worst case: the <strong>shortest</strong> root-to-null path is all black links (all 2-nodes, about lg n), and the <strong>longest</strong> path alternates black and red links (every node on it is a 3-node), so it is at most twice as long. Since all paths have the same number of black links, no path can be longer than 2 × that.</p>
+<p>Slide 23&#39;s summary of dictionary (symbol table) operations:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Search (worst)</th>
+<th>Insert (worst)</th>
+<th>Delete (worst)</th>
+<th>Search (avg)</th>
+<th>Insert (avg)</th>
+<th>Delete (avg)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Sequential search (unordered list)</td>
+<td>n</td>
+<td>n</td>
+<td>n</td>
+<td>n/2</td>
+<td>n</td>
+<td>n/2</td>
+</tr>
+<tr>
+<td>Binary search (ordered array)</td>
+<td>log n</td>
+<td>n</td>
+<td>n</td>
+<td>log n</td>
+<td>n/2</td>
+<td>n/2</td>
+</tr>
+<tr>
+<td>BST</td>
+<td>n</td>
+<td>n</td>
+<td>n</td>
+<td>log n</td>
+<td>log n</td>
+<td>log n</td>
+</tr>
+<tr>
+<td>2-3 search tree</td>
+<td>c log n</td>
+<td>c log n</td>
+<td>c log n</td>
+<td>c log n</td>
+<td>c log n</td>
+<td>c log n</td>
+</tr>
+<tr>
+<td>Red-black BST</td>
+<td>2 log n</td>
+<td>2 log n</td>
+<td>2 log n</td>
+<td>1 log n</td>
+<td>1 log n</td>
+<td>1 log n</td>
+</tr>
+</tbody></table>
+<p>(This table lists the BST average delete as log n; §1&#39;s √n is what repeated Hibbard deletions drift to.) So an LLRB is <strong>O(log n) worst case</strong> for search, insert and delete, and in practice paths are about lg n long.</p>
+<h2 id="12-hash-tables-the-idea">12. Hash Tables: the Idea</h2>
+<p>A balanced BST gives O(log n) and keeps keys in order. A <strong>hash table</strong> aims for <strong>O(1) average</strong> time for search, insert and delete of key-value pairs; the trade-off is that keys are no longer kept in order (slide 25).</p>
+<p>Yeh&#39;s analogy (slides 26–30): to find a shirt in a pile of laundry you could search the unordered pile (unordered list) or compare clothes and build a tree (BST). What you actually do is <strong>put clothes into drawers</strong>. Information about the item tells you <strong>where to put it</strong> and later <strong>where to look</strong>: a hash table uses a clue from the data itself to decide its location, for every operation.</p>
+<p>Structure (slide 31): a large number of small collections called <strong>buckets</strong> (<code>[0] … [m-1]</code>), which together form the hash table, plus a <strong>rule — the hash function</strong> — that maps each item to its bucket (slide 32: shirt → hash function → 3, the shirts drawer; sweaters 0, jackets 1, pants 2, shirts 3, socks 4). To find something, look only in its bucket.</p>
+<h2 id="13-hash-functions-hash-code--compression">13. Hash Functions: Hash Code + Compression</h2>
+<p><strong>First try</strong> (slide 33): <code>hash_value = hash(input)</code> with <code>hash = len(input)</code>, e.g. &quot;Prof Yeh&quot; → 8. The problem: 8 isn&#39;t a bucket — there are only 5 buckets, so the value has to be squeezed into the range of indices.</p>
+<p><strong>Second try, in two parts</strong> (slide 34):</p>
+<ol>
+<li><code>hashCode()</code> maps the input to an integer (the <strong>hash code</strong>);</li>
+<li><strong>compression</strong> maps the hash code into the range of buckets: <strong><code>hash = hashCode(input) % numBuckets</code></strong>.</li>
+</ol>
+<p>The same function is used for <strong>both insert and search</strong> (slides 35–36). With 5 buckets and <code>len</code> as the hash code:</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>hashCode = len</th>
+<th>% 5</th>
+<th>Bucket</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&quot;Prof Yeh&quot;</td>
+<td>8</td>
+<td>8 % 5</td>
+<td>3</td>
+</tr>
+<tr>
+<td>&quot;Students&quot;</td>
+<td>8</td>
+<td>8 % 5</td>
+<td>3</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>📘 <strong>Beyond the lecture</strong>: A good hash function is <strong>deterministic</strong> (equal keys → same hash), <strong>fast</strong>, and <strong>spreads keys uniformly</strong> over 0 … m−1. <code>len</code> fails the last one badly. For integer keys the usual choice is <strong>modular hashing</strong> <code>k % m</code> with <strong>m prime</strong>, so that patterns in the keys don&#39;t line up with m. (algs4 §3.4; Thornton&#39;s credit-card example shows how biased digits ruin a hash.)</p>
+</blockquote>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: In C++ (as in Java), <code>%</code> of a <strong>negative</strong> number is negative, so <code>hashCode(key) % m</code> can give an index like −2. Use an unsigned hash (e.g. <code>std::hash</code> returns <code>size_t</code>) or fix the sign before indexing.</p>
+</blockquote>
+<h2 id="14-collisions">14. Collisions</h2>
+<p>A <strong>collision</strong> happens when multiple elements hash to the same bucket (slides 37–38): &quot;Prof Yeh&quot; and &quot;Students&quot; both land in bucket 3. Collisions can&#39;t be avoided in general — there are far more possible keys than buckets — so a hash table needs a collision-resolution strategy. Slide 39 asks how to let one bucket hold several items and what structure makes insertion fast: a linked list per bucket.</p>
+<blockquote>
+<p>➡️ <strong>Continued in <a href="/~kazuhak/notes/ics-46/lec-15/en-US/">Lecture 15</a></strong>: collision handling — separate chaining (its structure, the S E A R C H trace, Activity 3 and the implementation are repeated there), linear probing and quadratic probing.</p>
+</blockquote>
+<h2 id="15-complete-implementation">15. Complete Implementation</h2>
+<div class="code-collapse is-collapsed"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">#include</span><span style="color:#CE9178"> &#x3C;iostream></span></span>
+<span class="line"><span style="color:#C586C0">#include</span><span style="color:#CE9178"> &#x3C;string></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">template</span><span style="color:#D4D4D4"> &#x3C;</span><span style="color:#569CD6">typename</span><span style="color:#4EC9B0"> Key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">typename</span><span style="color:#4EC9B0"> Value</span><span style="color:#D4D4D4">></span></span>
+<span class="line"><span style="color:#569CD6">class</span><span style="color:#4EC9B0"> LLRB</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">    static</span><span style="color:#569CD6"> const</span><span style="color:#569CD6"> bool</span><span style="color:#9CDCFE"> RED</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    static</span><span style="color:#569CD6"> const</span><span style="color:#569CD6"> bool</span><span style="color:#9CDCFE"> BLACK</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">    class</span><span style="color:#4EC9B0"> Node</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">    public:</span></span>
+<span class="line"><span style="color:#4EC9B0">        Key</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">            // key</span></span>
+<span class="line"><span style="color:#4EC9B0">        Value</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">          // associated data</span></span>
+<span class="line"><span style="color:#4EC9B0">        Node</span><span style="color:#569CD6"> *</span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">, *</span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955"> // links to left and right subtrees</span></span>
+<span class="line"><span style="color:#569CD6">        bool</span><span style="color:#9CDCFE"> color</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">         // color of parent link</span></span>
+<span class="line"><span style="color:#569CD6">        int</span><span style="color:#9CDCFE"> size</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">           // subtree count</span></span>
+<span class="line"><span style="color:#DCDCAA">        Node</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> k</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Value</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> v</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">bool</span><span style="color:#9CDCFE"> c</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">int</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">            : </span><span style="color:#DCDCAA">key</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">k</span><span style="color:#D4D4D4">), </span><span style="color:#DCDCAA">val</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">v</span><span style="color:#D4D4D4">), </span><span style="color:#DCDCAA">left</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">), </span><span style="color:#DCDCAA">right</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">), </span><span style="color:#DCDCAA">color</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">c</span><span style="color:#D4D4D4">), </span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">) {}</span></span>
+<span class="line"><span style="color:#D4D4D4">    };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#4EC9B0">    Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> root</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">    bool</span><span style="color:#DCDCAA"> isRed</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">        if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> == </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#569CD6"> false</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955"> // null links are black</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">RED</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#569CD6">    int</span><span style="color:#DCDCAA"> size</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> { </span><span style="color:#C586C0">return</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4"> == </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4"> ? </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4"> : </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">size</span><span style="color:#D4D4D4">; }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#4EC9B0">    Node</span><span style="color:#569CD6">*</span><span style="color:#DCDCAA"> rotateLeft</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#4EC9B0">        Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">RED</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">size</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">size</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">size</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">) + </span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">) + </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#4EC9B0">    Node</span><span style="color:#569CD6">*</span><span style="color:#DCDCAA"> rotateRight</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#4EC9B0">        Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">RED</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">size</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">size</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">size</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">) + </span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">) + </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#569CD6">    void</span><span style="color:#DCDCAA"> flipColors</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#9CDCFE">        h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">RED</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">BLACK</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">BLACK</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">    // insert the key-value pair in the subtree rooted at h</span></span>
+<span class="line"><span style="color:#4EC9B0">    Node</span><span style="color:#569CD6">*</span><span style="color:#DCDCAA"> put</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Value</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#C586C0">        if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4"> == </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#C586C0"> new</span><span style="color:#DCDCAA"> Node</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">RED</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955"> // Insert at bottom, color red</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">        if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955">   // Compare as before to traverse tree</span></span>
+<span class="line"><span style="color:#C586C0">        else</span><span style="color:#C586C0"> if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> > </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">        else</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">        if</span><span style="color:#D4D4D4"> (</span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">) &#x26;&#x26; !</span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">))    </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">rotateLeft</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955">  // Fix any right-leaning links</span></span>
+<span class="line"><span style="color:#C586C0">        if</span><span style="color:#D4D4D4"> (</span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">) &#x26;&#x26; </span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">)) </span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">rotateRight</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955"> // 2 left red links</span></span>
+<span class="line"><span style="color:#C586C0">        if</span><span style="color:#D4D4D4"> (</span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">) &#x26;&#x26; </span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">))     </span><span style="color:#DCDCAA">flipColors</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955">      // 4-node</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">        h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">size</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">) + </span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">) + </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#4EC9B0">    Value</span><span style="color:#DCDCAA"> get</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">        while</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#C586C0">            if</span><span style="color:#D4D4D4">      (</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">            else</span><span style="color:#C586C0"> if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> > </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">            else</span><span style="color:#C586C0">                   return</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">        }</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#9CDCFE"> Value</span><span style="color:#D4D4D4">{};</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">    int</span><span style="color:#DCDCAA"> height</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">        if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> == </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#B5CEA8"> 0</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">        int</span><span style="color:#9CDCFE"> l</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">height</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">), </span><span style="color:#9CDCFE">r</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">height</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#B5CEA8"> 1</span><span style="color:#D4D4D4"> + (</span><span style="color:#9CDCFE">l</span><span style="color:#D4D4D4"> > </span><span style="color:#9CDCFE">r</span><span style="color:#D4D4D4"> ? </span><span style="color:#9CDCFE">l</span><span style="color:#D4D4D4"> : </span><span style="color:#9CDCFE">r</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#569CD6">    void</span><span style="color:#DCDCAA"> print</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">, </span><span style="color:#4EC9B0">std</span><span style="color:#D4D4D4">::</span><span style="color:#4EC9B0">ostream</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> out</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span><span style="color:#6A9955">   // in-order, red nodes marked *</span></span>
+<span class="line"><span style="color:#C586C0">        if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> == </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">        print</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">out</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">        out</span><span style="color:#D4D4D4"> &#x3C;&#x3C; (</span><span style="color:#DCDCAA">isRed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">) ? </span><span style="color:#CE9178">"*"</span><span style="color:#D4D4D4"> : </span><span style="color:#CE9178">""</span><span style="color:#D4D4D4">) &#x3C;&#x3C; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">' '</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">        print</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">out</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#569CD6">    void</span><span style="color:#DCDCAA"> destroy</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#C586C0">        if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> == </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">        destroy</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">left</span><span style="color:#D4D4D4">); </span><span style="color:#DCDCAA">destroy</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">right</span><span style="color:#D4D4D4">); </span><span style="color:#C586C0">delete</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">public:</span></span>
+<span class="line"><span style="color:#DCDCAA">    LLRB</span><span style="color:#D4D4D4">() = </span><span style="color:#569CD6">default</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">    LLRB</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> LLRB</span><span style="color:#569CD6">&#x26;</span><span style="color:#D4D4D4">) = </span><span style="color:#569CD6">delete</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">    LLRB</span><span style="color:#569CD6">&#x26;</span><span style="color:#C586C0"> operator=</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> LLRB</span><span style="color:#569CD6">&#x26;</span><span style="color:#D4D4D4">) = </span><span style="color:#569CD6">delete</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">    ~LLRB</span><span style="color:#D4D4D4">() { </span><span style="color:#DCDCAA">destroy</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">root</span><span style="color:#D4D4D4">); }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">    void</span><span style="color:#DCDCAA"> put</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Value</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#9CDCFE">        root</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">root</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">        root</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">color</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">BLACK</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">              // the root is always black</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#4EC9B0">    Value</span><span style="color:#DCDCAA"> get</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> { </span><span style="color:#C586C0">return</span><span style="color:#DCDCAA"> get</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">root</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">); }</span></span>
+<span class="line"><span style="color:#569CD6">    int</span><span style="color:#DCDCAA"> size</span><span style="color:#D4D4D4">() </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> { </span><span style="color:#C586C0">return</span><span style="color:#DCDCAA"> size</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">root</span><span style="color:#D4D4D4">); }</span></span>
+<span class="line"><span style="color:#569CD6">    int</span><span style="color:#DCDCAA"> height</span><span style="color:#D4D4D4">() </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> { </span><span style="color:#C586C0">return</span><span style="color:#DCDCAA"> height</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">root</span><span style="color:#D4D4D4">); }</span></span>
+<span class="line"><span style="color:#4EC9B0">    Key</span><span style="color:#DCDCAA"> rootKey</span><span style="color:#D4D4D4">() </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> { </span><span style="color:#C586C0">return</span><span style="color:#9CDCFE"> root</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">; }</span></span>
+<span class="line"><span style="color:#569CD6">    void</span><span style="color:#DCDCAA"> print</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">std</span><span style="color:#D4D4D4">::</span><span style="color:#4EC9B0">ostream</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> out</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> { </span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">root</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">out</span><span style="color:#D4D4D4">); </span><span style="color:#9CDCFE">out</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">'</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">'</span><span style="color:#D4D4D4">; }</span></span>
+<span class="line"><span style="color:#D4D4D4">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">int</span><span style="color:#DCDCAA"> main</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#4EC9B0">    LLRB</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#569CD6">char</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">int</span><span style="color:#D4D4D4">> </span><span style="color:#9CDCFE">t</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">    std</span><span style="color:#D4D4D4">::</span><span style="color:#4EC9B0">string</span><span style="color:#9CDCFE"> keys</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">"SEARCHXMPL"</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">int</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> &#x3C; (</span><span style="color:#569CD6">int</span><span style="color:#D4D4D4">)</span><span style="color:#9CDCFE">keys</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(); </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">++) </span><span style="color:#9CDCFE">t</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">keys</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">], </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#4EC9B0">    std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"in-order: "</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">t</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#4EC9B0">    std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"root "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">t</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">rootKey</span><span style="color:#D4D4D4">() &#x3C;&#x3C; </span><span style="color:#CE9178">", size "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">t</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">() &#x3C;&#x3C; </span><span style="color:#CE9178">", height "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">t</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">height</span><span style="color:#D4D4D4">() &#x3C;&#x3C; </span><span style="color:#CE9178">'</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">    std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"get(H) = "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">t</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">'H'</span><span style="color:#D4D4D4">) &#x3C;&#x3C; </span><span style="color:#CE9178">", get(Z) = "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">t</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">'Z'</span><span style="color:#D4D4D4">) &#x3C;&#x3C; </span><span style="color:#CE9178">'</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#4EC9B0">    LLRB</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#569CD6">char</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">int</span><span style="color:#D4D4D4">> </span><span style="color:#9CDCFE">u</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">    std</span><span style="color:#D4D4D4">::</span><span style="color:#4EC9B0">string</span><span style="color:#9CDCFE"> inc</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">"ACEHLMPRSX"</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">int</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> &#x3C; (</span><span style="color:#569CD6">int</span><span style="color:#D4D4D4">)</span><span style="color:#9CDCFE">inc</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">(); </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">++) </span><span style="color:#9CDCFE">u</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">inc</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">], </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#4EC9B0">    std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"ascending: "</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">u</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#4EC9B0">std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#4EC9B0">    std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"root "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">u</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">rootKey</span><span style="color:#D4D4D4">() &#x3C;&#x3C; </span><span style="color:#CE9178">", height "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">u</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">height</span><span style="color:#D4D4D4">() &#x3C;&#x3C; </span><span style="color:#CE9178">'</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="125"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>Show all 125 lines</span></button><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Output (<code>*</code> = the link from the parent is red; height counts nodes on the longest path):</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">in-order: *A C E *H L M P R *S X 
+root M, size 10, height 4
+get(H) = 5, get(Z) = 0
+ascending: A C E H L *M P R *S X 
+root H, height 4</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<h2 id="16-in-class-activities-with-solutions">16. In-class Activities (with Solutions)</h2>
+<p>Try each one before opening the solution. The two decks both number from Activity 1, so the deck date is in each title.</p>
+<h3 id="161-activity-1-construction-1110-deck-slide-19">16.1 Activity 1: Construction (11/10 deck, slide 19)</h3>
+<p>Draw the 2-3 tree that results when you insert the keys E A S Y Q U T I O N in that order in an initially empty tree.</p>
+<blockquote>
+<p>Hint: splits happen when inserting S, Q, T (twice: a leaf and then the root) and O.</p>
+</blockquote>
+<details>
+<summary>Solution</summary>
+
+<table>
+<thead>
+<tr>
+<th>Insert</th>
+<th>What happens</th>
+<th>Tree after (levels top to bottom, <code>[ ]</code> = one node)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E, A</td>
+<td>2-node → 3-node</td>
+<td>[A E]</td>
+</tr>
+<tr>
+<td>S</td>
+<td>4-node A E S at the root → split</td>
+<td>[E] / [A] [S]</td>
+</tr>
+<tr>
+<td>Y</td>
+<td>into 2-node</td>
+<td>[E] / [A] [S Y]</td>
+</tr>
+<tr>
+<td>Q</td>
+<td>4-node Q S Y → S up</td>
+<td>[E S] / [A] [Q] [Y]</td>
+</tr>
+<tr>
+<td>U</td>
+<td>into 2-node</td>
+<td>[E S] / [A] [Q] [U Y]</td>
+</tr>
+<tr>
+<td>T</td>
+<td>4-node T U Y → U up → root E S U → split</td>
+<td>[S] / [E] [U] / [A] [Q] [T] [Y]</td>
+</tr>
+<tr>
+<td>I</td>
+<td>into 2-node</td>
+<td>[S] / [E] [U] / [A] [I Q] [T] [Y]</td>
+</tr>
+<tr>
+<td>O</td>
+<td>4-node I O Q → O up</td>
+<td>[S] / [E O] [U] / [A] [I] [Q] [T] [Y]</td>
+</tr>
+<tr>
+<td>N</td>
+<td>into 2-node</td>
+<td>[S] / [E O] [U] / [A] [I N] [Q] [T] [Y]</td>
+</tr>
+</tbody></table>
+<p>Final tree: root <strong>S</strong>; second level <strong>E O</strong> and <strong>U</strong>; bottom <strong>A</strong>, <strong>I N</strong>, <strong>Q</strong> (children of E O) and <strong>T</strong>, <strong>Y</strong> (children of U). Height 3, all null links at the same depth. Check it:</p>
+<pre data-language="viz" data-viz="two-three-tree"><code>{&quot;title&quot;: &quot;Activity 1 (11/10) check: E A S Y Q U T I O N&quot;, &quot;ops&quot;: &quot;insert(E); insert(A); insert(S); insert(Y); insert(Q); insert(U); insert(T); insert(I); insert(O); insert(N)&quot;}</code></pre></details>
+
+<p>Back to <a href="#4-2-3-tree-insertion">§4</a>.</p>
+<h3 id="162-activity-1-legal-llrbs-1117-deck-slide-8">16.2 Activity 1: Legal LLRBs (11/17 deck, slide 8)</h3>
+<p>Which of the following are legal LLRB trees? Convert the legal LLRBs to 2-3 trees. (Red links marked &quot;red&quot;.)</p>
+<ul>
+<li><strong>(i)</strong> C; C&#39;s left A (red), C&#39;s right Y; Y&#39;s left H; H&#39;s left D (red).</li>
+<li><strong>(ii)</strong> E; E&#39;s left D (red), E&#39;s right H; D&#39;s children C and F; C&#39;s left A (red); H&#39;s children G and Z.</li>
+<li><strong>(iii)</strong> E; children B and Y; B&#39;s children A and D; Y&#39;s children H and Z (all black).</li>
+<li><strong>(iv)</strong> H; children C and Y; C&#39;s left A (red); Y&#39;s left T (red).</li>
+</ul>
+<details>
+<summary>Solution</summary>
+
+<p><strong>(iii) and (iv) only.</strong></p>
+<ul>
+<li><strong>(i)</strong> is <strong>not balanced</strong>: the path C → A → null has 1 black link, while C → Y → H → D → null has 3. (A 2-node Y with only a left child can&#39;t exist in a 2-3 tree.)</li>
+<li><strong>(ii)</strong> is <strong>not in symmetric order</strong>: F is in D&#39;s right subtree, so it must be between D and E, but F &gt; E (in-order: A C D F E G H Z). It isn&#39;t balanced either.</li>
+<li><strong>(iii)</strong> has no red links and every root-to-null path has 3 black links → legal. Its 2-3 tree is the same shape: root [E], then [B] [Y], then [A] [D] [H] [Z] — all 2-nodes.</li>
+<li><strong>(iv)</strong>: both red links lean left, no node touches two red links, every path has 2 black links → legal. 2-3 tree: root [H], children <strong>[A C]</strong> and <strong>[T Y]</strong>.</li>
+</ul>
+<p>Check each tree against the three rules (switch to the 2-3 view for the conversion):</p>
+<pre data-language="viz" data-viz="llrb"><code>{&quot;title&quot;: &quot;Activity 1 (11/17) check: tree (iv)&quot;, &quot;tree&quot;: &quot;H, C, Y, *A, -, *T&quot;, &quot;ops&quot;: &quot;check()&quot;}</code></pre><pre data-language="viz" data-viz="llrb"><code>{&quot;title&quot;: &quot;Activity 1 (11/17) check: tree (i)&quot;, &quot;tree&quot;: &quot;C, *A, Y, -, -, H, -, -, -, -, -, *D&quot;, &quot;ops&quot;: &quot;check()&quot;}</code></pre></details>
+
+<p>Back to <a href="#7-the-llrb-definition">§7</a>.</p>
+<h3 id="163-activity-2-construct-an-llrb-1117-deck-slide-21">16.3 Activity 2: Construct an LLRB (11/17 deck, slide 21)</h3>
+<p>Construct the LLRB by inserting in order: <strong>S E A R C H X M P L</strong>, and then (separately) <strong>A C E H L M P R S X</strong>.</p>
+<blockquote>
+<p>Hint: after every insertion, run the three checks bottom-up, then make the root black.</p>
+</blockquote>
+<details>
+<summary>Solution</summary>
+
+<p><strong>S E A R C H X M P L</strong> — fix-ups per insertion (bottom-up):</p>
+<table>
+<thead>
+<tr>
+<th>Insert</th>
+<th>Fix-ups</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>S, E</td>
+<td>none (E is S&#39;s red left child)</td>
+</tr>
+<tr>
+<td>A</td>
+<td>rotate right at S, flip colors at E, root black</td>
+</tr>
+<tr>
+<td>R</td>
+<td>none</td>
+</tr>
+<tr>
+<td>C</td>
+<td>rotate left at A</td>
+</tr>
+<tr>
+<td>H</td>
+<td>rotate right at S, flip at R, rotate left at E → R is the root, E its red left child</td>
+</tr>
+<tr>
+<td>X</td>
+<td>rotate left at S</td>
+</tr>
+<tr>
+<td>M</td>
+<td>rotate left at H</td>
+</tr>
+<tr>
+<td>P</td>
+<td>flip at M (children H, P); rotate left at E; rotate right at R; flip at M again; root black (height grows)</td>
+</tr>
+<tr>
+<td>L</td>
+<td>rotate left at H</td>
+</tr>
+</tbody></table>
+<p>Final: root <strong>M</strong>; <strong>E</strong> and <strong>R</strong> below it; E&#39;s children <strong>C</strong> (with red left child A) and <strong>L</strong> (with red left child H); R&#39;s children <strong>P</strong> and <strong>X</strong> (with red left child S). As a 2-3 tree: [M] / [E] [R] / [A C] [H L] [P] [S X].</p>
+<p><strong>A C E H L M P R S X</strong> (ascending): the new key always lands on the right, so almost every insertion starts with a left rotation, and a color flip propagates up whenever the right spine fills. Final: root <strong>H</strong>; <strong>C</strong> (children A, E) and <strong>R</strong>; R&#39;s left child <strong>M</strong> is red (M&#39;s children L, P), R&#39;s right child <strong>X</strong> has red left child <strong>S</strong>. As a 2-3 tree: [H] / [C] [M R] / [A] [E] [L] [P] [S X]. Ascending input, the worst case for a plain BST, still gives height 4.</p>
+<pre data-language="viz" data-viz="llrb"><code>{&quot;title&quot;: &quot;Activity 2 check: ascending order&quot;, &quot;ops&quot;: &quot;put(A); put(C); put(E); put(H); put(L); put(M); put(P); put(R); put(S); put(X)&quot;}</code></pre></details>
+
+<p>Back to <a href="#10-llrb-insertion">§10</a>.</p>
+<h2 id="17-quick-reference--top-5-things-to-remember">17. Quick Reference &amp; Top 5 Things to Remember</h2>
+<table>
+<thead>
+<tr>
+<th>Structure</th>
+<th>Search</th>
+<th>Insert</th>
+<th>Delete</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BST</td>
+<td>O(n) worst, O(log n) avg</td>
+<td>O(n) worst</td>
+<td>O(n) worst, √n avg after many Hibbard deletes</td>
+<td>height depends on insertion order</td>
+</tr>
+<tr>
+<td>2-3 tree</td>
+<td>O(log n) worst</td>
+<td>O(log n) worst</td>
+<td>O(log n) worst</td>
+<td>perfect balance; height between log₃ n and lg n</td>
+</tr>
+<tr>
+<td>LLRB</td>
+<td>O(log n) worst</td>
+<td>O(log n) worst</td>
+<td>O(log n) worst</td>
+<td>height ≤ 2 lg n; average path ≈ lg n</td>
+</tr>
+<tr>
+<td>Hash table</td>
+<td>O(1) average</td>
+<td>O(1) average</td>
+<td>O(1) average</td>
+<td>depends on the hash function (Lecture 15)</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>LLRB fix-up (checked in this order)</th>
+<th>Condition</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>right child red, left child black</td>
+<td><code>h = rotateLeft(h)</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>left child red and left-left grandchild red</td>
+<td><code>h = rotateRight(h)</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>both children red</td>
+<td><code>flipColors(h)</code></td>
+</tr>
+</tbody></table>
+<p><strong>Top 5 things to remember</strong></p>
+<ol>
+<li>2-3 tree insert: join the bottom node; a 3-node becomes a temporary 4-node, split it and push the middle key up, repeating; a root split is the only way the height grows, so perfect balance always holds.</li>
+<li>An LLRB is a 2-3 tree drawn as a BST: a red link glues a 3-node&#39;s two keys, red links lean left, no node touches two reds, and every root-to-null path has the same number of black links.</li>
+<li>LLRB <code>put</code> = BST insert with a red link, then on the way up: rotate left (right red), rotate right (two left reds), flip colors (two red children) — in that order — and finally make the root black.</li>
+<li>Height ≤ 2 lg n (the longest path alternates red and black, the shortest is all black), so search, insert and delete are O(log n) in the worst case.</li>
+<li>A hash function = hash code + compression (<code>hashCode(key) % m</code>); it decides the bucket for both insert and search, and collisions (two keys, one bucket) must be handled.</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="Note navigation" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/~kazuhak/notes/ics-46/lec-12/en-US/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Previous · Lecture 12</span><span class="pager-title" data-astro-cid-gxyjxt6l>Heap Sort &amp; BSTs</span></a><a class="card interactive pager-card pager-next" href="/~kazuhak/notes/ics-46/lec-15/en-US/" rel="next" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>Lecture 15 · Next<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>Hash Tables</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>Shortcuts<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> Previous</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> Next</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> Switch language</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="Table of Contents" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>Top</button><script type="module" src="/~kazuhak/_astro/NoteReader.astro_astro_type_script_index_0_lang.D_DIoJ7q.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/~kazuhak/assets/js/bento.js" defer></script><script src="/~kazuhak/assets/js/chat-widget.js" defer></script></body></html>

@@ -1,0 +1,660 @@
+<!DOCTYPE html><html lang="en-US"><head><title>IN4MATX 133 Device Resources &amp; Signals | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Capacitor plugins for native device resources, setting up Capacitor and running on an emulator or device, Angular signals for refreshing the view after async calls, the Local Notifications, Geolocation and Share plugins, plugin quality issues, and the strengths and weaknesses of hybrid apps."><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-15/en-US/"><link rel="icon" href="/~kazuhak/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/~kazuhak/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-15/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-15/zh-CN/"><link rel="stylesheet" href="/~kazuhak/_astro/BaseLayout.D6FvEM2t.css"><link rel="stylesheet" href="/~kazuhak/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/~kazuhak/_astro/katex.D1M0OS0E.css"><link rel="stylesheet" href="/~kazuhak/_astro/index.BWdCFSBs.css"></head><body data-nav-path="/~kazuhak/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/~kazuhak/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/~kazuhak/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/~kazuhak/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/~kazuhak/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/~kazuhak/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="en-US" data-viz-base="/~kazuhak/assets/viz/" data-viz-version="1795162311" data-source-url="/~kazuhak/notes/in4matx-133/lec-15/en-US/source.md" data-editor-url="/~kazuhak/tools/md-editor/" data-alt-url="/~kazuhak/notes/in4matx-133/lec-15/zh-CN/" data-prev-url="/~kazuhak/notes/in4matx-133/lec-14/en-US/" data-next-url="/~kazuhak/notes/in4matx-133/lec-16/en-US/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="Previous / next note" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/~kazuhak/notes/in4matx-133/lec-14/en-US/" title="Previous: Mobile Design Principles ([)" aria-label="Previous: Lecture 14" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>Lecture 14</span></a><label class="rb-title" title="Jump to another note" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>IN4MATX 133</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>Lecture 15</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg><select class="rb-jump" data-rb-jump aria-label="Jump to another note" autocomplete="off" data-astro-cid-gxyjxt6l><option value="/~kazuhak/notes/in4matx-133/lec-01/en-US/" data-astro-cid-gxyjxt6l>Lecture 1 — Introduction &amp; History</option><option value="/~kazuhak/notes/in4matx-133/lec-02/en-US/" data-astro-cid-gxyjxt6l>Lecture 2 — HTML &amp; Accessibility</option><option value="/~kazuhak/notes/in4matx-133/lec-03/en-US/" data-astro-cid-gxyjxt6l>Lecture 3 — CSS</option><option value="/~kazuhak/notes/in4matx-133/lec-04/en-US/" data-astro-cid-gxyjxt6l>Lecture 4 — Responsive Design &amp; JavaScript 1</option><option value="/~kazuhak/notes/in4matx-133/lec-05/en-US/" data-astro-cid-gxyjxt6l>Lecture 5 — JavaScript 2</option><option value="/~kazuhak/notes/in4matx-133/lec-06/en-US/" data-astro-cid-gxyjxt6l>Lecture 6 — DOM Manipulation &amp; Package Management</option><option value="/~kazuhak/notes/in4matx-133/lec-07/en-US/" data-astro-cid-gxyjxt6l>Lecture 7 — TypeScript &amp; Data Visualization Tools</option><option value="/~kazuhak/notes/in4matx-133/lec-08/en-US/" data-astro-cid-gxyjxt6l>Lecture 8 — AJAX, Fetch &amp; Promises</option><option value="/~kazuhak/notes/in4matx-133/lec-09/en-US/" data-astro-cid-gxyjxt6l>Lecture 9 — Server-Side Development, Authentication &amp; Authorization</option><option value="/~kazuhak/notes/in4matx-133/lec-10/en-US/" data-astro-cid-gxyjxt6l>Lecture 10 — Components in Angular</option><option value="/~kazuhak/notes/in4matx-133/lec-11/en-US/" data-astro-cid-gxyjxt6l>Lecture 11 — Separation in Angular</option><option value="/~kazuhak/notes/in4matx-133/lec-12/en-US/" data-astro-cid-gxyjxt6l>Lecture 12 — Hybrid and Native Architectures</option><option value="/~kazuhak/notes/in4matx-133/lec-13/en-US/" data-astro-cid-gxyjxt6l>Lecture 13 — Ionic Components</option><option value="/~kazuhak/notes/in4matx-133/lec-14/en-US/" data-astro-cid-gxyjxt6l>Lecture 14 — Mobile Design Principles</option><option value="/~kazuhak/notes/in4matx-133/lec-15/en-US/" selected data-astro-cid-gxyjxt6l>Lecture 15 — Device Resources &amp; Signals</option><option value="/~kazuhak/notes/in4matx-133/lec-16/en-US/" data-astro-cid-gxyjxt6l>Lecture 16 — Databases &amp; Local Storage</option></select></label><a class="rb-btn rb-lang" href="/~kazuhak/notes/in4matx-133/lec-15/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>中</span></a><a class="rb-btn rb-next rb-side-next" href="/~kazuhak/notes/in4matx-133/lec-16/en-US/" title="Next: Databases &amp; Local Storage (])" aria-label="Next: Lecture 16" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>Lecture 16</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/~kazuhak/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/~kazuhak/notes/in4matx-133/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>IN4MATX 133</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>Lecture 15</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/~kazuhak/notes/in4matx-133/lec-15/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>中文</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>Headings</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>Open in Editor</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>Lecture 15 · User Interface Software Reading Notes</h2><p id="reader-description" data-astro-cid-gxyjxt6l>This page presents IN4MATX 133 Lecture 15 notes in a structured reading format so you can review HTML, CSS, JavaScript, the DOM, and UI tooling lecture by lecture, with live demos you can edit and run. The path below takes you back to Notes, Course Notes, the course page, or this note file. Hover over the ≡ icon on the right side to open the Table of Contents.</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>Last edited on November 17, 2026</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="in4matx-133-user-interface-software--lecture-15-device-resources--sensors">IN4MATX 133: User Interface Software — Lecture 15: Device Resources &amp; Sensors</h1>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-ionic-and-capacitor">1. Ionic and Capacitor</a></li>
+<li><a href="#2-adding-capacitor-and-a-plugin-to-a-project">2. Adding Capacitor and a plugin to a project</a></li>
+<li><a href="#3-running-in-the-browser-ionic-serve">3. Running in the browser: ionic serve</a></li>
+<li><a href="#4-running-on-an-emulator-or-a-device">4. Running on an emulator or a device</a></li>
+<li><a href="#5-signals">5. Signals</a></li>
+<li><a href="#6-local-notifications">6. Local notifications</a></li>
+<li><a href="#7-geolocation">7. Geolocation</a></li>
+<li><a href="#8-sharing">8. Sharing</a></li>
+<li><a href="#9-plugin-quality-and-plugin-issues">9. Plugin quality and plugin issues</a></li>
+<li><a href="#10-strengths-and-weaknesses-of-hybrid-apps">10. Strengths and weaknesses of hybrid apps</a></li>
+<li><a href="#11-in-class-questions--demos-with-solutions">11. In-class Questions &amp; Demos (with Solutions)</a></li>
+<li><a href="#12-quick-reference--top-5-things-to-remember">12. Quick Reference &amp; Top 5 Things to Remember</a></li>
+</ul>
+<blockquote>
+<p>UCI IN4MATX 133: User Interface Software — Prof. Travis Linden Reid, Fall 2026, Tuesday 11/17 (Week 8)<br>Built from the Lecture 15 slides (35 pages) and the demo repo folder <code>W8_L1_DeviceResources_Signals</code>. Organized by concept, not by source.</p>
+</blockquote>
+<blockquote>
+<p>📅 <strong>Class logistics</strong>: A4 is due <strong>Monday, Nov 23, at midnight</strong>. Join an A4 group on Canvas.</p>
+</blockquote>
+<p>Today&#39;s goals (slides 3, 34): access device resources with a Capacitor plugin; run an Ionic/Capacitor project in an emulator or on a device; use signals to track variable changes granularly; describe the strengths and limitations of web hybrid apps.</p>
+<hr>
+<h2 id="1-ionic-and-capacitor">1. Ionic and Capacitor</h2>
+<p><strong>Ionic</strong> (slide 4) gives you Angular-style components for many interface elements common in mobile apps: lists, buttons, sliders, tabs, modal dialogs, search bars and more (the slide shows an iOS list of &quot;recent conversations&quot; and a range-slider screen). That&#39;s the UI half, covered in <a href="/~kazuhak/notes/in4matx-133/lec-13/en-US/">Lecture 13</a>.</p>
+<p><strong>Capacitor</strong> (slide 5) is the other half: libraries for connecting to <strong>device resources</strong>, packaged as <strong>plugins</strong>.</p>
+<ul>
+<li>There are hundreds of plugins.</li>
+<li>They are either <strong>official</strong> (maintained by the Capacitor team) or <strong>community</strong> plugins.</li>
+<li>Some have known issues (more in <a href="#9-plugin-quality-and-plugin-issues">Section 9</a>).</li>
+</ul>
+<p>So an Ionic app is a web app (Angular + Ionic components) and Capacitor is the bridge from that web code to the phone&#39;s notifications, GPS, share sheet, camera and so on.</p>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://ionicframework.com/docs/components/">Ionic UI components</a> · <a href="https://ionicframework.com/docs/native/">Ionic: native APIs / Capacitor plugins</a></p>
+</blockquote>
+<h2 id="2-adding-capacitor-and-a-plugin-to-a-project">2. Adding Capacitor and a plugin to a project</h2>
+<p>Adding Capacitor to an <strong>existing</strong> Ionic project (slide 6) is two npm packages, then one package per device resource:</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">cd</span><span style="color:#D4D4D4"> [project </span><span style="color:#CE9178">folder]</span></span>
+<span class="line"><span style="color:#DCDCAA">npm</span><span style="color:#CE9178"> install</span><span style="color:#CE9178"> @capacitor/core</span></span>
+<span class="line"><span style="color:#DCDCAA">npm</span><span style="color:#CE9178"> install</span><span style="color:#CE9178"> @capacitor/cli</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># one package per resource, e.g. local notifications</span></span>
+<span class="line"><span style="color:#DCDCAA">npm</span><span style="color:#CE9178"> install</span><span style="color:#CE9178"> @capacitor/local-notifications</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Then the resource is available in your TypeScript:</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">LocalNotifications</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> ‘</span><span style="color:#9CDCFE">capacitor</span><span style="color:#D4D4D4">/</span><span style="color:#9CDCFE">local</span><span style="color:#D4D4D4">-</span><span style="color:#9CDCFE">notifications</span><span style="color:#D4D4D4">’;</span></span>
+<span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> notif</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">schedule</span><span style="color:#D4D4D4"> ( { …. } );</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>⚠️ Slide 6&#39;s import has two typos: curly quotes <code>‘…’</code> (a syntax error in TS) and a missing <code>@</code>. Correct form: <code>import { LocalNotifications } from &#39;@capacitor/local-notifications&#39;;</code> — every official plugin lives under the <code>@capacitor/</code> scope.</p>
+<p>Before building for a phone, two more setup steps (slide 8):</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955"># initialize Capacitor settings for the project (app name, app id, web dir)</span></span>
+<span class="line"><span style="color:#DCDCAA">npx</span><span style="color:#CE9178"> cap</span><span style="color:#CE9178"> init</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># set up the project for Android or iOS</span></span>
+<span class="line"><span style="color:#DCDCAA">npm</span><span style="color:#CE9178"> install</span><span style="color:#CE9178"> @capacitor/[android</span><span style="color:#CE9178"> or</span><span style="color:#CE9178"> ios]</span></span>
+<span class="line"><span style="color:#DCDCAA">npx</span><span style="color:#CE9178"> cap</span><span style="color:#CE9178"> add</span><span style="color:#D4D4D4"> [android </span><span style="color:#CE9178">or</span><span style="color:#CE9178"> ios]</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>npx cap init</code> writes <code>capacitor.config.ts</code>. The demo project&#39;s (from the repo):</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#C586C0"> type</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">CapacitorConfig</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@capacitor/cli'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> config</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">CapacitorConfig</span><span style="color:#D4D4D4"> = {</span></span>
+<span class="line"><span style="color:#9CDCFE">  appId:</span><span style="color:#CE9178"> 'com.inf133.deviceexamples'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  appName:</span><span style="color:#CE9178"> 'DeviceResourceExamples'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  webDir:</span><span style="color:#CE9178"> 'www'</span></span>
+<span class="line"><span style="color:#D4D4D4">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">export</span><span style="color:#C586C0"> default</span><span style="color:#9CDCFE"> config</span><span style="color:#D4D4D4">;</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>webDir: &#39;www&#39;</code> is where <code>ionic build</code> puts the compiled web app, which is what Capacitor copies into the native project. The demo app&#39;s <code>package.json</code> has <code>@capacitor/core</code>, <code>@capacitor/cli</code>, <code>@capacitor/ios</code> and the three plugins this lecture uses: <code>@capacitor/local-notifications</code>, <code>@capacitor/geolocation</code>, <code>@capacitor/share</code>. <code>npx cap add ios</code> is what created its <code>ios/</code> folder (an Xcode project).</p>
+<blockquote>
+<p>🧪 <strong>Demo files</strong>: <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/solution1/DeviceResourceExamples/capacitor.config.ts">capacitor.config.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/solution1/DeviceResourceExamples/package.json">package.json</a></p>
+</blockquote>
+<h2 id="3-running-in-the-browser-ionic-serve">3. Running in the browser: ionic serve</h2>
+<p>To run an Ionic project in the browser (slide 7):</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">ionic</span><span style="color:#CE9178"> serve</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Capacitor <strong>evaluates the platform and available resources at run time</strong>. A plugin tries to use the native feature; when there isn&#39;t one (you&#39;re in a browser), it <strong>falls back to a web API</strong>. So the same <code>LocalNotifications.schedule(...)</code> call is a native notification on a phone and a browser notification in <code>ionic serve</code>.</p>
+<p>Different browsers have different capabilities — e.g. Firefox doesn&#39;t support local notifications, but Safari does.</p>
+<p>The takeaway on slide 10: <strong>if you&#39;re not using Capacitor for a native device resource, none of the setup and deploy commands are needed</strong> — just <code>ionic serve</code> and test in the browser.</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: &quot;it works in <code>ionic serve</code>&quot; only tests the web fallback. A plugin&#39;s browser behavior can differ from (or be missing compared to) its device behavior — see the Share plugin in <a href="#8-sharing">Section 8</a>.</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://ionicframework.com/docs/cli/commands/serve">Ionic CLI: ionic serve</a> · <a href="https://capacitorjs.com/docs/basics/progressive-web-app">Capacitor: progressive web apps</a></p>
+</blockquote>
+<h2 id="4-running-on-an-emulator-or-a-device">4. Running on an emulator or a device</h2>
+<p>Deploying (slide 9) is build → sync → open the native IDE:</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955"># build the Ionic project and sync the web app into the native project</span></span>
+<span class="line"><span style="color:#DCDCAA">ionic</span><span style="color:#CE9178"> build</span></span>
+<span class="line"><span style="color:#DCDCAA">npx</span><span style="color:#CE9178"> cap</span><span style="color:#CE9178"> sync</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># open the native project in Android Studio or Xcode</span></span>
+<span class="line"><span style="color:#DCDCAA">npx</span><span style="color:#CE9178"> cap</span><span style="color:#CE9178"> open</span><span style="color:#D4D4D4"> [android </span><span style="color:#CE9178">or</span><span style="color:#CE9178"> ios]</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Then deploy to an emulator or a device <strong>from the native IDE</strong> (the Run button in Android Studio / Xcode).</p>
+<p>Alternatively, <strong>live reload</strong> keeps an emulator or device updated as you edit:</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">ionic</span><span style="color:#CE9178"> cap</span><span style="color:#CE9178"> run</span><span style="color:#D4D4D4"> [android </span><span style="color:#CE9178">or</span><span style="color:#CE9178"> iOS]</span><span style="color:#569CD6"> -l</span><span style="color:#569CD6"> --external</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>-l</code> is live reload; <code>--external</code> serves on your machine&#39;s network address so the phone can reach the dev server. (The demo project&#39;s <code>ios/App/App/Info.plist</code> sets <code>NSAllowsArbitraryLoads</code> to true, i.e. the iOS app may load plain-<code>http</code> pages such as that dev server.)</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>once</td>
+<td><code>npx cap init</code></td>
+<td>Capacitor config for the project</td>
+</tr>
+<tr>
+<td>once per platform</td>
+<td><code>npm install @capacitor/ios</code> + <code>npx cap add ios</code></td>
+<td>create the native project</td>
+</tr>
+<tr>
+<td>each change</td>
+<td><code>ionic build</code></td>
+<td>compile the web app into <code>www/</code></td>
+</tr>
+<tr>
+<td>each change</td>
+<td><code>npx cap sync</code></td>
+<td>copy <code>www/</code> + plugins into the native project</td>
+</tr>
+<tr>
+<td>to run</td>
+<td><code>npx cap open ios</code></td>
+<td>open Xcode / Android Studio, run from there</td>
+</tr>
+<tr>
+<td>or</td>
+<td><code>ionic cap run ios -l --external</code></td>
+<td>live reload on emulator/device</td>
+</tr>
+</tbody></table>
+<p><strong>A4 and testing on device</strong> (slides 11–12). A4 gives you two options:</p>
+<ul>
+<li>use a <strong>native device resource</strong>, or</li>
+<li>write data to <strong>local storage</strong>.</li>
+</ul>
+<p>If you choose a native resource that needs a real device to test (not a browser or emulator), do this <strong>first</strong>: install Capacitor, use the resource in an extremely simple way, and try deploying to the device. Deploying to a device counts toward the <strong>bonus point</strong> (A4/A5).</p>
+<p>Why bother: it&#39;s good experience, it&#39;s necessary for publishing on the App Store / Google Play, and testing on device is non-trivial — every app you build will hit device-specific errors, and users only ever experience your app on their device. &quot;Non-trivial, but also non-optional in the real world.&quot;</p>
+<h2 id="5-signals">5. Signals</h2>
+<p>Angular&#39;s change detection (slide 13) is complex and had a significant update in July this year to a new model. The <strong>view only refreshes</strong> when:</p>
+<ul>
+<li>an event fires,</li>
+<li>an input changes,</li>
+<li>you refresh manually, or</li>
+<li>a <strong>signal</strong> changes.</li>
+</ul>
+<p>A <strong>signal</strong> is a variable wrapper that tells the view to refresh.</p>
+<p><strong>Where this fits: Model-View-Controller</strong> (slide 14). The <strong>model</strong> is the data behind an app. It notifies views when it changes, lets views query it for data, and lets the controller manipulate it. The slide&#39;s diagram: the controller <em>manipulates</em> the model, the model <em>updates</em> the view, the user <em>sees</em> the view and <em>uses</em> the controller. A signal is the &quot;model notifies the view&quot; arrow.</p>
+<pre data-language="mermaid"><code class="language-mermaid">flowchart TB
+  M[&quot;MODEL&quot;] -- &quot;UPDATES&quot; --&gt; V[&quot;VIEW&quot;]
+  C[&quot;CONTROLLER&quot;] -- &quot;MANIPULATES&quot; --&gt; M
+  V -- &quot;SEES&quot; --&gt; U((&quot;USER&quot;))
+  U -- &quot;USES&quot; --&gt; C</code></pre><p>What signals do (slide 15):</p>
+<ul>
+<li>wrap a variable;</li>
+<li>when the value changes, update <strong>only the portion of the template that uses the variable</strong> — more performant than refreshing the entire view;</li>
+<li>make sure the view updates <strong>whenever</strong> the variable updates.</li>
+</ul>
+<p>Prof. Reid&#39;s experience: <strong>to refresh the view after async callbacks, wrap the variable in a signal</strong> — including after Capacitor calls or a <code>fetch</code> to a remote API.</p>
+<p>How to use one (slide 16): import <code>signal</code> from <code>@angular/core</code>, initialize with <code>signal&lt;type&gt;(defaultValue)</code>, update with <code>set(newValue)</code>, and <strong>read it by calling it</strong> — <code>readyForSelfie()</code>:</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// component.ts file</span></span>
+<span class="line"><span style="color:#6A9955">// at top of file…</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Component</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">signal</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> ‘@</span><span style="color:#9CDCFE">angular</span><span style="color:#D4D4D4">/</span><span style="color:#9CDCFE">core</span><span style="color:#D4D4D4">’;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// in Component variable declarations…</span></span>
+<span class="line"><span style="color:#9CDCFE">readyForSelfie</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">boolean</span><span style="color:#D4D4D4">>(</span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// in some function…</span></span>
+<span class="line"><span style="color:#9CDCFE">readyForSelfie</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">&#x3C;!-- component.html file --></span></span>
+<span class="line"><span style="color:#D4D4D4">@if ( readyForSelfie() )</span></span>
+<span class="line"><span style="color:#D4D4D4">{ … }</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Two slide slips: curly quotes again (use <code>&#39;@angular/core&#39;</code>), and inside a component method it&#39;s <code>this.readyForSelfie.set(true)</code>.</p>
+<p>The demo app (from <code>home.page.ts</code>, solution1) keeps all of its state in signals and sets them <strong>after</strong> awaiting Capacitor calls:</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> class</span><span style="color:#4EC9B0"> HomePage</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">  finishedReminder</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">boolean</span><span style="color:#D4D4D4">>(</span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  finishedLocation</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">boolean</span><span style="color:#D4D4D4">>(</span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">  latCoord</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">number</span><span style="color:#D4D4D4">>(</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  longCoord</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">number</span><span style="color:#D4D4D4">>(</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  async</span><span style="color:#DCDCAA"> getLocation</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> position</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> Geolocation</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">getCurrentPosition</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">finishedLocation</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">latCoord</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">position</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">coords</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">latitude</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">longCoord</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">position</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">coords</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">longitude</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#6A9955">  // scheduleReminder() and shareStuff(): Sections 6 and 8</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">div</span><span style="color:#9CDCFE"> id</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"container"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">  @if(!finishedReminder())</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> (click)</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"scheduleReminder()"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Schedule a reminder</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">  @if(finishedReminder() &#x26;&#x26; !finishedLocation())</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> (click)</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"getLocation()"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Print geolocation</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">  @if(finishedLocation())</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span><span style="color:#D4D4D4">Coordinates: ({{latCoord()}}, {{longCoord()}})</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> (click)</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"shareStuff()"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Share my coordinates</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">div</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>The claim holds for this project (Angular 22): built and run in Chromium with notifications and location allowed, each click moves to the next button and the coordinates appear. With the four signals turned into plain fields (<code>finishedReminder = false;</code> … <code>this.finishedReminder = true;</code>, template without the <code>()</code>), the page <strong>stays on &quot;Schedule a reminder&quot;</strong> after the click, even though the code ran — the assignment happens after an <code>await</code>, and nothing tells the view to refresh.</p>
+<p>Try it below: the page is the demo app re-created with Ionic web components (no Angular in the sandbox, so <code>signal()</code> and the three plugins are small stand-ins written for this page). Click through the three buttons, then press Next to swap in plain variables:</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Demo 1 (slide 25 · setup1 → solution1) re-created with Ionic web components; signal() and the three plugins are stand-ins&quot;, &quot;width&quot;: 375, &quot;height&quot;: 420, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-header&gt;&lt;ion-toolbar&gt;&lt;ion-title&gt;Daily selfie&lt;/ion-title&gt;&lt;/ion-toolbar&gt;&lt;/ion-header&gt;\n&lt;ion-content&gt;\n  &lt;div id=\&quot;container\&quot;&gt;&lt;/div&gt;\n&lt;/ion-content&gt;\n&lt;/ion-app&gt;&quot;, &quot;css&quot;: &quot;#container { text-align: center; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); }&quot;, &quot;js&quot;: &quot;// ---- Stand-ins (the sandbox has no Angular and no Capacitor) ----\n// A tiny signal(): read with s(), write with s.set(v); set() re-renders the template.\nfunction signal(value) {\n  const s = () =&gt; value;\n  s.set = (v) =&gt; { value = v; render(); };\n  return s;\n}\nconst LocalNotifications = {\n  requestPermissions: async () =&gt; ({ display: &#39;granted&#39; }),\n  schedule: async (opts) =&gt; { console.log(&#39;scheduled&#39;, opts.notifications[0].title); return opts; }\n};\nconst Geolocation = {\n  getCurrentPosition: async () =&gt; ({ coords: { latitude: 33.6405, longitude: -117.8443 } })\n};\nconst Share = {\n  share: async () =&gt; { throw new Error(&#39;Share API not available in this browser&#39;); }\n};\n\n// ---- home.page.ts (solution1) ----\nconst finishedReminder = signal(false);\nconst finishedLocation = signal(false);\nconst latCoord = signal(0);\nconst longCoord = signal(0);\n\nasync function scheduleReminder() {\n  console.log(&#39;clicked schedule selfie&#39;);\n  const perm = await LocalNotifications.requestPermissions();\n  if (perm.display == &#39;granted&#39;) {\n    await LocalNotifications.schedule({ notifications: [{ title: &#39;Daily Reminder&#39;, body: &#39;Time to do the thing!&#39;, id: 1, schedule: { at: new Date(Date.now()) } }] });\n    finishedReminder.set(true);\n  }\n}\nasync function getLocation() {\n  const position = await Geolocation.getCurrentPosition();\n  finishedLocation.set(true);\n  latCoord.set(position.coords.latitude);\n  longCoord.set(position.coords.longitude);\n}\nasync function shareStuff() {\n  try {\n    await Share.share({ title: &#39;Share coordinates&#39;, text: `My current coordinates are ${latCoord()}, ${longCoord()}`, dialogTitle: &#39;Share my coordinates&#39; });\n  } catch (e) {\n    console.log(e.message);\n  }\n}\n\n// ---- home.page.html: the three @if blocks ----\nfunction button(label, onClick) {\n  const b = document.createElement(&#39;ion-button&#39;);\n  b.textContent = label;\n  b.addEventListener(&#39;click&#39;, onClick);\n  return b;\n}\nfunction render() {\n  const c = document.getElementById(&#39;container&#39;);\n  c.innerHTML = &#39;&#39;;\n  if (!finishedReminder()) c.append(button(&#39;Schedule a reminder&#39;, scheduleReminder));\n  if (finishedReminder() &amp;&amp; !finishedLocation()) c.append(button(&#39;Print geolocation&#39;, getLocation));\n  if (finishedLocation()) {\n    const item = document.createElement(&#39;ion-item&#39;);\n    item.textContent = `Coordinates: (${latCoord()}, ${longCoord()})`;\n    c.append(item, button(&#39;Share my coordinates&#39;, shareStuff));\n  }\n}\nrender();&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;Plain variables instead: set() only stores the value and nothing redraws, so the first button never goes away (what the real app does when the signals are plain fields).&quot;, &quot;js&quot;: &quot;\n// ---- Without signals: assigning a value doesn&#39;t refresh the view ----\nfunction signal(value) {\n  const s = () =&gt; value;\n  s.set = (v) =&gt; { value = v; };\n  return s;\n}&quot;}], &quot;interactive&quot;: true}</code></pre><blockquote>
+<p>💡 <strong>Key Insight</strong>: a signal is read with <code>()</code> and written with <code>.set()</code>. Forgetting the <code>()</code> in the template prints the function, not the value; assigning with <code>=</code> replaces the signal with a plain value and the view stops updating.</p>
+</blockquote>
+<blockquote>
+<p>🧪 <strong>Demo files</strong>: <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/solution1/DeviceResourceExamples/src/app/home/home.page.ts">solution1/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/solution1/DeviceResourceExamples/src/app/home/home.page.html">solution1/…/home.page.html</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#111-demo-1-schedule-a-reminder-print-and-share-the-location-slide-25--setup1--solution1">Demo 1</a></p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://angular.dev/guide/signals">Angular: Signals guide</a> · <a href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">Wikipedia: Model–view–controller</a></p>
+</blockquote>
+<h2 id="6-local-notifications">6. Local notifications</h2>
+<p>Slide 17: three official plugin examples — <strong>Local Notification</strong>, <strong>Geolocation</strong>, <strong>Sharing</strong> (there are others).</p>
+<p><strong>Goal</strong> (slide 18): send a notification to the phone — e.g. remind someone to journal their sleepiness.</p>
+<p><strong>Step 1 — import and ask permission</strong> (slide 19). Import the plugin in a service or component, then prompt the user to authorize notifications, e.g. when the page initializes:</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">LocalNotifications</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@capacitor/local-notifications'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> ngOnInit</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#C586C0">    await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">requestPermissions</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>The prompt looks different per platform. On the web: a browser bar &quot;<a href="http://localhost:8102">http://localhost:8102</a> wants to — Show notifications — Block / Allow&quot;. On iOS: a system alert &quot;“myApp” Would Like to Send You Notifications … Don&#39;t Allow / Allow&quot;.</p>
+<p><strong>Step 2 — schedule</strong> (slide 20). <code>schedule</code> takes an array of notifications; <code>schedule.at</code> is a <code>Date</code>, so you <strong>can schedule for the future</strong> (here: 5 seconds from now):</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">LocalNotifications</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@capacitor/local-notifications'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> notifs</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">schedule</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  notifications:</span><span style="color:#D4D4D4"> [</span></span>
+<span class="line"><span style="color:#D4D4D4">    {</span></span>
+<span class="line"><span style="color:#9CDCFE">      title:</span><span style="color:#CE9178"> "Title"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      body:</span><span style="color:#CE9178"> "Body"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      id:</span><span style="color:#B5CEA8"> 1</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      schedule:</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">at:</span><span style="color:#569CD6"> new</span><span style="color:#DCDCAA"> Date</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">Date</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">now</span><span style="color:#D4D4D4">() + </span><span style="color:#B5CEA8">1000</span><span style="color:#D4D4D4"> * </span><span style="color:#B5CEA8">5</span><span style="color:#D4D4D4">) },</span></span>
+<span class="line"><span style="color:#9CDCFE">      sound:</span><span style="color:#569CD6"> null</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      attachments:</span><span style="color:#569CD6"> null</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      actionTypeId:</span><span style="color:#CE9178"> ""</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      extra:</span><span style="color:#569CD6"> null</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#D4D4D4">  ]</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">'scheduled notifications'</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">notifs</span><span style="color:#D4D4D4">);</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>The demo app (slide 25 shows it in the browser: &quot;Daily selfie&quot; with a &quot;Schedule a selfie reminder&quot; button) checks the permission result before scheduling, then flips a signal:</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> scheduleReminder</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"clicked schedule selfie"</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> perm</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">requestPermissions</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#C586C0">  if</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">perm</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">display</span><span style="color:#D4D4D4"> == </span><span style="color:#CE9178">'granted'</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> notif</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">schedule</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">      notifications:</span><span style="color:#D4D4D4"> [</span></span>
+<span class="line"><span style="color:#D4D4D4">        {</span></span>
+<span class="line"><span style="color:#9CDCFE">          title:</span><span style="color:#CE9178"> 'Daily Reminder'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">          body:</span><span style="color:#CE9178"> 'Time to do the thing!'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">          id:</span><span style="color:#B5CEA8"> 1</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">          schedule:</span><span style="color:#D4D4D4"> {</span><span style="color:#9CDCFE">at:</span><span style="color:#569CD6"> new</span><span style="color:#DCDCAA"> Date</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">Date</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">now</span><span style="color:#D4D4D4">())}</span></span>
+<span class="line"><span style="color:#D4D4D4">        }</span></span>
+<span class="line"><span style="color:#D4D4D4">      ]</span></span>
+<span class="line"><span style="color:#D4D4D4">    });</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">finishedReminder</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>When the browser doesn&#39;t grant notifications (headless Chromium&#39;s default), the console shows only <code>clicked schedule selfie</code> and the page stays on the first button: <code>perm.display</code> isn&#39;t <code>&#39;granted&#39;</code>, so nothing is scheduled and the signal isn&#39;t set.</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: <code>requestPermissions()</code> resolves whether the user says yes or no. Check <code>perm.display == &#39;granted&#39;</code> before relying on notifications — the user can always press &quot;Don&#39;t Allow&quot;.</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://capacitorjs.com/docs/apis/local-notifications">Capacitor: Local Notifications API</a></p>
+</blockquote>
+<h2 id="7-geolocation">7. Geolocation</h2>
+<p><strong>Goal</strong> (slide 21): get the device&#39;s location, heading and speed. Probably not relevant for A4 — but few Capacitor plugins are testable and meaningful in the browser, and this is one.</p>
+<p>Import <code>Geolocation</code> and call <code>getCurrentPosition()</code> (slide 22):</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Geolocation</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@capacitor/geolocation'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> position</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> Geolocation</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">getCurrentPosition</span><span style="color:#D4D4D4">({});</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>The result&#39;s <code>coords.latitude</code> / <code>coords.longitude</code> are what the demo stores (Section 5&#39;s <code>getLocation()</code>). In the browser this uses the browser&#39;s location permission; with location allowed, the demo shows <code>Coordinates: (&lt;lat&gt;, &lt;long&gt;)</code> and the &quot;Share my coordinates&quot; button.</p>
+<h2 id="8-sharing">8. Sharing</h2>
+<p><strong>Goal</strong> (slide 23): export data from your app to a social app on the device — share a photo to Facebook, share text in a text message.</p>
+<ul>
+<li>It uses the <strong>Web Share API</strong> in the browser — &quot;support is currently spotty&quot;.</li>
+<li>It can share URLs, text and files (e.g. a picture).</li>
+<li>Not available in some desktop browsers, but usually available in a phone&#39;s browser.</li>
+</ul>
+<p>Import the plugin and call <code>Share.share()</code> with the content (slide 24):</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Share</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@capacitor/share'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">let</span><span style="color:#9CDCFE"> shareRet</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> Share</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">share</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  title:</span><span style="color:#CE9178"> 'See cool stuff'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  text:</span><span style="color:#CE9178"> 'Really awesome thing you need to see right meow'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  url:</span><span style="color:#CE9178"> 'http://ionicframework.com/'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  dialogTitle:</span><span style="color:#CE9178"> 'Share with buddies'</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>The demo wraps it in <code>try/catch</code>, because <strong>an error is thrown if the user cancels sharing</strong> (repo comment):</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> shareStuff</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // try/catch because error is thrown if user cancells sharing operation</span></span>
+<span class="line"><span style="color:#C586C0">  try</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    await</span><span style="color:#9CDCFE"> Share</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">share</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">      title:</span><span style="color:#CE9178"> 'Share coordinates'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      text:</span><span style="color:#CE9178"> `Just in case you wanted to know, these are my current coordinates. Perhaps this is an emergency location sharing app idk. My current coordinates are </span><span style="color:#569CD6">${</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">latCoord</span><span style="color:#D4D4D4">()</span><span style="color:#569CD6">}</span><span style="color:#CE9178">, </span><span style="color:#569CD6">${</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">longCoord</span><span style="color:#D4D4D4">()</span><span style="color:#569CD6">}</span><span style="color:#CE9178">`</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      dialogTitle:</span><span style="color:#CE9178"> 'Share my coordinates'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">    });</span></span>
+<span class="line"><span style="color:#D4D4D4">  } </span><span style="color:#C586C0">catch</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">e</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">e</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Note <code>this.latCoord()</code> — reading a signal inside a template literal still needs the call. In desktop Chromium (Linux) the catch is what runs: the console shows <code>CapacitorException: Share API not available in this browser</code> — the &quot;not available in some desktop browsers&quot; case from slide 23, handled by the same <code>try/catch</code>.</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: always <code>try/catch</code> around <code>Share.share()</code> — it rejects both when the user cancels and when the browser has no Web Share API.</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://capacitorjs.com/docs/apis/share">Capacitor: Share API</a> · <a href="https://web.dev/web-share/">web.dev: Web Share API</a> · <a href="https://github.com/ionic-team/capacitor/issues/910">Capacitor issue #910</a> · <a href="https://ionicframework.com/docs/native/social-sharing">Ionic: Social Sharing plugin</a> · <a href="https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin">SocialSharing-PhoneGap-Plugin (GitHub)</a></p>
+</blockquote>
+<h2 id="9-plugin-quality-and-plugin-issues">9. Plugin quality and plugin issues</h2>
+<p>Capacitor plugins (slide 26): some are maintained officially, others by the community. As a result:</p>
+<ul>
+<li>quality varies <strong>immensely</strong>;</li>
+<li>features may not work as expected;</li>
+<li>community information might be out of date.</li>
+</ul>
+<p>Plugin issues (slide 27): there are many. Example: Prof. Reid tried the <strong>Camera</strong> plugin for this lecture&#39;s demo and found it&#39;s <strong>no longer usable in-browser</strong> — so the demo uses notifications, geolocation and sharing instead. Only a limited set of functionality is enabled, plugins may be unreliable, and Capacitor is continuing to improve.</p>
+<p>Thoughts on native resources (slide 31):</p>
+<ul>
+<li>The state of native support is &quot;just okay&quot;.</li>
+<li>You could <strong>fork</strong> (copy) a broken or incomplete plugin and patch it yourself. Is that better or worse than writing the plugin yourself?</li>
+<li>This is the clear downside of hybrid apps vs native: <strong>device libraries can&#39;t be used directly</strong> — you rely on community libraries or fill in the missing pieces.</li>
+</ul>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://github.com/ionic-team/capacitor/issues">Capacitor issues on GitHub</a></p>
+</blockquote>
+<h2 id="10-strengths-and-weaknesses-of-hybrid-apps">10. Strengths and weaknesses of hybrid apps</h2>
+<table>
+<thead>
+<tr>
+<th>Weaknesses (slide 32)</th>
+<th>Strengths (slide 33)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Performance issues</td>
+<td>Can share a codebase between web and mobile</td>
+</tr>
+<tr>
+<td>Inconsistency with the platform</td>
+<td>Can save time and effort (sometimes)</td>
+</tr>
+<tr>
+<td>Limited access to device capabilities</td>
+<td>Easily design for various form factors</td>
+</tr>
+<tr>
+<td></td>
+<td>Access to <em>some</em> device capabilities</td>
+</tr>
+</tbody></table>
+<p><strong>The choice is all about analyzing requirements.</strong> A hybrid app wins when the device resources you need are none, or are covered by well-maintained plugins; native wins when you need lots of native resources or high performance.</p>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#112-question-1-when-might-a-web-hybrid-app-be-preferable-to-a-native-app-slides-2830">Question 1</a></p>
+</blockquote>
+<h2 id="11-in-class-questions--demos-with-solutions">11. In-class Questions &amp; Demos (with Solutions)</h2>
+<h3 id="111-demo-1-schedule-a-reminder-print-and-share-the-location-slide-25--setup1--solution1">11.1 Demo 1: Schedule a reminder, print and share the location (slide 25 · setup1 → solution1)</h3>
+<p><strong>Task.</strong> <code>setup1</code> is an Ionic + Angular + Capacitor app (&quot;Daily selfie&quot;) with the template, the four signals and the plugin imports already in place. The three methods are empty:</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> scheduleReminder</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"clicked schedule selfie"</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: request permissions, schedule reminder, update finishedReminder</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> getLocation</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: get current location, update latCoord and longCoord, update finishedLocation</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> shareStuff</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: share current coordinates</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: try/catch because error is thrown if user cancells sharing operation</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>The template (Section 5) shows one step at a time: &quot;Schedule a reminder&quot; → &quot;Print geolocation&quot; → the coordinates and &quot;Share my coordinates&quot;.</p>
+<details>
+<summary>Answer</summary>
+
+<div class="code-collapse is-collapsed"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> scheduleReminder</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"clicked schedule selfie"</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> perm</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">requestPermissions</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#C586C0">  if</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">perm</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">display</span><span style="color:#D4D4D4"> == </span><span style="color:#CE9178">'granted'</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> notif</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">schedule</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">      notifications:</span><span style="color:#D4D4D4"> [</span></span>
+<span class="line"><span style="color:#D4D4D4">        {</span></span>
+<span class="line"><span style="color:#9CDCFE">          title:</span><span style="color:#CE9178"> 'Daily Reminder'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">          body:</span><span style="color:#CE9178"> 'Time to do the thing!'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">          id:</span><span style="color:#B5CEA8"> 1</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">          schedule:</span><span style="color:#D4D4D4"> {</span><span style="color:#9CDCFE">at:</span><span style="color:#569CD6"> new</span><span style="color:#DCDCAA"> Date</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">Date</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">now</span><span style="color:#D4D4D4">())}</span></span>
+<span class="line"><span style="color:#D4D4D4">        }</span></span>
+<span class="line"><span style="color:#D4D4D4">      ]</span></span>
+<span class="line"><span style="color:#D4D4D4">    });</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">finishedReminder</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> getLocation</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> position</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> Geolocation</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">getCurrentPosition</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">finishedLocation</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">latCoord</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">position</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">coords</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">latitude</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">longCoord</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">position</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">coords</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">longitude</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> shareStuff</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // try/catch because error is thrown if user cancells sharing operation</span></span>
+<span class="line"><span style="color:#C586C0">  try</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    await</span><span style="color:#9CDCFE"> Share</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">share</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">      title:</span><span style="color:#CE9178"> 'Share coordinates'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      text:</span><span style="color:#CE9178"> `Just in case you wanted to know, these are my current coordinates. Perhaps this is an emergency location sharing app idk. My current coordinates are </span><span style="color:#569CD6">${</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">latCoord</span><span style="color:#D4D4D4">()</span><span style="color:#569CD6">}</span><span style="color:#CE9178">, </span><span style="color:#569CD6">${</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">longCoord</span><span style="color:#D4D4D4">()</span><span style="color:#569CD6">}</span><span style="color:#CE9178">`</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      dialogTitle:</span><span style="color:#CE9178"> 'Share my coordinates'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">    });</span></span>
+<span class="line"><span style="color:#D4D4D4">  } </span><span style="color:#C586C0">catch</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">e</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">e</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="38"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>Show all 38 lines</span></button><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Result in Chromium with notifications and location allowed: &quot;Schedule a reminder&quot; → &quot;Print geolocation&quot; → <code>Coordinates: (&lt;lat&gt;, &lt;long&gt;)</code> with &quot;Share my coordinates&quot;; pressing Share logs <code>CapacitorException: Share API not available in this browser</code> (caught). Key points:</p>
+<ul>
+<li>every update after an <code>await</code> goes through <code>.set()</code> — that&#39;s what makes the <code>@if</code> blocks switch (with plain fields the page stays on the first button);</li>
+<li>check <code>perm.display == &#39;granted&#39;</code> before scheduling;</li>
+<li><code>try/catch</code> around <code>Share.share()</code>.</li>
+</ul>
+<p>The interactive re-creation is in <a href="#5-signals">Section 5</a>.</p>
+</details>
+
+<blockquote>
+<p>🧪 <strong>Demo files</strong>: <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/setup1/DeviceResourceExamples/src/app/home/home.page.ts">setup1/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/solution1/DeviceResourceExamples/src/app/home/home.page.ts">solution1/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/solution1/DeviceResourceExamples/src/app/home/home.page.html">home.page.html</a></p>
+</blockquote>
+<p>Back to <a href="#5-signals">Section 5</a>.</p>
+<h3 id="112-question-1-when-might-a-web-hybrid-app-be-preferable-to-a-native-app-slides-2830">11.2 Question 1: When might a web hybrid app be preferable to a native app? (slides 28–30)</h3>
+<p>When might developing a web hybrid app be preferable to a native app?</p>
+<ul>
+<li>A. When you need to access a lot of native device resources</li>
+<li>B. When you don&#39;t need any native device resources</li>
+<li>C. When you can use well-maintained libraries to access native resources</li>
+<li>D. When you need high performance</li>
+<li>E. I don&#39;t know, this lecture has scared me away from making hybrid apps</li>
+</ul>
+<details>
+<summary>Answer</summary>
+
+<p><strong>Answer: B and C</strong> (the slides don&#39;t reveal the poll result; this follows from slides 31–33).</p>
+<ul>
+<li><strong>B</strong> — with no native resources, hybrid&#39;s biggest weakness (limited device access, unreliable plugins) doesn&#39;t apply, and you keep its strengths: one codebase for web and mobile, easy design for many form factors.</li>
+<li><strong>C</strong> — the downside is relying on plugins of varying quality; if the plugins you need are well maintained, that risk is small.</li>
+<li><strong>A</strong> is wrong: lots of native resources means lots of plugins of uneven quality, or writing/patching them yourself — &quot;the clear downside&quot; (slide 31).</li>
+<li><strong>D</strong> is wrong: performance issues are the first weakness on slide 32.</li>
+<li><strong>E</strong> — the lecture&#39;s point is &quot;analyze the requirements&quot;, not &quot;never go hybrid&quot;.</li>
+</ul>
+</details>
+
+<p>Back to <a href="#10-strengths-and-weaknesses-of-hybrid-apps">Section 10</a>.</p>
+<h2 id="12-quick-reference--top-5-things-to-remember">12. Quick Reference &amp; Top 5 Things to Remember</h2>
+<p><strong>Capacitor commands</strong></p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>npm install @capacitor/core</code> / <code>@capacitor/cli</code></td>
+<td>add Capacitor to an Ionic project</td>
+</tr>
+<tr>
+<td><code>npm install @capacitor/local-notifications</code></td>
+<td>add one plugin (one package per resource)</td>
+</tr>
+<tr>
+<td><code>ionic serve</code></td>
+<td>run in the browser (plugins fall back to web APIs)</td>
+</tr>
+<tr>
+<td><code>npx cap init</code></td>
+<td>create the Capacitor config</td>
+</tr>
+<tr>
+<td><code>npm install @capacitor/ios</code> · <code>npx cap add ios</code></td>
+<td>set up the native project</td>
+</tr>
+<tr>
+<td><code>ionic build</code> · <code>npx cap sync</code></td>
+<td>build the web app, copy it into the native project</td>
+</tr>
+<tr>
+<td><code>npx cap open ios</code></td>
+<td>open Xcode / Android Studio to run on emulator/device</td>
+</tr>
+<tr>
+<td><code>ionic cap run ios -l --external</code></td>
+<td>live reload on emulator/device</td>
+</tr>
+</tbody></table>
+<p><strong>Plugin calls</strong></p>
+<table>
+<thead>
+<tr>
+<th>Plugin</th>
+<th>Import</th>
+<th>Call</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Local Notifications</td>
+<td><code>@capacitor/local-notifications</code></td>
+<td><code>requestPermissions()</code>, <code>schedule({ notifications: [...] })</code></td>
+</tr>
+<tr>
+<td>Geolocation</td>
+<td><code>@capacitor/geolocation</code></td>
+<td><code>getCurrentPosition()</code> → <code>coords.latitude/longitude</code></td>
+</tr>
+<tr>
+<td>Share</td>
+<td><code>@capacitor/share</code></td>
+<td><code>share({ title, text, url, dialogTitle })</code> (wrap in try/catch)</td>
+</tr>
+</tbody></table>
+<p><strong>Signals</strong></p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Code</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>import</td>
+<td><code>import { Component, signal } from &#39;@angular/core&#39;;</code></td>
+</tr>
+<tr>
+<td>declare</td>
+<td><code>ready = signal&lt;boolean&gt;(false);</code></td>
+</tr>
+<tr>
+<td>write</td>
+<td><code>this.ready.set(true);</code></td>
+</tr>
+<tr>
+<td>read (TS or template)</td>
+<td><code>this.ready()</code> / <code>@if (ready()) { … }</code></td>
+</tr>
+</tbody></table>
+<p><strong>Top 5 things to remember</strong></p>
+<ol>
+<li>Capacitor plugins connect web code to device resources; in the browser they fall back to web APIs, and browser support differs (Firefox: no local notifications; desktop Chromium: no Share).</li>
+<li>Without a native resource you only need <code>ionic serve</code>; for a device it&#39;s <code>ionic build</code> → <code>npx cap sync</code> → <code>npx cap open</code>, and you run from the native IDE.</li>
+<li>The view refreshes on events, input changes, manual refreshes and signal changes — so values set after an <code>await</code> (Capacitor calls, <code>fetch</code>) should be signals, written with <code>.set()</code> and read with <code>()</code>.</li>
+<li>Check <code>perm.display == &#39;granted&#39;</code> after <code>requestPermissions()</code>, and wrap <code>Share.share()</code> in <code>try/catch</code>.</li>
+<li>Hybrid vs native is a requirements decision: hybrid shares one codebase and form factors; native wins on performance, platform consistency and full device access.</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="Note navigation" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/~kazuhak/notes/in4matx-133/lec-14/en-US/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Previous · Lecture 14</span><span class="pager-title" data-astro-cid-gxyjxt6l>Mobile Design Principles</span></a><a class="card interactive pager-card pager-next" href="/~kazuhak/notes/in4matx-133/lec-16/en-US/" rel="next" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>Lecture 16 · Next<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>Databases &amp; Local Storage</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>Shortcuts<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> Previous</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> Next</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> Switch language</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="Table of Contents" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>Top</button><script type="module" src="/~kazuhak/_astro/NoteReader.astro_astro_type_script_index_0_lang.D_DIoJ7q.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/~kazuhak/assets/js/bento.js" defer></script><script src="/~kazuhak/assets/js/chat-widget.js" defer></script></body></html>
