@@ -482,6 +482,8 @@ end procedure
 
 That's the architecture picture of L18 p51 and p53: a second, small **Index** box, then a **"Deleted Pages!"** store beside it.
 
+> 🗣️ **In class** (L20.5 p28–30): the in-class version names this the **delayed updating strategy** — **temporary (and much smaller) auxiliary index structures** for **updated pages** ("Index n..") and **removed pages** ("Deleted Pages"), with a **veto system** between them and Ranking, so deleted pages are filtered out before results reach the UI.
+
 > 🔗 **Go deeper**: [Croft §5.6.4 Update (book p. 164)](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf) · [IIR Ch 4 (dynamic indexing)](https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf)
 
 ---
