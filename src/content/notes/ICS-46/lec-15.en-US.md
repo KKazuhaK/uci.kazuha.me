@@ -1,6 +1,6 @@
 ---
 title: "Hash Tables"
-summary: "Collision handling for hash tables: separate chaining (structure, trace, implementation, load factor), linear probing (insert, search, tombstone deletion, primary clustering, probe-count formulas and resizing), quadratic probing, and the dictionary-operations summary."
+summary: "Collision handling for hash tables: separate chaining (structure, trace, implementation, load factor), linear probing (insert, search, tombstone deletion, primary clustering, probe-count formulas and resizing), and quadratic probing."
 ---
 
 # Information and Computer Science 46 — Lecture 15: Hash Table
@@ -16,10 +16,9 @@ summary: "Collision handling for hash tables: separate chaining (structure, trac
 - [7. Linear Probing in Practice: Speed and Primary Clustering](#7-linear-probing-in-practice-speed-and-primary-clustering)
 - [8. Linear Probing Time Analysis and Resizing](#8-linear-probing-time-analysis-and-resizing)
 - [9. Quadratic Probing](#9-quadratic-probing)
-- [10. Summary for Dictionary Operations](#10-summary-for-dictionary-operations)
-- [11. Complete Implementation](#11-complete-implementation)
-- [12. In-class Activities (with Solutions)](#12-in-class-activities-with-solutions)
-- [13. Quick Reference & Top 5 Things to Remember](#13-quick-reference--top-5-things-to-remember)
+- [10. Complete Implementation](#10-complete-implementation)
+- [11. In-class Activities (with Solutions)](#11-in-class-activities-with-solutions)
+- [12. Quick Reference & Top 5 Things to Remember](#12-quick-reference--top-5-things-to-remember)
 
 > UCI ICS 46: Data Structure Implementation and Analysis — Prof. Tom Yeh, Fall 2026, 11/19/26
 > Built from the Lecture 15 slides (whose separate-chaining part repeats the end of the 11/17 "Lecture 14" deck, including its Activity 3, so those slides are covered here), with algs4 §3.4 Hash Tables and Thornton's ICS 46 Hash Tables notes as supplements. Organized by concept, not by source.
@@ -43,7 +42,7 @@ Even under the uniform hashing assumption, **collisions occur** (slide 5; analog
 |---|---|---|
 | 1 | Allow multiple elements inside each bucket | **Separate chaining** |
 | 2 | Overflow to other buckets | **Linear probing** (and quadratic probing) |
-| 3 | Kick out the existing data | **Cuckoo hashing** (only named in this course) |
+| 3 | Kick out the existing data | **Cuckoo hashing** (covered in [Lecture 16](lec-16.en-US.md)) |
 
 ## 2. Separate Chaining
 
@@ -66,7 +65,7 @@ The second E (value 6), second A (8) and third E (12) are **updates**, not new n
 {"title": "Slides 9–22: separate chaining, m = 5", "m": 5, "hashes": "S:2, E:0, A:0, R:4, C:4, H:4, X:2, M:4, P:3, L:3", "ops": "put(S); put(E); put(A); put(R); put(C); put(H); put(E); put(X); put(A); put(M); put(P); put(L); put(E)", "interactive": true}
 ```
 
-> 📝 **Practice**: [Activity 1](#121-activity-1-separate-chaining-slide-23) — m = 7, h(k) = k % m.
+> 📝 **Practice**: [Activity 1](#111-activity-1-separate-chaining-slide-23) — m = 7, h(k) = k % m.
 
 ## 3. Separate Chaining Implementation
 
@@ -103,7 +102,7 @@ public:
 
 `put` scans the chain first (update if found), then links a new node at the head: its `next` is the old head `dict[i]`, and `dict[i]` now points at it — O(1) after the scan.
 
-> ⚠️ **Pitfall**: One slide bug, if you compile it: `dict[m]` is never initialized, so the chains start as garbage pointers instead of `nullptr` — write `Node* dict[m] = {};`. Note the braces in `new Node{key, val, dict[i]}`: `Node` is an aggregate with no constructor, so `new Node(key, val, dict[i])` would not compile in C++17. ([§11](#11-complete-implementation) has the fix, a `remove`, and a destructor.)
+> ⚠️ **Pitfall**: One slide bug, if you compile it: `dict[m]` is never initialized, so the chains start as garbage pointers instead of `nullptr` — write `Node* dict[m] = {};`. Note the braces in `new Node{key, val, dict[i]}`: `Node` is an aggregate with no constructor, so `new Node(key, val, dict[i])` would not compile in C++17. ([§10](#10-complete-implementation) has the fix, a `remove`, and a destructor.)
 
 Deletion is easy with chaining: find the node in chain i and unlink it, as in a linked list; nothing else moves.
 
@@ -153,7 +152,7 @@ In the demo above, the last two operations remove w (slot 8 becomes †) and the
 
 > ⚠️ **Pitfall**: A tombstone is not empty for *search* but is free for *insert*. If you stop searching at a tombstone you lose keys; if you never reuse tombstones the table fills up with them (rehashing into a fresh array clears them).
 
-> 📝 **Practice**: [Activity 2](#122-activity-2-linear-probing-slide-30) — m = 13, inserts, deletes and a search.
+> 📝 **Practice**: [Activity 2](#112-activity-2-linear-probing-slide-30) — m = 13, inserts, deletes and a search.
 
 ## 7. Linear Probing in Practice: Speed and Primary Clustering
 
@@ -195,22 +194,11 @@ When c₂ = 0, quadratic probing reduces to linear probing. The jumps grow (1, 4
 
 > ⚠️ **Pitfall**: The probe sequence does not necessarily visit every slot. With h(k, i) = (h(k) + i²) % 13 the offsets i² % 13 take only 7 distinct values (0, 1, 3, 4, 9, 10, 12), so an insert can fail while the table still has empty slots — another reason to keep the load factor low.
 
-> 📝 **Practice**: [Activity 3](#123-activity-3-quadratic-probing-slide-37) — m = 13, h(k, i) = (h(k) + i²) % m.
+> 📝 **Practice**: [Activity 3](#113-activity-3-quadratic-probing-slide-37) — m = 13, h(k, i) = (h(k) + i²) % m.
 
-## 10. Summary for Dictionary Operations
+> ➡️ **Continued in [Lecture 16](lec-16.en-US.md)**: the summary table of dictionary operations (BST, 2-3 tree, separate chaining, open addressing), then cuckoo hashing.
 
-Slide 38:
-
-| | Search (worst) | Insert (worst) | Delete (worst) | Search (avg) | Insert (avg) | Delete (avg) |
-|---|---|---|---|---|---|---|
-| BST | n | n | n | log n | log n | log n |
-| 2-3 search tree | log n | log n | log n | log n | log n | log n |
-| Separate chaining | n | n | n | 1 | 1 | 1 |
-| Open addressing | n | n | n | 1 | 1 | 1 |
-
-(Slide 38 lists the BST average delete as log n; after many Hibbard deletions it drifts to √n, as [Lecture 14](lec-14.en-US.md) shows.) Hash tables win on average (O(1), assuming a good hash function and a bounded load factor) but have an O(n) worst case and no order; balanced trees guarantee O(log n) and keep the keys sorted.
-
-## 11. Complete Implementation
+## 10. Complete Implementation
 
 `SeparateChaining` follows slide 24 with the `dict` fix, a `remove`, and m = 7 to match Activity 1. `LinearProbing` is mine (the slides give no code): int keys, h(k) = k % 13, tombstones as a `DELETED` state.
 
@@ -367,11 +355,11 @@ find(8): slot 10, 3 probes
 . . . 3 X 18 . 20 7 22 8 . . 
 ```
 
-## 12. In-class Activities (with Solutions)
+## 11. In-class Activities (with Solutions)
 
 Try each one before opening the solution.
 
-### 12.1 Activity 1: Separate Chaining (slide 23)
+### 11.1 Activity 1: Separate Chaining (slide 23)
 
 Perform hash table operations using separate chaining based on the following rules and inputs. Show states after task A and after task C.
 
@@ -416,7 +404,7 @@ Hashes: 47 % 7 = 5, 3 % 7 = 3, 28 % 7 = 0, 14 % 7 = 0, 9 % 7 = 2.
 
 Back to [§2](#2-separate-chaining).
 
-### 12.2 Activity 2: Linear Probing (slide 30)
+### 11.2 Activity 2: Linear Probing (slide 30)
 
 m = 13, h(x) = x mod 13. Insert keys 18, 3, 16, 22, 21, 8; delete 16, delete 21; search for 8; insert 20, 7. (Fill in a 13-slot table, indices 0–12.)
 
@@ -445,7 +433,7 @@ Insert 20 → slot 7 (empty). Insert 7 → slot 7 holds 20; slot 8 is a tombston
 
 Back to [§6](#6-linear-probing-deletion-tombstones).
 
-### 12.3 Activity 3: Quadratic Probing (slide 37)
+### 11.3 Activity 3: Quadratic Probing (slide 37)
 
 h(k) = k % m and h(k, i) = (h(k) + i²) % m. Assume m = 13, and key-value pairs to insert: (17,0), (33,1), (18,2), (20,3), (44,4), (11,5), (19,6), (7,7). (The slide's table already shows 17 in slot 4.)
 
@@ -483,7 +471,7 @@ After the insertions: 3: (7,7) · 4: (17,0) · 5: (18,2) · 6: (44,4) · 7: (33,
 
 Back to [§9](#9-quadratic-probing).
 
-## 13. Quick Reference & Top 5 Things to Remember
+## 12. Quick Reference & Top 5 Things to Remember
 
 | | Separate chaining | Linear probing | Quadratic probing |
 |---|---|---|---|
