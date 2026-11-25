@@ -96,18 +96,18 @@ cf 80
 
 > 📘 **Going further**: [Croft §3.5.1 Character Encodings](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf)
 
-### 2.4 Practice
-
 > 📝 **Practice**: [§2.4](#24-practice)
 
-#### UTF-8 encoding of π
+### 2.4 Practice
 
-π is Unicode code point 960. What bytes does UTF-8 store? How many bytes does UTF-32 use?
+#### UTF-8 encoding of €
+
+The euro sign € is Unicode code point 8364 (hex 20AC). What bytes does UTF-8 store, and how many bytes does UTF-32 use?
 
 <details>
 <summary>Solution</summary>
 
-960 = `0x3C0` = `00000011 11000000`. It's in 128–2047, so the template is `110xxxxx 10xxxxxx`, with 5 + 6 = 11 payload bits: 960 in 11 bits is `01111000000`. High 5 bits `01111` → `110`+`01111` = `11001111`; next 6 bits `000000` → `10`+`000000` = `10000000`. Result **`CF 80`**, 2 bytes. UTF-32 always uses 4: `00 00 03 C0`.
+8364 = `0x20AC` = `00100000 10101100`. It's in 2048–65535, so the template is `1110xxxx 10xxxxxx 10xxxxxx`, with 4 + 6 + 6 = 16 payload bits: `0010` | `000010` | `101100`. That gives `1110`+`0010` = `11100010`, `10`+`000010` = `10000010`, `10`+`101100` = `10101100`. Result **`E2 82 AC`**, 3 bytes (π took 2). UTF-32 always uses 4: `00 00 20 AC`. Check: `"€".encode("utf-8")` is `e2 82 ac`.
 
 </details>
 
@@ -272,18 +272,18 @@ Swapping two letters keeps the byte sum but changes the CRC.
 
 > 📘 **Going further**: [Croft §3.7 Detecting Duplicates](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf)
 
-### 4.3 Practice
-
 > 📝 **Practice**: [§4.3](#43-practice)
+
+### 4.3 Practice
 
 #### A byte-sum checksum
 
-Sum the bytes of the ASCII string "Tropical fish". Is a byte sum a safe way to detect exact duplicates?
+Sum the bytes of the ASCII strings "Search engine" and "Saerch engine". Does the byte sum tell the two apart? What would?
 
 <details>
 <summary>Solution</summary>
 
-In hex, 54 + 72 + 6F + 70 + 69 + 63 + 61 + 6C + 20 + 66 + 69 + 73 + 68 = **508 hex = 1,288**. It's not safe: the sum ignores order, so "Tropical fihs" also sums to 1,288. A CRC weighs bytes by position: CRC-32 gives `0x18f14f94` vs `0x3ba24de2`.
+In hex, "Search engine" is 53 + 65 + 61 + 72 + 63 + 68 + 20 + 65 + 6E + 67 + 69 + 6E + 65 = **4EC hex = 1,260**. "Saerch engine" has the same bytes with *e* and *a* swapped, so it also sums to **1,260**: the byte sum ignores order and calls them duplicates. A CRC weighs each byte by its position: CRC-32 gives `0x98149ea5` vs `0x2bcbd658`.
 
 </details>
 
@@ -364,24 +364,24 @@ print(jaccard(fp, {664, 492, 100, 200, 236}))
 
 > 📘 **Going further**: [Croft §3.7 Detecting Duplicates](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf)
 
-### 5.4 Practice
-
 > 📝 **Practice**: [§5.4](#54-practice)
+
+### 5.4 Practice
 
 #### Which fingerprint values does "0 mod 4" select?
 
-The text "Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species." has 18 words. Its overlapping 3-grams, in order, hash to 938, 664, 463, 822, 492, 798, 78, 969, 143, 236, 913, 908, 694, 553, 870, 779. How many 3-grams are there, which hash values does "0 mod 4" select, and which 3-grams are they? How would you compare this fingerprint with another document's?
+The text "salt water fish and tropical fish both swim in warm water" has 11 words. Its overlapping 3-grams, in order, hash to 499, 302, 944, 311, 505, 301, 114, 639, 942. How many 3-grams are there, which hash values does "0 mod 4" select, and what does the result say about choosing the selection rule?
 
 <details>
 <summary>Solution</summary>
 
-18 words → 18 − 3 + 1 = 16 3-grams. Remainders mod 4:
+11 words → 11 − 3 + 1 = 9 3-grams. Remainders mod 4:
 
-| Hash | 938 | 664 | 463 | 822 | 492 | 798 | 78 | 969 | 143 | 236 | 913 | 908 | 694 | 553 | 870 | 779 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| mod 4 | 2 | **0** | 3 | 2 | **0** | 2 | 2 | 1 | 3 | **0** | 1 | **0** | 2 | 1 | 2 | 3 |
+| Hash | 499 | 302 | 944 | 311 | 505 | 301 | 114 | 639 | 942 |
+|---|---|---|---|---|---|---|---|---|---|
+| mod 4 | 3 | 2 | **0** | 3 | 1 | 1 | 2 | 3 | 2 |
 
-$F$ = {664, 492, 236, 908}: 4 of 16 values, from "fish include fish", "found in tropical", "the world including" and "including both freshwater". Comparing it with another document's fingerprint uses $|F_A \cap F_B| / |F_A \cup F_B| \ge \tau$.
+$F$ = {944}: only "fish and tropical" is kept, 1 of 9 values. "0 mod p" keeps about $1/p$ of the n-grams on average, but on a short text it can keep almost none, so two short documents may share no selected value even when they overlap. Use a smaller $p$ (or keep the smallest few hashes) for short texts. Comparison is still $|F_A \cap F_B| / |F_A \cup F_B| \ge \tau$.
 
 </details>
 
@@ -469,13 +469,13 @@ $H_A, H_B$ are the two fingerprints, $\equiv_{\text{bitwise}}$ counts 1 for each
 
 > 📘 **Going further**: [Croft §3.7 Detecting Duplicates](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf)
 
-### 6.4 Practice
-
 > 📝 **Practice**: [§6.4](#64-practice)
 
-#### Simhash of the tropical fish text
+### 6.4 Practice
 
-A document has these words with weights (frequency): tropical 2, fish 2, include 1, found 1, environments 1, around 1, world 1, including 1, both 1, freshwater 1, salt 1, water 1, species 1. Their 8-bit hashes are tropical `01100001`, fish `10101011`, include `11100110`, found `00011110`, environments `00101101`, around `10001011`, world `00101010`, including `11000000`, both `10101110`, freshwater `00111111`, salt `10110101`, water `00100101`, species `11101110`. Compute $V$ and the simhash fingerprint.
+#### Simhash of a short fish text
+
+A second document has these words with weights (frequency): fish 3, water 2, salt 2, tropical 1, species 1. Their 8-bit hashes are the same as in §6.2: fish `10101011`, water `00100101`, salt `10110101`, tropical `01100001`, species `11101110`. Compute $V$ and the simhash fingerprint, and compare it with the §6.2 fingerprint `10101111`.
 
 <details>
 <summary>Solution</summary>
@@ -484,10 +484,10 @@ Each word adds +weight for a 1 bit and −weight for a 0 bit. Column by column:
 
 | Bit | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
 |---|---|---|---|---|---|---|---|---|
-| $V$ | 1 | −5 | 9 | −9 | 3 | 1 | 3 | 3 |
-| Fingerprint | 1 | 0 | 1 | 0 | 1 | 1 | 1 | 1 |
+| $V$ | 3 | −5 | 9 | −5 | −1 | 1 | −1 | 7 |
+| Fingerprint | 1 | 0 | 1 | 0 | 0 | 1 | 0 | 1 |
 
-Bit 8: tropical +2, fish +2, include −1, found −1, environments +1, around +1, world −1, including −1, both −1, freshwater +1, salt +1, water +1, species −1 → 3 > 0 → 1. Fingerprint **10101111**. Two documents with simhashes $H_A, H_B$ are compared by the fraction of the 8 bits that agree, against $\tau$.
+Bit 1: fish +3, water −2, salt +2, tropical −1, species +1 → 3 > 0 → 1. Bit 5: fish +3, water −2, salt −2, tropical −1, species +1 → −1 → 0. Fingerprint **10100101**. Against `10101111` the bits agree in positions 1, 2, 3, 4, 6 and 8: 6 of 8 = **0.75**, so the two count as near duplicates only if $\tau \le 0.75$.
 
 </details>
 

@@ -446,8 +446,9 @@ Also **find out the site's crawling policy** and **contact the web admins** (L8 
 | 1993 | W3Catalogue | Primitive catalogue |
 | 1993 | World Wide Web Wanderer | First web crawler, built to measure the size of the web |
 | 1993 | JumpSearch | Crawling, indexing, searching: first "modern" engine |
-| 1994 | Excite and RankDex | Ranking system that inspired Google's PageRank |
+| 1994 | Excite | Search engine of the early commercial web |
 | 1994 | WebCrawler | Full-text indexing |
+| 1996 | RankDex | Link-based ranking that inspired Google's PageRank (the slide lists it under 1994 with Excite; RankDex is from 1996) |
 
 (The slide writes "JumpSearch", but its own screenshot is titled "NCSA Mosaic – **JumpStation II** Document Search Page".)
 

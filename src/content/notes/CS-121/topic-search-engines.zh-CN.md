@@ -142,9 +142,9 @@ IR 不止于搜索。信息检索有四类任务，搜索引擎有五类；本�
 
 > 📘 **延伸阅读**：[Croft §1.2 核心问题（书中第 4 页）](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf)
 
-### 3.3 练习
+> 📝 **练习**：[§3.3](#33-练习)
 
-> 📝 **练习**：§3.1 的题目见下文。
+### 3.3 练习
 
 #### 数据库查询还是搜索查询？
 
@@ -187,9 +187,9 @@ IR 不止于搜索。信息检索有四类任务，搜索引擎有五类；本�
 
 > 📘 **延伸阅读**：[Croft §1.3 搜索引擎（书中第 6 页）](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf)
 
-### 4.1 练习
+> 📝 **练习**：[§4.1](#41-练习)
 
-> 📝 **练习**：§4 的题目见下文。
+### 4.1 练习
 
 #### 哪一条经典 IR 假设被打破了？
 
@@ -399,9 +399,9 @@ for s in share:
 
 > 📘 **延伸阅读**：[Google Trends](https://www.google.com/trends/)
 
-### 7.7 练习
+> 📝 **练习**：[§7.7](#77-练习)
 
-> 📝 **练习**：§7.3 的题目见下文。
+### 7.7 练习
 
 #### 谁在什么时候放弃？
 
@@ -441,9 +441,9 @@ for s in share:
 
 > ⚠️ **易错点**：CPM 中的 M 取自 *mil(le)*——即一千次展示，而不是一百万次。点击欺诈会损害按点击计价的定价：每一次虚假点击都会被计费。
 
-### 8.3 练习
+> 📝 **练习**：[§8.3](#83-练习)
 
-> 📝 **练习**：§8.1 的题目见下文。
+### 8.3 练习
 
 #### 选择定价模式
 
@@ -538,7 +538,6 @@ flowchart LR
 import sys
 import urllib.request
 
-
 def print_data_url(url_name: str) -> None:
     # First we spoof an user agent
     headers = {'User-Agent': "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like "
@@ -552,7 +551,6 @@ def print_data_url(url_name: str) -> None:
     response_data = response_data.decode(encoding = 'utf-8')
     response.close()
     print(response_data)
-
 
 if __name__ == "__main__":
     print_data_url(sys.argv[1])
@@ -575,7 +573,6 @@ IPHONE = ("Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) "
           "AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/110.0.5481.83 "
           "Mobile/15E148 Safari/604.1")
 
-
 class Cloaker(BaseHTTPRequestHandler):
     def do_GET(self):
         agent = self.headers.get("User-Agent", "")
@@ -588,7 +585,6 @@ class Cloaker(BaseHTTPRequestHandler):
 
     def log_message(self, *args):                        # keep the output clean
         pass
-
 
 server = HTTPServer(("127.0.0.1", 8765), Cloaker)
 threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -609,9 +605,9 @@ spoofed iPhone   -> page for a user
 
 普通的 `urlopen(url)` 会自称 `Python-urllib/3.x`——这正是伪装服务器或机器人拦截器所查找的默认值；而伪造了 User-Agent 的脚本则以 iPhone 字符串到达，于是拿到的是用户页面。
 
-### 10.4 练习
+> 📝 **练习**：[§10.4](#104-练习)
 
-> 📝 **练习**：§10.1 的题目见下文。
+### 10.4 练习
 
 #### 伪装还是过渡页？
 

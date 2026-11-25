@@ -449,7 +449,9 @@ variants → comparison → practice → quick reference, one explanation per
 idea, one naming scheme, and **no sources or course plan** (no slides,
 lectures, weeks, videos, instructor, A1–A3, quizzes, dates, scope or
 grades). Every concept, formula, table, worked example, pitfall and viz demo
-from the weeks is kept (viz JSON byte-identical except `title`); supplements
+from the weeks is kept (viz JSON as in the week note except `title`, minus
+slide cites in code comments; the zh-CN copy takes the week zh-CN's step
+`note` text and `"lang": "zh"`); supplements
 are `> 📘 **Going further**:` callouts; practice sits in `### N.M Practice`
 at the end of its `##`, one `####` per problem, answer folded under
 `Solution` (zh-CN: `解答`); Python is run and its real output shown. Links go only to other

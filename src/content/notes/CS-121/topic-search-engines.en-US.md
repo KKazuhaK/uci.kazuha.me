@@ -142,9 +142,9 @@ A **retrieval model** is defined behind every notion of relevance. It is the con
 
 > 📘 **Going further**: [Croft §1.2 The Big Issues (book p. 4)](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf)
 
-### 3.3 Practice
+> 📝 **Practice**: [§3.3](#33-practice)
 
-> 📝 **Practice**: problems for §3.1 follow.
+### 3.3 Practice
 
 #### Database query or search query?
 
@@ -187,9 +187,9 @@ For each request, decide whether it is a database query or a search-engine query
 
 > 📘 **Going further**: [Croft §1.3 Search Engines (book p. 6)](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf)
 
-### 4.1 Practice
+> 📝 **Practice**: [§4.1](#41-practice)
 
-> 📝 **Practice**: problem for §4 follows.
+### 4.1 Practice
 
 #### Which classic IR assumption breaks?
 
@@ -399,9 +399,9 @@ Term interest can be explored at Google Trends, and a search engine **uses trend
 
 > 📘 **Going further**: [Google Trends](https://www.google.com/trends/)
 
-### 7.7 Practice
+> 📝 **Practice**: [§7.7](#77-practice)
 
-> 📝 **Practice**: problem for §7.3 follows.
+### 7.7 Practice
 
 #### Who gives up when?
 
@@ -441,9 +441,9 @@ Search is the largest slice of online ad revenue ([§2.1](#21-search-is-the-mone
 
 > ⚠️ **Pitfall**: The M in CPM is *mil(le)* — a thousand impressions, not a million. Click fraud hurts per-click pricing: each fake click is billed.
 
-### 8.3 Practice
+> 📝 **Practice**: [§8.3](#83-practice)
 
-> 📝 **Practice**: problem for §8.1 follows.
+### 8.3 Practice
 
 #### Pick the pricing model
 
@@ -538,7 +538,6 @@ The important class is `urllib.request.Request()`: by setting the **User-Agent**
 import sys
 import urllib.request
 
-
 def print_data_url(url_name: str) -> None:
     # First we spoof an user agent
     headers = {'User-Agent': "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like "
@@ -552,7 +551,6 @@ def print_data_url(url_name: str) -> None:
     response_data = response_data.decode(encoding = 'utf-8')
     response.close()
     print(response_data)
-
 
 if __name__ == "__main__":
     print_data_url(sys.argv[1])
@@ -575,7 +573,6 @@ IPHONE = ("Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) "
           "AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/110.0.5481.83 "
           "Mobile/15E148 Safari/604.1")
 
-
 class Cloaker(BaseHTTPRequestHandler):
     def do_GET(self):
         agent = self.headers.get("User-Agent", "")
@@ -588,7 +585,6 @@ class Cloaker(BaseHTTPRequestHandler):
 
     def log_message(self, *args):                        # keep the output clean
         pass
-
 
 server = HTTPServer(("127.0.0.1", 8765), Cloaker)
 threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -609,9 +605,9 @@ spoofed iPhone   -> page for a user
 
 A plain `urlopen(url)` announces itself as `Python-urllib/3.x` — the default a cloaking server or bot blocker looks for — while the spoofed script arrives as the iPhone string and gets the user's page.
 
-### 10.4 Practice
+> 📝 **Practice**: [§10.4](#104-practice)
 
-> 📝 **Practice**: problem for §10.1 follows.
+### 10.4 Practice
 
 #### Cloaking or doorway page?
 

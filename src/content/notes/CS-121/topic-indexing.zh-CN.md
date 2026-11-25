@@ -64,7 +64,7 @@ $I_t$ 是词项 $t$ 的行，$\wedge$ 是按位 AND，$\neg$ 把每一位取反�
 结果中的 1 在第 1 列和第 4 列：**Antony and Cleopatra** 和 **Hamlet**。*Julius Caesar* 两个名字都有，但也包含 Calpurnia，所以被 NOT 排除了。可以逐步演示这一过程，也可以输入其他查询（对这些词项使用 AND / OR / NOT）：
 
 ```viz incidence-matrix
-{"title": "Brutus AND Caesar AND NOT Calpurnia（布尔关联矩阵演示）", "terms": "Antony: 1 1 0 0 0 1; Brutus: 1 1 0 1 0 0; Caesar: 1 1 0 1 1 1; Calpurnia: 0 1 0 0 0 0; Cleopatra: 1 0 0 0 0 0; mercy: 1 0 1 1 1 1; worser: 1 0 1 1 1 0", "docs": "Antony and Cleopatra, Julius Caesar, The Tempest, Hamlet, Othello, Macbeth", "query": "Brutus AND Caesar AND NOT Calpurnia", "interactive": true}
+{"title": "Brutus AND Caesar AND NOT Calpurnia（布尔关联矩阵演示）", "terms": "Antony: 1 1 0 0 0 1; Brutus: 1 1 0 1 0 0; Caesar: 1 1 0 1 1 1; Calpurnia: 0 1 0 0 0 0; Cleopatra: 1 0 0 0 0 0; mercy: 1 0 1 1 1 1; worser: 1 0 1 1 1 0", "docs": "Antony and Cleopatra, Julius Caesar, The Tempest, Hamlet, Othello, Macbeth", "query": "Brutus AND Caesar AND NOT Calpurnia", "lang": "zh", "interactive": true}
 ```
 
 匹配的两个文档，恰好是两个名字同时出现的剧本：
@@ -265,7 +265,7 @@ killed [1] hath [2]
 `killed` 在 Doc 1 中出现两次，但 df = 1，只有一条 posting：合并是按文档进行的。可以逐步演示构建过程，也可以输入自己的文档（`docID: text; docID: text`）：
 
 ```viz inverted-index
-{"title": "Doc 1 与 Doc 2 的索引器步骤", "docs": "1: I did enact Julius Caesar I was killed i' the Capitol; Brutus killed me. ; 2: So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious", "postings": "docs", "interactive": true}
+{"title": "Doc 1 与 Doc 2 的索引器步骤", "docs": "1: I did enact Julius Caesar I was killed i' the Capitol; Brutus killed me. ; 2: So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious", "postings": "docs", "lang": "zh", "interactive": true}
 ```
 
 结果包含两部分，都需要存储：**词项与计数**（词典），以及 **docID 列表**（postings）。实现 IR 系统要回答两个问题：**如何高效地建立索引？** 以及**需要多少存储空间？** 下面 [§3.3](#33-简单的内存索引器buildindex) 到 [§6](#6-索引放不进内存时内存与硬件) 依次讨论这两个问题。
@@ -488,7 +488,7 @@ fish      1,2  1,4        2,7  2,18  2,23  3,2  3,6  4,3  4,13
 短语 *tropical fish* 出现在 1,1–2、2,6–7、2,17–18 和 3,1–2 处（S4 中没有 *tropical*）。下面是完整的位置索引，可逐步查看构建过程：
 
 ```viz inverted-index
-{"title": "S1–S4 的位置索引", "docs": "1: Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species. ; 2: Fishkeepers often use the term tropical fish to refer only those requiring fresh water, with saltwater tropical fish referred to as marine fish. ; 3: Tropical fish are popular aquarium fish, due to their often bright coloration. ; 4: In freshwater fish, this coloration typically derives from iridescence, while salt water fish are generally pigmented.", "postings": "positions"}
+{"title": "S1–S4 的位置索引", "docs": "1: Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species. ; 2: Fishkeepers often use the term tropical fish to refer only those requiring fresh water, with saltwater tropical fish referred to as marine fish. ; 3: Tropical fish are popular aquarium fish, due to their often bright coloration. ; 4: In freshwater fish, this coloration typically derives from iridescence, while salt water fish are generally pigmented.", "postings": "positions", "lang": "zh"}
 ```
 
 [§5](#5-短语查询双词索引与位置索引) 说明短语查询如何使用这些列表，以及它们的代价。

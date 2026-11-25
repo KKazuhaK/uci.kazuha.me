@@ -396,7 +396,7 @@ Step 1b:
 下面可以逐步演示全部十二个例子，也可以输入你自己的词。表格会在 1a 步和 1b 步之后分别填入每个词的结果：紫色单元格表示*该步*改变了这个词，最终的词干加粗；代码面板会高亮触发的规则：
 
 ```viz porter-step1
-{"title": "Porter 第 1a + 1b 步：十二个例子", "words": "stresses, gaps, gas, ties, cries, agreed, feed, fished, pirating, falling, dripping, hoping", "interactive": true}
+{"title": "Porter 第 1a + 1b 步：十二个例子", "words": "stresses, gaps, gas, ties, cries, agreed, feed, fished, pirating, falling, dripping, hoping", "lang": "zh", "interactive": true}
 ```
 
 十二个例子的结果都与预期一致：stress、gap、gas、tie、cri、agree、feed、fish、pirate、fall、drip、hope。注意 "cri"：它是词干，不是词。
@@ -599,7 +599,7 @@ for n in (1, 2, 3):
 运行下面的演示；该步骤会统计一篇 1,000 词文档中的 n-gram 数量：
 
 ```viz web-demo
-{"title": "词 n-gram：每次移动一个词的窗口", "html": "<p>See the console.</p>", "js": "const words = \"the sea turned black\".split(\" \");\nfunction ngrams(ws, n) {\n  const out = [];\n  for (let i = 0; i + n <= ws.length; i++) out.push(ws.slice(i, i + n).join(\" \"));\n  return out;\n}\nconsole.log(\"unigrams\", ngrams(words, 1));\nconsole.log(\"bigrams \", ngrams(words, 2));\nconsole.log(\"trigrams\", ngrams(words, 3));", "steps": [{"note": "Count the windows instead of listing them: a document of N words has N − n + 1 n-grams of length n.", "js": "\n// L14 p14: n-gram instances in a 1,000-word document, 2 <= n <= 5\nlet total = 0;\nfor (let n = 2; n <= 5; n++) { console.log(\"n =\", n, \":\", 1000 - n + 1); total += 1000 - n + 1; }\nconsole.log(\"total\", total);"}], "height": 60, "interactive": true}
+{"title": "词 n-gram：每次移动一个词的窗口", "html": "<p>See the console.</p>", "js": "const words = \"the sea turned black\".split(\" \");\nfunction ngrams(ws, n) {\n  const out = [];\n  for (let i = 0; i + n <= ws.length; i++) out.push(ws.slice(i, i + n).join(\" \"));\n  return out;\n}\nconsole.log(\"unigrams\", ngrams(words, 1));\nconsole.log(\"bigrams \", ngrams(words, 2));\nconsole.log(\"trigrams\", ngrams(words, 3));", "steps": [{"note": "不列出窗口，只数个数：N 个词的文档有 N − n + 1 个长度为 n 的 n-gram。", "js": "\n// n-gram instances in a 1,000-word document, 2 <= n <= 5\nlet total = 0;\nfor (let n = 2; n <= 5; n++) { console.log(\"n =\", n, \":\", 1000 - n + 1); total += 1000 - n + 1; }\nconsole.log(\"total\", total);"}], "height": 60, "interactive": true}
 ```
 
 n-gram 能带来的好处：

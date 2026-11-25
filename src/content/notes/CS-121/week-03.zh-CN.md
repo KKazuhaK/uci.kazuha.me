@@ -446,8 +446,9 @@ RSS 示例（L9 p30–33）：
 | 1993 | W3Catalogue | 原始的目录 |
 | 1993 | World Wide Web Wanderer | 第一个网络爬虫，最初用于测量 Web 的规模 |
 | 1993 | JumpSearch | 爬取、索引、搜索：第一个“现代”引擎 |
-| 1994 | Excite 和 RankDex | 启发了 Google PageRank 的排名系统 |
+| 1994 | Excite | 早期商业网络上的搜索引擎 |
 | 1994 | WebCrawler | 全文索引 |
+| 1996 | RankDex | 基于链接的排名，启发了 Google 的 PageRank（幻灯片把它和 Excite 一起列在 1994 年；RankDex 实际是 1996 年的） |
 
 （幻灯片写的是“JumpSearch”，但它自己的截图标题为“NCSA Mosaic – **JumpStation II** Document Search Page”。）
 

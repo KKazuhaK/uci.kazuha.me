@@ -96,18 +96,18 @@ cf 80
 
 > 📘 **延伸阅读**：[Croft §3.5.1 Character Encodings](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf)
 
+> 📝 **练习**： [§2.4](#24-练习)
+
 ### 2.4 练习
 
-> 📝 **练习**：[§2.4](#24-练习)
+#### € 的 UTF-8 编码
 
-#### π 的 UTF-8 编码
-
-π 是 Unicode 码位 960。UTF-8 存储哪些字节？UTF-32 使用多少字节？
+欧元符号 € 的 Unicode 码位是 8364（十六进制 20AC）。UTF-8 存储哪些字节？UTF-32 用几个字节？
 
 <details>
 <summary>解答</summary>
 
-960 = `0x3C0` = `00000011 11000000`。它位于 128–2047 范围内，因此模板为 `110xxxxx 10xxxxxx`，有 5 + 6 = 11 个有效载荷位：960 用 11 位表示为 `01111000000`。高 5 位 `01111` → `110`+`01111` = `11001111`；接下来 6 位 `000000` → `10`+`000000` = `10000000`。结果为 **`CF 80`**，共 2 个字节。UTF-32 始终使用 4 个字节：`00 00 03 C0`。
+8364 = `0x20AC` = `00100000 10101100`。它落在 2048–65535 区间，所以模板是 `1110xxxx 10xxxxxx 10xxxxxx`，共 4 + 6 + 6 = 16 个有效位：`0010` | `000010` | `101100`。于是得到 `1110`+`0010` = `11100010`、`10`+`000010` = `10000010`、`10`+`101100` = `10101100`。结果是 **`E2 82 AC`**，3 个字节（π 只用 2 个）。UTF-32 总是用 4 个字节：`00 00 20 AC`。核对：`"€".encode("utf-8")` 的结果是 `e2 82 ac`。
 
 </details>
 
@@ -272,18 +272,18 @@ b'Tropical fihs' 1288 0x508 0x3ba24de2
 
 > 📘 **延伸阅读**：[Croft §3.7 Detecting Duplicates](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf)
 
-### 4.3 练习
+> 📝 **练习**： [§4.3](#43-练习)
 
-> 📝 **练习**：[§4.3](#43-练习)
+### 4.3 练习
 
 #### 字节和校验和
 
-对 ASCII 字符串 "Tropical fish" 的字节求和。字节和是检测精确重复的安全方法吗？
+分别求 ASCII 字符串 "Search engine" 和 "Saerch engine" 的字节和。字节和能区分这两个字符串吗？什么方法能区分？
 
 <details>
 <summary>解答</summary>
 
-以十六进制计算：54 + 72 + 6F + 70 + 69 + 63 + 61 + 6C + 20 + 66 + 69 + 73 + 68 = **508（十六进制）= 1,288**。这并不安全：求和忽略顺序，因此 "Tropical fihs" 的和也是 1,288。CRC 会按位置对字节加权：CRC-32 得到 `0x18f14f94` 与 `0x3ba24de2`。
+用十六进制计算，"Search engine" 是 53 + 65 + 61 + 72 + 63 + 68 + 20 + 65 + 6E + 67 + 69 + 6E + 65 = **4EC（十六进制）= 1,260**。"Saerch engine" 只是把 *e* 和 *a* 对调，字节完全相同，所以和也是 **1,260**：字节和不考虑顺序，会把两者判为重复。CRC 会按位置给每个字节加权：CRC-32 分别得到 `0x98149ea5` 和 `0x2bcbd658`。
 
 </details>
 
@@ -364,24 +364,24 @@ print(jaccard(fp, {664, 492, 100, 200, 236}))
 
 > 📘 **延伸阅读**：[Croft §3.7 Detecting Duplicates](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf)
 
-### 5.4 练习
+> 📝 **练习**： [§5.4](#54-练习)
 
-> 📝 **练习**：[§5.4](#54-练习)
+### 5.4 练习
 
 #### 0 mod 4 会选出哪些指纹值？
 
-文本 "Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species." 有 18 个词。按顺序，其重叠的 3-gram 的哈希值依次为 938、664、463、822、492、798、78、969、143、236、913、908、694、553、870、779。共有多少个 3-gram？"0 mod 4" 会选出哪些哈希值？它们对应哪些 3-gram？如何将这一指纹与另一文档的指纹进行比较？
+文本 "salt water fish and tropical fish both swim in warm water" 有 11 个词。它相互重叠的 3-gram 依次哈希为 499、302、944、311、505、301、114、639、942。一共有多少个 3-gram？"0 mod 4" 会选出哪些哈希值？这个结果对选择规则的取法说明了什么？
 
 <details>
 <summary>解答</summary>
 
-18 个词 → 18 − 3 + 1 = 16 个 3-gram。对 4 取余：
+11 个词 → 11 − 3 + 1 = 9 个 3-gram。各哈希值模 4 的余数：
 
-| 哈希 | 938 | 664 | 463 | 822 | 492 | 798 | 78 | 969 | 143 | 236 | 913 | 908 | 694 | 553 | 870 | 779 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 对 4 取余 | 2 | **0** | 3 | 2 | **0** | 2 | 2 | 1 | 3 | **0** | 1 | **0** | 2 | 1 | 2 | 3 |
+| 哈希 | 499 | 302 | 944 | 311 | 505 | 301 | 114 | 639 | 942 |
+|---|---|---|---|---|---|---|---|---|---|
+| 对 4 取余 | 3 | 2 | **0** | 3 | 1 | 1 | 2 | 3 | 2 |
 
-$F$ = {664, 492, 236, 908}：16 个值中有 4 个，分别来自 "fish include fish"、"found in tropical"、"the world including" 和 "including both freshwater"。与另一文档的指纹比较时，使用 $|F_A \cap F_B| / |F_A \cup F_B| \ge \tau$。
+$F$ = {944}：只保留了 "fish and tropical"，9 个值中只有 1 个。"0 mod p" 平均保留约 $1/p$ 的 n-gram，但在短文本上可能几乎什么都不留，于是两篇短文档即使有重叠，选出的值也可能完全不同。对短文本应使用更小的 $p$（或保留最小的几个哈希值）。比较方法仍是 $|F_A \cap F_B| / |F_A \cup F_B| \ge \tau$。
 
 </details>
 
@@ -469,25 +469,25 @@ $H_A, H_B$ 是两个指纹，$\equiv_{\text{bitwise}}$ 在两者比特一致的�
 
 > 📘 **延伸阅读**：[Croft §3.7 Detecting Duplicates](https://ciir.cs.umass.edu/downloads/SEIRiP.pdf)
 
+> 📝 **练习**： [§6.4](#64-练习)
+
 ### 6.4 练习
 
-> 📝 **练习**：[§6.4](#64-练习)
+#### 一段短的鱼类文本的 Simhash
 
-#### 热带鱼文本的 Simhash
-
-某文档包含以下词及其权重（频次）：tropical 2、fish 2、include 1、found 1、environments 1、around 1、world 1、including 1、both 1、freshwater 1、salt 1、water 1、species 1。其 8 位哈希值分别为：tropical `01100001`，fish `10101011`，include `11100110`，found `00011110`，environments `00101101`，around `10001011`，world `00101010`，including `11000000`，both `10101110`，freshwater `00111111`，salt `10110101`，water `00100101`，species `11101110`。计算 $V$ 与 simhash 指纹。
+另一篇文档包含以下词及其权重（词频）：fish 3、water 2、salt 2、tropical 1、species 1。它们的 8 位哈希与 §6.2 中相同：fish `10101011`、water `00100101`、salt `10110101`、tropical `01100001`、species `11101110`。计算 $V$ 和 simhash 指纹，并与 §6.2 的指纹 `10101111` 比较。
 
 <details>
 <summary>解答</summary>
 
-每个词对 1 位加上 +权重，对 0 位加上 −权重。按列计算：
+每个词在为 1 的位上加上权重，在为 0 的位上减去权重。逐列计算：
 
-| 比特 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+| 位 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
 |---|---|---|---|---|---|---|---|---|
-| $V$ | 1 | −5 | 9 | −9 | 3 | 1 | 3 | 3 |
-| 指纹 | 1 | 0 | 1 | 0 | 1 | 1 | 1 | 1 |
+| $V$ | 3 | −5 | 9 | −5 | −1 | 1 | −1 | 7 |
+| 指纹 | 1 | 0 | 1 | 0 | 0 | 1 | 0 | 1 |
 
-第 8 位：tropical +2，fish +2，include −1，found −1，environments +1，around +1，world −1，including −1，both −1，freshwater +1，salt +1，water +1，species −1，合计为 3 > 0，因此该位为 1。指纹为 **10101111**。两个文档的 simhash $H_A, H_B$ 通过 8 位中相同比特的比例与 $\tau$ 比较。
+第 1 位：fish +3、water −2、salt +2、tropical −1、species +1 → 3 > 0 → 1。第 5 位：fish +3、water −2、salt −2、tropical −1、species +1 → −1 → 0。指纹为 **10100101**。与 `10101111` 相比，第 1、2、3、4、6、8 位相同：8 位中有 6 位一致，即 **0.75**，因此只有当 $\tau \le 0.75$ 时两者才算近似重复。
 
 </details>
 

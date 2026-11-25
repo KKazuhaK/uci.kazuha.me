@@ -112,7 +112,7 @@ print(intersect(brutus, caesar))
 为什么可以移动较小的那个指针：若 `p1[i] < p2[j]`，另一个列表已经越过了 `p1[i]`（它是有序的），所以文档 `p1[i]` 不可能同时出现在两个列表中。可以自己试试不同的列表（`list1 | list2`）：
 
 ```viz postings-intersect
-{"title": "Brutus AND Caesar 的合并", "lists": "2 4 8 16 32 64 128 | 1 2 3 5 8 13 21 34", "terms": "Brutus, Caesar", "interactive": true}
+{"title": "Brutus AND Caesar 的合并", "lists": "2 4 8 16 32 64 128 | 1 2 3 5 8 13 21 34", "terms": "Brutus, Caesar", "lang": "zh", "interactive": true}
 ```
 
 > ⚠️ **易错点**：$O(x+y)$ 的合并依赖于两个列表都**按 docID 排序**。若 postings 无序，就必须为另一个列表的每个条目在这一列表中搜索一遍。
@@ -187,7 +187,7 @@ print(intersect_skips(long_list, short_list, add_skips(len(long_list))))
 优化后顺序的第一次合并：
 
 ```viz postings-intersect
-{"title": "先算 (Calpurnia AND Brutus)——最短的列表领先", "lists": "13 16 | 2 4 8 16 32 64 128", "terms": "Calpurnia, Brutus"}
+{"title": "先算 (Calpurnia AND Brutus)——最短的列表领先", "lists": "13 16 | 2 4 8 16 32 64 128", "terms": "Calpurnia, Brutus", "lang": "zh"}
 ```
 
 然后把结果 `[16]` 与 Caesar 做 AND，得到 `[16]`。
