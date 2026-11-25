@@ -60,10 +60,16 @@ needs the repo attached with push access (`add_repo`, access `push`).
   need the actual PDF to render pages; find it on disk or ask him to attach it).
 - **Schedule PDF** lists each lecture's supplement links. A ready map is in
   `references/sources.md` — read it to find this lecture's supplements.
-- **Homework PDFs** are not lecture material, but their problems make good
-  practice: quote a problem (original wording is fine) where its topic is
-  taught or in a practice section at the end of the topic, with the worked
-  answer folded in `<details>`. Never attach, link or upload the PDF itself.
+- **Practice problems** (homework problems and problems from the slides)
+  live inside the lecture notes, never in a separate homework note: no
+  `hw-NN` files (`check_md.py` rejects the slug). Quote a problem (original
+  wording is fine) either next to the passage it practises or in a
+  "Practice" subsection (`### N.M Practice` / `### N.M 练习`) as the last
+  `###` of the last `## N.` section of that topic (a hub topic spanning
+  `"5-11"` gets one, as `### 11.k`), one `####` per problem when there are
+  several, with the worked answer folded in
+  `<details>` (Step 4). The question stays outside the fold. Never attach,
+  link or upload the PDF or any other source file.
 - **Earlier lectures**: when a slide leans on something from a previous
   lecture (e.g. "implement a stack with our ArrayList"), use
   `project_search` (or the earlier slide PDF) to pull that lecture's exact
@@ -134,8 +140,9 @@ open every non-trivial page with Read, and transcribe what's in the image.
 **2. Organise by concept, not by source.** One section per idea (e.g.
 "Inserting at an index"), with the slide content, the supplement content, the
 diagram, and the pitfalls all inside that section. (In-class Activities are
-the one planned exception — their prompts and worked solutions are gathered
-in a practice section at the end, see Step 4 — but the *concept* an activity
+a planned exception — their prompts and worked solutions are gathered
+in a practice section at the end, see Step 4 — and so is a topic's closing
+`### N.M Practice` subsection of homework/slide problems; in both cases the *concept* an activity
 teaches is still fully explained in its concept section.) Never a "Supplement" or "From the reading" section — when the same
 idea is split across sections he has to stitch it back together while
 studying and will miss pieces. This mirrors the ICS 45C notes skill, which
@@ -372,9 +379,17 @@ Per concept section:
     🧪 / 🔗 callouts stay outside. No "Try it first" line — the closed fold
     already makes the reader try first. A zh-CN translation keeps the same
     folds in the same order (the site restores the reader's open answers by
-    position) with `<summary>解答</summary>`. Fold nothing else unless it is
-    long and non-essential — never as a blanket rule. `check_md.py` checks
-    all of this.
+    position) with `<summary>解答</summary>`. The summary is `Solution` or
+    `Answer` in en-US and `解答` or `答案` in zh-CN (Solution ↔ 解答,
+    Answer ↔ 答案); ICS 46 uses Solution by default. Fold nothing else
+    unless it is long and non-essential — never as a blanket rule.
+    `check_md.py` checks all of this, including that the en-US and zh-CN
+    files have the same folds in the same sections and order.
+- **Practice problems** (homework or slide problems, see "Where the material
+  is") follow the same fold rules: the question as given, outside the fold;
+  the worked answer inside. Put them next to the passage they practise or
+  in a `### N.M Practice` subsection closing the topic, never in a separate
+  note.
 - **Callouts** (same style as his ICS 45C notes): `> ⚠️ **Pitfall**: ...`
   for common bugs and exam traps, `> 💡 **Key Insight**: ...` for the
   one-line takeaway, `> 📘 **Beyond the lecture**: ...` for supplement
@@ -413,6 +428,7 @@ topics:
 
 ## 1. <Concept>
 ### 1.1 ...
+### 1.k Practice                      (optional: homework / slide problems for this topic)
 ...
 ## N-2. Complete Implementation        (when the lecture builds a class)
 ## N-1. In-class Activities (with Solutions)
@@ -435,22 +451,43 @@ by hand.
 view, whose whole point is to gather each topic's material from every
 lecture in one place. Ids (from `src/content/courses/ICS-46.json`): `cpp`,
 `analysis`, `linear`, `sorting`, `trees`, `heaps`, `search-trees`,
-`hashing`, `review`.
+`hashing`. (Review sheets are not a topic: they are `kind: "review"` notes,
+shown in the hub's Review view, and carry no `topics`.)
 - A lecture on one topic: a bare id (`- sorting`); the whole note, activities
   included, goes under it.
 - A lecture spanning topics: one `{ id, sections }` line per topic.
   `sections` is a quoted string of `## N.` numbers (`N`) and `### N.M`
-  numbers (`N.M`), with ranges and commas: `"5-11, 13.3-13.6"`. The hub lists
-  and links each section. Put each in-class activity under the topic it
+  numbers (`N.M`), with ranges and commas: `"5-11, 13.3-13.6"`. Both ends
+  of a range are the same level: `N-N`, or `N.M-N.M` with the same `N`
+  (`"5-13.2"` is invalid). The hub lists and links each section. Put each
+  in-class activity and each Practice subsection under the topic it
   practises (as `N.M`, or the whole activities section `N` when they all
   practise one topic), and the Complete Implementation under the topic(s)
   whose code it holds; leave out the Quick Reference section.
-- Both language files carry the identical `topics` block.
-- If no id fits (a new topic such as graphs), don't invent one: say so in the
-  delivery report with a proposed id, English/Chinese label and one-line
-  summary, so it can be added to the course JSON first; until then the note
-  would fail the build, so leave `topics` out and say it will show under
-  "Other".
+- Both language files carry the identical `topics` block, so the zh-CN
+  headings use the same Arabic numbering (`## 1.`, `### 1.2`).
+- If no id fits (a new topic such as graphs), don't invent one and don't
+  add it to the course JSON yourself: **ask Kazuha first** whether to add
+  it, proposing an id, English/Chinese label and one-line summary. Only
+  after he agrees does it go into `src/content/courses/ICS-46.json` (in the
+  same push as the note); otherwise leave `topics` out and say the note
+  will show under "Other".
+
+### Topic notes (`topic-<id>`) — keep them in step
+
+Besides the lecture notes, each topic has one **topic note**,
+`src/content/notes/ICS-46/topic-<id>.<lang>.md` (`kind: "topic"`,
+`topics:` + `- <id>`, `order: 501…` in course-JSON order), that gathers the
+topic from every lecture into one pure-knowledge note: reorganized by
+concept and deduplicated, all instructor code, examples, viz blocks and
+pitfalls kept, activities and homework problems as `### N.M Practice`
+problems with folded answers, and **nothing about the course plan** — no
+logistics boxes, dates, quiz/exam scope, due dates, grades, slide page
+numbers or "continued in" pointers. When a new lecture note adds to a topic,
+also merge its new material into that topic's note (both languages) in the
+same push; a lecture that starts a topic with no id yet waits for Kazuha's
+go-ahead on the new id (see Frontmatter). Exam review sheets are
+`kind: "review"` notes instead (no `topics`).
 
 ### Step 5 — Verify before delivering
 
@@ -528,7 +565,8 @@ digits, spaces, `_`, `-`; spaces → `-`); links to other notes switched to
 `.zh-CN.md`; code and `text` blocks byte-for-byte; `viz` JSON unchanged except
 the `"title"` value; callouts `⚠️ **易错点**`, `💡 **关键洞见**`,
 `📘 **课外补充**`, `📝 **练习**`, `📅 **课程安排**`, `➡️ **续见 …**`;
-the same `<details>` folds in the same order with `<summary>解答</summary>`.
+the same `<details>` folds in the same order with `<summary>解答</summary>`
+(`答案` where the English says Answer); the identical `topics` block.
 Then run `check_md.py` on it too, diff its code blocks against the English
 file, and spot-read a few paragraphs (terms: 2-3 树, 红链接, 拉链法, 线性探测,
 负载因子, 墓碑 …). Commit it together with the English note.

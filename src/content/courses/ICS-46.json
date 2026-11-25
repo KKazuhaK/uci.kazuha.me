@@ -110,13 +110,6 @@
         "en-US": "Hash functions, separate chaining, linear and quadratic probing.",
         "zh-CN": "哈希函数、拉链法、线性探测与二次探测。"
       }
-    },
-    {
-      "id": "review",
-      "label": {
-        "en-US": "Exam Review",
-        "zh-CN": "考试复习"
-      }
     }
   ]
 }

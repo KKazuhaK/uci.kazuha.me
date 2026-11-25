@@ -1,8 +1,7 @@
 ---
 title: "期中复习"
 summary: "第 0–12 讲的期中复习：考试范围与策略、大 O 与循环计数、ArrayList 与均摊分析、链表、由彼此构建的栈/队列/双端队列、四种比较排序、树与遍历、堆与优先队列、二叉搜索树、第 0–2 讲的 C++ 主题，以及样题、测验、作业与实验的解答与可能的变体。"
-topics:
-  - review
+kind: "review"
 ---
 
 # Information and Computer Science 46 — 期中复习

@@ -5,6 +5,8 @@ export type NoteEntry = CollectionEntry<"notes">;
 export type CourseEntry = CollectionEntry<"courses">;
 
 export type Unit = "lecture" | "week" | "special";
+/** unit = lecture/week (or other special) note; topic = one topic across lectures; review = exam review. */
+export type Kind = "unit" | "topic" | "review";
 
 /** One lecture/week of a course, with whichever languages exist. */
 export interface NoteGroup {
@@ -14,6 +16,7 @@ export interface NoteGroup {
   unit: Unit;
   number: number | null;
   order: number;
+  kind: Kind;
   versions: Partial<Record<Lang, NoteEntry>>;
 }
 
@@ -40,8 +43,10 @@ export function unitLabel(group: Pick<NoteGroup, "unit" | "number" | "slug" | "v
   const { unit, number } = group;
   if (unit === "lecture") return lang === "zh-CN" ? `第 ${number} 讲` : `Lecture ${number}`;
   if (unit === "week") return lang === "zh-CN" ? `第 ${number} 周` : `Week ${number}`;
-  const custom = (group.versions[lang] ?? Object.values(group.versions)[0])?.data.label;
-  if (custom) return custom[lang];
+  const data = (group.versions[lang] ?? Object.values(group.versions)[0])?.data;
+  if (data?.label) return data.label[lang];
+  if (data?.kind === "topic") return lang === "zh-CN" ? `话题 · ${data.title}` : `Topic · ${data.title}`;
+  if (data?.kind === "review") return lang === "zh-CN" ? "复习" : "Review";
   return group.slug.split("-").map((w) => w[0]!.toUpperCase() + w.slice(1)).join(" ");
 }
 
@@ -63,8 +68,21 @@ export function getNoteGroups(): Promise<Map<string, NoteGroup[]>> {
       let group = byKey.get(key);
       if (!group) {
         const { unit, number } = parseSlug(slug);
-        group = { course, courseSlug: courseSlug(course), slug, unit, number, order: number ?? SPECIAL_ORDER, versions: {} };
+        const kind: Kind = note.data.kind ?? "unit";
+        group = { course, courseSlug: courseSlug(course), slug, unit, number, order: number ?? SPECIAL_ORDER, kind, versions: {} };
         byKey.set(key, group);
+      }
+      if ((note.data.kind ?? "unit") !== group.kind) {
+        throw new Error(`${key}: frontmatter kind differs between languages`);
+      }
+      if (group.kind === "topic" && !/^topic-[a-z0-9-]+$/.test(slug)) {
+        throw new Error(`${key}: a kind: topic note must be named topic-<topic id>`);
+      }
+      if (group.kind !== "topic" && slug.startsWith("topic-")) {
+        throw new Error(`${key}: a topic-<id> note needs kind: "topic" in its frontmatter`);
+      }
+      if (group.kind === "review" && note.data.topics?.length) {
+        throw new Error(`${key}: a kind: review note has its own hub view; leave topics out`);
       }
       group.versions[lang] = note;
       if (note.data.order !== undefined) group.order = note.data.order;

@@ -12,12 +12,15 @@ export const getStaticPaths = (async () => {
   const groups = await getNoteGroups();
   return courses.flatMap((course) => {
     const list = groups.get(course.data.code) ?? [];
-    return list.flatMap((group, index) =>
-      Object.keys(group.versions).map((lang) => ({
+    return list.flatMap((group) => {
+      // Prev/next stay within the note's kind: lectures chain to lectures, topic notes to topic notes.
+      const same = list.filter((g) => g.kind === group.kind);
+      const index = same.indexOf(group);
+      return Object.keys(group.versions).map((lang) => ({
         params: { course: group.courseSlug, entry: group.slug, lang },
-        props: { course, group, lang: lang as Lang, prev: list[index - 1] ?? null, next: list[index + 1] ?? null },
-      })),
-    );
+        props: { course, group, lang: lang as Lang, prev: same[index - 1] ?? null, next: same[index + 1] ?? null },
+      }));
+    });
   });
 }) satisfies GetStaticPaths;
 

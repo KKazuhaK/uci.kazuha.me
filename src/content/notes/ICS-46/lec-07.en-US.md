@@ -354,7 +354,8 @@ void resize(int newCap) {
 With doubling, each enqueue is **amortized O(1)** (the same argument as the ArrayList in Lecture 3); the dequeues are O(1). Test run starting at capacity 2: `enqueueBack(1); enqueueBack(2); enqueueFront(0); enqueueFront(-1); enqueueBack(3)`, then one `dequeueFront()`, one `dequeueBack()`, and dequeueFront until empty:
 
 ```text
-deque size=5 capacity=8 : -1 3 0 1 2
+deque size=5 capacity=8 : -1 0 1 2 3
+dequeued: -1 3 0 1 2
 ```
 
 </details>

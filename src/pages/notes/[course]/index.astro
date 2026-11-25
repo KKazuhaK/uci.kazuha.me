@@ -22,10 +22,15 @@ const c = course.data;
 const unitWord = groups[0]?.unit === "lecture" ? "Lecture-by-lecture" : "Week-by-week";
 const topics = (await getCourseTopics(course, groups))?.filter((t) => t.entries.length) ?? null;
 const byWeek = groups[0]?.unit === "week";
+const unitGroups = groups.filter((g) => g.kind === "unit");
+const reviewGroups = groups.filter((g) => g.kind === "review");
+// Views offered on this hub: topic (when the course has topics), unit, review (when it has review notes).
+const views = [...(topics ? ["topic"] : []), "unit", ...(reviewGroups.length ? ["review"] : [])];
+const multiView = views.length > 1;
 
 const S = {
-  "en-US": { ready: "Available", other: "Other language only", open: "Open →", openOther: "Open other lang →", byTopic: "By topic", byUnit: byWeek ? "By week" : "By lecture", view: "View", topicsNav: "Topics", notes: (n: number) => `${n} note${n === 1 ? "" : "s"}` },
-  "zh-CN": { ready: "已就绪", other: "仅另一语言可用", open: "打开 →", openOther: "打开现有版本 →", byTopic: "按话题", byUnit: byWeek ? "按周" : "按讲", view: "视图", topicsNav: "话题", notes: (n: number) => `${n} 篇` },
+  "en-US": { ready: "Available", other: "Other language only", open: "Open →", openOther: "Open other lang →", byTopic: "By topic", byUnit: byWeek ? "By week" : "By lecture", byReview: "Review", topicNote: "Topic note", view: "View", topicsNav: "Topics", notes: (n: number) => `${n} note${n === 1 ? "" : "s"}` },
+  "zh-CN": { ready: "已就绪", other: "仅另一语言可用", open: "打开 →", openOther: "打开现有版本 →", byTopic: "按话题", byUnit: byWeek ? "按周" : "按讲", byReview: "复习", topicNote: "话题笔记", view: "视图", topicsNav: "话题", notes: (n: number) => `${n} 篇` },
 } satisfies Record<Lang, unknown>;
 
 function card(group: (typeof groups)[number], lang: Lang) {
@@ -53,15 +58,15 @@ function topicCard(entry: TopicEntry, lang: Lang) {
 
 <BaseLayout title={`${c.name} Notes`} description={`${unitWord} notes for UC Irvine ${c.name} (${c.fullTitle}). Bilingual EN / 中文.`} navPath="notes/">
   <LangBoot slot="head" />
-  {topics && (
-    <script is:inline slot="head">
+  {multiView && (
+    <script is:inline slot="head" define:vars={{ views }}>
       (function () {
         // A #topic-<id> link always opens the topic view, then ?view=, then the saved choice.
         var v = /^#topic-/.test(location.hash) ? "topic" : new URLSearchParams(location.search).get("view");
-        if (v !== "topic" && v !== "unit") {
+        if (views.indexOf(v) < 0) {
           try { v = localStorage.getItem("kzh-hub-view"); } catch (e) {}
         }
-        document.documentElement.setAttribute("data-hub-view", v === "unit" ? "unit" : "topic");
+        document.documentElement.setAttribute("data-hub-view", views.indexOf(v) < 0 ? views[0] : v);
       })();
     </script>
   )}
@@ -84,15 +89,16 @@ function topicCard(entry: TopicEntry, lang: Lang) {
       <LangSwitch />
     </div>
 
-    {topics && (
+    {multiView && (
       <div class="card hub-toolbar">
         {LANGS.map((l) => (
           <div class="lang-switch view-switch" role="group" aria-label={S[l].view} data-pane={l} lang={l}>
-            <button type="button" data-hub-view-btn="topic">{S[l].byTopic}</button>
+            {topics && <button type="button" data-hub-view-btn="topic">{S[l].byTopic}</button>}
             <button type="button" data-hub-view-btn="unit">{S[l].byUnit}</button>
+            {reviewGroups.length > 0 && <button type="button" data-hub-view-btn="review">{S[l].byReview}</button>}
           </div>
         ))}
-        {LANGS.map((l) => (
+        {topics && LANGS.map((l) => (
           <nav class="topic-chips" aria-label={S[l].topicsNav} data-pane={l} lang={l} data-view="topic">
             {topics.map((t) => (
               <a class="topic-chip" href={`#topic-${t.id}`}>{t.label[l]}<span class="topic-chip-n">{t.entries.length}</span></a>
@@ -114,9 +120,9 @@ function topicCard(entry: TopicEntry, lang: Lang) {
                 </header>
                 {t.summary && <p class="topic-summary">{t.summary[l]}</p>}
                 <div class="week-grid">
-                  {t.entries.map((e) => topicCard(e, l)).map((n) => (
-                    <article class="card week-card">
-                      <span class="week-badge">{n.label}</span>
+                  {t.entries.map((e) => ({ e, n: topicCard(e, l) })).map(({ e, n }) => (
+                    <article class={e.group.kind === "topic" ? "card week-card topic-note-card" : "card week-card"}>
+                      <span class="week-badge">{e.group.kind === "topic" ? S[l].topicNote : n.label}</span>
                       <h3>{n.title}</h3>
                       {n.sections.length ? (
                         <ul class="topic-sections">
@@ -142,7 +148,24 @@ function topicCard(entry: TopicEntry, lang: Lang) {
 
     {LANGS.map((l) => (
       <div class="week-grid" data-pane={l} lang={l} data-view="unit">
-        {[...groups].map((g) => card(g, l)).map((n) => (
+        {unitGroups.map((g) => card(g, l)).map((n) => (
+          <article class="card week-card">
+            <span class="week-badge">{n.label}</span>
+            <h3>{n.title}</h3>
+            <p class="week-summary">{n.summary}</p>
+            <p class="week-date">{n.date}</p>
+            <div class="week-meta-row">
+              <span class={n.own ? "note-state ready" : "note-state"}>{n.own ? S[l].ready : S[l].other}</span>
+              <a href={n.href} class="btn-open">{n.own ? S[l].open : S[l].openOther}</a>
+            </div>
+          </article>
+        ))}
+      </div>
+    ))}
+
+    {reviewGroups.length > 0 && LANGS.map((l) => (
+      <div class="week-grid" data-pane={l} lang={l} data-view="review">
+        {reviewGroups.map((g) => card(g, l)).map((n) => (
           <article class="card week-card">
             <span class="week-badge">{n.label}</span>
             <h3>{n.title}</h3>
@@ -172,12 +195,12 @@ function topicCard(entry: TopicEntry, lang: Lang) {
   }
   buttons.forEach((b) =>
     b.addEventListener("click", () => {
-      const view = b.dataset["hubViewBtn"] === "unit" ? "unit" : "topic";
+      const view = b.dataset["hubViewBtn"] ?? "unit";
       root.dataset["hubView"] = view;
       try { localStorage.setItem(KEY, view); } catch {}
       const u = new URL(location.href);
       u.searchParams.set("view", view);
-      if (view === "unit" && u.hash.startsWith("#topic-")) u.hash = "";
+      if (view !== "topic" && u.hash.startsWith("#topic-")) u.hash = "";
       history.replaceState(null, "", u);
       sync();
     }),
@@ -186,8 +209,9 @@ function topicCard(entry: TopicEntry, lang: Lang) {
 </script>
 
 <style>
-  :global(html[data-hub-view="topic"]) [data-view="unit"],
-  :global(html[data-hub-view="unit"]) [data-view="topic"] {
+  :global(html[data-hub-view="topic"]) [data-view]:not([data-view="topic"]),
+  :global(html[data-hub-view="unit"]) [data-view]:not([data-view="unit"]),
+  :global(html[data-hub-view="review"]) [data-view]:not([data-view="review"]) {
     display: none !important;
   }
   .hub-toolbar {
@@ -211,6 +235,7 @@ function topicCard(entry: TopicEntry, lang: Lang) {
   .topic-count { font-size: 12px; color: var(--subtle); font-weight: 600; }
   .topic-summary { margin: 0 4px 12px; font-size: 13px; line-height: 1.55; color: var(--ink-2); }
   .topic-head + .week-grid { margin-top: 12px; }
+  .topic-note-card { border: 1.5px solid var(--uci-gold, #ffd200); }
   .topic-sections {
     margin: 0; padding: 0; list-style: none;
     display: flex; flex-direction: column; gap: 4px;

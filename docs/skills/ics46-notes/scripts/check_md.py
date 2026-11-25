@@ -11,7 +11,8 @@ assets/js/kzh-markdown.mjs, for this script. Checks:
 
 1. Frontmatter + file name — `title` / `summary` present and non-empty
    (JSON-style double-quoted strings), file named <slug>.<lang>.md
-   (lec-NN / week-NN / a special like final-review). `topics`
+   (lec-NN / week-NN / a special like final-review; no hw-NN homework
+   notes — practice problems live inside the lecture notes). `topics`
    (the course hub's "By topic" view): ids exist in the course JSON
    (with --site-repo), every section has its `## N.` / `### N.M` heading,
    and the other language's file, when it sits next to this one, has the
@@ -32,7 +33,8 @@ assets/js/kzh-markdown.mjs, for this script. Checks:
    <details> / <summary>Solution|Answer</summary> (zh-CN: 解答|答案), blank
    lines around the content, nothing nested, no heading inside; old-style
    "> ✍️ Try it first" lines and **Solution**/**Answer** paragraphs left
-   outside a fold are reported.
+   outside a fold are reported. When the other language's file sits next
+   to this one, both must have the same folds in the same sections and order.
 5. viz — every ```viz <component> block: valid JSON, the component exists
    (live site assets/viz/, or --viz-dir), its own validate() accepts the
    config and steps() runs. The site build runs the same check and a broken
@@ -132,6 +134,12 @@ def split_frontmatter(text):
             if not items:
                 issues.append(("ERROR", i, "frontmatter topics: list the topics as '  - <id>' lines below it"))
             continue
+        if key == "order":
+            if re.fullmatch(r"-?[0-9]+(?:\.[0-9]+)?", val):
+                fields["order"] = float(val)
+            else:
+                issues.append(("ERROR", i, f"frontmatter order: write a bare number (order: 501), not {val[:20]}"))
+            continue
         if not (val.startswith('"') and val.endswith('"') and len(val) >= 2):
             issues.append(("ERROR", i, f"frontmatter {key}: write the value as a JSON-style double-quoted string"))
             continue
@@ -140,8 +148,10 @@ def split_frontmatter(text):
         except ValueError as e:
             issues.append(("ERROR", i, f"frontmatter {key}: not a valid double-quoted string ({e}) — escape \" and \\"))
             continue
-        if key not in ("title", "summary"):
-            issues.append(("WARN", i, f"frontmatter has '{key}' — notes use only title, summary and topics"))
+        if key == "kind" and fields[key] not in ("topic", "review"):
+            issues.append(("ERROR", i, f"frontmatter kind: \"{fields[key]}\" — use \"topic\" or \"review\" (leave it out for a lecture note)"))
+        elif key not in ("title", "summary", "kind"):
+            issues.append(("WARN", i, f"frontmatter has '{key}' — notes use only title, summary, topics, kind and order"))
     for key in ("title", "summary"):
         if not str(fields.get(key, "")).strip():
             issues.append(("ERROR", 1, f"frontmatter {key} is missing or empty"))
@@ -283,6 +293,62 @@ def check_topics(topics, lines, path, lang, course, repo):
     return issues
 
 
+FOLD_OPEN = re.compile(r"^(?:>\s*)*<details\b[^>]*>\s*$")
+FOLD_KIND = {"Solution": "S", "解答": "S", "Answer": "A", "答案": "A"}
+
+
+def fold_sections(lines):
+    """For each <details> fold outside code fences (also `<details open>` and folds inside a
+    blockquote, which the site counts too): (section, kind, line). section = the '## N.' /
+    '### N.M' heading it sits under ('' before the first); kind = S (Solution/解答),
+    A (Answer/答案) or '?' (a descriptive summary); line = 0-based index in `lines`."""
+    out, cur, fence = [], "", None
+    for i, line in enumerate(lines):
+        f = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+        if f:
+            run = f.group(1)
+            if fence is None:
+                fence = run
+            elif run[0] == fence[0] and len(run) >= len(fence) and not f.group(2).strip():
+                fence = None
+            continue
+        if fence:
+            continue
+        m = re.match(r"^## ([0-9]+)\.\s", line) or re.match(r"^### ([0-9]+\.[0-9]+)\s", line)
+        if m:
+            cur = m.group(1)
+        elif FOLD_OPEN.match(line.strip()):
+            nxt = re.sub(r"^(?:>\s*)*", "", lines[i + 1].strip()) if i + 1 < len(lines) else ""
+            sm = re.match(r"^<summary>(.*)</summary>$", nxt)
+            out.append((cur, FOLD_KIND.get(sm.group(1).strip(), "?") if sm else "?", i))
+    return out
+
+
+def check_sibling_folds(lines, path, lang, off=0):
+    """en-US and zh-CN need the same <details> folds in the same sections and order, with
+    paired summaries (Solution <-> 解答, Answer <-> 答案): the site reopens a reader's open
+    answers by position after a language switch."""
+    other = {"en-US": "zh-CN", "zh-CN": "en-US"}.get(lang)
+    sib = re.sub(r"\.(en-US|zh-CN)\.md$", f".{other}.md", path) if other else None
+    if not sib or sib == path or not os.path.exists(sib):
+        return []
+    _, _, sib_body, _ = split_frontmatter(open(sib, encoding="utf-8").read().replace("\r\n", "\n"))
+    mine, theirs = fold_sections(lines), fold_sections(sib_body.split("\n"))
+    name = os.path.basename(sib)
+    if [m[:2] for m in mine] == [t[:2] for t in theirs]:
+        return []
+    tail = " — both languages need the same folds in the same order"
+    if len(mine) != len(theirs):
+        return [("ERROR", 1, f"{len(mine)} <details> folds here, {len(theirs)} in {name}" + tail)]
+    k = next(i for i, (x, y) in enumerate(zip(mine, theirs)) if x[:2] != y[:2])
+    ln = mine[k][2] + 1 + off
+    if mine[k][0] != theirs[k][0]:
+        return [("ERROR", ln, f"fold #{k + 1} is in section {mine[k][0] or '(intro)'} here but "
+                              f"{theirs[k][0] or '(intro)'} in {name}" + tail +
+                              " (also check that both files number their headings '## N. ' / '### N.M ' alike)")]
+    return [("ERROR", ln, f"fold #{k + 1}: summary doesn't pair with {name} (Solution <-> 解答, Answer <-> 答案)")]
+
+
 def check_name(path, strict):
     """Return (issues, slug, lang)."""
     level = "ERROR" if strict else "WARN"
@@ -293,6 +359,10 @@ def check_name(path, strict):
         hint = " (the old XXX_LecNN_Notes_<lang>.md names are no longer used)" if old else ""
         return [(level, 0, f"file name '{base}' must be <slug>.<en-US|zh-CN>.md, e.g. lec-10.en-US.md{hint}")], None, None
     slug, lang = m.group(1), m.group(2)
+    if re.match(r"^(?:hw|homework)(?:-|\d)", slug):
+        # Always an ERROR (even with --no-name-check): homework notes are banned, not misnamed.
+        return [("ERROR", 0, f"slug '{slug}': no separate homework notes — put the problems as practice "
+                             "inside the lecture notes where the topic is taught")], slug, lang
     if re.match(r"^(lec|week)-", slug) and not re.match(r"^(lec|week)-\d{2}$", slug):
         return [(level, 0, f"slug '{slug}' must be lec-NN / week-NN with two digits")], slug, lang
     return [], slug, lang
@@ -836,10 +906,31 @@ def main():
         lines = body.split("\n")
         lint_issues, links = lint(lines, off)
         issues += lint_issues
-        if fields is not None:
+        if fields is not None and fields.get("kind") == "topic":
+            want = (slug or "")[len("topic-"):] if (slug or "").startswith("topic-") else None
+            t = fields.get("topics")
+            if want is None:
+                issues.append(("ERROR", 0, "a kind: \"topic\" note must be named topic-<topic id>.<lang>.md"))
+            elif not (isinstance(t, list) and len(t) == 1 and t[0] == (want, [])):
+                issues.append(("ERROR", 1, f"a topic note needs exactly 'topics:' + '  - {want}' (a bare id, no sections)"))
+        if fields is not None and fields.get("kind") == "topic" and "order" not in fields:
+            issues.append(("WARN", 1, "a topic note should set order (501 + its position in the course JSON) to sort after the lectures"))
+        if fields is not None and lang in ("en-US", "zh-CN"):
+            sib = re.sub(r"\.(en-US|zh-CN)\.md$", ".%s.md" % ("zh-CN" if lang == "en-US" else "en-US"), a.path)
+            if sib != a.path and os.path.exists(sib):
+                sf = split_frontmatter(open(sib, encoding="utf-8").read().replace("\r\n", "\n"))[0] or {}
+                for k in ("kind", "order"):
+                    if sf.get(k) != fields.get(k):
+                        issues.append(("ERROR", 1, f"frontmatter {k} differs from {os.path.basename(sib)} — both languages need the same {k}"))
+        if fields is not None and fields.get("kind") == "review" and fields.get("topics"):
+            issues.append(("ERROR", 1, "a kind: \"review\" note has its own hub view — leave topics out"))
+        if fields is not None and (slug or "").startswith("topic-") and fields.get("kind") != "topic":
+            issues.append(("ERROR", 1, "a topic-<id> note needs kind: \"topic\" in the frontmatter"))
+        if fields is not None and fields.get("kind") != "review":
             issues += check_topics(fields.get("topics"), lines, a.path, lang, a.course, a.site_repo)
         answer_issues, folds = check_answers(lines, off, lang)
         issues += answer_issues
+        issues += check_sibling_folds(lines, a.path, lang, off)
         print(f"answers: {folds} folded")
         link_issues, link_note = check_links(links, a.course, a.sitemap, a.offline, a.site_repo)
         issues += link_issues

@@ -88,12 +88,19 @@ export async function getCourseTopics(course: CourseEntry, groups: NoteGroup[]):
   const other: Topic = { ...OTHER, entries: [] };
 
   for (const group of groups) {
+    if (group.kind === "review") continue; // review notes have their own hub view
     const present = LANGS.filter((l) => group.versions[l]);
     const perLang = present.map((l) => normalize(group.versions[l]!.data.topics ?? []));
     const tags = perLang[0]!;
     const key = JSON.stringify(tags);
     if (perLang.some((t) => JSON.stringify(t) !== key)) {
       throw new Error(`${code}/${group.slug}: frontmatter topics differ between ${present.join(" and ")}`);
+    }
+    if (group.kind === "topic") {
+      const want = group.slug.slice("topic-".length);
+      if (tags.length !== 1 || tags[0]!.id !== want || tags[0]!.sections.length) {
+        throw new Error(`${code}/${group.slug}: a topic note needs exactly "topics: [${want}]" (a bare id, no sections)`);
+      }
     }
     if (!tags.length) {
       other.entries.push({ group, sections: {} });
@@ -117,5 +124,7 @@ export async function getCourseTopics(course: CourseEntry, groups: NoteGroup[]):
       topics.find((t) => t.id === tag.id)!.entries.push({ group, sections });
     }
   }
+  // The topic note (all of the topic in one place) leads; the lecture sections it was built from follow.
+  for (const t of topics) t.entries.sort((a, b) => Number(b.group.kind === "topic") - Number(a.group.kind === "topic"));
   return [...topics, ...(other.entries.length ? [other] : [])];
 }

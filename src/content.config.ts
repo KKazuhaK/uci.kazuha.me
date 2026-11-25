@@ -62,6 +62,9 @@ const notes = defineCollection({
     // Override the slug-derived sort position.
     order: z.number().optional(),
     draft: z.boolean().default(false),
+    // What the note is: a lecture/week note (default), a topic note that gathers one topic from every
+    // lecture (slug topic-<id>, frontmatter topics: [<id>]), or review material (own hub view).
+    kind: z.enum(["topic", "review"]).optional(),
     // Topics of the course hub's "By topic" view (ids from the course JSON). A bare id covers the
     // whole note; `sections` limits it to numbered sections, ## N. or ### N.M, as a quoted string
     // ("5-11, 13.3-13.6"). Checked in src/lib/topics.ts; both languages must list the same topics.

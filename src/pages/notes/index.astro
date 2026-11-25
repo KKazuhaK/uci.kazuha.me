@@ -37,7 +37,8 @@ const unitPlural = (list: typeof all) => (list.every((g) => g.unit !== "week") ?
     <div class="notes-grid">
       {courses.map((course) => {
         const c = course.data;
-        const list = groups.get(c.code) ?? [];
+        // Lecture/week notes only: topic and review notes have their own views on the course hub.
+        const list = (groups.get(c.code) ?? []).filter((g) => g.kind === "unit");
         const numbered = list.filter((g) => g.unit !== "special");
         const recent = [...list].reverse().slice(0, RECENT);
         return (

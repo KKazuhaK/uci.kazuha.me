@@ -14,7 +14,7 @@ Section 9 is a block to paste into a new skill as-is.
 
 - File: `src/content/notes/<COURSE>/<slug>.<lang>.md`
   - `<COURSE>`: the folder of an existing `src/content/courses/<COURSE>.json` (`ICS-46`, `CS-121`, …).
-  - `<slug>`: `lec-NN` or `week-NN` (two digits), or a special such as `final-review`.
+  - `<slug>`: `lec-NN` or `week-NN` (two digits), or a special such as `final-review`. No separate homework notes (`hw-NN`): a course's homework or slide problems go into the lecture notes as practice (ICS 46: section 6 and its skill).
   - `<lang>`: `en-US` or `zh-CN`. The other language is optional.
 - URL: `/notes/<course>/<slug>/<lang>/` (lowercase course). A push to `main` builds it and publishes it to the Cloudflare mirror `uci.kazuha.me` and, through the `uci-ics-deploy` job, to `ics.uci.edu/~kazuhak/`; if that job is off or fails, run `~/update_site.sh` on the ICS server (CLAUDE.md, Workflow).
 - One note is one self-contained `.md` file. No local images or extra files (section 5).
@@ -44,6 +44,13 @@ topics:
 ```
 
 A bare id puts the whole note under that topic; `sections` lists numbered sections, `N` for a `## N.` heading and `N.M` for a `### N.M` heading, with ranges (`5-11`, `13.3-13.6`, same `N` on both ends) and commas, always as a quoted string. The hub links each one. Include the complete implementation and the in-class activities that belong to the topic (the whole section, or the `N.M` parts that belong to it); leave out the quick-reference section. Ids must exist in the course JSON, each section must have a matching `## N.` / `### N.M` heading, and both languages must carry the identical `topics` block, or the build fails. A note without `topics` is listed under "Other". A new topic is added to the course JSON first (`id`, `label: { en-US, zh-CN }`, optional `summary`), in the order it should appear.
+
+**Note kinds.** Frontmatter `kind` (optional) says what a note is; leave it out for a lecture/week note.
+
+- `kind: "topic"` — a *topic note*: one topic gathered from every lecture into a single note, pure knowledge (no class logistics, dates, quiz/exam scope or grades). File `topic-<id>.<lang>.md`, frontmatter `topics:` with exactly that bare id, and `order` to place it after the lectures (ICS 46: 501 + the topic's position in the course JSON). On the hub's By topic view it leads its topic, above the lecture sections it was built from; it is not listed in the By lecture view.
+- `kind: "review"` — exam review material (e.g. `midterm-review`): no `topics`; the hub shows these in their own "Review / 复习" view, not in By topic or By lecture.
+
+Both languages carry the same `kind`, or the build fails.
 
 ## 3. Structure
 
@@ -103,6 +110,7 @@ Back to [§3](#3-queues).
 
 Rules:
 
+- Where exercises go: in the lecture note itself, next to the passage they practise or in a `### N.M Practice` / `### N.M 练习` subsection closing the topic. Homework and slide problems may be quoted as given; never attach, link or upload the source PDF or file.
 - Summary text: `Solution` or `Answer` (en-US), `解答` or `答案` (zh-CN), whichever the course's skill uses (ICS 46 / CS 121: Solution; IN4MATX 133 / ICS 45C: Answer). The zh-CN pair: Solution ↔ 解答, Answer ↔ 答案.
 - Blank line after `<summary>…</summary>`, before `</details>` and after it. An HTML block runs to the next blank line, so a missing one swallows the next line or leaves the Markdown inside unrendered.
 - Tags start at column 0. No nesting, and no heading inside a fold.
@@ -116,7 +124,7 @@ Rules:
 ## 7. Translations (zh-CN)
 
 - Same headings, same numbering and same order as en-US.
-- Same `<details>` blocks in the same order, with the same content split. The site reopens the reader's open answers by position after a language switch, and only does so when both pages have the same number of blocks.
+- Same `<details>` blocks in the same order, with the same content split. The site reopens the reader's open answers by position after a language switch, and only does so when both pages have the same number of blocks. The ICS 46 `check_md.py` is stricter: each fold must sit in the same `## N.` / `### N.M` section in both files, with paired summaries (Solution ↔ 解答, Answer ↔ 答案).
 - Code, identifiers and course terms stay in English. Prose is Chinese.
 
 ## 8. Checking

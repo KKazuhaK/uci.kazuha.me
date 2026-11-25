@@ -354,7 +354,8 @@ void resize(int newCap) {
 使用加倍策略时，每次入队都是**摊还 O(1)**（与第 3 讲中 ArrayList 的论证相同）；出队为 O(1)。测试：从容量 2 开始，执行 `enqueueBack(1); enqueueBack(2); enqueueFront(0); enqueueFront(-1); enqueueBack(3)`，然后执行一次 `dequeueFront()`、一次 `dequeueBack()`，并持续 `dequeueFront()` 直到队列为空：
 
 ```text
-deque size=5 capacity=8 : -1 3 0 1 2
+deque size=5 capacity=8 : -1 0 1 2 3
+dequeued: -1 3 0 1 2
 ```
 
 </details>
