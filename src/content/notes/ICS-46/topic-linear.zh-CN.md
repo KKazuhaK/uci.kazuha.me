@@ -7,7 +7,7 @@ kind: "topic"
 order: 503
 ---
 
-# 信息与计算机科学 46 — 话题：列表、栈与队列
+# Information and Computer Science 46 — 话题：列表、栈与队列
 
 ## 目录
 

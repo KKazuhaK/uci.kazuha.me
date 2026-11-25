@@ -7,7 +7,7 @@ kind: "topic"
 order: 501
 ---
 
-# 信息与计算机科学 46 — 话题：C++ 基础
+# Information and Computer Science 46 — 话题：C++ 基础
 
 ## 目录
 

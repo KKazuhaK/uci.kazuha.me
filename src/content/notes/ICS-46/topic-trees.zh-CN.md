@@ -7,7 +7,7 @@ kind: "topic"
 order: 505
 ---
 
-# 信息与计算机科学 46 — 话题：树与遍历
+# Information and Computer Science 46 — 话题：树与遍历
 
 ## 目录
 

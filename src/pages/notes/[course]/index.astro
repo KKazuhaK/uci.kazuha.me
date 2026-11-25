@@ -27,6 +27,8 @@ const topics =
     ?.map((t) => (t.entries.some((e) => e.group.kind === "topic") ? { ...t, entries: t.entries.filter((e) => e.group.kind === "topic") } : t))
     .filter((t) => t.entries.length) ?? null;
 const byWeek = groups[0]?.unit === "week";
+// Every topic has exactly one topic note → the By topic view is one grid of chapter cards.
+const unified = !!topics?.length && topics.every((t) => t.entries.length === 1 && t.entries[0]!.group.kind === "topic");
 const unitGroups = groups.filter((g) => g.kind === "unit");
 const reviewGroups = groups.filter((g) => g.kind === "review");
 // Views offered on this hub: topic (when the course has topics), unit, review (when it has review notes).
@@ -34,8 +36,8 @@ const views = [...(topics ? ["topic"] : []), "unit", ...(reviewGroups.length ? [
 const multiView = views.length > 1;
 
 const S = {
-  "en-US": { ready: "Available", other: "Other language only", open: "Open →", openOther: "Open other lang →", byTopic: "By topic", byUnit: byWeek ? "By week" : "By lecture", byReview: "Review", topicNote: "Topic note", view: "View", topicsNav: "Topics", notes: (n: number) => `${n} note${n === 1 ? "" : "s"}` },
-  "zh-CN": { ready: "已就绪", other: "仅另一语言可用", open: "打开 →", openOther: "打开现有版本 →", byTopic: "按话题", byUnit: byWeek ? "按周" : "按讲", byReview: "复习", topicNote: "话题笔记", view: "视图", topicsNav: "话题", notes: (n: number) => `${n} 篇` },
+  "en-US": { ready: "Available", other: "Other language only", open: "Open →", openOther: "Open other lang →", byTopic: "By topic", byUnit: byWeek ? "By week" : "By lecture", byReview: "Review", topicNote: "Topic note", topicN: (n: number) => `Topic ${n}`, view: "View", topicsNav: "Topics", notes: (n: number) => `${n} note${n === 1 ? "" : "s"}` },
+  "zh-CN": { ready: "已就绪", other: "仅另一语言可用", open: "打开 →", openOther: "打开现有版本 →", byTopic: "按话题", byUnit: byWeek ? "按周" : "按讲", byReview: "复习", topicNote: "话题笔记", topicN: (n: number) => `话题 ${n}`, view: "视图", topicsNav: "话题", notes: (n: number) => `${n} 篇` },
 } satisfies Record<Lang, unknown>;
 
 function card(group: (typeof groups)[number], lang: Lang) {
@@ -103,7 +105,7 @@ function topicCard(entry: TopicEntry, lang: Lang) {
             {reviewGroups.length > 0 && <button type="button" data-hub-view-btn="review">{S[l].byReview}</button>}
           </div>
         ))}
-        {topics && LANGS.map((l) => (
+        {topics && !unified && LANGS.map((l) => (
           <nav class="topic-chips" aria-label={S[l].topicsNav} data-pane={l} lang={l} data-view="topic">
             {topics.map((t) => (
               <a class="topic-chip" href={`#topic-${t.id}`}>{t.label[l]}{t.entries.length > 1 && <span class="topic-chip-n">{t.entries.length}</span>}</a>
@@ -113,7 +115,24 @@ function topicCard(entry: TopicEntry, lang: Lang) {
       </div>
     )}
 
-    {topics && (
+    {unified && topics && LANGS.map((l) => (
+      <div class="week-grid topic-grid" data-pane={l} lang={l} data-view="topic">
+        {topics.map((t) => ({ t, n: topicCard(t.entries[0]!, l) })).map(({ t, n }, i) => (
+          <article class="card week-card topic-note-card" data-topic={t.id}>
+            <span class="week-badge">{S[l].topicN(i + 1)}</span>
+            <h3><a href={n.href} class="topic-card-title" tabindex="-1">{t.label[l]}</a></h3>
+            <p class="week-summary">{n.summary}</p>
+            <p class="week-date">{n.date}</p>
+            <div class="week-meta-row">
+              <span class={n.own ? "note-state ready" : "note-state"}>{n.own ? S[l].ready : S[l].other}</span>
+              <a href={n.href} class="btn-open">{n.own ? S[l].open : S[l].openOther}</a>
+            </div>
+          </article>
+        ))}
+      </div>
+    ))}
+
+    {topics && !unified && (
       <div class="topic-list" data-view="topic">
         {topics.map((t) => (
           <section class="topic-section" id={`topic-${t.id}`}>
@@ -211,6 +230,16 @@ function topicCard(entry: TopicEntry, lang: Lang) {
     }),
   );
   sync();
+  // Unified topic grid: cards carry data-topic (ids would repeat across the two language panes),
+  // so a #topic-<id> link scrolls to the card in the pane that is showing.
+  function scrollToTopic() {
+    const m = /^#topic-([a-z0-9-]+)$/.exec(location.hash);
+    if (!m) return;
+    const card = [...document.querySelectorAll<HTMLElement>(`[data-topic="${m[1]}"]`)].find((el) => el.offsetParent !== null);
+    card?.scrollIntoView({ block: "start" });
+  }
+  scrollToTopic();
+  window.addEventListener("hashchange", scrollToTopic);
 </script>
 
 <style>
@@ -241,6 +270,10 @@ function topicCard(entry: TopicEntry, lang: Lang) {
   .topic-summary { margin: 0 4px 12px; font-size: 13px; line-height: 1.55; color: var(--ink-2); }
   .topic-head + .week-grid { margin-top: 12px; }
   .topic-note-card { border: 1.5px solid var(--uci-gold, #ffd200); }
+  .topic-grid .topic-note-card { scroll-margin-top: 90px; display: flex; flex-direction: column; }
+  .topic-grid .week-date { margin-top: auto; }
+  .topic-card-title { color: inherit; }
+  .topic-card-title:hover { color: var(--uci-blue); }
   .topic-sections {
     margin: 0; padding: 0; list-style: none;
     display: flex; flex-direction: column; gap: 4px;

@@ -7,7 +7,7 @@ kind: "topic"
 order: 502
 ---
 
-# 信息与计算机科学 46 — 话题：算法分析
+# Information and Computer Science 46 — 话题：算法分析
 
 ## 目录
 

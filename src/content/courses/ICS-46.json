@@ -49,7 +49,7 @@
       "id": "linear",
       "label": {
         "en-US": "Lists, Stacks & Queues",
-        "zh-CN": "线性表、栈与队列"
+        "zh-CN": "列表、栈与队列"
       },
       "summary": {
         "en-US": "ArrayList, linked lists, stacks, queues, deques and circular arrays.",

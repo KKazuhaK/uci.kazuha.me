@@ -7,7 +7,7 @@ kind: "topic"
 order: 504
 ---
 
-# 信息与计算机科学 46 — 话题：排序
+# Information and Computer Science 46 — 话题：排序
 
 ## 目录
 

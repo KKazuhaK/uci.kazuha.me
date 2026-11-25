@@ -7,7 +7,7 @@ kind: "topic"
 order: 506
 ---
 
-# 信息与计算机科学 46 — 话题：堆与优先队列
+# Information and Computer Science 46 — 话题：堆与优先队列
 
 ## 目录
 

@@ -564,7 +564,7 @@ go-ahead on the new id (see Frontmatter). Exam review sheets are
 Kazuha wants a zh-CN copy of every ICS 46 note, translated by a **Haiku**
 subagent (Agent tool, `model: "haiku"`), into
 `src/content/notes/ICS-46/lec-NN.zh-CN.md`. Give it the rules in the prompt:
-frontmatter `title` / `summary` translated; the same `##` / `###` headings in
+frontmatter `title` / `summary` translated; the course name in the `#` title stays English (`# Information and Computer Science 46 — Lecture N：…` / `— 话题：…`, never 信息与计算机科学); the same `##` / `###` headings in
 the same order with Arabic numerals; every in-page `(#anchor)` recomputed for
 the Chinese headings (lowercase, drop everything but letters incl. CJK,
 digits, spaces, `_`, `-`; spaces → `-`); links to other notes switched to
