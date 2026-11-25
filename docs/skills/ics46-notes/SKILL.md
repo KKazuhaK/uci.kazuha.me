@@ -60,8 +60,10 @@ needs the repo attached with push access (`add_repo`, access `push`).
   need the actual PDF to render pages; find it on disk or ask him to attach it).
 - **Schedule PDF** lists each lecture's supplement links. A ready map is in
   `references/sources.md` — read it to find this lecture's supplements.
-- **Homework PDFs** are not lecture material; don't fold them in, and don't
-  solve homework inside notes.
+- **Homework PDFs** are not lecture material, but their problems make good
+  practice: quote a problem (original wording is fine) where its topic is
+  taught or in a practice section at the end of the topic, with the worked
+  answer folded in `<details>`. Never attach, link or upload the PDF itself.
 - **Earlier lectures**: when a slide leans on something from a previous
   lecture (e.g. "implement a stack with our ArrayList"), use
   `project_search` (or the earlier slide PDF) to pull that lecture's exact
