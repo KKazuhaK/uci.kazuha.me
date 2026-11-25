@@ -1,6 +1,8 @@
 ---
 title: "随机数、引用与指针"
 summary: "C++ 随机数生成、引用、裸指针，以及智能指针与所有权（ownership）入门。"
+topics:
+  - cpp
 ---
 
 # Information and Computer Science 46 — Lecture 1：随机性、引用与指针

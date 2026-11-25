@@ -390,6 +390,9 @@ Note structure:
 ---
 title: "<short card title, e.g. Trees>"
 summary: "<one sentence listing this lecture's topics>"
+topics:
+  - <topic id>                                     # or, when the lecture spans topics:
+  - { id: <topic id>, sections: "<1-4, 8.1-8.2>" }
 ---
 
 # Information and Computer Science 46 — Lecture N: <Title from slide 1>
@@ -419,11 +422,33 @@ summary: "<one sentence listing this lecture's topics>"
 "Five things to remember" = the five ideas most likely to cost points on
 the quiz, each one sentence.
 
-**Frontmatter** — exactly two fields, JSON-style double-quoted strings, then
-one blank line, then the body's own `#` title. `title` is the short name on
-the course hub card ("Trees", "Quick Sort"); `summary` is one sentence
-listing the lecture's topics. The hub, prev/next cards, home page and
-sitemap are all generated from these — there is nothing to update by hand.
+**Frontmatter** — `title` and `summary` as JSON-style double-quoted strings,
+then `topics`, then one blank line, then the body's own `#` title. `title` is
+the short name on the course hub card ("Trees", "Quick Sort"); `summary` is
+one sentence listing the lecture's topics. The hub, prev/next cards, home
+page and sitemap are all generated from these — there is nothing to update
+by hand.
+
+`topics` places the note in the course hub's "By topic" view, the default
+view, whose whole point is to gather each topic's material from every
+lecture in one place. Ids (from `src/content/courses/ICS-46.json`): `cpp`,
+`analysis`, `linear`, `sorting`, `trees`, `heaps`, `search-trees`,
+`hashing`, `review`.
+- A lecture on one topic: a bare id (`- sorting`); the whole note, activities
+  included, goes under it.
+- A lecture spanning topics: one `{ id, sections }` line per topic.
+  `sections` is a quoted string of `## N.` numbers (`N`) and `### N.M`
+  numbers (`N.M`), with ranges and commas: `"5-11, 13.3-13.6"`. The hub lists
+  and links each section. Put each in-class activity under the topic it
+  practises (as `N.M`, or the whole activities section `N` when they all
+  practise one topic), and the Complete Implementation under the topic(s)
+  whose code it holds; leave out the Quick Reference section.
+- Both language files carry the identical `topics` block.
+- If no id fits (a new topic such as graphs), don't invent one: say so in the
+  delivery report with a proposed id, English/Chinese label and one-line
+  summary, so it can be added to the course JSON first; until then the note
+  would fail the build, so leave `topics` out and say it will show under
+  "Other".
 
 ### Step 5 — Verify before delivering
 
@@ -457,7 +482,9 @@ sitemap are all generated from these — there is nothing to update by hand.
   ics.uci.edu and nothing needs building; the output should say
   `render: done with deploy branch @ <sha>` — anything else means the
   render step didn't run, so report it.
-  It checks the frontmatter (title/summary present and non-empty) and the
+  It checks the frontmatter (title/summary present and non-empty; `topics`
+  ids exist, each section has its heading, the other language's file next to
+  it has the identical block) and the
   file name (`<slug>.<lang>.md`; `--no-name-check` while drafting under
   another name), lints the source (images only from the assets CDN, no
   legacy `?kind=course_notes` links), renders the note with the

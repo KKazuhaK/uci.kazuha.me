@@ -1,6 +1,8 @@
 ---
 title: "Quick Sort"
 summary: "Quick sort: Hoare/Sedgewick 2-pointer partitioning, full traces, worst/best/average analysis, stability and in-place properties, comparison of all sorts so far, and pivot/cutoff improvements with Lab 4's median-of-three and random pivots and timings."
+topics:
+  - sorting
 ---
 
 # Information and Computer Science 46 — Lecture 9: Quick Sort

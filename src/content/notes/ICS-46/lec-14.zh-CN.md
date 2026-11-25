@@ -1,6 +1,9 @@
 ---
 title: "2-3 树与红黑 BST"
 summary: "平衡查找树：2-3 树的查找、以临时 4-节点分裂实现的插入与高度上界；左倾红黑 BST（一一对应、定义、旋转、颜色翻转、插入及其检查顺序、2 lg n 的高度）；然后是哈希表：桶、哈希码与压缩、冲突。"
+topics:
+  - { id: search-trees, sections: "1-11, 15, 16" }
+  - { id: hashing, sections: "12-14" }
 ---
 
 # Information and Computer Science 46 — Lecture 14：平衡 BST（2-3 树、LLRB）+ 哈希表

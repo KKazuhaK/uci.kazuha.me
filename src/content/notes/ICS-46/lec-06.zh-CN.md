@@ -1,6 +1,9 @@
 ---
 title: "递归的复杂度分析"
 summary: "ADT 与数据结构的区别、建立递推式、递归树方法，以及主定理（Master Theorem）。"
+topics:
+  - { id: linear, sections: "1" }
+  - { id: analysis, sections: "2-8" }
 ---
 
 # Information and Computer Science 46 — Lecture 6：递归分析

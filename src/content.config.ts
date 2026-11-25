@@ -3,6 +3,8 @@ import { z } from "astro/zod";
 import { glob } from "astro/loaders";
 import { LANGS } from "./lib/i18n";
 
+const localizedText = z.object({ "en-US": z.string().min(1), "zh-CN": z.string().min(1) });
+
 const localizedCourseCopy = z.object({
   heroPrimary: z.string(),
   heroSecondary: z.string(),
@@ -25,6 +27,16 @@ const courses = defineCollection({
     current: z.boolean(),
     order: z.number().int(),
     copy: z.object(Object.fromEntries(LANGS.map((l) => [l, localizedCourseCopy])) as Record<(typeof LANGS)[number], typeof localizedCourseCopy>),
+    // Optional "By topic" view on the course hub, in this order. Notes opt in with frontmatter `topics`.
+    topics: z
+      .array(
+        z.object({
+          id: z.string().regex(/^[a-z0-9-]+$/),
+          label: localizedText,
+          summary: localizedText.optional(),
+        }),
+      )
+      .optional(),
   }),
 });
 
@@ -50,6 +62,17 @@ const notes = defineCollection({
     // Override the slug-derived sort position.
     order: z.number().optional(),
     draft: z.boolean().default(false),
+    // Topics of the course hub's "By topic" view (ids from the course JSON). A bare id covers the
+    // whole note; `sections` limits it to numbered sections, ## N. or ### N.M, as a quoted string
+    // ("5-11, 13.3-13.6"). Checked in src/lib/topics.ts; both languages must list the same topics.
+    topics: z
+      .array(
+        z.union([
+          z.string(),
+          z.object({ id: z.string(), sections: z.string().min(1) }).strict(),
+        ]),
+      )
+      .optional(),
   }),
 });
 

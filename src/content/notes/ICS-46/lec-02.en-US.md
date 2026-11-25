@@ -1,6 +1,9 @@
 ---
 title: "Smart Pointers, Arrays & Empirical Analysis"
 summary: "Finishing smart-pointer ownership, 1D array review, multidimensional arrays, why we analyze algorithms, empirical timing of running time, and mathematical cost models."
+topics:
+  - { id: cpp, sections: "1-3, 7.1-7.2" }
+  - { id: analysis, sections: "4-6, 7.3" }
 ---
 
 # Information and Computer Science 46 — Lecture 2: Smart Pointers, Multi-dimensional Arrays, Empirical Analysis

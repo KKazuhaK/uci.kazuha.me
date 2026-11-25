@@ -1,6 +1,9 @@
 ---
 title: "Heaps & Priority Queues"
 summary: "Heap insert and sink practice, delete-the-maximum (2 log n compares), heap running times, the priority queue ADT and its array vs heap implementations, min-heaps, the heap sort plan, and optimal bottom-up heap construction."
+topics:
+  - { id: heaps, sections: "1-6, 8-10" }
+  - { id: sorting, sections: "7-8" }
 ---
 
 # Information and Computer Science 46 — Lecture 11: Heaps, Priority Queues

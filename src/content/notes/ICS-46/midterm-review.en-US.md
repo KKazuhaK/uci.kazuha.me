@@ -1,6 +1,8 @@
 ---
 title: "Midterm Review"
 summary: "Midterm review for Lectures 0–12: exam scope and strategy, Big-O and loop counting, ArrayList and amortized analysis, linked lists, stacks/queues/deques built from each other, the four comparison sorts, trees and traversals, heaps and priority queues, binary search trees, the Lec 0–2 C++ topics, and the sample midterm, quizzes, homework and labs solved with likely variants."
+topics:
+  - review
 ---
 
 # Information and Computer Science 46 — Midterm Review

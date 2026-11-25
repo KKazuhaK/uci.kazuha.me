@@ -1,6 +1,9 @@
 ---
 title: "排序"
 summary: "循环数组队列与双端队列、排序基础（代价模型、内存、稳定性），以及选择排序与插入排序的对比。"
+topics:
+  - { id: linear, sections: "1-2, 8.1" }
+  - { id: sorting, sections: "3-7, 8.2-8.3" }
 ---
 
 # Information and Computer Science 46 — Lecture 7：排序

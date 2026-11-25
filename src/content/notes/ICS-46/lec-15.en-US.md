@@ -1,6 +1,8 @@
 ---
 title: "Hash Tables"
 summary: "Collision handling for hash tables: separate chaining (structure, trace, implementation, load factor), linear probing (insert, search, tombstone deletion, primary clustering, probe-count formulas and resizing), and quadratic probing."
+topics:
+  - hashing
 ---
 
 # Information and Computer Science 46 — Lecture 15: Hash Table

@@ -1,6 +1,9 @@
 ---
 title: "2-3 Trees & Red-Black BSTs"
 summary: "Balanced search trees: 2-3 tree search, insertion with 4-node splits and height bounds; left-leaning red-black BSTs (1-1 correspondence, definition, rotations, color flips, insertion and its order of checks, 2 lg n height); then hash tables: buckets, hash code + compression, collisions."
+topics:
+  - { id: search-trees, sections: "1-11, 15, 16" }
+  - { id: hashing, sections: "12-14" }
 ---
 
 # Information and Computer Science 46 — Lecture 14: Balanced BSTs (2-3 Trees, LLRB) + Hash Tables

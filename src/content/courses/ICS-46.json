@@ -21,5 +21,102 @@
       "readerHeading": "数据结构课程阅读笔记",
       "readerDescription": "这页整理的是 {course}{weekPhrase} 的课程笔记，适合按讲复习 C++ 模板、指针与所有权、算法分析和各类数据结构的实现。下面这条路径可以带你回到 Notes、Course Notes、课程主页，或定位到当前笔记。将鼠标悬停在右侧的 ≡ 图标上可以打开目录。"
     }
-  }
+  },
+  "topics": [
+    {
+      "id": "cpp",
+      "label": {
+        "en-US": "C++ Foundations",
+        "zh-CN": "C++ 基础"
+      },
+      "summary": {
+        "en-US": "Unit tests, templates, references, pointers, smart pointers and arrays.",
+        "zh-CN": "单元测试、模板、引用、指针、智能指针与数组。"
+      }
+    },
+    {
+      "id": "analysis",
+      "label": {
+        "en-US": "Algorithm Analysis",
+        "zh-CN": "算法分析"
+      },
+      "summary": {
+        "en-US": "Empirical timing, Big-O / Ω / Θ, orders of growth, recurrences and the Master Theorem.",
+        "zh-CN": "实测运行时间、Big-O / Ω / Θ、增长阶、递推式与主定理。"
+      }
+    },
+    {
+      "id": "linear",
+      "label": {
+        "en-US": "Lists, Stacks & Queues",
+        "zh-CN": "线性表、栈与队列"
+      },
+      "summary": {
+        "en-US": "ArrayList, linked lists, stacks, queues, deques and circular arrays.",
+        "zh-CN": "ArrayList、链表、栈、队列、双端队列与循环数组。"
+      }
+    },
+    {
+      "id": "sorting",
+      "label": {
+        "en-US": "Sorting",
+        "zh-CN": "排序"
+      },
+      "summary": {
+        "en-US": "Selection, insertion, merge, quick and heap sort.",
+        "zh-CN": "选择、插入、归并、快速与堆排序。"
+      }
+    },
+    {
+      "id": "trees",
+      "label": {
+        "en-US": "Trees & Traversals",
+        "zh-CN": "树与遍历"
+      },
+      "summary": {
+        "en-US": "Tree terminology, binary trees, height bounds and traversals.",
+        "zh-CN": "树的术语、二叉树、高度上下界与遍历。"
+      }
+    },
+    {
+      "id": "heaps",
+      "label": {
+        "en-US": "Heaps & Priority Queues",
+        "zh-CN": "堆与优先队列"
+      },
+      "summary": {
+        "en-US": "Binary heaps, swim and sink, heap construction and the priority queue ADT.",
+        "zh-CN": "二叉堆、上浮与下沉、建堆与优先队列 ADT。"
+      }
+    },
+    {
+      "id": "search-trees",
+      "label": {
+        "en-US": "Search Trees",
+        "zh-CN": "搜索树"
+      },
+      "summary": {
+        "en-US": "Binary search trees, 2-3 trees and left-leaning red-black BSTs.",
+        "zh-CN": "二叉搜索树、2-3 树与左倾红黑树。"
+      }
+    },
+    {
+      "id": "hashing",
+      "label": {
+        "en-US": "Hash Tables",
+        "zh-CN": "哈希表"
+      },
+      "summary": {
+        "en-US": "Hash functions, separate chaining, linear and quadratic probing.",
+        "zh-CN": "哈希函数、拉链法、线性探测与二次探测。"
+      }
+    },
+    {
+      "id": "review",
+      "label": {
+        "en-US": "Exam Review",
+        "zh-CN": "考试复习"
+      }
+    }
+  ]
 }

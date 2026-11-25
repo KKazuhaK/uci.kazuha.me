@@ -1,6 +1,9 @@
 ---
 title: "算法分析与 ArrayList"
 summary: "2-Sum 问题的操作计数、Big-O / Big-Ω / Big-Θ、常见增长阶、空间复杂度，以及实现 ArrayList（动态数组）的扩容与均摊分析。"
+topics:
+  - { id: analysis, sections: "1-4, 9.1-9.3" }
+  - { id: linear, sections: "5-8, 9.4-9.5" }
 ---
 
 # Information and Computer Science 46 — Lecture 3：算法分析 + ArrayList

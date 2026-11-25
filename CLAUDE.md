@@ -122,7 +122,7 @@ summary: "Hoare partitioning, full traces, worst/best/average analysis, …"
 …
 ```
 
-- `<slug>`: `lec-NN` (lecture courses) or `week-NN` (two digits), or a special like `final-review`. Lecture/week number, label ("Lecture 9" / "第 9 讲"), sort order, prev/next, hub card, Notes home strip, homepage tiles and Recent notes, and sitemap entry all derive from the slug. Specials sort last; optional frontmatter `label: { en-US, zh-CN }`, `order`, `draft: true`.
+- `<slug>`: `lec-NN` (lecture courses) or `week-NN` (two digits), or a special like `final-review`. Lecture/week number, label ("Lecture 9" / "第 9 讲"), sort order, prev/next, hub card, Notes home strip, homepage tiles and Recent notes, and sitemap entry all derive from the slug. Specials sort last; optional frontmatter `label: { en-US, zh-CN }`, `order`, `draft: true`, `topics` (see below).
 - `<lang>`: `en-US` / `zh-CN` (BCP 47). The other language is optional; hubs show "Other language only" when missing.
 - Bad file names, missing title/summary, or notes for a course without `src/content/courses/<COURSE>.json` fail the build.
 - **Links between notes** are relative links to the source file: `[Lecture 4](lec-04.en-US.md#2-the-stack-adt)`, other course `[Week 1](../CS-121/week-01.en-US.md)`. They render as note URLs. A link to a note that doesn't exist yet renders as plain text with a build warning and becomes a link once the note exists. Don't write `?kind=course_notes…` links (legacy).
@@ -147,6 +147,7 @@ summary: "Hoare partitioning, full traces, worst/best/average analysis, …"
 1. `src/content/courses/<COURSE>.json` (code, name, fullTitle, short, tagline, dept, tone `blue|navy|gold`, `current`, `order`, `copy.{en-US,zh-CN}.{heroPrimary,heroSecondary,readerHeading,readerDescription}`; `readerDescription` takes `{course}` / `{weekPhrase}`).
 2. Add notes. Everything else (hub, Notes home card, homepage tile, sitemap) appears automatically.
 3. Each term flip `current` (current courses sort first on Home / Notes).
+4. Optional "By topic" hub view: `topics: [{ id, label: {en-US, zh-CN}, summary? }]` in the course JSON, and `topics` in each note's frontmatter (a bare id = whole note, `{ id, sections: "5-11, 13.3-13.6" }` = those `## N.` / `### N.M` sections, linked from the hub). Resolved and validated in `src/lib/topics.ts` (unknown id, missing section, or the two languages disagreeing fails the build); untagged notes go under "Other". The hub's By topic / By lecture switch is kept in `localStorage.kzh-hub-view` (`?view=topic|unit`, `#topic-<id>` opens the topic view); topic view is the default. Spec: `docs/notes-authoring.md` §2.
 
 ### Renderer (`src/lib/markdown/`)
 

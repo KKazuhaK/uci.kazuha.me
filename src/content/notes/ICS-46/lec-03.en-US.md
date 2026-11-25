@@ -1,6 +1,9 @@
 ---
 title: "Algorithm Analysis & ArrayList"
 summary: "Counting operations in 2-Sum, Big-O / Big-Ω / Big-Θ, common orders of growth, space complexity, and building an ArrayList (dynamic array) with resizing and amortized analysis."
+topics:
+  - { id: analysis, sections: "1-4, 9.1-9.3" }
+  - { id: linear, sections: "5-8, 9.4-9.5" }
 ---
 
 # Information and Computer Science 46 — Lecture 3: Algorithm Analysis + ArrayList

@@ -1,6 +1,8 @@
 ---
 title: "归并排序与快速排序"
 summary: "合并两个有序半段、自顶向下归并排序及其 N log N 分析、稳定性与改进（Lab 4 的阈值切换与跳过检查、HW 5 去掉边界检查的合并），以及快速排序的背景（在 Lecture 9 中继续）。"
+topics:
+  - sorting
 ---
 
 # Information and Computer Science 46 — Lecture 8：归并排序与快速排序

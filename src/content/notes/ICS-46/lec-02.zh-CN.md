@@ -1,6 +1,9 @@
 ---
 title: "智能指针、多维数组与经验分析"
 summary: "智能指针所有权收尾、一维数组复习、多维数组、为什么要分析算法、运行时间的经验测量，以及运行时间的数学模型。"
+topics:
+  - { id: cpp, sections: "1-3, 7.1-7.2" }
+  - { id: analysis, sections: "4-6, 7.3" }
 ---
 
 # Information and Computer Science 46 — Lecture 2：智能指针、多维数组、实测分析

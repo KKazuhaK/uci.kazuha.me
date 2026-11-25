@@ -1,6 +1,10 @@
 ---
 title: "堆排序与二叉搜索树"
 summary: "建堆（朴素的 O(n log n) 与自底向上的 O(n)）、下沉排序、堆排序分析与排序总结，然后是二叉搜索树：对称有序、Node 类、查找、插入、树的形状与高度，以及 Hibbard 删除。"
+topics:
+  - { id: heaps, sections: "1-2, 13.1" }
+  - { id: sorting, sections: "1-4, 12, 13.1-13.2" }
+  - { id: search-trees, sections: "5-12, 13.3-13.6" }
 ---
 
 # Information and Computer Science 46 — Lecture 12：堆排序、二叉搜索树

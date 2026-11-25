@@ -1,6 +1,8 @@
 ---
 title: "Merge Sort, Quick Sort"
 summary: "Merging sorted halves, top-down merge sort and its N log N analysis, stability and improvements (Lab 4 cutoff and skip check, HW 5 merge without bounds checks), plus quick sort's background (continued in Lecture 9)."
+topics:
+  - sorting
 ---
 
 # Information and Computer Science 46 — Lecture 8: Merge Sort, Quick Sort

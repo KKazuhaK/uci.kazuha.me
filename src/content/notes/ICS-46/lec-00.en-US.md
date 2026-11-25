@@ -1,6 +1,8 @@
 ---
 title: "Course Intro, Unit Tests & Templates"
 summary: "What ICS 46 is about, C++ unit testing with Google Test, why templates exist, function templates and compile-time instantiation, .hpp/.tpp layout, implicit type constraints, and class templates (the Box example)."
+topics:
+  - cpp
 ---
 
 # Information and Computer Science 46 — Lecture 0: Course Introduction, Unit Tests, Templates

@@ -1,6 +1,8 @@
 ---
 title: "快速排序"
 summary: "快速排序：Hoare/Sedgewick 双指针划分、完整排序过程追踪、最坏/最好/平均情况分析、稳定性与原地性、目前各排序算法对比，以及选主元与小数组截断等改进（含 Lab 4 的三数取中、随机枢轴与实测计时）。"
+topics:
+  - sorting
 ---
 
 # Information and Computer Science 46 — Lecture 9：快速排序

@@ -1,6 +1,8 @@
 ---
 title: "链表与栈"
 summary: "单向链表的接口、实现与分析，双向链表，ArrayList 与链表的对比，以及栈（Stack）ADT。"
+topics:
+  - linear
 ---
 
 # Information and Computer Science 46 — Lecture 4：链表与栈

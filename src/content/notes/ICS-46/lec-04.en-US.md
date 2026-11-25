@@ -1,6 +1,8 @@
 ---
 title: "Linked Lists & Stacks"
 summary: "Singly linked list API, implementation and analysis, doubly linked lists, ArrayList vs. linked lists, and the Stack ADT."
+topics:
+  - linear
 ---
 
 # Information and Computer Science 46 — Lecture 4: Linked Lists & Stacks

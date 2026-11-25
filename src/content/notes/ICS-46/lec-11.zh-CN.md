@@ -1,6 +1,9 @@
 ---
 title: "堆与优先队列"
 summary: "堆的插入与下沉练习、删除最大值（2 log n 次比较）、堆操作的运行时间、优先队列 ADT 及其数组与堆实现、最小堆、堆排序计划，以及最优的自底向上建堆。"
+topics:
+  - { id: heaps, sections: "1-6, 8-10" }
+  - { id: sorting, sections: "7-8" }
 ---
 
 # Information and Computer Science 46 — Lecture 11：堆、优先队列

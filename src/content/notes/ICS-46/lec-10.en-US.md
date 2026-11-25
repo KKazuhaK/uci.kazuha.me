@@ -1,6 +1,9 @@
 ---
 title: "Trees"
 summary: "Tree terminology (depth, height, degree), full vs complete binary trees, node-count and height bounds, the BinaryTree skeleton, level/pre/in/post-order traversals, and binary heaps: heap order, array representation, swim, insert and sink."
+topics:
+  - { id: trees, sections: "1-8, 14, 15" }
+  - { id: heaps, sections: "9-14" }
 ---
 
 # Information and Computer Science 46 — Lecture 10: Trees

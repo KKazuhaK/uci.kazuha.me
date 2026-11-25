@@ -1,6 +1,9 @@
 ---
 title: "Analysis of Recursion"
 summary: "ADTs vs. data structures, setting up recurrences, the recursion-tree method, and the Master Theorem."
+topics:
+  - { id: linear, sections: "1" }
+  - { id: analysis, sections: "2-8" }
 ---
 
 # Information and Computer Science 46 — Lecture 6: Analysis of Recursion

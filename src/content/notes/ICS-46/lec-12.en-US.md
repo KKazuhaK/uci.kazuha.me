@@ -1,6 +1,10 @@
 ---
 title: "Heap Sort & BSTs"
 summary: "Heap construction (naive O(n log n) vs bottom-up O(n)), sortdown, heap sort analysis and the sorting summary, then binary search trees: symmetric order, the Node class, search, insert, tree shape and height, and Hibbard deletion."
+topics:
+  - { id: heaps, sections: "1-2, 13.1" }
+  - { id: sorting, sections: "1-4, 12, 13.1-13.2" }
+  - { id: search-trees, sections: "5-12, 13.3-13.6" }
 ---
 
 # Information and Computer Science 46 — Lecture 12: Heap Sort, Binary Search Trees

@@ -32,7 +32,18 @@ summary: "Hoare partitioning, full traces, worst/best/average analysis."
 # Information and Computer Science 46 — Lecture 9: Quick Sort
 ```
 
-`title` is the short name on the course hub card; `summary` is one sentence listing the topics. The schema (`src/content.config.ts`) also accepts `label: { en-US, zh-CN }`, `order` and `draft: true`, for special notes only; skills write just the two required fields (`check_md.py` warns on anything else). A missing title/summary or a bad file name fails the build.
+`title` is the short name on the course hub card; `summary` is one sentence listing the topics. The schema (`src/content.config.ts`) also accepts `label: { en-US, zh-CN }`, `order` and `draft: true`, for special notes only; skills write `title`, `summary` and, when the course defines topics, `topics` (the ICS 46 skill's `check_md.py` validates `topics` and warns on anything else; the other skills' copies don't accept `topics` yet, and their courses don't define any). A missing title/summary or a bad file name fails the build.
+
+**Topics.** A course whose `src/content/courses/<COURSE>.json` has a `topics` list gets a "By topic" view on its hub. Each note says which topics it belongs to, after `summary`:
+
+```markdown
+topics:
+  - sorting                                  # the whole note
+  - { id: search-trees, sections: "5-11, 13.3-13.6" }   # `## 5.` … `## 11.` and `### 13.3` … `### 13.6`
+  - { id: heaps, sections: "1-2, 13.1" }
+```
+
+A bare id puts the whole note under that topic; `sections` lists numbered sections, `N` for a `## N.` heading and `N.M` for a `### N.M` heading, with ranges (`5-11`, `13.3-13.6`, same `N` on both ends) and commas, always as a quoted string. The hub links each one. Include the complete implementation and the in-class activities that belong to the topic (the whole section, or the `N.M` parts that belong to it); leave out the quick-reference section. Ids must exist in the course JSON, each section must have a matching `## N.` / `### N.M` heading, and both languages must carry the identical `topics` block, or the build fails. A note without `topics` is listed under "Other". A new topic is added to the course JSON first (`id`, `label: { en-US, zh-CN }`, optional `summary`), in the order it should appear.
 
 ## 3. Structure
 

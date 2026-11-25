@@ -1,6 +1,8 @@
 ---
 title: "Queues, Deques & Stack Applications"
 summary: "Stacks on linked lists, the Queue ADT and its implementations, expression evaluation with stacks, and queue applications."
+topics:
+  - linear
 ---
 
 # Information and Computer Science 46 — Lecture 5: Queues, Deques, Analysis of Recursion

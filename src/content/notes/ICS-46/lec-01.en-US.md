@@ -1,6 +1,8 @@
 ---
 title: "Randomness, References & Pointers"
 summary: "Random number generation in C++, references, raw pointers, and an introduction to smart pointers and ownership."
+topics:
+  - cpp
 ---
 
 # Information and Computer Science 46 — Lecture 1: Randomness, References, Pointers

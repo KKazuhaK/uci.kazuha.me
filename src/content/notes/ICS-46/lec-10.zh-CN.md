@@ -1,6 +1,9 @@
 ---
 title: "树"
 summary: "树的术语（深度、高度、度）、满二叉树与完全二叉树、节点数与高度界、BinaryTree 骨架、层序/前序/中序/后序遍历，以及二叉堆：堆序、数组表示、swim、insert 与 sink。"
+topics:
+  - { id: trees, sections: "1-8, 14, 15" }
+  - { id: heaps, sections: "9-14" }
 ---
 
 # Information and Computer Science 46 — Lecture 10：树

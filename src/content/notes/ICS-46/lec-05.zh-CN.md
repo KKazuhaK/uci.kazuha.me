@@ -1,6 +1,8 @@
 ---
 title: "队列、双端队列与栈的应用"
 summary: "基于链表的栈、队列（Queue）ADT 及其实现、用栈求值表达式，以及队列的应用。"
+topics:
+  - linear
 ---
 
 # Information and Computer Science 46 — Lecture 5：队列、双端队列与递归分析

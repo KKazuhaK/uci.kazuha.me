@@ -1,6 +1,8 @@
 ---
 title: "课程介绍、单元测试与模板"
 summary: "ICS 46 课程概览、用 Google Test 写 C++ 单元测试、为什么需要模板、函数模板与编译期实例化、.hpp/.tpp 文件组织、类型参数的隐式约束，以及类模板（Box 示例）。"
+topics:
+  - cpp
 ---
 
 # Information and Computer Science 46 — Lecture 0：课程介绍、单元测试、模板

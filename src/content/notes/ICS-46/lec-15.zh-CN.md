@@ -1,6 +1,8 @@
 ---
 title: "哈希表"
 summary: "哈希表的冲突处理：拉链法（结构、跟踪示例、实现、负载因子）、线性探测（插入、查找、墓碑删除、主聚集、探测次数公式与扩容）以及二次探测。"
+topics:
+  - hashing
 ---
 
 # Information and Computer Science 46 — Lecture 15：哈希表
