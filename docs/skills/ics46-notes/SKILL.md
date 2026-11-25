@@ -478,12 +478,18 @@ shown in the hub's Review view, and carry no `topics`.)
 Besides the lecture notes, each topic has one **topic note**,
 `src/content/notes/ICS-46/topic-<id>.<lang>.md` (`kind: "topic"`,
 `topics:` + `- <id>`, `order: 501…` in course-JSON order), that gathers the
-topic from every lecture into one pure-knowledge note: reorganized by
-concept and deduplicated, all instructor code, examples, viz blocks and
-pitfalls kept, activities and homework problems as `### N.M Practice`
-problems with folded answers, and **nothing about the course plan** — no
-logistics boxes, dates, quiz/exam scope, due dates, grades, slide page
-numbers or "continued in" pointers. When a new lecture note adds to a topic,
+topic from every lecture into **one unified, self-contained chapter** — the
+note the hub's By topic view shows for that topic. It reads like a textbook
+chapter, not a merge of lectures: one teaching order, one explanation per
+idea, one consistent set of code names, and **no reference to its sources** —
+no slides, lectures, Lecture N, the professor, activities, labs, homework,
+"slide bug" or "my completion" notes (fix the instructor code's bugs in
+place; a common student mistake can stay as a general Pitfall). Supplements
+are `> 📘 **Going further**:` callouts. Every fact, complexity result, table,
+trace, viz block and practice problem is kept; practice problems sit in
+`### N.M Practice` with folded answers; all code is compiled and run. And
+**nothing about the course plan** (dates, quiz/exam scope, due dates,
+grades). When a new lecture note adds to a topic,
 also merge its new material into that topic's note (both languages) in the
 same push; a lecture that starts a topic with no id yet waits for Kazuha's
 go-ahead on the new id (see Frontmatter). Exam review sheets are

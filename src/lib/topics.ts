@@ -115,6 +115,11 @@ export async function getCourseTopics(course: CourseEntry, groups: NoteGroup[]):
       seen.add(tag.id);
       const sections: TopicEntry["sections"] = {};
       for (const l of present) {
+        if (group.kind === "topic") {
+          // A topic note's card lists its chapters (the `## N.` headings).
+          sections[l] = [...headingMaps.get(l)!.values()].filter((s) => s.depth === 2);
+          continue;
+        }
         sections[l] = tag.sections.map((n) => {
           const s = headingMaps.get(l)!.get(n);
           if (!s) throw new Error(`${code}/${group.slug}.${l}: topic "${tag.id}" names section ${n}, but there is no ${n.includes(".") ? `"### ${n}"` : `"## ${n}."`} heading`);

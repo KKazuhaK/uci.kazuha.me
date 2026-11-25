@@ -20,7 +20,12 @@ export const getStaticPaths = (async () => {
 const { course, groups } = Astro.props;
 const c = course.data;
 const unitWord = groups[0]?.unit === "lecture" ? "Lecture-by-lecture" : "Week-by-week";
-const topics = (await getCourseTopics(course, groups))?.filter((t) => t.entries.length) ?? null;
+// A topic that has its own topic note shows only that note (one unified note per topic); the lecture
+// sections it was built from stay in the By lecture view. Topics without one list the lecture sections.
+const topics =
+  (await getCourseTopics(course, groups))
+    ?.map((t) => (t.entries.some((e) => e.group.kind === "topic") ? { ...t, entries: t.entries.filter((e) => e.group.kind === "topic") } : t))
+    .filter((t) => t.entries.length) ?? null;
 const byWeek = groups[0]?.unit === "week";
 const unitGroups = groups.filter((g) => g.kind === "unit");
 const reviewGroups = groups.filter((g) => g.kind === "review");
@@ -51,7 +56,7 @@ function card(group: (typeof groups)[number], lang: Lang) {
 function topicCard(entry: TopicEntry, lang: Lang) {
   const base = card(entry.group, lang);
   const sections = (entry.sections[base.shownLang] ?? []).map((s) => ({ ...s, href: `${base.href}#${encodeURIComponent(s.id)}` }));
-  return { ...base, sections, href: sections[0]?.href ?? base.href };
+  return { ...base, sections, href: entry.group.kind === "topic" ? base.href : (sections[0]?.href ?? base.href) };
 }
 
 ---
@@ -101,7 +106,7 @@ function topicCard(entry: TopicEntry, lang: Lang) {
         {topics && LANGS.map((l) => (
           <nav class="topic-chips" aria-label={S[l].topicsNav} data-pane={l} lang={l} data-view="topic">
             {topics.map((t) => (
-              <a class="topic-chip" href={`#topic-${t.id}`}>{t.label[l]}<span class="topic-chip-n">{t.entries.length}</span></a>
+              <a class="topic-chip" href={`#topic-${t.id}`}>{t.label[l]}{t.entries.length > 1 && <span class="topic-chip-n">{t.entries.length}</span>}</a>
             ))}
           </nav>
         ))}
@@ -116,7 +121,7 @@ function topicCard(entry: TopicEntry, lang: Lang) {
               <div data-pane={l} lang={l}>
                 <header class="topic-head">
                   <h2>{t.label[l]}</h2>
-                  <span class="topic-count">{S[l].notes(t.entries.length)}</span>
+                  {t.entries.length > 1 && <span class="topic-count">{S[l].notes(t.entries.length)}</span>}
                 </header>
                 {t.summary && <p class="topic-summary">{t.summary[l]}</p>}
                 <div class="week-grid">

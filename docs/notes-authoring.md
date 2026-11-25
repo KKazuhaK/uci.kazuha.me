@@ -47,7 +47,7 @@ A bare id puts the whole note under that topic; `sections` lists numbered sectio
 
 **Note kinds.** Frontmatter `kind` (optional) says what a note is; leave it out for a lecture/week note.
 
-- `kind: "topic"` — a *topic note*: one topic gathered from every lecture into a single note, pure knowledge (no class logistics, dates, quiz/exam scope or grades). File `topic-<id>.<lang>.md`, frontmatter `topics:` with exactly that bare id, and `order` to place it after the lectures (ICS 46: 501 + the topic's position in the course JSON). On the hub's By topic view it leads its topic, above the lecture sections it was built from; it is not listed in the By lecture view.
+- `kind: "topic"` — a *topic note*: one topic gathered from every lecture into a single note, pure knowledge (no class logistics, dates, quiz/exam scope or grades). File `topic-<id>.<lang>.md`, frontmatter `topics:` with exactly that bare id, and `order` to place it after the lectures (ICS 46: 501 + the topic's position in the course JSON). It is a self-contained chapter (no references to slides, lectures or the course plan). On the hub's By topic view it is the only card for its topic (the lecture sections it was built from stay in the By lecture view); topics without a topic note list their lecture sections instead.
 - `kind: "review"` — exam review material (e.g. `midterm-review`): no `topics`; the hub shows these in their own "Review / 复习" view, not in By topic or By lecture.
 
 Both languages carry the same `kind`, or the build fails.
