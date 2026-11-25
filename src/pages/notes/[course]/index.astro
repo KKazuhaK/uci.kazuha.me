@@ -249,9 +249,10 @@ function topicCard(entry: TopicEntry, lang: Lang) {
 </script>
 
 <script>
-  // Full-text search over this course's notes (index: notes/<course>/search.json, fetched on first use).
-  type Sec = { id: string; h: string; t: string };
-  type Note = { lang: string; kind: string; label: string; title: string; url: string; s: Sec[] };
+  // Search this course's notes by title, summary and headings, in both languages
+  // (index: notes/<course>/search.json, fetched on first use).
+  type Sec = { id: string; h: string };
+  type Note = { lang: string; g: string; kind: string; label: string; title: string; sum: string; url: string; s: Sec[] };
   const box = document.querySelector<HTMLElement>(".hub-search");
   const input = box?.querySelector<HTMLInputElement>(".hub-search-input");
   const panel = box?.querySelector<HTMLElement>(".hub-search-results");
@@ -268,7 +269,7 @@ function topicCard(entry: TopicEntry, lang: Lang) {
     new MutationObserver(() => { setPh(); if (input.value && !panel.hidden) run(); }).observe(html, { attributes: true, attributeFilter: ["data-notes-lang"] });
 
     let index: Promise<Note[]> | null = null;
-    const load = () => (index ??= fetch(box.dataset["searchUrl"]!).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }).then((d) => d.notes as Note[]));
+    const load = () => (index ??= fetch(box.dataset["searchUrl"]!).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }).then((d) => { if (d.v !== 2) throw new Error("old index"); return d.notes as Note[]; }));
     const esc = (x: string) => x.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
     // One pass over the raw text with all terms, escaping the pieces in between (never re-scan HTML).
     const mark = (text: string, terms: string[]) => {
@@ -280,14 +281,6 @@ function topicCard(entry: TopicEntry, lang: Lang) {
         last = m.index! + m[0].length;
       }
       return out + esc(text.slice(last));
-    };
-    const snippet = (text: string, terms: string[]) => {
-      const low = text.toLowerCase();
-      const at = Math.min(...terms.map((t) => low.indexOf(t)).filter((i) => i >= 0), text.length);
-      if (at === text.length) return esc(text.slice(0, 170)) + (text.length > 170 ? "…" : "");
-      const from = Math.max(0, at - 50);
-      const cut = text.slice(from, from + 170);
-      return (from > 0 ? "…" : "") + mark(cut, terms) + (from + 170 < text.length ? "…" : "");
     };
 
     let active = -1;
@@ -310,24 +303,37 @@ function topicCard(entry: TopicEntry, lang: Lang) {
       try { notes = await load(); } catch { index = null; if (my !== seq) return; panel!.innerHTML = `<div class="hs-empty">${msg[lang()].fail}</div>`; return open(); }
       if (my !== seq) return;
       const terms = q.split(/\s+/).filter(Boolean);
-      const hits: { score: number; html: string }[] = [];
+      // Both languages are searched; a hit is shown as the same section of the note in the reader's
+      // language (en-US and zh-CN notes have the same headings in the same order), else as found.
+      const cur = lang();
+      const byNote = new Map<string, Note>();
+      for (const n of notes) if (n.lang === cur) byNote.set(n.g, n);
+      const best = new Map<string, { score: number; html: string }>();
+      const has = (x: string) => { const l = x.toLowerCase(); return terms.every((w) => l.includes(w)); };
+      const add = (key: string, score: number, href: string, where: string, head: string, sub: string) => {
+        if ((best.get(key)?.score ?? -1) >= score) return;
+        best.set(key, {
+          score,
+          html: `<a class="hs-item" role="option" href="${esc(href)}"><span class="hs-where">${esc(where)}</span>` +
+            `<span class="hs-head">${mark(head, terms)}</span>` + (sub ? `<span class="hs-snip">${mark(sub, terms)}</span>` : "") + `</a>`,
+        });
+      };
       for (const n of notes) {
-        if (n.lang !== lang()) continue;
-        const nt = n.title.toLowerCase();
-        for (const sec of n.s) {
-          const h = sec.h.toLowerCase(), t = sec.t.toLowerCase();
-          if (!terms.every((w) => h.includes(w) || t.includes(w))) continue; // the title only boosts
-          let score = n.kind === "topic" ? 8 : 0; // the unified topic note first
-          for (const w of terms) score += (h.includes(w) ? 20 : 0) + (nt.includes(w) ? 5 : 0) + Math.min(10, t.split(w).length - 1);
-          const href = n.url + (sec.id ? "#" + encodeURIComponent(sec.id) : "");
-          hits.push({
-            score,
-            html: `<a class="hs-item" role="option" href="${esc(href)}"><span class="hs-where">${esc(n.kind === "topic" ? n.label : n.label + " · " + n.title)}</span>` +
-              `<span class="hs-head">${mark(sec.h || n.title, terms)}</span>` +
-              (sec.t ? `<span class="hs-snip">${snippet(sec.t, terms)}</span>` : "") + `</a>`,
-          });
-        }
+        const shown = byNote.get(n.g) ?? n;
+        const aligned = shown !== n && shown.s.length === n.s.length;
+        const bonus = (n.kind === "topic" ? 8 : 0) + (n.lang === cur ? 2 : 0); // topic notes, then own language
+        const where = shown.label;
+        // The note itself: its title or summary has every term.
+        if (has(n.title + " " + n.sum)) add(shown.url, 30 + bonus + (has(n.title) ? 10 : 0), shown.url, where, shown.title, shown.sum);
+        // Its sections: the heading has every term (or the note title plus heading together do).
+        n.s.forEach((sec, i) => {
+          if (!has(sec.h) && !(has(n.title + " " + sec.h) && !has(n.title))) return;
+          const tsec = aligned ? shown.s[i]! : sec;
+          const target = aligned ? shown : n;
+          add(target.url + "#" + tsec.id, 20 + bonus, target.url + "#" + encodeURIComponent(tsec.id), target.kind === "topic" ? target.label : target.label + " · " + target.title, tsec.h, "");
+        });
       }
+      const hits = [...best.values()];
       hits.sort((a, b) => b.score - a.score);
       panel!.innerHTML = hits.length ? hits.slice(0, 30).map((x) => x.html).join("") : `<div class="hs-empty">${msg[lang()].none}</div>`;
       active = -1;
@@ -380,7 +386,7 @@ function topicCard(entry: TopicEntry, lang: Lang) {
   .hub-search-results :global(.hs-item:hover), .hub-search-results :global(.hs-item.active) { background: var(--card-2); }
   .hub-search-results :global(.hs-where) { font-size: 11px; font-weight: 600; color: var(--subtle); }
   .hub-search-results :global(.hs-head) { font-size: 14px; font-weight: 600; }
-  .hub-search-results :global(.hs-snip) { font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+  .hub-search-results :global(.hs-snip) { font-size: 12.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; color: var(--ink-2); }
   .hub-search-results :global(mark) { background: rgba(255, 210, 0, .35); color: inherit; border-radius: 3px; padding: 0 1px; }
   .hub-search-results :global(.hs-empty) { padding: 14px; font-size: 13px; color: var(--subtle); }
   @media (max-width: 736px) { .hub-search { flex: 1 1 100%; margin-left: 0; } }
