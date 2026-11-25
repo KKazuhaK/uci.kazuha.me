@@ -1,6 +1,8 @@
 ---
 title: "Course Intro, IR and the Web, Architecture"
 summary: "How the course works, what information retrieval is, types of search engines, databases vs. search engines, relevance and retrieval models, classic vs. web IR, and search engine architecture."
+topics:
+  - { id: search-engines, sections: "2-10, 12.1-12.2" }
 ---
 
 # CS 121: Information Retrieval — Week 1: Course Introduction, IR and the Web, Architecture

@@ -32,7 +32,7 @@ summary: "Hoare partitioning, full traces, worst/best/average analysis."
 # Information and Computer Science 46 — Lecture 9: Quick Sort
 ```
 
-`title` is the short name on the course hub card; `summary` is one sentence listing the topics. The schema (`src/content.config.ts`) also accepts `label: { en-US, zh-CN }`, `order` and `draft: true`, for special notes only; skills write `title`, `summary` and, when the course defines topics, `topics` (the ICS 46 skill's `check_md.py` validates `topics` and warns on anything else; the other skills' copies don't accept `topics` yet, and their courses don't define any). A missing title/summary or a bad file name fails the build.
+`title` is the short name on the course hub card; `summary` is one sentence listing the topics. The schema (`src/content.config.ts`) also accepts `label: { en-US, zh-CN }`, `order` and `draft: true`, for special notes only; skills write `title`, `summary` and, when the course defines topics, `topics` (the ICS 46 `check_md.py` and the IN4MATX 133 one, which CS 121 shares, validate `topics`, `kind` and `order` and warn on anything else; ICS 46 and CS 121 define topics). A missing title/summary or a bad file name fails the build.
 
 **Topics.** A course whose `src/content/courses/<COURSE>.json` has a `topics` list gets a "By topic" view on its hub. Each note says which topics it belongs to, after `summary`:
 

@@ -1,6 +1,9 @@
 ---
 title: "The Vector Space Model and Cosine Ranking"
 summary: "Documents and queries as tf-idf vectors, why Euclidean distance fails, cosine similarity and length normalization, the CosineScore algorithm, tf-idf variants and SMART notation (lnc.ltc), an aggregated scoring function, and faster ranking: top-K with a heap, inexact top K and index elimination."
+topics:
+  - { id: retrieval-models, sections: "2-8, 14.1-14.3" }
+  - { id: query-processing, sections: "9-12, 14.4-14.5" }
 ---
 
 # CS 121: Information Retrieval — Week 8: Ranked Retrieval / The Vector Space Model

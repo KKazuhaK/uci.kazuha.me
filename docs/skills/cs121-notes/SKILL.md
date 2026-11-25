@@ -426,11 +426,42 @@ problems → fixes, encodings, duplicate-detection methods, formulas …); "Top
 5" = the five ideas most likely to cost points on the quiz, one sentence
 each.
 
-**Frontmatter** — exactly two fields, JSON-style double-quoted strings, then
-one blank line, then the body's own `#` title. `title` is the short name on
-the course hub card; `summary` is one sentence listing the week's topics.
-The hub, prev/next, home page and sitemap are generated from these — there
-is no index page or catalog to update by hand.
+**Frontmatter** — `title` and `summary` (JSON-style double-quoted strings),
+then a `topics:` block, then one blank line, then the body's own `#` title.
+`title` is the short name on the course hub card; `summary` is one sentence
+listing the week's topics. `topics` assigns the week's numbered sections to
+the topic ids in `src/content/courses/CS-121.json`
+(`  - { id: crawling, sections: "1-13, 15.1-15.6" }`; both ends of a range at
+the same level; leave out course intro, In-class Notes & Assignment Tips and
+Quick Reference; a "Where we are" §1 goes in only when it carries real
+content, e.g. week-06/07 §1 → indexing; see `docs/notes-authoring.md` §2). The en-US and zh-CN files
+carry the identical block. The hub, prev/next, home page and sitemap are
+generated from these — there is no index page or catalog to update by hand.
+
+### Topic notes (`topic-<id>`) — keep them in step
+
+Each topic in the course JSON also has one **topic note**,
+`src/content/notes/CS-121/topic-<id>.<lang>.md` (`kind: "topic"`,
+`topics:` + `  - <id>`, `order: 501 +` its position in the course JSON), the
+only card for that topic in the hub's By topic view. It is a self-contained
+textbook chapter: motivation → definitions → methods/algorithms → analysis →
+variants → comparison → practice → quick reference, one explanation per
+idea, one naming scheme, and **no sources or course plan** (no slides,
+lectures, weeks, videos, instructor, A1–A3, quizzes, dates, scope or
+grades). Every concept, formula, table, worked example, pitfall and viz demo
+from the weeks is kept (viz JSON byte-identical except `title`); supplements
+are `> 📘 **Going further**:` callouts; practice sits in `### N.M Practice`
+at the end of its `##`, one `####` per problem, answer folded under
+`Solution` (zh-CN: `解答`); Python is run and its real output shown. Links go only to other
+`topic-<id>` notes, never to `week-*.md`. Title line:
+`# CS 121: Information Retrieval — Topic: <label>` /
+`# CS 121: Information Retrieval — 话题：<中文标签>`; zh-CN callouts
+⚠️ **易错点** / 💡 **关键洞见** / 📘 **延伸阅读** / 📝 **练习**.
+
+**Rule: when a new week adds material to a topic, merge it into that
+topic's note too (en-US and zh-CN) in the same push**, and add the week's
+`topics` block. A week that needs a **new topic id** waits: ask Kazuha
+before adding the id to the course JSON.
 
 ## Viz demos
 

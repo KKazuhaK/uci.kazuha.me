@@ -1,6 +1,10 @@
 ---
 title: "扩展索引、查询处理、tf-idf"
 summary: "部分索引与多路合并、跳表指针与查询顺序、用双词索引和位置索引处理短语查询、为索引建索引与 seek、MapReduce、索引更新、分布式查询求值与缓存、按文档处理与按词项处理、合取处理、MaxScore，以及迈向排序检索的第一步：Jaccard、词袋模型、tf、idf 与 tf-idf。"
+topics:
+  - { id: indexing, sections: "1-2, 4-8, 20.1, 20.3-20.5" }
+  - { id: retrieval-models, sections: "14-18, 20.7-20.8" }
+  - { id: query-processing, sections: "3, 9-13, 20.2, 20.6" }
 ---
 
 # CS 121: Information Retrieval — Week 7：分布式索引、工程问题

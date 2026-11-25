@@ -1,6 +1,10 @@
 ---
 title: "Scaling the Index, Query Processing, tf-idf"
 summary: "Partial indexes and multi-way merging, skip pointers and query order, phrase queries with biword and positional indexes, indexing the index with seek, MapReduce, index updates, distributed query evaluation and caching, document-at-a-time vs term-at-a-time, conjunctive processing, MaxScore, and the first step to ranked retrieval: Jaccard, bag of words, tf, idf and tf-idf."
+topics:
+  - { id: indexing, sections: "1-2, 4-8, 20.1, 20.3-20.5" }
+  - { id: retrieval-models, sections: "14-18, 20.7-20.8" }
+  - { id: query-processing, sections: "3, 9-13, 20.2, 20.6" }
 ---
 
 # CS 121: Information Retrieval — Week 7: Distributed Indexing, Engineering Issues

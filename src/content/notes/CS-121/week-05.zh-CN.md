@@ -1,6 +1,10 @@
 ---
 title: "文本处理、词项-文档矩阵"
 summary: "分词难点、停用词去除、词干提取（suffix-s、Porter、Krovetz）、用词性标注和 n-gram 识别短语、文档结构与锚文本，以及词项-文档关联矩阵。"
+topics:
+  - { id: text-processing, sections: "1-12, 15.1-15.3" }
+  - { id: indexing, sections: "13-14, 15.5" }
+  - { id: retrieval-models, sections: "15.4" }
 ---
 
 # CS 121: Information Retrieval — Week 5：文本处理、词项-文档矩阵

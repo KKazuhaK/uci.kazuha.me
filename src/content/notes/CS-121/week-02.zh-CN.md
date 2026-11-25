@@ -1,6 +1,11 @@
 ---
 title: "网络语料、搜索引擎优化与网络爬虫"
 summary: "语料与分词、网络图、网络用户与查询、广告商业模式、SEO 与垃圾信息、URL，以及走向爬虫的第一步。"
+topics:
+  - { id: search-engines, sections: "3-5, 7-11" }
+  - { id: crawling, sections: "12-14, 16.4-16.5" }
+  - { id: text-processing, sections: "1-2, 16.1-16.2" }
+  - { id: evaluation, sections: "6, 16.3" }
 ---
 
 # CS 121: Information Retrieval — Week 2：网页语料、搜索引擎优化与网页爬取

@@ -1,6 +1,10 @@
 ---
 title: "Inverted Index, Index Construction"
 summary: "The inverted index (dictionary and postings), the indexer's sort-and-merge steps, AND queries by merging postings, the Boolean retrieval model, the abstract model of ranking, postings with counts, positions, extents and scores, the simple in-memory indexer, docIDs, and the hardware limits that make in-memory indexing break."
+topics:
+  - { id: indexing, sections: "1-4, 8-10, 12.1-12.3, 12.6-12.7" }
+  - { id: retrieval-models, sections: "6-7, 12.5" }
+  - { id: query-processing, sections: "5, 12.4" }
 ---
 
 # CS 121: Information Retrieval — Week 6: Inverted Index, Index Construction, Query Processing

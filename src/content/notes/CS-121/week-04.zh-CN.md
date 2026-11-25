@@ -1,6 +1,9 @@
 ---
 title: "字符编码、文档存储、重复检测与 Zipf 定律"
 summary: "文档转换与字符编码（Unicode、UTF-8）、文档存储（TREC Web 格式、压缩、BigTable）、精确与近似重复检测（校验和、n-gram 指纹、Simhash）、去除网页噪声，以及文本统计与 Zipf 定律。"
+topics:
+  - { id: documents, sections: "1-10, 12.1-12.4" }
+  - { id: text-processing, sections: "11, 12.5" }
 ---
 
 # CS 121: Information Retrieval — Week 4：网页爬取、文本处理

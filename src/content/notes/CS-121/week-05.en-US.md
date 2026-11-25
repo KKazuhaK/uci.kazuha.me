@@ -1,6 +1,10 @@
 ---
 title: "Text Processing, Term-Document Matrices"
 summary: "Tokenizing problems, stopping, stemming (suffix-s, Porter, Krovetz), phrases with POS tagging and n-grams, document structure and anchor text, and the term-document incidence matrix."
+topics:
+  - { id: text-processing, sections: "1-12, 15.1-15.3" }
+  - { id: indexing, sections: "13-14, 15.5" }
+  - { id: retrieval-models, sections: "15.4" }
 ---
 
 # CS 121: Information Retrieval — Week 5: Text Processing, Term-Document Matrices

@@ -1,6 +1,8 @@
 ---
 title: "课程介绍、信息检索与网络、搜索引擎架构"
 summary: "课程安排、什么是信息检索、搜索引擎的类型、数据库与搜索引擎的区别、相关性与检索模型、传统 IR 与网络 IR，以及搜索引擎架构。"
+topics:
+  - { id: search-engines, sections: "2-10, 12.1-12.2" }
 ---
 
 # CS 121: Information Retrieval — Week 1：课程介绍、信息检索与网络、架构

@@ -1,6 +1,11 @@
 ---
 title: "Efficient Scoring, Link Analysis, Evaluation"
 summary: "Inexact top-K retrieval (index elimination, champion lists, static quality g(d) and net score, high/low lists, impact ordering, tiered indexes), zone and field indexes, proximity and query parsers, HITS hubs and authorities, PageRank by iteration and in matrix form, and the start of search engine evaluation: test collections, pooling, query logs and clicks, precision, recall and fallout."
+topics:
+  - { id: retrieval-models, sections: "7, 9-10, 21.1-21.2" }
+  - { id: query-processing, sections: "2-6, 8" }
+  - { id: link-analysis, sections: "11-14, 21.3" }
+  - { id: evaluation, sections: "15-19, 21.4" }
 ---
 
 # CS 121: Information Retrieval — Week 9: The Vector Space Model, Scoring, Term Weighting / Link Analysis

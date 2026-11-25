@@ -1,6 +1,10 @@
 ---
 title: "倒排索引、索引构建"
 summary: "倒排索引（词典与 postings）、索引器的排序与合并步骤、通过合并 postings 处理 AND 查询、布尔检索模型、排序的抽象模型、带计数、位置、区段与分数的 postings、简单的内存索引器、docID，以及使内存索引失效的硬件限制。"
+topics:
+  - { id: indexing, sections: "1-4, 8-10, 12.1-12.3, 12.6-12.7" }
+  - { id: retrieval-models, sections: "6-7, 12.5" }
+  - { id: query-processing, sections: "5, 12.4" }
 ---
 
 # CS 121: Information Retrieval — Week 6：倒排索引、索引构建、查询处理

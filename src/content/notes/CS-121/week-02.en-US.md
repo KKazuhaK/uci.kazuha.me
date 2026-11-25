@@ -1,6 +1,11 @@
 ---
 title: "The Web Corpus, SEO, Web Crawling"
 summary: "Corpus and tokenization, the web graph, web users and queries, the ad business model, SEO and spam, URLs, and the first steps toward a crawler."
+topics:
+  - { id: search-engines, sections: "3-5, 7-11" }
+  - { id: crawling, sections: "12-14, 16.4-16.5" }
+  - { id: text-processing, sections: "1-2, 16.1-16.2" }
+  - { id: evaluation, sections: "6, 16.3" }
 ---
 
 # CS 121: Information Retrieval — Week 2: The Web Corpus, Search Engine Optimization, Web Crawling

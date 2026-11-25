@@ -1,6 +1,8 @@
 ---
 title: "Web Crawling"
 summary: "The basic crawl loop, robots.txt and sitemaps, politeness, crawler traps, duplicates, freshness, distributed and focused crawling, and ethics, privacy and copyright."
+topics:
+  - { id: crawling, sections: "1-13, 15.1-15.6" }
 ---
 
 # CS 121: Information Retrieval — Week 3: Web Crawling

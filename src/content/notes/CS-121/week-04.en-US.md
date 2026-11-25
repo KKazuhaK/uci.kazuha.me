@@ -1,6 +1,9 @@
 ---
 title: "Encodings, Storing Documents, Duplicates, Zipf's Law"
 summary: "Document conversion and character encodings (Unicode, UTF-8), storing documents (TREC Web, compression, BigTable), exact and near-duplicate detection (checksums, n-gram fingerprints, Simhash), removing page noise, and text statistics with Zipf's law."
+topics:
+  - { id: documents, sections: "1-10, 12.1-12.4" }
+  - { id: text-processing, sections: "11, 12.5" }
 ---
 
 # CS 121: Information Retrieval — Week 4: Web Crawling, Text Processing

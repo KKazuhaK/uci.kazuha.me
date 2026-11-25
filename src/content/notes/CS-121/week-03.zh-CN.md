@@ -1,6 +1,8 @@
 ---
 title: "网络爬虫"
 summary: "基本爬取循环、robots.txt 与 sitemap、礼貌性、爬虫陷阱、重复内容、新鲜度、分布式与聚焦爬取，以及伦理、隐私与版权。"
+topics:
+  - { id: crawling, sections: "1-13, 15.1-15.6" }
 ---
 
 # CS 121: Information Retrieval — Week 3：网络爬虫

@@ -21,5 +21,106 @@
       "readerHeading": "信息检索课程阅读笔记",
       "readerDescription": "这页整理的是 {course}{weekPhrase} 的课程笔记，适合按周复习文本处理、网络图、SEO、网络爬虫，以及搜索引擎如何索引网页并为其排序。下面这条路径可以带你回到 Notes、Course Notes、课程主页，或定位到当前笔记。将鼠标悬停在右侧的 ≡ 图标上可以打开目录。"
     }
-  }
+  },
+  "topics": [
+    {
+      "id": "search-engines",
+      "label": {
+        "en-US": "Search Engines & the Web",
+        "zh-CN": "搜索引擎与 Web"
+      },
+      "summary": {
+        "en-US": "What IR is, databases vs. search engines, relevance, classic vs. web IR, search engine architecture, the web graph, users and queries, the ad model, SEO and spam.",
+        "zh-CN": "信息检索的定义、数据库与搜索引擎、相关性、传统 IR 与网络 IR、搜索引擎架构、网络图、用户与查询、广告模式、SEO 与垃圾信息。"
+      }
+    },
+    {
+      "id": "crawling",
+      "label": {
+        "en-US": "Web Crawling",
+        "zh-CN": "网络爬虫"
+      },
+      "summary": {
+        "en-US": "URLs, the crawl loop, robots.txt and sitemaps, politeness and performance, DNS, crawler traps, freshness and expected age, distributed and focused crawling, ethics, privacy and copyright.",
+        "zh-CN": "URL 结构、爬取循环、robots.txt 与 sitemap、礼貌性与性能、DNS、爬虫陷阱、新鲜度与期望年龄、分布式与聚焦爬取、伦理、隐私与版权。"
+      }
+    },
+    {
+      "id": "documents",
+      "label": {
+        "en-US": "Document Conversion, Storage & Duplicates",
+        "zh-CN": "文档转换、存储与去重"
+      },
+      "summary": {
+        "en-US": "Format conversion, Unicode and UTF-8, the TREC Web format, compression and BigTable, checksums, n-gram fingerprints, Simhash and content-block extraction.",
+        "zh-CN": "格式转换、Unicode 与 UTF-8、TREC Web 格式、压缩与 BigTable、校验和、n-gram 指纹、Simhash 与正文块提取。"
+      }
+    },
+    {
+      "id": "text-processing",
+      "label": {
+        "en-US": "Text Processing",
+        "zh-CN": "文本处理"
+      },
+      "summary": {
+        "en-US": "Tokenization, stopping, stemming (suffix-s, Porter, Krovetz), phrases, POS tagging and n-grams, document structure and anchor text, and text statistics with Zipf's law.",
+        "zh-CN": "分词、停用词、词干提取（suffix-s、Porter、Krovetz）、短语、词性标注与 n-gram、文档结构与锚文本，以及文本统计与 Zipf 定律。"
+      }
+    },
+    {
+      "id": "indexing",
+      "label": {
+        "en-US": "Inverted Indexes & Index Construction",
+        "zh-CN": "倒排索引与索引构建"
+      },
+      "summary": {
+        "en-US": "From the term-document matrix to the inverted index, postings with counts, positions, extents and scores, docIDs, partial indexes and merging, biword and positional indexes, index-the-index with seek, MapReduce and index updates.",
+        "zh-CN": "从词项-文档矩阵到倒排索引、含计数/位置/extent/分数的 postings、docID、部分索引与归并、双词与位置索引、索引的索引与 seek、MapReduce 与索引更新。"
+      }
+    },
+    {
+      "id": "retrieval-models",
+      "label": {
+        "en-US": "Retrieval Models: Boolean, tf-idf & Vector Space",
+        "zh-CN": "检索模型：布尔、tf-idf 与向量空间"
+      },
+      "summary": {
+        "en-US": "The Boolean model, the abstract ranking model, Jaccard, bag of words, tf, idf and tf-idf, the vector space model with cosine similarity, SMART notation, zones, proximity, query parsers and aggregate scores.",
+        "zh-CN": "布尔模型、排序的抽象模型、Jaccard、词袋、tf/idf/tf-idf、向量空间模型与余弦相似度、SMART 记号、区域打分、邻近度、查询解析器与聚合打分。"
+      }
+    },
+    {
+      "id": "query-processing",
+      "label": {
+        "en-US": "Query Processing & Efficient Top-K",
+        "zh-CN": "查询处理与高效 Top-K"
+      },
+      "summary": {
+        "en-US": "Merging postings for AND, skip pointers and term order, distributed evaluation and caching, DAAT vs TAAT, conjunctive processing, MaxScore, heap top-K, index elimination, champion lists, g(d), high/low lists, impact ordering and tiered indexes.",
+        "zh-CN": "postings 归并求 AND、跳表指针与词项顺序、分布式查询与缓存、DAAT 与 TAAT、合取处理、MaxScore、堆取 top-K、索引剪枝、冠军列表、g(d)、高低列表、按影响排序与分层索引。"
+      }
+    },
+    {
+      "id": "link-analysis",
+      "label": {
+        "en-US": "Link Analysis: HITS & PageRank",
+        "zh-CN": "链接分析：HITS 与 PageRank"
+      },
+      "summary": {
+        "en-US": "Hubs and authorities, the base set, the HITS iteration, the random surfer and teleporting, PageRank by iteration and in matrix form, and PageRank in a real engine.",
+        "zh-CN": "枢纽页与权威页、基础集、HITS 迭代、随机游走者与远程跳转、PageRank 的迭代与矩阵形式，以及实际引擎中的 PageRank。"
+      }
+    },
+    {
+      "id": "evaluation",
+      "label": {
+        "en-US": "Search Engine Evaluation",
+        "zh-CN": "搜索引擎评测"
+      },
+      "summary": {
+        "en-US": "Effectiveness, efficiency and cost, test collections and relevance judgments, pooling, query logs and clickthrough (Skip Above/Next), precision, recall and fallout.",
+        "zh-CN": "有效性、效率与成本，测试集与相关性判断，汇集（pooling），查询日志与点击数据（Skip Above/Next），精确率、召回率与误报率。"
+      }
+    }
+  ]
 }

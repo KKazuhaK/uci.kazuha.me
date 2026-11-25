@@ -1,6 +1,11 @@
 ---
 title: "高效打分、链接分析、评价"
 summary: "近似的前 K 个检索（索引剪枝、冠军列表、静态质量分数 g(d) 与净得分、高/低列表、按影响排序、分层索引）、区域索引与字段索引、邻近度与查询解析器、HITS 的枢纽页与权威页、迭代与矩阵形式的 PageRank，以及搜索引擎评价的起点：测试集合、汇集、查询日志与点击、精确率、召回率和误报率。"
+topics:
+  - { id: retrieval-models, sections: "7, 9-10, 21.1-21.2" }
+  - { id: query-processing, sections: "2-6, 8" }
+  - { id: link-analysis, sections: "11-14, 21.3" }
+  - { id: evaluation, sections: "15-19, 21.4" }
 ---
 
 # CS 121: Information Retrieval — Week 9：向量空间模型、打分、词项加权 / 链接分析

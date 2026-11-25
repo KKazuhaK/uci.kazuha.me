@@ -1,6 +1,9 @@
 ---
 title: "向量空间模型与余弦排序"
 summary: "文档与查询表示为 tf-idf 向量，为什么欧氏距离行不通，余弦相似度与长度归一化，CosineScore 算法，tf-idf 变体与 SMART 记号（lnc.ltc），聚合打分函数，以及更快的排序：用堆选出前 K 个、近似的前 K 个与索引剪枝。"
+topics:
+  - { id: retrieval-models, sections: "2-8, 14.1-14.3" }
+  - { id: query-processing, sections: "9-12, 14.4-14.5" }
 ---
 
 # CS 121: Information Retrieval — Week 8：排序检索 / 向量空间模型
