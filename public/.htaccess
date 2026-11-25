@@ -9,7 +9,7 @@ AddType "text/javascript; charset=utf-8" .mjs
 # Pages and viz modules: the browser asks again on every load (a cheap 304 when
 # unchanged), so a deploy is seen at once and a new page never meets an old module.
 <IfModule mod_headers.c>
-  <FilesMatch "\.(html|js|mjs)$">
+  <FilesMatch "\.(html|js|mjs|json)$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
 </IfModule>

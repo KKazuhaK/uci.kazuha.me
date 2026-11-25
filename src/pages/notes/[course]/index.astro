@@ -36,8 +36,8 @@ const views = [...(topics ? ["topic"] : []), "unit", ...(reviewGroups.length ? [
 const multiView = views.length > 1;
 
 const S = {
-  "en-US": { ready: "Available", other: "Other language only", open: "Open →", openOther: "Open other lang →", byTopic: "By topic", byUnit: byWeek ? "By week" : "By lecture", byReview: "Review", topicNote: "Topic note", topicN: (n: number) => `Topic ${n}`, view: "View", topicsNav: "Topics", notes: (n: number) => `${n} note${n === 1 ? "" : "s"}` },
-  "zh-CN": { ready: "已就绪", other: "仅另一语言可用", open: "打开 →", openOther: "打开现有版本 →", byTopic: "按话题", byUnit: byWeek ? "按周" : "按讲", byReview: "复习", topicNote: "话题笔记", topicN: (n: number) => `话题 ${n}`, view: "视图", topicsNav: "话题", notes: (n: number) => `${n} 篇` },
+  "en-US": { ready: "Available", other: "Other language only", open: "Open →", openOther: "Open other lang →", byTopic: "By topic", byUnit: byWeek ? "By week" : "By lecture", byReview: "Review", topicNote: "Topic note", topicN: (n: number) => `Topic ${n}`, searchPh: "Search notes…", view: "View", topicsNav: "Topics", notes: (n: number) => `${n} note${n === 1 ? "" : "s"}` },
+  "zh-CN": { ready: "已就绪", other: "仅另一语言可用", open: "打开 →", openOther: "打开现有版本 →", byTopic: "按话题", byUnit: byWeek ? "按周" : "按讲", byReview: "复习", topicNote: "话题笔记", topicN: (n: number) => `话题 ${n}`, searchPh: "搜索笔记…", view: "视图", topicsNav: "话题", notes: (n: number) => `${n} 篇` },
 } satisfies Record<Lang, unknown>;
 
 function card(group: (typeof groups)[number], lang: Lang) {
@@ -96,9 +96,8 @@ function topicCard(entry: TopicEntry, lang: Lang) {
       <LangSwitch />
     </div>
 
-    {multiView && (
-      <div class="card hub-toolbar">
-        {LANGS.map((l) => (
+    <div class="card hub-toolbar">
+        {multiView && LANGS.map((l) => (
           <div class="lang-switch view-switch" role="group" aria-label={S[l].view} data-pane={l} lang={l}>
             {topics && <button type="button" data-hub-view-btn="topic">{S[l].byTopic}</button>}
             <button type="button" data-hub-view-btn="unit">{S[l].byUnit}</button>
@@ -112,8 +111,15 @@ function topicCard(entry: TopicEntry, lang: Lang) {
             ))}
           </nav>
         ))}
+        <div class="hub-search" role="search" data-search-url={url(`notes/${courseSlug(c.code)}/search.json`)}>
+          <svg class="hub-search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" class="hub-search-input" autocomplete="off" spellcheck="false"
+            data-ph-en-US={S["en-US"].searchPh} data-ph-zh-CN={S["zh-CN"].searchPh} placeholder={S["en-US"].searchPh}
+            aria-label={S["en-US"].searchPh} aria-controls="hub-search-results" aria-expanded="false" />
+          <kbd class="hub-search-kbd" aria-hidden="true">/</kbd>
+          <div class="hub-search-results card" id="hub-search-results" role="listbox" hidden></div>
+        </div>
       </div>
-    )}
 
     {unified && topics && LANGS.map((l) => (
       <div class="week-grid topic-grid" data-pane={l} lang={l} data-view="topic">
@@ -242,13 +248,150 @@ function topicCard(entry: TopicEntry, lang: Lang) {
   window.addEventListener("hashchange", scrollToTopic);
 </script>
 
+<script>
+  // Full-text search over this course's notes (index: notes/<course>/search.json, fetched on first use).
+  type Sec = { id: string; h: string; t: string };
+  type Note = { lang: string; kind: string; label: string; title: string; url: string; s: Sec[] };
+  const box = document.querySelector<HTMLElement>(".hub-search");
+  const input = box?.querySelector<HTMLInputElement>(".hub-search-input");
+  const panel = box?.querySelector<HTMLElement>(".hub-search-results");
+  if (box && input && panel) {
+    const html = document.documentElement;
+    const lang = () => (html.dataset["notesLang"] === "zh-CN" ? "zh-CN" : "en-US");
+    const msg = { "en-US": { none: "No matches", fail: "Search is unavailable right now" }, "zh-CN": { none: "没有找到", fail: "搜索暂时不可用" } };
+    const setPh = () => {
+      const ph = input.getAttribute(lang() === "zh-CN" ? "data-ph-zh-cn" : "data-ph-en-us") ?? "";
+      input.placeholder = ph;
+      input.setAttribute("aria-label", ph);
+    };
+    setPh();
+    new MutationObserver(() => { setPh(); if (input.value && !panel.hidden) run(); }).observe(html, { attributes: true, attributeFilter: ["data-notes-lang"] });
+
+    let index: Promise<Note[]> | null = null;
+    const load = () => (index ??= fetch(box.dataset["searchUrl"]!).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }).then((d) => d.notes as Note[]));
+    const esc = (x: string) => x.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+    // One pass over the raw text with all terms, escaping the pieces in between (never re-scan HTML).
+    const mark = (text: string, terms: string[]) => {
+      const re = new RegExp([...terms].sort((a, b) => b.length - a.length).map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "gi");
+      let out = "", last = 0;
+      for (const m of text.matchAll(re)) {
+        if (!m[0]) continue;
+        out += esc(text.slice(last, m.index)) + "<mark>" + esc(m[0]) + "</mark>";
+        last = m.index! + m[0].length;
+      }
+      return out + esc(text.slice(last));
+    };
+    const snippet = (text: string, terms: string[]) => {
+      const low = text.toLowerCase();
+      const at = Math.min(...terms.map((t) => low.indexOf(t)).filter((i) => i >= 0), text.length);
+      if (at === text.length) return esc(text.slice(0, 170)) + (text.length > 170 ? "…" : "");
+      const from = Math.max(0, at - 50);
+      const cut = text.slice(from, from + 170);
+      return (from > 0 ? "…" : "") + mark(cut, terms) + (from + 170 < text.length ? "…" : "");
+    };
+
+    let active = -1;
+    const items = () => (panel.hidden ? [] : [...panel.querySelectorAll<HTMLAnchorElement>(".hs-item")]);
+    const setActive = (i: number) => {
+      const list = items();
+      active = list.length ? (i + list.length) % list.length : -1;
+      list.forEach((a, k) => a.classList.toggle("active", k === active));
+      list[active]?.scrollIntoView({ block: "nearest" });
+    };
+    const close = () => { panel.hidden = true; input.setAttribute("aria-expanded", "false"); active = -1; };
+    const open = () => { panel.hidden = false; input.setAttribute("aria-expanded", "true"); };
+
+    let seq = 0;
+    async function run() {
+      const q = input!.value.trim().toLowerCase();
+      if (!q) return close();
+      const my = ++seq;
+      let notes: Note[];
+      try { notes = await load(); } catch { index = null; if (my !== seq) return; panel!.innerHTML = `<div class="hs-empty">${msg[lang()].fail}</div>`; return open(); }
+      if (my !== seq) return;
+      const terms = q.split(/\s+/).filter(Boolean);
+      const hits: { score: number; html: string }[] = [];
+      for (const n of notes) {
+        if (n.lang !== lang()) continue;
+        const nt = n.title.toLowerCase();
+        for (const sec of n.s) {
+          const h = sec.h.toLowerCase(), t = sec.t.toLowerCase();
+          if (!terms.every((w) => h.includes(w) || t.includes(w))) continue; // the title only boosts
+          let score = n.kind === "topic" ? 8 : 0; // the unified topic note first
+          for (const w of terms) score += (h.includes(w) ? 20 : 0) + (nt.includes(w) ? 5 : 0) + Math.min(10, t.split(w).length - 1);
+          const href = n.url + (sec.id ? "#" + encodeURIComponent(sec.id) : "");
+          hits.push({
+            score,
+            html: `<a class="hs-item" role="option" href="${esc(href)}"><span class="hs-where">${esc(n.kind === "topic" ? n.label : n.label + " · " + n.title)}</span>` +
+              `<span class="hs-head">${mark(sec.h || n.title, terms)}</span>` +
+              (sec.t ? `<span class="hs-snip">${snippet(sec.t, terms)}</span>` : "") + `</a>`,
+          });
+        }
+      }
+      hits.sort((a, b) => b.score - a.score);
+      panel!.innerHTML = hits.length ? hits.slice(0, 30).map((x) => x.html).join("") : `<div class="hs-empty">${msg[lang()].none}</div>`;
+      active = -1;
+      open();
+    }
+
+    let timer = 0;
+    input.addEventListener("input", () => { clearTimeout(timer); timer = window.setTimeout(run, 120); });
+    input.addEventListener("focus", () => { if (input.value.trim()) run(); });
+    input.addEventListener("click", () => { if (input.value.trim() && panel.hidden) run(); });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") { e.preventDefault(); if (panel.hidden) run(); else setActive(active + 1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); setActive(active - 1); }
+      else if (e.key === "Enter") { const a = items()[active >= 0 ? active : 0]; if (a) { e.preventDefault(); location.href = a.href; } }
+      else if (e.key === "Escape") { if (!panel.hidden) close(); else { input.value = ""; input.blur(); } }
+    });
+    document.addEventListener("click", (e) => { if (!box.contains(e.target as Node)) close(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      e.preventDefault();
+      input.focus();
+    });
+  }
+</script>
+
 <style>
+  .hub-search { position: relative; margin-left: auto; flex: 0 1 320px; min-width: 200px; display: flex; align-items: center; }
+  .hub-search-icon { position: absolute; left: 12px; color: var(--subtle); pointer-events: none; }
+  .hub-search-input {
+    width: 100%; height: 36px; padding: 0 34px 0 34px;
+    border-radius: var(--r-pill); border: 1px solid transparent;
+    background: var(--card-2); color: var(--ink); font: inherit; font-size: 13px;
+    outline: none; transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+  }
+  .hub-search-input::placeholder { color: var(--subtle); }
+  .hub-search-input:focus { border-color: var(--uci-blue); background: var(--card); }
+  .hub-search-input::-webkit-search-cancel-button { display: none; }
+  .hub-search-kbd {
+    position: absolute; right: 10px; font: 600 11px/1 inherit; color: var(--subtle);
+    border: 1px solid var(--line, rgba(127,127,127,.3)); border-radius: 5px; padding: 3px 6px; pointer-events: none;
+  }
+  .hub-search-input:focus ~ .hub-search-kbd, .hub-search-input:not(:placeholder-shown) ~ .hub-search-kbd { display: none; }
+  .hub-search-results {
+    position: absolute; top: calc(100% + 8px); right: 0; width: min(560px, 92vw); max-height: min(70vh, 560px);
+    overflow-y: auto; padding: 6px; z-index: 40; box-shadow: 0 12px 32px rgba(0,0,0,.18);
+  }
+  .hub-search-results :global(.hs-item) { display: flex; flex-direction: column; gap: 3px; padding: 9px 12px; border-radius: 12px; color: var(--ink); }
+  .hub-search-results :global(.hs-item:hover), .hub-search-results :global(.hs-item.active) { background: var(--card-2); }
+  .hub-search-results :global(.hs-where) { font-size: 11px; font-weight: 600; color: var(--subtle); }
+  .hub-search-results :global(.hs-head) { font-size: 14px; font-weight: 600; }
+  .hub-search-results :global(.hs-snip) { font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+  .hub-search-results :global(mark) { background: rgba(255, 210, 0, .35); color: inherit; border-radius: 3px; padding: 0 1px; }
+  .hub-search-results :global(.hs-empty) { padding: 14px; font-size: 13px; color: var(--subtle); }
+  @media (max-width: 736px) { .hub-search { flex: 1 1 100%; margin-left: 0; } }
+  @media (max-width: 736px), (hover: none) { .hub-search-kbd { display: none; } }
   :global(html[data-hub-view="topic"]) [data-view]:not([data-view="topic"]),
   :global(html[data-hub-view="unit"]) [data-view]:not([data-view="unit"]),
   :global(html[data-hub-view="review"]) [data-view]:not([data-view="review"]) {
     display: none !important;
   }
   .hub-toolbar {
+    overflow: visible; position: relative; z-index: 30;
     display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap;
     padding: 12px 14px;
   }
@@ -269,7 +412,6 @@ function topicCard(entry: TopicEntry, lang: Lang) {
   .topic-count { font-size: 12px; color: var(--subtle); font-weight: 600; }
   .topic-summary { margin: 0 4px 12px; font-size: 13px; line-height: 1.55; color: var(--ink-2); }
   .topic-head + .week-grid { margin-top: 12px; }
-  .topic-note-card { border: 1.5px solid var(--uci-gold, #ffd200); }
   .topic-grid .topic-note-card { scroll-margin-top: 90px; display: flex; flex-direction: column; }
   .topic-grid .week-date { margin-top: auto; }
   .topic-card-title { color: inherit; }
