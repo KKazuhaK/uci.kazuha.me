@@ -311,7 +311,7 @@ export function steps(config) {
 }
 
 const CSS = `
-.vz-ht-chains { display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-start; margin: 0 auto; width: max-content; max-width: 100%; overflow-x: auto; }
+.vz-ht-chains { display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-start; margin: 0 auto; width: max-content; max-width: 100%; overflow-x: auto; padding: 4px; box-sizing: border-box; } /* padding: room for the 2px highlight ring, which overflow would clip */
 .vz-ht-row { display: flex; align-items: center; gap: 0.35rem; min-height: 2.3rem; }
 .vz-ht-idx { width: 2.2rem; height: 2.1rem; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--vz-border); border-radius: 0.4rem; background: var(--vz-soft); font-variant-numeric: tabular-nums; color: var(--vz-muted); font-size: 0.85rem; }
 .vz-ht-idx.is-cmp { border-color: var(--vz-cmp-bd); box-shadow: 0 0 0 2px var(--vz-cmp-bd); color: var(--vz-ink); }

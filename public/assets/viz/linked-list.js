@@ -343,7 +343,7 @@ export function steps(config) {
 }
 
 const STYLE = `
-.vz-ll { display: flex; flex-direction: column; align-items: center; align-items: safe center; gap: 0.9rem; overflow-x: auto; padding-bottom: 0.2rem; }
+.vz-ll { display: flex; flex-direction: column; align-items: center; align-items: safe center; gap: 0.9rem; overflow-x: auto; padding: 4px 4px calc(0.2rem + 4px); } /* padding: room for highlight rings, which overflow would clip */
 .vz-ll-row { display: flex; align-items: flex-start; gap: 0.15rem; }
 .vz-ll-node { display: flex; flex-direction: column; align-items: center; }
 .vz-ll-box { display: flex; border: 1.5px solid var(--vz-border); border-radius: 0.55rem; background: var(--vz-surface); overflow: hidden;
