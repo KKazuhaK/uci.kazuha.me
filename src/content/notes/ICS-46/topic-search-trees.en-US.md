@@ -503,7 +503,7 @@ In the anatomy tree above, the link from J to its left child E is red (E's `colo
 
 ### 8.4 Rotations and Color Flips
 
-Insertion may temporarily break the color rules; three O(1) operations fix them:
+Insertion may temporarily break the color rules; three O(1) operations fix them ([section 8.5](#85-llrb-insertion) explains exactly when each one fires, and why):
 
 - **Left rotation**: turn a (temporarily) right-leaning red link between h and its right child x into a left-leaning one. x takes h's place and h's color; h becomes x's red left child; x's old left subtree (keys between h and x) becomes h's right subtree.
 - **Right rotation**: the mirror image: turn a left-leaning red link to (temporarily) lean right.
@@ -565,12 +565,70 @@ Each operation step by step, one statement per step (h and x are the local point
 
 ### 8.5 LLRB Insertion
 
-**Strategy**: keep the 1-1 correspondence with 2-3 trees. Symmetric order and perfect black balance are maintained during every step, but the color invariants may be violated temporarily: a right-leaning red link, two red children (temporary 4-node), left-left red, or left-right red (both temporary 4-nodes). Rotations and color flips restore them.
+**Strategy**: keep the 1-1 correspondence with 2-3 trees. Symmetric order and perfect black balance hold at every step; only the color rules may break for a moment, and rotations and color flips put them back. This section answers the two questions that matter: **when** does each fix fire, and **why** is that the right fix?
 
-The algorithm:
+#### Where the new key lands
 
-1. Do a standard BST insertion and **color the new link red** (the new key joins an existing 2-3 node).
-2. Repeat until the color invariants are restored, on the way back up:
+Insert exactly as in a BST: the new key becomes a leaf. Its link is colored **red**, because in the 2-3 tree a new key never makes a node of its own — it **joins an existing node** (a new black link would make one path one link longer and break perfect black balance). The node it joins is either a 2-node or a 3-node, which gives five possible situations. Only the first is already legal.
+
+**Into a 2-node** (a black node h, no red child):
+
+1. **Smaller than h** → red **left** child. That is exactly how an LLRB draws a 3-node. Legal, nothing to do.
+2. **Larger than h** → red **right** child. As a 2-3 tree this is a fine 3-node, but it is drawn the wrong way round (rule 2: red links lean left). **Rotate left** at h: the larger key moves up and the smaller one becomes its red left child. Same 3-node, same keys, now in the one shape an LLRB allows.
+
+```viz llrb
+{"title": "Case 1: put(30) into the 2-node 50 — red left child, legal", "keys": "50", "ops": "put(30)", "interactive": true}
+```
+
+```viz llrb
+{"title": "Case 2: put(70) into the 2-node 50 — leans right, so rotateLeft(50)", "keys": "50", "ops": "put(70)", "interactive": true}
+```
+
+**Into a 3-node** (b with red left child a, a < b): there is no room. In 2-3 terms the node becomes a **temporary 4-node** (a, b and the new key), which must be split: its middle key moves up into the parent. Depending on where the new key falls, the two red links take one of three shapes:
+
+3. **Larger than both** → red right child of b. Now b has **two red children**: a 4-node already in the balanced shape, middle key on top. **Flip colors** at b: a and the new key become black (two separate 2-nodes) and b's own link turns red (b joins its parent's node). That *is* the 2-3 split.
+4. **Smaller than both** → red left child of a: **two left reds in a row** (b → a → new). Also a 4-node, but drawn lopsided, with the largest key on top. **Rotate right** at b: the middle key a moves up with two red children. That is case 3, so **flip colors**.
+5. **Between a and b** → red **right** child of a: a right-leaning red link inside the 3-node. **Rotate left** at a: the new key moves above a, giving two left reds in a row. That is case 4: **rotate right** at b, then **flip colors**.
+
+```viz llrb
+{"title": "Case 3: put(70) into the 3-node 30 50 — two red children, flipColors(50)", "keys": "50, 30", "ops": "put(70)", "interactive": true}
+```
+
+```viz llrb
+{"title": "Case 4: put(20) into the 3-node 30 50 — two left reds, rotateRight(50) then flip", "keys": "50, 30", "ops": "put(20)", "interactive": true}
+```
+
+```viz llrb
+{"title": "Case 5: put(40) into the 3-node 30 50 — rotateLeft(30), rotateRight(50), flip", "keys": "50, 30", "ops": "put(40)", "interactive": true}
+```
+
+Switch any demo to the 2-3 view to see the 3-node or 4-node that the red links glue together. In cases 3–5 the tree is a single 2-3 node, so the flip reaches the root; `put` then colors the root black and the tree grows one level.
+
+#### Why the fixes travel up the tree
+
+After a color flip, the middle key's link is red: in 2-3 terms it has **joined its parent's node**. To the parent this looks exactly like a new key arriving from below, so the same five cases apply one level up:
+
+- parent was a 2-node → case 1 or 2: done, after at most one left rotation;
+- parent was a 3-node → case 3, 4 or 5: another flip, and the next key moves up again.
+
+That is why the three checks come **after** the recursive call in `put`: they run at every node on the way back to the root. If a flip reaches the root, the root's link is red; the public `put` colors it black, and the tree is one level taller. This is the 2-3 root split, and it is the **only** way the 2-3 tree (the LLRB's black height) gets taller, so every root-to-null path keeps the same number of black links.
+
+#### The three checks are the five cases
+
+| Check (in this order) | Fires when | In 2-3 terms | Cases |
+|---|---|---|---|
+| `isRed(h->right) && !isRed(h->left)` → **rotate left** | a red link leans right, and h is not already a balanced 4-node | fix the drawing of a 3-node, or of a 4-node being formed | 2; first step of 5 |
+| `isRed(h->left) && isRed(h->left->left)` → **rotate right** | two left reds in a row | turn a lopsided 4-node into the balanced shape | 4; second step of 5 |
+| `isRed(h->left) && isRed(h->right)` → **flip colors** | both children red | split the 4-node and send its middle key up | 3; last step of 4 and 5 |
+
+> 💡 **Key Insight**: Rotations never change which keys are in which 2-3 node; they only fix how a 3-node or 4-node is drawn. The **color flip** is the only fix that changes the 2-3 tree, and it does exactly one thing: split a 4-node and pass its middle key up (at the root, `put`'s final recolor completes that split).
+
+> ⚠️ **Pitfall**: Why the first check has `!isRed(h->left)`: if both children are red, h is already a balanced 4-node (case 3) and only needs a flip. Without the guard, h would first be rotated left into a lopsided 4-node, and the next check would immediately rotate it back — two wasted rotations before the same flip. The tree still comes out right; the guard just skips the useless pair.
+
+#### The algorithm and the code
+
+1. Do a standard BST insertion and **color the new link red**.
+2. On the way back up, at every node, run the three checks in order:
    - right link red (left black)? → **rotate left**;
    - two left reds in a row? → **rotate right**;
    - both children red? → **flip colors**.
@@ -608,11 +666,31 @@ The public `put` must **color the root black** after each insertion: a flip can 
 
 **The order of the three checks matters**: each fix produces exactly the situation the next check looks for. A left rotation can create two left reds in a row, which the right rotation turns into a node with two red children, which the color flip splits. Three `if`s in that order handle every case in one pass per level.
 
-An example where doing the checks out of order needs extra work: insert a key **between** the two keys of a 3-node, e.g. 35 into the 3-node 30 40 (40 with red left child 30). 35 lands as 30's red right child: rotate left at 30 (now 40–35–30 is left-left red), rotate right at 40 (35 with red children 30 and 40), flip colors. Now suppose the flip were checked **before** the right rotation: at 40 the left child is red but the right child is null, so no flip; then the right rotation leaves 35 with two red children, an unsplit temporary 4-node that stays broken until some later pass reaches it. Checked in the right order, each fix sets up the next one at the same node. The whole `put(35)` from [section 8.4](#84-rotations-and-color-flips), from the new red node up (the same three fixes run again one level up, at 20 and 60):
+An example where doing the checks out of order needs extra work: insert a key **between** the two keys of a 3-node (case 5), e.g. 35 into the 3-node 30 40 (40 with red left child 30). 35 lands as 30's red right child: rotate left at 30 (now 40–35–30 is left-left red), rotate right at 40 (35 with red children 30 and 40), flip colors. Now suppose the flip were checked **before** the right rotation: at 40 the left child is red but the right child is null, so no flip; then the right rotation leaves 35 with two red children, an unsplit temporary 4-node that stays broken until some later pass reaches it. Checked in the right order, each fix sets up the next one at the same node. The whole `put(35)` from [section 8.4](#84-rotations-and-color-flips), from the new red node up (the same three fixes run again one level up, at 20 and 60):
 
 ```viz rb-rotation
 {"title": "The whole put(35), fixes in order at 30 / 40, then at 20 / 60", "op": "rotateLeft(30), rotateRight(40), flipColors, rotateLeft(20), rotateRight(60), flipColors"}
 ```
+
+#### A worked example with numbers
+
+Insert **50 30 70 20 10 80 75** into an empty LLRB. Every case appears, and the last key travels all the way to the root:
+
+| put | The new red link | Case | Fixes, bottom-up | 2-3 tree afterwards |
+|---|---|---|---|---|
+| 50 | — (empty tree) | — | root colored black | [50] |
+| 30 | left child of 50 | 1 | none | [30 50] |
+| 70 | right child of 50, whose left child 30 is red | 3 | flipColors(50); root black, height +1 | [50] / [30] [70] |
+| 20 | left child of 30 | 1 | none | [50] / [20 30] [70] |
+| 10 | left child of 20: 30 → 20 → 10 are two left reds | 4 | rotateRight(30), flipColors(20). 20 now joins the 2-node 50 from the left: case 1 one level up, nothing more | [20 50] / [10] [30] [70] |
+| 80 | right child of 70 | 2 | rotateLeft(70) | [20 50] / [10] [30] [70 80] |
+| 75 | right child of 70 (between 70 and 80) | 5 | rotateLeft(70), rotateRight(80), flipColors(75). 75 now joins the 3-node [20 50] as its largest key: case 3 one level up, so flipColors(50); root black, height +1 | [50] / [20] [75] / [10] [30] [70] [80] |
+
+```viz llrb
+{"title": "put 50 30 70 20 10 80 75", "ops": "put(50); put(30); put(70); put(20); put(10); put(80); put(75)", "interactive": true}
+```
+
+The result is the perfectly balanced 2-3 tree [50] / [20] [75] / [10] [30] [70] [80]: all 2-nodes, every link black. Running the code of [section 9.2](#92-llrb) on these keys, with a print in each fix, gives exactly the fixes in the table.
 
 Step through the trace of inserting S E A R C H X M P L, in either view:
 
