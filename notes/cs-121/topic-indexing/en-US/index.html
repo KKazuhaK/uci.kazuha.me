@@ -1,0 +1,1462 @@
+<!DOCTYPE html><html lang="en-US"><head><title>CS 121 Inverted Indexes &amp; Index Construction | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Why a term-document incidence matrix does not scale, the inverted index (dictionary, postings, docIDs, document frequency), the indexer's token-sort-merge steps and the in-memory BuildIndex, postings with counts, positions, extents and scores, biword and positional indexes for phrase queries, hardware limits and disk seeks, blocked external construction with partial indexes and multi-way merging, index engineering (index the index, seek, lexicon, auxiliary structures), MapReduce distributed indexing, and index updates with delete lists."><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-indexing/en-US/"><link rel="icon" href="/~kazuhak/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/~kazuhak/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-indexing/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-indexing/zh-CN/"><link rel="stylesheet" href="/~kazuhak/_astro/BaseLayout.D6FvEM2t.css"><link rel="stylesheet" href="/~kazuhak/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/~kazuhak/_astro/katex.D1M0OS0E.css"><link rel="stylesheet" href="/~kazuhak/_astro/index.BWdCFSBs.css"></head><body data-nav-path="/~kazuhak/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/~kazuhak/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/~kazuhak/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/~kazuhak/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/~kazuhak/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/~kazuhak/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="en-US" data-viz-base="/~kazuhak/assets/viz/" data-viz-version="1795857753" data-source-url="/~kazuhak/notes/cs-121/topic-indexing/en-US/source.md" data-editor-url="/~kazuhak/tools/md-editor/" data-alt-url="/~kazuhak/notes/cs-121/topic-indexing/zh-CN/" data-prev-url="/~kazuhak/notes/cs-121/topic-text-processing/en-US/" data-next-url="/~kazuhak/notes/cs-121/topic-retrieval-models/en-US/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="Previous / next note" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/~kazuhak/notes/cs-121/topic-text-processing/en-US/" title="Previous: Text Processing ([)" aria-label="Previous: Topic · Text Processing" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>Topic · Text Processing</span></a><label class="rb-title" title="Jump to another note" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>CS 121</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>Topic · Inverted Indexes &amp; Index Construction</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg><select class="rb-jump" data-rb-jump aria-label="Jump to another note" autocomplete="off" data-astro-cid-gxyjxt6l><option value="/~kazuhak/notes/cs-121/week-01/en-US/" data-astro-cid-gxyjxt6l>Week 1 — Course Intro, IR and the Web, Architecture</option><option value="/~kazuhak/notes/cs-121/week-02/en-US/" data-astro-cid-gxyjxt6l>Week 2 — The Web Corpus, SEO, Web Crawling</option><option value="/~kazuhak/notes/cs-121/week-03/en-US/" data-astro-cid-gxyjxt6l>Week 3 — Web Crawling</option><option value="/~kazuhak/notes/cs-121/week-04/en-US/" data-astro-cid-gxyjxt6l>Week 4 — Encodings, Storing Documents, Duplicates, Zipf&#39;s Law</option><option value="/~kazuhak/notes/cs-121/week-05/en-US/" data-astro-cid-gxyjxt6l>Week 5 — Text Processing, Term-Document Matrices</option><option value="/~kazuhak/notes/cs-121/week-06/en-US/" data-astro-cid-gxyjxt6l>Week 6 — Inverted Index, Index Construction</option><option value="/~kazuhak/notes/cs-121/week-07/en-US/" data-astro-cid-gxyjxt6l>Week 7 — Scaling the Index, Query Processing, tf-idf</option><option value="/~kazuhak/notes/cs-121/week-08/en-US/" data-astro-cid-gxyjxt6l>Week 8 — The Vector Space Model and Cosine Ranking</option><option value="/~kazuhak/notes/cs-121/week-09/en-US/" data-astro-cid-gxyjxt6l>Week 9 — Efficient Scoring, Link Analysis, Evaluation</option><option value="/~kazuhak/notes/cs-121/topic-search-engines/en-US/" data-astro-cid-gxyjxt6l>Topic · Search Engines &amp; the Web — Search Engines &amp; the Web</option><option value="/~kazuhak/notes/cs-121/topic-crawling/en-US/" data-astro-cid-gxyjxt6l>Topic · Web Crawling — Web Crawling</option><option value="/~kazuhak/notes/cs-121/topic-documents/en-US/" data-astro-cid-gxyjxt6l>Topic · Document Conversion, Storage &amp; Duplicates — Document Conversion, Storage &amp; Duplicates</option><option value="/~kazuhak/notes/cs-121/topic-text-processing/en-US/" data-astro-cid-gxyjxt6l>Topic · Text Processing — Text Processing</option><option value="/~kazuhak/notes/cs-121/topic-indexing/en-US/" selected data-astro-cid-gxyjxt6l>Topic · Inverted Indexes &amp; Index Construction — Inverted Indexes &amp; Index Construction</option><option value="/~kazuhak/notes/cs-121/topic-retrieval-models/en-US/" data-astro-cid-gxyjxt6l>Topic · Retrieval Models: Boolean, tf-idf &amp; Vector Space — Retrieval Models: Boolean, tf-idf &amp; Vector Space</option><option value="/~kazuhak/notes/cs-121/topic-query-processing/en-US/" data-astro-cid-gxyjxt6l>Topic · Query Processing &amp; Efficient Top-K — Query Processing &amp; Efficient Top-K</option><option value="/~kazuhak/notes/cs-121/topic-link-analysis/en-US/" data-astro-cid-gxyjxt6l>Topic · Link Analysis: HITS &amp; PageRank — Link Analysis: HITS &amp; PageRank</option><option value="/~kazuhak/notes/cs-121/topic-evaluation/en-US/" data-astro-cid-gxyjxt6l>Topic · Search Engine Evaluation — Search Engine Evaluation</option></select></label><a class="rb-btn rb-lang" href="/~kazuhak/notes/cs-121/topic-indexing/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>中</span></a><a class="rb-btn rb-next rb-side-next" href="/~kazuhak/notes/cs-121/topic-retrieval-models/en-US/" title="Next: Retrieval Models: Boolean, tf-idf &amp; Vector Space (])" aria-label="Next: Topic · Retrieval Models: Boolean, tf-idf &amp; Vector Space" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>Topic · Retrieval Models: Boolean, tf-idf &amp; Vector Space</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/~kazuhak/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/~kazuhak/notes/cs-121/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>CS 121</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>Topic · Inverted Indexes &amp; Index Construction</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/~kazuhak/notes/cs-121/topic-indexing/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>中文</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>Headings</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>Open in Editor</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>Information Retrieval Reading Notes</h2><p id="reader-description" data-astro-cid-gxyjxt6l>This page presents CS 121 Topic · Inverted Indexes &amp; Index Construction notes in a structured reading format so you can review text processing, the web graph, SEO, web crawling, and how search engines index and rank pages week by week. The path below takes you back to Notes, Course Notes, the course page, or this note file. Hover over the ≡ icon on the right side to open the Table of Contents.</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>Last edited on November 25, 2026</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="cs-121-information-retrieval--topic-inverted-indexes--index-construction">CS 121: Information Retrieval — Topic: Inverted Indexes &amp; Index Construction</h1>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-from-the-incidence-matrix-to-the-index">1. From the Incidence Matrix to the Index</a></li>
+<li><a href="#2-the-inverted-index-dictionary-and-postings">2. The Inverted Index: Dictionary and Postings</a></li>
+<li><a href="#3-building-an-index-in-memory">3. Building an Index in Memory</a></li>
+<li><a href="#4-richer-postings-counts-positions-extents-scores">4. Richer Postings: Counts, Positions, Extents, Scores</a></li>
+<li><a href="#5-phrase-queries-biword-and-positional-indexes">5. Phrase Queries: Biword and Positional Indexes</a></li>
+<li><a href="#6-when-the-index-does-not-fit-memory-and-hardware">6. When the Index Does Not Fit: Memory and Hardware</a></li>
+<li><a href="#7-external-construction-partial-indexes-and-merging">7. External Construction: Partial Indexes and Merging</a></li>
+<li><a href="#8-index-engineering-reading-an-index-bigger-than-memory">8. Index Engineering: Reading an Index Bigger Than Memory</a></li>
+<li><a href="#9-distributed-indexing-with-mapreduce">9. Distributed Indexing with MapReduce</a></li>
+<li><a href="#10-updating-the-index">10. Updating the Index</a></li>
+<li><a href="#11-quick-reference--top-5-things-to-remember">11. Quick Reference &amp; Top 5 Things to Remember</a></li>
+</ul>
+<blockquote>
+<p>This chapter is about the <strong>Index Creation</strong> box of the search-engine architecture (<a href="/~kazuhak/notes/cs-121/topic-search-engines/en-US/">Search Engines &amp; the Web</a>): turning processed text (<a href="/~kazuhak/notes/cs-121/topic-text-processing/en-US/">Text Processing</a>) into a data structure that answers queries fast. How the index is <em>used</em> — merging postings for AND, skip pointers, document-at-a-time and term-at-a-time scoring — is in <a href="/~kazuhak/notes/cs-121/topic-query-processing/en-US/">Query Processing &amp; Efficient Top-K</a>; the Boolean model and ranking functions are in <a href="/~kazuhak/notes/cs-121/topic-retrieval-models/en-US/">Retrieval Models</a>.</p>
+</blockquote>
+<h2 id="1-from-the-incidence-matrix-to-the-index">1. From the Incidence Matrix to the Index</h2>
+<h3 id="11-the-term-document-incidence-matrix">1.1 The term-document incidence matrix</h3>
+<p>Take a small collection of Shakespeare plays and ask: <strong>which plays contain the words Brutus AND Caesar but NOT Calpurnia?</strong> You could grep all the plays for Brutus and Caesar, then strip out the lines containing Calpurnia. That is not an acceptable answer for search:</p>
+<ul>
+<li>It is <strong>slow</strong> for large corpora.</li>
+<li><strong>NOT Calpurnia</strong> is non-trivial.</li>
+<li>Other operations, like finding the word <em>Romans</em> <strong>near</strong> <em>countrymen</em>, aren&#39;t feasible.</li>
+<li><strong>Ranked retrieval</strong> isn&#39;t possible — and users want ordered documents.</li>
+</ul>
+<p>A <strong>term-document incidence matrix</strong> is a Boolean matrix: rows are <strong>terms</strong>, columns are <strong>documents</strong>, and an entry is 1 if the play contains the word, 0 otherwise.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Antony and Cleopatra</th>
+<th>Julius Caesar</th>
+<th>The Tempest</th>
+<th>Hamlet</th>
+<th>Othello</th>
+<th>Macbeth</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Antony</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Brutus</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Caesar</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Calpurnia</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Cleopatra</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>mercy</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>worser</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+</tbody></table>
+<p><strong>Incidence vectors</strong>: each term has a 0/1 vector, its row. To answer the query, take the rows for Brutus, Caesar and Calpurnia, <strong>complement</strong> Calpurnia&#39;s, and <strong>bitwise AND</strong> them:</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>R</mi><mo>=</mo><msub><mi>I</mi><mrow><mi>B</mi><mi>r</mi><mi>u</mi></mrow></msub><mo>∧</mo><msub><mi>I</mi><mrow><mi>C</mi><mi>a</mi><mi>e</mi></mrow></msub><mo>∧</mo><mi mathvariant="normal">¬</mi><msub><mi>I</mi><mrow><mi>C</mi><mi>a</mi><mi>l</mi></mrow></msub></mrow><annotation encoding="application/x-tex">R = I_{Bru} \wedge I_{Cae} \wedge \neg I_{Cal}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span><span class="mord mathnormal mtight">u</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.07153em;">C</span><span class="mord mathnormal mtight">a</span><span class="mord mathnormal mtight">e</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord">¬</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.07153em;">C</span><span class="mord mathnormal mtight">a</span><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></div>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">I_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> is term <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span>&#39;s row, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∧</mo></mrow><annotation encoding="application/x-tex">\wedge</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5556em;"></span><span class="mord">∧</span></span></span></span> is bitwise AND, and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">¬</mi></mrow><annotation encoding="application/x-tex">\neg</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord">¬</span></span></span></span> flips every bit.</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">(Brutus)         1 1 0 1 0 0  AND
+(Caesar)         1 1 0 1 1 1  AND
+(NOT Calpurnia)  1 0 1 1 1 1  =
+                 1 0 0 1 0 0</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>The result&#39;s 1s are columns 1 and 4: <strong>Antony and Cleopatra</strong> and <strong>Hamlet</strong>. Julius Caesar has both names but also Calpurnia, so the NOT removes it. Step through it, or type another query (AND / OR / NOT over these terms):</p>
+<pre data-language="viz" data-viz="incidence-matrix"><code>{&quot;title&quot;: &quot;Brutus AND Caesar AND NOT Calpurnia&quot;, &quot;terms&quot;: &quot;Antony: 1 1 0 0 0 1; Brutus: 1 1 0 1 0 0; Caesar: 1 1 0 1 1 1; Calpurnia: 0 1 0 0 0 0; Cleopatra: 1 0 0 0 0 0; mercy: 1 0 1 1 1 1; worser: 1 0 1 1 1 0&quot;, &quot;docs&quot;: &quot;Antony and Cleopatra, Julius Caesar, The Tempest, Hamlet, Othello, Macbeth&quot;, &quot;query&quot;: &quot;Brutus AND Caesar AND NOT Calpurnia&quot;, &quot;interactive&quot;: true}</code></pre><p>The two documents that match are, in fact, the plays in which both names occur together:</p>
+<ul>
+<li><em>Antony and Cleopatra</em>, Act III, Scene ii — Agrippa [aside to Domitius Enobarbus]: &quot;Why, Enobarbus, / When Antony found Julius <strong>Caesar</strong> dead, / He cried almost to roaring; and he wept / When at Philippi he found <strong>Brutus</strong> slain.&quot;</li>
+<li><em>Hamlet</em>, Act III, Scene ii — Lord Polonius: &quot;I did enact Julius <strong>Caesar</strong> I was killed i&#39; the / Capitol; <strong>Brutus</strong> killed me.&quot;</li>
+</ul>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">Manning et al., <em>Introduction to Information Retrieval</em>, Ch 1</a></p>
+</blockquote>
+<h3 id="12-why-the-matrix-does-not-scale">1.2 Why the matrix does not scale</h3>
+<p>Can you use this on bigger collections? Take:</p>
+<ul>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">N = 10^6</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span></span></span></span> documents, each with about <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">10^3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span> words;</li>
+<li>about 6 bytes per word, including spaces and punctuation → about <strong>6 GB</strong> of data;</li>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>500</mn><mtext>K</mtext></mrow><annotation encoding="application/x-tex">M = 500\text{K}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">500</span><span class="mord text"><span class="mord">K</span></span></span></span></span> <strong>distinct</strong> terms among them.</li>
+</ul>
+<p>The term-document matrix is then <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>500</mn><mtext>K</mtext><mo>×</mo><mn>1</mn><mtext>M</mtext></mrow><annotation encoding="application/x-tex">500\text{K} \times 1\text{M}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord">500</span><span class="mord text"><span class="mord">K</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">1</span><span class="mord text"><span class="mord">M</span></span></span></span></span>: <strong>half a trillion</strong> 0s and 1s, so it <strong>can&#39;t be built in memory</strong>. But it has <strong>no more than one billion 1s</strong> — at most <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">10^6 \times 10^3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span>, one per word occurrence. The matrix is <strong>extremely sparse</strong>.</p>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: The better representation records <strong>only the 1 positions</strong>. For each term, keep the list of documents that contain it. That is the inverted index of <a href="#2-the-inverted-index-dictionary-and-postings">§2</a>.</p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#13-practice">§1.3</a></p>
+</blockquote>
+<h3 id="13-practice">1.3 Practice</h3>
+<h4 id="how-big-is-the-incidence-matrix">How big is the incidence matrix?</h4>
+<p>A collection has <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">N = 10^6</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span></span></span></span> documents of about <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">10^3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span> words each, about 6 bytes per word, and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>500</mn><mtext>K</mtext></mrow><annotation encoding="application/x-tex">M = 500\text{K}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">500</span><span class="mord text"><span class="mord">K</span></span></span></span></span> distinct terms. How much text is that, how many cells does the incidence matrix have, and at most how many of them are 1?</p>
+<details>
+<summary>Solution</summary>
+
+<p>Text: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>3</mn></msup><mo>×</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">10^6 \times 10^3 \times 6</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">6</span></span></span></span> bytes <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo><mn>6</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>9</mn></msup></mrow><annotation encoding="application/x-tex">= 6 \times 10^9</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">6</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">9</span></span></span></span></span></span></span></span></span></span></span> bytes ≈ <strong>6 GB</strong>. Matrix: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>5</mn></msup><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup><mo>=</mo><mn>5</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>11</mn></msup></mrow><annotation encoding="application/x-tex">5 \times 10^5 \times 10^6 = 5 \times 10^{11}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">5</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">11</span></span></span></span></span></span></span></span></span></span></span></span> cells, <strong>half a trillion</strong>. 1s: each word occurrence can add at most one, so at most <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>3</mn></msup><mo>=</mo><mn>1</mn><msup><mn>0</mn><mn>9</mn></msup></mrow><annotation encoding="application/x-tex">10^6 \times 10^3 = 10^9</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">9</span></span></span></span></span></span></span></span></span></span></span>, <strong>one billion</strong>. At most <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>9</mn></msup><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mn>5</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>11</mn></msup><mo stretchy="false">)</mo><mo>=</mo><mn>0.2</mn><mi mathvariant="normal">%</mi></mrow><annotation encoding="application/x-tex">10^9 / (5 \times 10^{11}) = 0.2\%</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">9</span></span></span></span></span></span></span></span><span class="mord">/</span><span class="mopen">(</span><span class="mord">5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">11</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8056em;vertical-align:-0.0556em;"></span><span class="mord">0.2%</span></span></span></span> of the cells are 1, so store only the 1 positions.</p>
+</details>
+
+<h2 id="2-the-inverted-index-dictionary-and-postings">2. The Inverted Index: Dictionary and Postings</h2>
+<h3 id="21-one-list-per-term">2.1 One list per term</h3>
+<p><strong>For each term <em>t</em>, store a list of all documents that contain <em>t</em>.</strong> Each document is identified by a <strong>docID</strong>, a document serial number.</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">Brutus    → 1  2  4  11  31  45  173  174
+Caesar    → 1  2  4   5   6  16   57  132
+Calpurnia → 2  31 54 101</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Can we use fixed-size arrays for this? What happens if the word <em>Caesar</em> is added to document 14? The list must stay sorted, so 14 goes between 6 and 16, which means shifting everything after it — and a full array needs to be replaced by a bigger one (worked out in <a href="#24-practice">§2.4</a>). Lists grow and shrink term by term, so we need <strong>variable-size postings lists</strong>:</p>
+<ul>
+<li><strong>On disk</strong>, a <strong>continuous run of postings</strong> is the optimal solution.</li>
+<li><strong>In memory</strong>, use linked lists, variable-length arrays, or associative arrays — with some <strong>trade-offs in size and ease of insertion</strong>.</li>
+</ul>
+<p>The vocabulary:</p>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Dictionary</strong></td>
+<td>The terms (Brutus, Caesar, Calpurnia)</td>
+</tr>
+<tr>
+<td><strong>Postings</strong></td>
+<td>All the lists together</td>
+</tr>
+<tr>
+<td><strong>Posting</strong></td>
+<td>One entry of a list (one docID)</td>
+</tr>
+</tbody></table>
+<p>The lists are <strong>sorted by docID</strong>; the reason is the merge that answers AND queries (<a href="/~kazuhak/notes/cs-121/topic-query-processing/en-US/">Query Processing &amp; Efficient Top-K</a>).</p>
+<p>In code, the inverted index is normally a <strong>map/dictionary with the term as the key and the postings list as the value</strong>: <code>friend → 2, 4, …</code>, <code>roman → 1, 2, …</code>, <code>countryman → 13, 16</code>.</p>
+<h3 id="22-indexes-in-general-and-the-terminology">2.2 Indexes in general, and the terminology</h3>
+<p><strong>Indexes are data structures designed to make search faster.</strong> Text search has unique requirements, which leads to unique data structures. The most common one is the <strong>inverted index</strong>:</p>
+<ul>
+<li>it&#39;s a <strong>general name for a class of structures</strong>, not one fixed layout;</li>
+<li>it&#39;s &quot;<strong>inverted</strong>&quot; because <strong>documents are associated with words</strong>, rather than words with documents — similar to a <strong>concordance</strong> (the index at the back of a book).</li>
+</ul>
+<p>Croft&#39;s terms:</p>
+<ul>
+<li>Each index term is associated with an <strong>inverted list</strong>. It contains lists of documents, or lists of word occurrences in documents, plus other information.</li>
+<li>Each entry is a <strong>posting</strong>. The part of the posting that refers to a specific document or location is the <strong>pointer</strong>.</li>
+<li>Each document in the collection gets a <strong>unique number</strong>.</li>
+<li>Lists are usually <strong>document-ordered</strong> (sorted by document number).</li>
+</ul>
+<h3 id="23-the-running-example-s1s4">2.3 The running example: S1–S4</h3>
+<p>A standard small example indexes four sentences about tropical fish; later sections reuse it.</p>
+<ul>
+<li><strong>S1</strong> Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species.</li>
+<li><strong>S2</strong> Fishkeepers often use the term tropical fish to refer only those requiring fresh water, with saltwater tropical fish referred to as marine fish.</li>
+<li><strong>S3</strong> Tropical fish are popular aquarium fish, due to their often bright coloration.</li>
+<li><strong>S4</strong> In freshwater fish, this coloration typically derives from iridescence, while salt water fish are generally pigmented.</li>
+</ul>
+<p>Its <strong>simple inverted index</strong> (each posting = a sentence number; 46 terms):</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">and          1          marine       2           species      1
+aquarium     3          often        2 3         term         2
+are          3 4        only         2           the          1 2
+around       1          pigmented    4           their        3
+as           2          popular      3           this         4
+both         1          refer        2           those        2
+bright       3          referred     2           to           2 3
+coloration   3 4        requiring    2           tropical     1 2 3
+derives      4          salt         1 4         typically    4
+due          3          saltwater    2           use          2
+environments 1          fish         1 2 3 4     water        1 2 4
+fishkeepers  2          found        1           while        4
+fresh        2          freshwater   1 4         with         2
+from         4          generally    4           world        1
+in           1 4        include      1
+including    1          iridescence  4</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: The index never stores the 0s. <code>fish</code> has 4 postings, <code>marine</code> has 1 — space grows with the number of (term, document) pairs, not terms × documents.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.3 Inverted Indexes and §5.3.1 Documents (book p. 129, 131)</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR Ch 1–2</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#24-practice">§2.4</a></p>
+</blockquote>
+<h3 id="24-practice">2.4 Practice</h3>
+<h4 id="adding-caesar-to-document-14">Adding Caesar to document 14</h4>
+<p>Caesar&#39;s postings are stored in a fixed-size array <code>1 2 4 5 6 16 57 132</code> with 8 slots. Then <em>Caesar</em> is added to document 14. What happens?</p>
+<details>
+<summary>Solution</summary>
+
+<p>The list must stay sorted by docID, so 14 belongs between 6 and 16: <code>1 2 4 5 6 14 16 57 132</code>. In a fixed-size array that means <strong>shifting</strong> 16, 57 and 132 one slot right — and the array is full (8 slots, 8 entries), so you need a <strong>bigger array</strong>. Lists grow and shrink by term, so fixed-size arrays don&#39;t work: we need <strong>variable-size postings lists</strong> — a continuous run on disk, and linked lists / variable-length arrays / associative arrays in memory, trading size against ease of insertion.</p>
+</details>
+
+<h2 id="3-building-an-index-in-memory">3. Building an Index in Memory</h2>
+<h3 id="31-the-pipeline">3.1 The pipeline</h3>
+<p>Inverted index construction runs in stages:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Documents to be indexed</td>
+<td><code>Friends, Romans, countrymen.</code></td>
+</tr>
+<tr>
+<td><strong>Tokenizer</strong> → token stream</td>
+<td><code>Friends</code> <code>Romans</code> <code>Countrymen</code></td>
+</tr>
+<tr>
+<td><strong>Text processing: linguistic modules</strong> → modified tokens</td>
+<td><code>friend</code> <code>roman</code> <code>countryman</code></td>
+</tr>
+<tr>
+<td><strong>Indexer</strong> → inverted index</td>
+<td><code>friend → 2 → 4</code>, <code>roman → 1 → 2</code>, <code>countryman → 13 → 16</code></td>
+</tr>
+</tbody></table>
+<p>The <strong>typical minimal stages of text processing</strong> are <strong>tokenization</strong> (cut the character sequence into word tokens; deal with &quot;John&#39;s&quot;, <em>a state-of-the-art solution</em>), <strong>normalization</strong> (map text and query terms to the same form: you want <em>U.S.A.</em> and <em>USA</em> to match), <strong>stemming, perhaps</strong> (<em>authorize</em>, <em>authorization</em>), and <strong>stop words, perhaps</strong> (<em>the, a, to, of</em> — may be omitted, or not). Details are in <a href="/~kazuhak/notes/cs-121/topic-text-processing/en-US/">Text Processing</a>.</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: Whatever you do to document tokens, you must do to <strong>query</strong> terms too (that&#39;s what &quot;map text and query term to the same form&quot; means). Stem <em>authorization</em> in the index but not in the query, and the query misses.</p>
+</blockquote>
+<h3 id="32-token-sequence--sort--dictionary-and-postings">3.2 Token sequence → sort → dictionary and postings</h3>
+<p>Index two documents:</p>
+<ul>
+<li><strong>Doc 1</strong>: <em>I did enact Julius Caesar I was killed i&#39; the Capitol; Brutus killed me.</em></li>
+<li><strong>Doc 2</strong>: <em>So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious</em></li>
+</ul>
+<ol>
+<li><strong>Token sequence</strong>: a sequence of <strong>(modified token, document ID) pairs</strong>, in text order — <code>(I, 1) (did, 1) (enact, 1) … (me, 1) (so, 2) … (ambitious, 2)</code>: 29 pairs.</li>
+<li><strong>Sort</strong> by term, then by docID: <code>(ambitious, 2) (be, 2) (brutus, 1) (brutus, 2) (caesar, 1) (caesar, 2) (caesar, 2) (capitol, 1) …</code>.</li>
+<li><strong>Merge and split</strong>: multiple entries of a term in a single document are <strong>merged</strong>; the result is split into a <strong>dictionary</strong> and <strong>postings</strong>; <strong>document frequency</strong> (df, the number of documents containing the term) is added to the dictionary.</li>
+</ol>
+<p>Result: 22 terms. The ones with two postings are <code>brutus</code>, <code>caesar</code>, <code>the</code>, <code>was</code> (df = 2, postings <code>1 → 2</code>); every other term has df = 1. For instance <code>hath</code> occurs only in Doc 2, so its posting is just <code>2</code>. The steps in Python:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> re</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">docs = {</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"I did enact Julius Caesar I was killed i' the Capitol; Brutus killed me."</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#B5CEA8">        2</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious"</span><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># 1. token sequence: (modified token, docID) pairs in text order</span></span>
+<span class="line"><span style="color:#D4D4D4">pairs = [(t, d) </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> d, text </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> docs.items()</span></span>
+<span class="line"><span style="color:#C586C0">         for</span><span style="color:#D4D4D4"> t </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> re.findall(</span><span style="color:#569CD6">r</span><span style="color:#D16969">"</span><span style="color:#CE9178">[</span><span style="color:#D16969">a-z0-9'</span><span style="color:#CE9178">]</span><span style="color:#D7BA7D">+</span><span style="color:#D16969">"</span><span style="color:#D4D4D4">, text.lower())]</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(pairs), </span><span style="color:#CE9178">"pairs;"</span><span style="color:#D4D4D4">, </span><span style="color:#DCDCAA">sum</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">1</span><span style="color:#C586C0"> for</span><span style="color:#D4D4D4"> _, d </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> pairs </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> d == </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">), </span><span style="color:#CE9178">"from doc 1,"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#DCDCAA">      sum</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">1</span><span style="color:#C586C0"> for</span><span style="color:#D4D4D4"> _, d </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> pairs </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> d == </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">), </span><span style="color:#CE9178">"from doc 2"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># 2. sort by term, then docID</span></span>
+<span class="line"><span style="color:#D4D4D4">pairs.sort()</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(pairs[:</span><span style="color:#B5CEA8">8</span><span style="color:#D4D4D4">])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># 3. merge repeats within a document, split into dictionary (term, df) and postings</span></span>
+<span class="line"><span style="color:#D4D4D4">postings = {}</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> term, d </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> pairs:</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#569CD6"> not</span><span style="color:#D4D4D4"> postings.get(term) </span><span style="color:#569CD6">or</span><span style="color:#D4D4D4"> postings[term][-</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">] != d:</span></span>
+<span class="line"><span style="color:#D4D4D4">        postings.setdefault(term, []).append(d)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(postings), </span><span style="color:#CE9178">"terms"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> term, plist </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> postings.items():</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#DCDCAA"> len</span><span style="color:#D4D4D4">(plist) > </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#DCDCAA">        print</span><span style="color:#D4D4D4">(term, </span><span style="color:#CE9178">"df ="</span><span style="color:#D4D4D4">, </span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(plist), plist)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"killed"</span><span style="color:#D4D4D4">, postings[</span><span style="color:#CE9178">"killed"</span><span style="color:#D4D4D4">], </span><span style="color:#CE9178">"hath"</span><span style="color:#D4D4D4">, postings[</span><span style="color:#CE9178">"hath"</span><span style="color:#D4D4D4">])</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">29 pairs; 14 from doc 1, 15 from doc 2
+[(&#39;ambitious&#39;, 2), (&#39;be&#39;, 2), (&#39;brutus&#39;, 1), (&#39;brutus&#39;, 2), (&#39;caesar&#39;, 1), (&#39;caesar&#39;, 2), (&#39;caesar&#39;, 2), (&#39;capitol&#39;, 1)]
+22 terms
+brutus df = 2 [1, 2]
+caesar df = 2 [1, 2]
+the df = 2 [1, 2]
+was df = 2 [1, 2]
+killed [1] hath [2]</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>killed</code> occurs twice in Doc 1 but has df = 1 and one posting — merging is per document. Step through the construction — or type your own documents (<code>docID: text; docID: text</code>):</p>
+<pre data-language="viz" data-viz="inverted-index"><code>{&quot;title&quot;: &quot;Indexer steps on Doc 1 and Doc 2&quot;, &quot;docs&quot;: &quot;1: I did enact Julius Caesar I was killed i&#39; the Capitol; Brutus killed me. ; 2: So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious&quot;, &quot;postings&quot;: &quot;docs&quot;, &quot;interactive&quot;: true}</code></pre><p>The result has two parts that cost storage: the <strong>terms and counts</strong> (the dictionary) and the <strong>lists of docIDs</strong> (the postings). The two questions for implementing an IR system are <strong>how to index efficiently</strong> and <strong>how much storage is needed</strong> — <a href="#33-the-simple-in-memory-indexer-buildindex">§3.3</a> to <a href="#6-when-the-index-does-not-fit-memory-and-hardware">§6</a>.</p>
+<h3 id="33-the-simple-in-memory-indexer-buildindex">3.3 The simple in-memory indexer: BuildIndex</h3>
+<p>The simplest indexer keeps the whole index in one hash table, reads documents one at a time, and appends each document&#39;s number to the list of every distinct token it contains:</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">procedure BuildIndex(D)                      ▷ D is a set of text documents
+    I ← HashTable()                          ▷ Inverted list storage
+    n ← 0                                    ▷ Document numbering
+    for all documents d ∈ D do
+        n ← n + 1
+        T ← Parse(d)                         ▷ Parse document into tokens
+        Remove duplicates from T
+        for all tokens t ∈ T do
+            if I_t ∉ I then
+                I_t ← List&lt;Posting&gt;()
+            end if
+            I_t.append(Posting(n))
+        end for
+    end for
+    return I
+end procedure</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>The parts to notice:</p>
+<ul>
+<li><code>n ← 0</code> / <code>n ← n + 1</code>: <strong>document numbering</strong> — docIDs are a counter, not the URL (<a href="#34-docids-urls-vs-integers">§3.4</a>).</li>
+<li><code>List&lt;Posting&gt;()</code> / <code>Posting(n)</code>: what&#39;s inside a posting (<a href="#35-what-a-posting-holds">§3.5</a>).</li>
+<li><code>I ← HashTable()</code> and <code>return I</code>: the whole index lives in one in-memory hash table. What happens if you run out of memory? → <a href="#6-when-the-index-does-not-fit-memory-and-hardware">§6</a>.</li>
+</ul>
+<p>A runnable Python version, with a <code>Posting</code> class holding a frequency count:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> re</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">class</span><span style="color:#4EC9B0"> Posting</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#569CD6">    def</span><span style="color:#DCDCAA"> __init__</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">self</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">docid</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">tfidf</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">fields</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#569CD6">        self</span><span style="color:#D4D4D4">.docid = docid</span></span>
+<span class="line"><span style="color:#569CD6">        self</span><span style="color:#D4D4D4">.tfidf = tfidf  </span><span style="color:#6A9955"># use freq counts for now</span></span>
+<span class="line"><span style="color:#569CD6">        self</span><span style="color:#D4D4D4">.fields = fields</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> parse</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">text</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> re.findall(</span><span style="color:#569CD6">r</span><span style="color:#D16969">"</span><span style="color:#CE9178">[</span><span style="color:#D16969">a-z0-9'</span><span style="color:#CE9178">]</span><span style="color:#D7BA7D">+</span><span style="color:#D16969">"</span><span style="color:#D4D4D4">, text.lower())</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> build_index</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">docs</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#CE9178">    """BuildIndex(D) with docIDs 1, 2, ..."""</span></span>
+<span class="line"><span style="color:#D4D4D4">    index = {}                          </span><span style="color:#6A9955"># I &#x3C;- HashTable()</span></span>
+<span class="line"><span style="color:#D4D4D4">    n = </span><span style="color:#B5CEA8">0</span><span style="color:#6A9955">                               # document numbering</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> d </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> docs:</span></span>
+<span class="line"><span style="color:#D4D4D4">        n += </span><span style="color:#B5CEA8">1</span></span>
+<span class="line"><span style="color:#D4D4D4">        tokens = parse(d)               </span><span style="color:#6A9955"># T &#x3C;- Parse(d)</span></span>
+<span class="line"><span style="color:#C586C0">        for</span><span style="color:#D4D4D4"> t </span><span style="color:#C586C0">in</span><span style="color:#4EC9B0"> set</span><span style="color:#D4D4D4">(tokens):           </span><span style="color:#6A9955"># remove duplicates</span></span>
+<span class="line"><span style="color:#C586C0">            if</span><span style="color:#D4D4D4"> t </span><span style="color:#569CD6">not</span><span style="color:#569CD6"> in</span><span style="color:#D4D4D4"> index:</span></span>
+<span class="line"><span style="color:#D4D4D4">                index[t] = []           </span><span style="color:#6A9955"># List&#x3C;Posting>()</span></span>
+<span class="line"><span style="color:#D4D4D4">            index[t].append(Posting(n, tokens.count(t), []))</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> index</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">docs = [</span><span style="color:#CE9178">"I did enact Julius Caesar I was killed i' the Capitol; Brutus killed me."</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">        "So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious"</span><span style="color:#D4D4D4">]</span></span>
+<span class="line"><span style="color:#D4D4D4">index = build_index(docs)</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> term </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> [</span><span style="color:#CE9178">"brutus"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"caesar"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"killed"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"hath"</span><span style="color:#D4D4D4">]:</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(term, [(p.docid, p.tfidf) </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> p </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> index[term]])</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(index), </span><span style="color:#CE9178">"terms"</span><span style="color:#D4D4D4">)</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">brutus [(1, 1), (2, 1)]
+caesar [(1, 1), (2, 2)]
+killed [(1, 2)]
+hath [(2, 1)]
+22 terms</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Same 22 terms as the sort-based steps of <a href="#32-token-sequence--sort--dictionary-and-postings">§3.2</a>. Documents are processed in docID order, so each list comes out sorted by docID without a sort.</p>
+<h3 id="34-docids-urls-vs-integers">3.4 DocIDs: URLs vs integers</h3>
+<p><strong>If docIDs are URLs</strong>, <code>https://www.ics.uci.edu/~aburtsev/238P/lectures/lecture03-calling-conventions</code> is <strong>77 characters</strong> — 77 bytes in C++, 352 bytes in Java, and well over 100 bytes in Python 3 (the exact figure depends on the interpreter version: 118 bytes on the Python 3.13 used for the check below, 126 on older 3.x builds). DocIDs are used in postings lists, and depending on the posting structure can appear <strong>several times in the same list</strong>. <strong>Strings are very wasteful to store and to compare.</strong></p>
+<p><strong>Map URLs to integers as you process documents</strong>:</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">0 → https://www.ics.uci.edu/~aburtsev/238P/lectures/lecture03-calling-conventions
+1 → https://www.ics.uci.edu/~goodrich/teach/ics247/notes
+2 → https://www.ics.uci.edu/~thornton/ics184/MidtermSolutions.html
+…</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Integers are <strong>4 bytes in C, C++ and Java</strong>, <strong>28 bytes in Python</strong> — almost always the same size, independent of the string. (Python 3 has a single arbitrary-precision <code>int</code>; the older &quot;converts integers to longs when they overflow&quot; behaviour belongs to Python 2.)</p>
+<p>The estimate for Python 3: 10,000 index terms, <del>20 postings per term, average URL 51 characters (</del>100 bytes):</p>
+<table>
+<thead>
+<tr>
+<th>DocIDs as</th>
+<th>Size</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>URLs</td>
+<td>10,000 × 20 × 100 ≈ <strong>20,000,000 bytes (20 MB)</strong></td>
+</tr>
+<tr>
+<td>integers</td>
+<td>10,000 × 20 × 28 ≈ <strong>5,600,000 bytes (5.6 MB)</strong></td>
+</tr>
+</tbody></table>
+<p><strong>Reduced to 28%</strong> of the string version → about <strong>4× more postings fit in memory</strong>, and it is <strong>significantly faster to sort</strong>. Checking the sizes:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> sys</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">url = </span><span style="color:#CE9178">"https://www.ics.uci.edu/~aburtsev/238P/lectures/lecture03-calling-conventions"</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(url), </span><span style="color:#CE9178">"chars ->"</span><span style="color:#D4D4D4">, sys.getsizeof(url), </span><span style="color:#CE9178">"bytes as a Python 3 str;"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">      "int ->"</span><span style="color:#D4D4D4">, sys.getsizeof(</span><span style="color:#B5CEA8">12345</span><span style="color:#D4D4D4">), </span><span style="color:#CE9178">"bytes"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">terms, per_term = </span><span style="color:#B5CEA8">10_000</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">20</span></span>
+<span class="line"><span style="color:#D4D4D4">avg_url = </span><span style="color:#B5CEA8">100</span><span style="color:#6A9955">                     # ~51-character URL as a Python 3 str</span></span>
+<span class="line"><span style="color:#D4D4D4">as_urls = terms * per_term * avg_url</span></span>
+<span class="line"><span style="color:#D4D4D4">as_ints = terms * per_term * sys.getsizeof(</span><span style="color:#B5CEA8">12345</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"URLs:"</span><span style="color:#D4D4D4">, as_urls, </span><span style="color:#CE9178">"bytes;"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"ints:"</span><span style="color:#D4D4D4">, as_ints, </span><span style="color:#CE9178">"bytes;"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">      "ratio:"</span><span style="color:#D4D4D4">, </span><span style="color:#DCDCAA">round</span><span style="color:#D4D4D4">(as_ints / as_urls, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">))</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">77 chars -&gt; 118 bytes as a Python 3 str; int -&gt; 28 bytes
+URLs: 20000000 bytes; ints: 5600000 bytes; ratio: 0.28</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>You must keep that mapping stored somewhere</strong>: you need it to show the search results (users want URLs, not numbers). It&#39;s typically <strong>not part of the inverted index itself</strong>, but an <strong>auxiliary bookkeeping structure, serialized to a file</strong> (<a href="#82-other-auxiliary-structures">§8.2</a>).</p>
+<h3 id="35-what-a-posting-holds">3.5 What a posting holds</h3>
+<p><strong>Postings contain the context of the term occurrence in a document</strong>: the <strong>doc id</strong>, a <strong>frequency count or tf-idf</strong> score, <strong>fields</strong>, <strong>positions</strong>, … At minimum a posting needs the doc id and a frequency count (or tf-idf):</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">class</span><span style="color:#4EC9B0"> Posting</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#569CD6">    def</span><span style="color:#DCDCAA"> __init__</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">self</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">docid</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">tfidf</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">fields</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#569CD6">        self</span><span style="color:#D4D4D4">.docid = docid</span></span>
+<span class="line"><span style="color:#569CD6">        self</span><span style="color:#D4D4D4">.tfidf = tfidf  </span><span style="color:#6A9955"># use freq counts for now</span></span>
+<span class="line"><span style="color:#569CD6">        self</span><span style="color:#D4D4D4">.fields = fields</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><a href="#4-richer-postings-counts-positions-extents-scores">§4</a> goes through the information a posting can carry.</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.6.1 Simple Construction (book p. 156)</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.5 Auxiliary Structures (p. 154), §5.6 Index Construction (p. 156)</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR Ch 1, Ch 2, Ch 4 (index construction)</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#36-practice">§3.6</a></p>
+</blockquote>
+<h3 id="36-practice">3.6 Practice</h3>
+<h4 id="index-two-documents">Index two documents</h4>
+<p>Doc 1: <em>I did enact Julius Caesar I was killed i&#39; the Capitol; Brutus killed me.</em> Doc 2: <em>So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious</em>. Lower-case the tokens and build the dictionary (with document frequency) and the postings.</p>
+<details>
+<summary>Solution</summary>
+
+<ol>
+<li>Token sequence: 29 (term, docID) pairs, 14 from Doc 1 and 15 from Doc 2 (<code>i</code> counted twice, <code>killed</code> twice, <code>caesar</code> twice in Doc 2).</li>
+<li>Sort by term, then docID.</li>
+<li>Merge repeats within a document, count documents:</li>
+</ol>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">term       df  postings     term       df  postings
+ambitious  1   2            julius     1   1
+be         1   2            killed     1   1
+brutus     2   1 → 2        let        1   2
+caesar     2   1 → 2        me         1   1
+capitol    1   1            noble      1   2
+did        1   1            so         1   2
+enact      1   1            the        2   1 → 2
+hath       1   2            told       1   2
+i          1   1            was        2   1 → 2
+i&#39;         1   1            with       1   2
+it         1   2            you        1   2</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>22 terms. <code>killed</code> occurs twice in Doc 1 but has df = 1 and one posting — merging is per document.</p>
+</details>
+
+<h4 id="docids-as-urls-vs-integers">DocIDs as URLs vs integers</h4>
+<p>An index has 10,000 terms with about 20 postings per term. The average URL is 51 characters (about 100 bytes as a Python 3 string) and a Python integer takes 28 bytes. Compare the size of the postings when docIDs are URLs and when they are integers.</p>
+<details>
+<summary>Solution</summary>
+
+<p>URLs: 10,000 × 20 × 100 = 20,000,000 bytes ≈ <strong>20 MB</strong>. Integers: 10,000 × 20 × 28 = 5,600,000 bytes ≈ <strong>5.6 MB</strong> — 28% of the URL version, so about 3.6× (100 / 28) more postings fit in the same memory, and integers are much faster to sort and compare. The price: an auxiliary docID → URL map, saved to a file, to show results.</p>
+</details>
+
+<h2 id="4-richer-postings-counts-positions-extents-scores">4. Richer Postings: Counts, Positions, Extents, Scores</h2>
+<p>Starting from the S1–S4 index of <a href="#23-the-running-example-s1s4">§2.3</a>, information can be added to each posting, one kind at a time.</p>
+<h3 id="41-counts">4.1 Counts</h3>
+<p><strong>Inverted index with counts</strong>: each posting is <code>docID:count</code>, the number of times the term occurs in that document. It <strong>supports better ranking algorithms</strong>.</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">fish      1:2  2:3  3:2  4:2
+tropical  1:2  2:2  3:1
+to        2:2  3:1
+the       1:1  2:1</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>(every other term has count 1 in each of its documents).</p>
+<h3 id="42-positions-and-proximity-matches">4.2 Positions and proximity matches</h3>
+<p><strong>Inverted index with positions</strong>: each posting is <code>docID,position</code> (word number in the sentence), one posting per occurrence. It <strong>supports proximity matches</strong>.</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">tropical  1,1  1,7  2,6  2,17  3,1
+fish      1,2  1,4  2,7  2,18  2,23  3,2  3,6  4,3  4,13
+water     1,17  2,14  4,12</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>Proximity matches</strong> are matching <strong>phrases</strong> (&quot;tropical fish&quot;) or <strong>words within a window</strong> (&quot;find <em>tropical</em> within 5 words of <em>fish</em>&quot;). An inverted index whose postings store positions — postings <code>[docID, word pos]</code> — makes these query features <strong>efficient</strong>: align the two lists and look for <code>fish</code> at position <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">p+1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> after <code>tropical</code> at <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span>, in the same document.</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">tropical  1,1        1,7  2,6  2,17        3,1
+fish      1,2  1,4        2,7  2,18  2,23  3,2  3,6  4,3  4,13</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>The phrase <em>tropical fish</em> occurs at 1,1–2 · 2,6–7 · 2,17–18 · 3,1–2 (S4 has no <em>tropical</em>). The full positional index, built step by step:</p>
+<pre data-language="viz" data-viz="inverted-index"><code>{&quot;title&quot;: &quot;Positional index of S1–S4&quot;, &quot;docs&quot;: &quot;1: Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species. ; 2: Fishkeepers often use the term tropical fish to refer only those requiring fresh water, with saltwater tropical fish referred to as marine fish. ; 3: Tropical fish are popular aquarium fish, due to their often bright coloration. ; 4: In freshwater fish, this coloration typically derives from iridescence, while salt water fish are generally pigmented.&quot;, &quot;postings&quot;: &quot;positions&quot;}</code></pre><p><a href="#5-phrase-queries-biword-and-positional-indexes">§5</a> shows how phrase queries use these lists and what they cost.</p>
+<h3 id="43-fields-and-extents">4.3 Fields and extents</h3>
+<p><strong>Document structure is useful in search</strong> (see markup and fields in <a href="/~kazuhak/notes/cs-121/topic-text-processing/en-US/">Text Processing</a>):</p>
+<ul>
+<li><strong>field restrictions</strong> — e.g. date, <code>from:</code>, etc.;</li>
+<li><strong>words in some fields are more important</strong> — e.g. the title!</li>
+</ul>
+<p>Options to capture this in the index:</p>
+<ol>
+<li><strong>separate inverted indexes for each field type</strong>;</li>
+<li><strong>add information about fields to postings</strong>;</li>
+<li>use <strong>extent lists</strong>.</li>
+</ol>
+<p><strong>Extent lists</strong>: an <strong>extent</strong> is a <strong>contiguous region of a document</strong>, represented with word positions. The inverted list for a <strong>field type</strong> records all extents of that field:</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">fish   1,2  1,4  2,7  2,18  2,23  3,2  3,6  4,3  4,13
+title  1:(1,3)  2:(1,5)  4:(9,15)</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>1:(1,3)</code> = a title extent in document 1, given by word positions 1 and 3. To match <em>fish in the title</em>, align the two lists: <code>1,2</code> falls in <code>1:(1,3)</code> and <code>4,13</code> falls in <code>4:(9,15)</code>; document 2&#39;s title <code>(1,5)</code> contains no <code>fish</code> posting, and document 3 has no title extent.</p>
+<h3 id="44-scores-and-score-ordered-lists">4.4 Scores and score-ordered lists</h3>
+<p><strong>Other possibilities</strong>:</p>
+<ul>
+<li><strong>Store precomputed scores</strong> in the inverted list, e.g. the list for <em>fish</em> <code>[(1:3.6), (3:2.2)]</code>, where 3.6 is the total feature value for document 1. <strong>Improves speed but reduces flexibility</strong> (change the ranking and you must rebuild).</li>
+<li><strong>Create score-ordered lists</strong>: the query processing engine can <strong>focus only on the top part of each inverted list</strong>, where the highest-scoring documents are. <strong>Very efficient for single-word queries</strong>.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Posting stores</th>
+<th>Example</th>
+<th>Enables</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>docID</td>
+<td><code>fish 1 2 3 4</code></td>
+<td>Boolean queries (AND/OR/NOT)</td>
+</tr>
+<tr>
+<td>docID:count</td>
+<td><code>fish 1:2 2:3 3:2 4:2</code></td>
+<td>better ranking (term frequency)</td>
+</tr>
+<tr>
+<td>docID,position</td>
+<td><code>fish 1,2 1,4 …</code></td>
+<td>phrases, proximity windows</td>
+</tr>
+<tr>
+<td>extent list per field</td>
+<td><code>title 1:(1,3) …</code></td>
+<td>field restrictions, title boosts</td>
+</tr>
+<tr>
+<td>docID:score</td>
+<td><code>fish (1:3.6) (3:2.2)</code></td>
+<td>fast ranking; less flexible</td>
+</tr>
+</tbody></table>
+<p>The scoring that uses these stored features is in <a href="/~kazuhak/notes/cs-121/topic-retrieval-models/en-US/">Retrieval Models</a> and <a href="/~kazuhak/notes/cs-121/topic-query-processing/en-US/">Query Processing &amp; Efficient Top-K</a>.</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.3.2 Counts (p. 133), §5.3.3 Positions (p. 134), §5.3.4 Fields and Extents (p. 136), §5.3.5 Scores (p. 138), §5.3.6 Ordering (p. 139)</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR Ch 2 (positional postings and phrase queries)</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#45-practice">§4.5</a></p>
+</blockquote>
+<h3 id="45-practice">4.5 Practice</h3>
+<h4 id="find-the-phrase-tropical-fish">Find the phrase &quot;tropical fish&quot;</h4>
+<p>In the positional index below, where does the phrase <em>tropical fish</em> occur?</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">tropical  1,1  1,7  2,6  2,17  3,1
+fish      1,2  1,4  2,7  2,18  2,23  3,2  3,6  4,3  4,13</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<details>
+<summary>Solution</summary>
+
+<p>A phrase match needs <code>fish</code> at position <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">p+1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> in the same document as <code>tropical</code> at <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span>:</p>
+<table>
+<thead>
+<tr>
+<th>tropical</th>
+<th>needs fish at</th>
+<th>found?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1,1</td>
+<td>1,2</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>1,7</td>
+<td>1,8</td>
+<td>✗ (S1 word 8 is <em>environments</em>)</td>
+</tr>
+<tr>
+<td>2,6</td>
+<td>2,7</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>2,17</td>
+<td>2,18</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>3,1</td>
+<td>3,2</td>
+<td>✓</td>
+</tr>
+</tbody></table>
+<p>The phrase occurs <strong>4 times</strong>, in <strong>documents 1, 2 and 3</strong>. Document 4 contains <em>fish</em> but not <em>tropical</em>, so a document-only index (<code>tropical 1 2 3</code>, <code>fish 1 2 3 4</code>) can&#39;t tell the phrase from the two words appearing anywhere — that&#39;s what positions buy.</p>
+<p>The same check in Python:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">tropical = [(</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">6</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">17</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">)]</span></span>
+<span class="line"><span style="color:#D4D4D4">fish = [(</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">18</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">23</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">6</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">13</span><span style="color:#D4D4D4">)]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> phrase</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">first</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">second</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#CE9178">    """Positions where `second` immediately follows `first` in the same document."""</span></span>
+<span class="line"><span style="color:#D4D4D4">    later = </span><span style="color:#4EC9B0">set</span><span style="color:#D4D4D4">(second)</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> [(d, p) </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> d, p </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> first </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> (d, p + </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">in</span><span style="color:#D4D4D4"> later]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">hits = phrase(tropical, fish)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(hits, </span><span style="color:#CE9178">"-> docs"</span><span style="color:#D4D4D4">, </span><span style="color:#DCDCAA">sorted</span><span style="color:#D4D4D4">({d </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> d, _ </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> hits}))</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">[(1, 1), (2, 6), (2, 17), (3, 1)] -&gt; docs [1, 2, 3]</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+</details>
+
+<h2 id="5-phrase-queries-biword-and-positional-indexes">5. Phrase Queries: Biword and Positional Indexes</h2>
+<p>We want to answer queries such as <strong>&quot;university of california&quot;</strong> — <strong>as a phrase</strong>. The sentence <em>&quot;I went to university in california&quot;</em> is <strong>not</strong> a match.</p>
+<ul>
+<li>Phrase queries have proven <strong>easily understood by users</strong>: one of the few &quot;advanced search&quot; ideas that works.</li>
+<li>Many more queries are <strong>implicit</strong> phrase queries.</li>
+<li>For this it <strong>no longer suffices</strong> to store only <code>&lt;term : docs&gt;</code> entries.</li>
+</ul>
+<h3 id="51-biword-bigram-indexes">5.1 Biword (bigram) indexes</h3>
+<p><strong>A first attempt: biword indexes.</strong> Index <strong>every consecutive pair of terms</strong> in the text as a phrase. <em>&quot;Friends, Romans, Countrymen&quot;</em> generates the biwords (= bigrams!) <strong>friends romans</strong> and <strong>romans countrymen</strong>. Each biword is now a <strong>dictionary term</strong>: all bigrams are indexed, and <strong>two-word phrase queries are immediate</strong>. Adopted for small <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span>, but <strong>unfeasible for arbitrary sizes</strong>.</p>
+<p><strong>Longer phrases</strong> are broken down: <em>University of California Irvine</em> becomes the Boolean query on bigrams</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">university of AND of california AND california irvine</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Without the documents, we <strong>cannot verify</strong> that a document matching this Boolean query contains the <strong>continuous</strong> phrase. <strong>It can have false positives!</strong></p>
+<p><strong>Issues</strong>:</p>
+<ul>
+<li>false positives, as above;</li>
+<li><strong>index blowup</strong> from a bigger dictionary: infeasible for more than biwords, big even for all biwords — though very large search engines support some n-grams for small <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span>;</li>
+<li>so bigram indexes for <strong>all</strong> bigrams are <strong>not the standard solution</strong>, but they can be <strong>part of a compound strategy</strong>.</li>
+</ul>
+<h3 id="52-positional-indexes">5.2 Positional indexes</h3>
+<p><strong>A better approach</strong>: in the postings, store for each term the <strong>position(s)</strong> in which tokens of it appear. Positional postings themselves were built in <a href="#42-positions-and-proximity-matches">§4.2</a> (the <em>tropical fish</em> example); this section adds how phrase queries use them, and what they cost.</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">&lt;term, number of docs containing term;
+ doc1: position1, position2 … ;
+ doc2: position1, position2 … ;
+ etc.&gt;</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>For example:</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">&lt;be: 993427;
+ 1: 7, 18, 34, 72, 86, 231;
+ 2: 3, 149;
+ 4: 17, 191, 291, 430, 434;
+ 5: 363, 367, …&gt;</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>Which of docs 1, 2, 4, 5 could contain &quot;to be or not to be&quot;?</strong></p>
+<ul>
+<li>For phrase queries we use a <strong>merge algorithm recursively at the document level</strong> — first the docs that contain every term, then positions inside each doc.</li>
+<li><strong>Pre-clean</strong> the list to keep only documents that <strong>respect the distance</strong> between words that appear more than once in the query: the two <em>be</em>s in &quot;to be or not to be&quot; are <strong>4 positions apart</strong>.</li>
+<li>We now deal with <strong>more than just equality</strong> — offsets like <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">p+1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">p+4</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">4</span></span></span></span>.</li>
+</ul>
+<p>Only docs <strong>4</strong> (430, 434) and <strong>5</strong> (363, 367) have two <em>be</em>s exactly 4 apart, so docs 1 and 2 are out before looking at any other term.</p>
+<p><strong>Processing a phrase query</strong>: extract the inverted index entries for each distinct term — <em>to, be, or, not</em> — and merge their doc:position lists to enumerate all positions with &quot;to be or not to be&quot;:</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">to: 2:1,17,74,222,551; 4:8,16,190,429,433; 7:13,23,191; ...
+be: 1:17,19; 4:17,191,291,430,434; 5:14,19,101; ...</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>In doc 4, <em>to</em> at 429 and 433 and <em>be</em> at 430 and 434 line up: the phrase can start at <strong>position 429</strong> (to 429, be 430, … to 433, be 434). The <strong>same general method</strong> works for <strong>proximity searches</strong> (&quot;within <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span> words&quot;).</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: These two <em>be</em> lists are separate illustrations (doc 1 is <code>7, 18, …</code> in one and <code>17, 19</code> in the other, and doc 5 differs); only doc 4&#39;s positions agree in both. Don&#39;t try to combine them into one index.</p>
+</blockquote>
+<h3 id="53-positional-index-size">5.3 Positional index size</h3>
+<ul>
+<li>A positional index <strong>expands postings storage substantially</strong> — even though indexes can be compressed.</li>
+<li><strong>Nevertheless, a positional index is now standardly used</strong>, because of the power and usefulness of phrase and proximity queries, whether used <strong>explicitly</strong> or <strong>implicitly</strong> in a ranking retrieval system.</li>
+<li>It needs an entry <strong>for each occurrence</strong>, not just once per document, so its size depends on <strong>average document size</strong>: an average web page has under 1,000 terms; SEC filings, books, even some epic poems easily have 100,000.</li>
+</ul>
+<p><strong>Rules of thumb</strong>, for &quot;English-like&quot; languages:</p>
+<table>
+<thead>
+<tr>
+<th>Measure</th>
+<th>Rule of thumb</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Compressed positional index vs non-positional</td>
+<td><strong>2–4×</strong> as large</td>
+</tr>
+<tr>
+<td>Positional index vs original text</td>
+<td><strong>35–50%</strong> of the volume</td>
+</tr>
+</tbody></table>
+<h3 id="54-mixing-schemes">5.4 Mixing schemes</h3>
+<p><strong>N-grams and positional approaches can be combined.</strong> For particular phrases (<em>&quot;Michael Jackson&quot;</em>, <em>&quot;Britney Spears&quot;</em>) it&#39;s inefficient to keep merging positional postings lists — even more so for <em>&quot;The Who&quot;</em> (two stop words). A more sophisticated mixed indexing scheme (Williams et al., 2004) ran a typical web query mixture in <strong>¼ of the time</strong> of a positional index alone, for <strong>26% more space</strong>.</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.3.3 Positions (book p. 134)</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR Ch 2 (biword indexes, positional indexes, combination schemes)</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#55-practice">§5.5</a></p>
+</blockquote>
+<h3 id="55-practice">5.5 Practice</h3>
+<h4 id="breaking-university-of-california-irvine-into-bigrams">Breaking &quot;University of California Irvine&quot; into bigrams</h4>
+<p>What Boolean query on a biword index answers the phrase <em>University of California Irvine</em>, and can it be wrong?</p>
+<details>
+<summary>Solution</summary>
+
+<p>Consecutive pairs: <code>university of AND of california AND california irvine</code>.</p>
+<p>Yes, it can be wrong: a <strong>false positive</strong> is a document that contains all three bigrams but not as one continuous phrase (e.g. &quot;university of&quot; in one sentence and &quot;of california&quot;, &quot;california irvine&quot; elsewhere). Without the document text (or positions), the biword index can&#39;t verify the phrase.</p>
+</details>
+
+<h4 id="which-documents-could-contain-to-be-or-not-to-be">Which documents could contain &quot;to be or not to be&quot;?</h4>
+<p>Positions of <em>be</em>: <code>1: 7, 18, 34, 72, 86, 231; 2: 3, 149; 4: 17, 191, 291, 430, 434; 5: 363, 367, …</code>. Which of docs 1, 2, 4, 5 could contain the phrase <em>to be or not to be</em>? Then, given positions of <em>to</em> in doc 4 (<code>8, 16, 190, 429, 433</code>) and of <em>be</em> in doc 4 (<code>17, 191, 291, 430, 434</code>), where does the phrase start in doc 4?</p>
+<details>
+<summary>Solution</summary>
+
+<p>&quot;to be or not to be&quot; has <em>be</em> at offsets 1 and 5 — <strong>two <em>be</em>s 4 positions apart</strong>. Pre-clean the <em>be</em> list:</p>
+<table>
+<thead>
+<tr>
+<th>Doc</th>
+<th>Pairs of <em>be</em> positions 4 apart</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>none</td>
+</tr>
+<tr>
+<td>2</td>
+<td>none</td>
+</tr>
+<tr>
+<td>4</td>
+<td>(430, 434)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>(363, 367)</td>
+</tr>
+</tbody></table>
+<p>Only <strong>docs 4 and 5</strong> could contain it (doc 5 still needs <em>to</em>, <em>or</em>, <em>not</em> checked).</p>
+<p>In doc 4: start <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span> needs <em>to</em> at <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">p+4</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">4</span></span></span></span>, <em>be</em> at <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">p+1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">p+5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5</span></span></span></span>. <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>429</mn></mrow><annotation encoding="application/x-tex">p = 429</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">429</span></span></span></span>: to 429 ✓, be 430 ✓, to 433 ✓, be 434 ✓. The phrase starts at <strong>position 429</strong> (<em>or</em> and <em>not</em> must then be at 431 and 432).</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">be = {</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">: [</span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">18</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">34</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">72</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">86</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">231</span><span style="color:#D4D4D4">], </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">: [</span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">149</span><span style="color:#D4D4D4">],</span></span>
+<span class="line"><span style="color:#B5CEA8">      4</span><span style="color:#D4D4D4">: [</span><span style="color:#B5CEA8">17</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">191</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">291</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">430</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">434</span><span style="color:#D4D4D4">], </span><span style="color:#B5CEA8">5</span><span style="color:#D4D4D4">: [</span><span style="color:#B5CEA8">363</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">367</span><span style="color:#D4D4D4">]}</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> d, ps </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> be.items():</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(d, [(p, p + </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> p </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> ps </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> p + </span><span style="color:#B5CEA8">4</span><span style="color:#569CD6"> in</span><span style="color:#D4D4D4"> ps])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># doc 4: phrase starts at p if to@p, be@p+1, to@p+4, be@p+5</span></span>
+<span class="line"><span style="color:#D4D4D4">to4, be4 = {</span><span style="color:#B5CEA8">8</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">16</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">190</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">429</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">433</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">17</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">191</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">291</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">430</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">434</span><span style="color:#D4D4D4">}</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">([p </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> p </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> to4 </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> p + </span><span style="color:#B5CEA8">1</span><span style="color:#569CD6"> in</span><span style="color:#D4D4D4"> be4 </span><span style="color:#569CD6">and</span><span style="color:#D4D4D4"> p + </span><span style="color:#B5CEA8">4</span><span style="color:#569CD6"> in</span><span style="color:#D4D4D4"> to4 </span><span style="color:#569CD6">and</span><span style="color:#D4D4D4"> p + </span><span style="color:#B5CEA8">5</span><span style="color:#569CD6"> in</span><span style="color:#D4D4D4"> be4])</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">1 []
+2 []
+4 [(430, 434)]
+5 [(363, 367)]
+[429]</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+</details>
+
+<h2 id="6-when-the-index-does-not-fit-memory-and-hardware">6. When the Index Does Not Fit: Memory and Hardware</h2>
+<h3 id="61-does-the-index-fit-in-memory">6.1 Does the index fit in memory?</h3>
+<p><strong>Inverted index for small data.</strong> If it fits in memory, use Python&#39;s dictionaries <code>{}</code> (or Java&#39;s <code>HashMap</code>):</p>
+<ul>
+<li>fill it during indexing,</li>
+<li>write it to a file,</li>
+<li>load it back into the dict/HashMap for search.</li>
+</ul>
+<p>Very simple to implement… <strong>but this will not work in any realistic web search engine</strong>.</p>
+<p><strong>Inverted index for large data</strong> — a back-of-the-envelope calculation:</p>
+<table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Vocabulary</td>
+<td>50,000 tokens</td>
+</tr>
+<tr>
+<td>Average postings list size</td>
+<td>20</td>
+</tr>
+<tr>
+<td>Postings</td>
+<td>50,000 × 20 = <strong>1,000,000</strong></td>
+</tr>
+<tr>
+<td>DocID = URL, average 50 characters</td>
+<td>≈ 100 bytes each (Python)</td>
+</tr>
+<tr>
+<td>Postings storage</td>
+<td>1,000,000 × 100 = <strong>100,000,000 bytes = 100 MB</strong></td>
+</tr>
+<tr>
+<td>Plus payload per posting (e.g. tf-idf), 4 bytes each</td>
+<td>many more MB</td>
+</tr>
+</tbody></table>
+<p>And the web comprises <strong>far more than 10⁶ documents</strong> (hosts alone are more than 10⁹). So <strong>usually the index does not fit in memory all at once</strong> → out-of-memory errors.</p>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: Two levers come out of this: make postings smaller (integer docIDs instead of URLs, <a href="#34-docids-urls-vs-integers">§3.4</a>) and stop assuming the whole index is in RAM (the rest of this chapter).</p>
+</blockquote>
+<h3 id="62-hardware-basics">6.2 Hardware basics</h3>
+<p><strong>In-memory index construction does not scale</strong>: you can&#39;t fit the entire collection into memory. How do we construct an index for very large collections — <strong>taking into account hardware constraints</strong>: memory, disk, speed, etc.?</p>
+<ul>
+<li>Servers used in IR systems typically have <strong>several GB of main memory</strong>, sometimes hundreds of GB. Available <strong>disk space is 2–3 orders of magnitude larger</strong>.</li>
+<li>But <strong>fault tolerance is very expensive</strong>: it&#39;s much cheaper to use <strong>many regular machines</strong> rather than one fault-tolerant machine — and regular machines have <strong>much smaller RAM</strong>.</li>
+<li>Large-scale storage is based on <strong>spinning disks</strong>. Access to data in memory is <strong>much</strong> faster than access to data on disk.</li>
+<li><strong>Disk seeks</strong>: no data is transferred while the disk head is being positioned. So transferring <strong>one large chunk</strong> from disk to memory is faster than transferring <strong>many small chunks</strong>.</li>
+<li><strong>Disk I/O is block-based</strong>: whole blocks are read and written, not smaller chunks. Block sizes: <strong>8 KB to 256 KB</strong>.</li>
+</ul>
+<p>Jeff Dean&#39;s <strong>&quot;Latency Numbers Every Programmer Should Know&quot;</strong> (2020 update):</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Latency</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>L1 cache reference</td>
+<td>0.5–1.5 ns</td>
+</tr>
+<tr>
+<td>L2 cache reference</td>
+<td>5–7 ns</td>
+</tr>
+<tr>
+<td>L3 cache reference</td>
+<td>16–25 ns</td>
+</tr>
+<tr>
+<td>Mutex lock/unlock</td>
+<td>25 ns</td>
+</tr>
+<tr>
+<td>64 MB main memory reference</td>
+<td>50–75 ns</td>
+</tr>
+<tr>
+<td>Send 4 KB over 100 Gbps HPC fabric</td>
+<td>1,040 ns</td>
+</tr>
+<tr>
+<td>Compress 1 KB with Zippy</td>
+<td>2,000 ns (2 µs)</td>
+</tr>
+<tr>
+<td>Read 1 MB sequentially from memory</td>
+<td>3,000 ns (3 µs)</td>
+</tr>
+<tr>
+<td>Send 4 KB over 10 Gbps ethernet</td>
+<td>10,000 ns (10 µs)</td>
+</tr>
+<tr>
+<td>Read 1 MB sequentially from SSD</td>
+<td>49,000 ns (49 µs)</td>
+</tr>
+<tr>
+<td>Read 1 MB sequentially from HDD</td>
+<td>825,000 ns (825 µs)</td>
+</tr>
+<tr>
+<td>Disk seek (up to)</td>
+<td>2,000,000 ns (2,000 µs)</td>
+</tr>
+<tr>
+<td>Send packet CA → Netherlands → CA</td>
+<td>150,000,000 ns (150,000 µs)</td>
+</tr>
+</tbody></table>
+<p>So back to the indexer&#39;s <code>I ← HashTable()</code>: <strong>could this be a file, directly?</strong> <strong>No.</strong> Compare a disk seek of up to 2 ms with a 50–75 ns memory reference in the table above.</p>
+<p><strong>Use disk as &quot;memory&quot;?</strong> Can we run the same algorithm on a larger collection, with disk instead of memory? <strong>No</strong>: accessing and modifying <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>≈</mo><mn>1</mn><msup><mn>0</mn><mn>8</mn></msup></mrow><annotation encoding="application/x-tex">T \approx 10^8</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">8</span></span></span></span></span></span></span></span></span></span></span>–<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>9</mn></msup></mrow><annotation encoding="application/x-tex">10^9</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">9</span></span></span></span></span></span></span></span></span></span></span> records on disk means <strong>too many disk seeks</strong> (each up to 2 ms). <strong>We need an external algorithm</strong> (<a href="#7-external-construction-partial-indexes-and-merging">§7</a>).</p>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: A disk seek costs tens of thousands of memory references, and one large chunk transfers faster than many small ones. How to build an index that doesn&#39;t fit in memory comes next.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ai.google/research/people/jeff/">Jeff Dean</a> · <a href="http://norvig.com/21-days.html#answers">Original numbers (Norvig)</a> · <a href="https://gist.github.com/eshelman/343a1c46cb3fba142c1afdcdeec17646">2019 version (gist)</a> · <a href="https://colin-scott.github.io/personal_website/research/interactive_latency.html">2020 interactive version</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.6.2 Merging (book p. 157)</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR Ch 4 (hardware basics)</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#63-practice">§6.3</a></p>
+</blockquote>
+<h3 id="63-practice">6.3 Practice</h3>
+<h4 id="how-big-is-the-index">How big is the index?</h4>
+<p>The vocabulary has 50,000 tokens, the average postings list has 20 entries, and each docID is a URL of about 50 characters, about 100 bytes in Python. How much memory do the postings take?</p>
+<details>
+<summary>Solution</summary>
+
+<p>Postings: 50,000 × 20 = 1,000,000. Bytes: 1,000,000 × 100 = 100,000,000 ≈ <strong>100 MB</strong> — before any payload (tf-idf, 4 bytes each, adds more). That&#39;s for 10⁶ postings; the web has far more than 10⁶ documents, so the index usually <strong>does not fit in memory all at once</strong>.</p>
+</details>
+
+<h2 id="7-external-construction-partial-indexes-and-merging">7. External Construction: Partial Indexes and Merging</h2>
+<h3 id="71-partial-indexes">7.1 Partial indexes</h3>
+<p>The external algorithm:</p>
+<ol>
+<li>Build the inverted list structure <strong>until a certain size</strong> (choose it from the memory you have; profile it).</li>
+<li><strong>Write the partial index to disk</strong>, and start a new one.</li>
+<li>At the end, the disk holds <strong>many partial indexes</strong>, which are <strong>merged</strong>.</li>
+</ol>
+<p>Partial lists (= partial indexes) must be designed so <strong>they can be merged in small pieces</strong> — e.g. by <strong>storing them in alphabetical order</strong>.</p>
+<p>The pseudocode is <code>BuildIndex</code> of <a href="#33-the-simple-in-memory-indexer-buildindex">§3.3</a> with two changes: read the documents in <strong>batches</strong>, and after each batch <strong>sort and write</strong> the hash table to disk, then empty it.</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">procedure BuildIndex(D)
+  I ← HashTable
+  n ← 0
+  B ← []                          # batch of documents
+  while D is not empty do
+    B ← GetBatch(D)
+    for all documents d in B do
+      n ← n+1
+      T ← Parse(d)
+      RemoveDuplicates(T)
+      for all tokens t in T do
+        if t not in I then
+          I[t] = []
+        I[t].append(Posting(n))
+      end for
+    end for
+    SortAndWriteToDisk(I, name)
+    I.empty()
+  end while</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: <code>n</code> keeps counting across batches, so docIDs stay <strong>globally unique and increasing</strong>: every partial index is sorted by docID, which is what makes the merge below a simple concatenation per term. (Reset <code>n</code> per batch and the concatenated lists would no longer be sorted, and docIDs from different batches would collide.)</p>
+</blockquote>
+<h3 id="72-merging-two-partial-indexes">7.2 Merging two partial indexes</h3>
+<p>Index A holds <code>aardvark 2 3 4 5</code> and <code>apple 2 4</code>; Index B holds <code>aardvark 6 9</code> and <code>actor 15 42 68</code>. Walk both in term order: <code>aardvark</code> is in both, so A&#39;s postings are followed by B&#39;s; <code>actor</code> only in B; <code>apple</code> only in A.</p>
+<table>
+<thead>
+<tr>
+<th>Combined index</th>
+<th>Postings</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>aardvark</td>
+<td>2 3 4 5 6 9</td>
+</tr>
+<tr>
+<td>actor</td>
+<td>15 42 68</td>
+</tr>
+<tr>
+<td>apple</td>
+<td>2 4</td>
+</tr>
+</tbody></table>
+<h3 id="73-how-to-merge-the-sorted-runs">7.3 How to merge the sorted runs?</h3>
+<p><strong>Binary merges</strong>: merge <strong>2 files at a time</strong>. During each layer, <strong>read</strong> into memory in blocks of a few MB (~10 MB is not uncommon for HDDs — <strong>but you should profile!</strong>), <strong>merge, write back</strong>. Merging two runs from disk/SSD:</p>
+<table>
+<thead>
+<tr>
+<th>Run 1</th>
+<th></th>
+<th>Run 2</th>
+<th></th>
+<th>Merged postings list</th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>brutus</td>
+<td>d1,d3</td>
+<td>brutus</td>
+<td>d6,d7</td>
+<td>brutus</td>
+<td>d1,d3,d6,d7</td>
+</tr>
+<tr>
+<td>caesar</td>
+<td>d1,d2,d4</td>
+<td>caesar</td>
+<td>d8,d9</td>
+<td>caesar</td>
+<td>d1,d2,d4,d8,d9</td>
+</tr>
+<tr>
+<td>noble</td>
+<td>d5</td>
+<td>julius</td>
+<td>d10</td>
+<td>julius</td>
+<td>d10</td>
+</tr>
+<tr>
+<td>with</td>
+<td>d1,d2,d3,d5</td>
+<td>killed</td>
+<td>d8</td>
+<td>killed</td>
+<td>d8</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>noble</td>
+<td>d5</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>with</td>
+<td>d1,d2,d3,d5</td>
+</tr>
+</tbody></table>
+<p><strong>Multi-way merge</strong> is <strong>more efficient</strong>: read from <strong>all files simultaneously</strong>.</p>
+<ul>
+<li>Open <strong>all</strong> partial index files at once, with a <strong>read buffer</strong> for each and a <strong>write buffer</strong> for the output file.</li>
+<li>In each iteration, <strong>pick the lowest termID</strong> that hasn&#39;t been processed.</li>
+<li><strong>Merge all postings lists</strong> for that termID and write it out.</li>
+</ul>
+<p>As long as you read <strong>decent-sized chunks</strong> of each block into memory and write out a decent-sized output chunk, <strong>you&#39;re not killed by disk seeks</strong>. The actual size of those chunks <strong>must be actively probed</strong> — it&#39;s hardware and filesystem dependent.</p>
+<p>A multi-way merge on Index A and B, with <code>heapq.merge</code> doing &quot;pick the lowest term&quot; across all runs:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> heapq</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> multiway_merge</span><span style="color:#D4D4D4">(*</span><span style="color:#9CDCFE">runs</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#CE9178">    """Merge partial indexes: each run is a list of</span></span>
+<span class="line"><span style="color:#CE9178">    (term, postings) sorted by term."""</span></span>
+<span class="line"><span style="color:#D4D4D4">    merged = []</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> term, postings </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> heapq.merge(*runs, </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">=</span><span style="color:#569CD6">lambda</span><span style="color:#9CDCFE"> e</span><span style="color:#D4D4D4">: e[</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">]):</span></span>
+<span class="line"><span style="color:#C586C0">        if</span><span style="color:#D4D4D4"> merged </span><span style="color:#569CD6">and</span><span style="color:#D4D4D4"> merged[-</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">][</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">] == term:</span></span>
+<span class="line"><span style="color:#D4D4D4">            merged[-</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">][</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">].extend(postings)   </span><span style="color:#6A9955"># same term: append</span></span>
+<span class="line"><span style="color:#C586C0">        else</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#D4D4D4">            merged.append((term, </span><span style="color:#4EC9B0">list</span><span style="color:#D4D4D4">(postings)))</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> merged</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">index_a = [(</span><span style="color:#CE9178">"aardvark"</span><span style="color:#D4D4D4">, [</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">5</span><span style="color:#D4D4D4">]), (</span><span style="color:#CE9178">"apple"</span><span style="color:#D4D4D4">, [</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">])]</span></span>
+<span class="line"><span style="color:#D4D4D4">index_b = [(</span><span style="color:#CE9178">"aardvark"</span><span style="color:#D4D4D4">, [</span><span style="color:#B5CEA8">6</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">9</span><span style="color:#D4D4D4">]), (</span><span style="color:#CE9178">"actor"</span><span style="color:#D4D4D4">, [</span><span style="color:#B5CEA8">15</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">42</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">68</span><span style="color:#D4D4D4">])]</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> term, postings </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> multiway_merge(index_a, index_b):</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(term, postings)</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">aardvark [2, 3, 4, 5, 6, 9]
+actor [15, 42, 68]
+apple [2, 4]</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: Sorting each partial index alphabetically is what lets the merge stream: in a real indexer each run is a file read front to back once, through one buffer, never seeked around.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.6.2 Merging (book p. 157)</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR Ch 4 (blocked sort-based indexing)</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#74-practice">§7.4</a></p>
+</blockquote>
+<h3 id="74-practice">7.4 Practice</h3>
+<h4 id="merge-index-a-and-index-b">Merge Index A and Index B</h4>
+<p>Index A: <code>aardvark 2 3 4 5</code>, <code>apple 2 4</code>. Index B: <code>aardvark 6 9</code>, <code>actor 15 42 68</code>. What is the combined index?</p>
+<details>
+<summary>Solution</summary>
+
+<p>Walk both indexes in alphabetical order, taking the smallest term each time:</p>
+<ol>
+<li><code>aardvark</code> is the smallest term in both → concatenate: <code>2 3 4 5 6 9</code> (A&#39;s docIDs are all smaller than B&#39;s, so concatenating keeps the list sorted).</li>
+<li><code>actor</code> (only in B) → <code>15 42 68</code>.</li>
+<li><code>apple</code> (only in A) → <code>2 4</code>.</li>
+</ol>
+<p>Combined index: <code>aardvark 2 3 4 5 6 9 · actor 15 42 68 · apple 2 4</code> — the output of the <code>multiway_merge</code> code in <a href="#73-how-to-merge-the-sorted-runs">§7.3</a>.</p>
+</details>
+
+<h2 id="8-index-engineering-reading-an-index-bigger-than-memory">8. Index Engineering: Reading an Index Bigger Than Memory</h2>
+<p>Building the index on disk is half of it; at <strong>query time</strong> you also have to find postings.</p>
+<p><strong>Small index</strong>: load it <strong>entirely into memory</strong> as a hash table / dictionary and find the postings by key. <em>What if the index is larger than available memory?</em></p>
+<p><strong>Large index</strong>: it doesn&#39;t fit in memory, so you must search for postings <strong>in the file itself</strong>. How?</p>
+<ol>
+<li><strong>Scan the file</strong> looking for the query terms. What if the terms in the file are <strong>not sorted</strong>? Then it&#39;s a full scan, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(n)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mclose">)</span></span></span></span>. With terms <strong>sorted</strong>, you can binary-search: from <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(n)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mclose">)</span></span></span></span> to <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><mi>log</mi><mo>⁡</mo><mi>N</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(\log N)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mclose">)</span></span></span></span> — and <strong>sorting the query terms helps</strong> too.</li>
+<li><strong>Jump to the right positions in the file</strong>: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord">1</span><span class="mclose">)</span></span></span></span>. <strong>INDEX THE INDEX!</strong></li>
+</ol>
+<h3 id="81-index-the-index">8.1 Index the index</h3>
+<p>As you construct the inverted index, create another <strong>bookkeeping file with offsets</strong> into the inverted index file:</p>
+<ul>
+<li>term &quot;ape&quot; is at position 1311, &quot;apple&quot; at position 1345, etc. — <strong>or</strong></li>
+<li>words starting with &quot;b&quot; start at position 10035, words starting with &quot;c&quot; at 20457, etc.</li>
+</ul>
+<p>This <strong>secondary index is much smaller</strong> than the inverted index, so it will (usually) fit in memory. <strong>Then: <code>seek(position)</code>.</strong></p>
+<p><strong>Seek operations</strong>, on a small test file:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">with</span><span style="color:#DCDCAA"> open</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"test.txt"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"w"</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">as</span><span style="color:#D4D4D4"> f:</span></span>
+<span class="line"><span style="color:#D4D4D4">    f.write(</span><span style="color:#CE9178">"Hello world!</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">This is a test file.</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span></span>
+<span class="line"><span style="color:#CE9178">            "For explaining how seek works.</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">f = </span><span style="color:#DCDCAA">open</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"test.txt"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">f.seek(</span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">);  </span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">repr</span><span style="color:#D4D4D4">(f.readline()))</span></span>
+<span class="line"><span style="color:#D4D4D4">f.seek(</span><span style="color:#B5CEA8">13</span><span style="color:#D4D4D4">); </span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">repr</span><span style="color:#D4D4D4">(f.readline()))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># "Index the index": term -> byte offset of its line</span></span>
+<span class="line"><span style="color:#D4D4D4">offsets, pos = {}, </span><span style="color:#B5CEA8">0</span></span>
+<span class="line"><span style="color:#C586C0">with</span><span style="color:#DCDCAA"> open</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"test.txt"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"rb"</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">as</span><span style="color:#D4D4D4"> g:</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> line </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> g:</span></span>
+<span class="line"><span style="color:#D4D4D4">        offsets[line.split()[</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">].decode()] = pos</span></span>
+<span class="line"><span style="color:#D4D4D4">        pos += </span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(line)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(offsets)</span></span>
+<span class="line"><span style="color:#D4D4D4">f.seek(offsets[</span><span style="color:#CE9178">"For"</span><span style="color:#D4D4D4">]); </span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">repr</span><span style="color:#D4D4D4">(f.readline()))</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">&#39;o world!\n&#39;
+&#39;This is a test file.\n&#39;
+{&#39;Hello&#39;: 0, &#39;This&#39;: 13, &#39;For&#39;: 34}
+&#39;For explaining how seek works.\n&#39;</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>seek(4)</code> lands inside &quot;Hello&quot;, so <code>readline()</code> returns the rest of line 1; <code>&quot;Hello world!\n&quot;</code> is 13 bytes, so <code>seek(13)</code> lands exactly at line 2. The second half is the bookkeeping file in miniature: one offset per entry, then one seek per lookup.</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: Offsets are <strong>byte</strong> offsets. Build them by reading in binary mode (<code>&quot;rb&quot;</code>), as above; in text mode, multi-byte UTF-8 characters and Windows <code>\r\n</code> line endings make character counts differ from byte positions.</p>
+</blockquote>
+<h3 id="82-other-auxiliary-structures">8.2 Other auxiliary structures</h3>
+<table>
+<thead>
+<tr>
+<th>Structure</th>
+<th>Contains</th>
+<th>Stored as</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Document IDs</strong></td>
+<td>lookup table from docid to URL</td>
+<td>hash table in memory, or B-tree for larger collections</td>
+</tr>
+<tr>
+<td><strong>Vocabulary</strong> or <strong>lexicon</strong></td>
+<td>lookup table from index term to the <strong>byte offset</strong> of its inverted list in the inverted file</td>
+<td>hash table in memory, or B-tree for larger vocabularies</td>
+</tr>
+<tr>
+<td><strong>Term statistics</strong></td>
+<td>e.g. df</td>
+<td>at the <strong>start</strong> of each inverted list</td>
+</tr>
+<tr>
+<td><strong>Collection statistics</strong></td>
+<td>e.g. number of documents</td>
+<td>in a <strong>separate file</strong></td>
+</tr>
+</tbody></table>
+<h3 id="83-alternatives-to-a-single-inverted-index">8.3 Alternatives to a single inverted index</h3>
+<ul>
+<li><strong>Split</strong> the inverted index file into <strong>alphabet ranges</strong>.</li>
+<li>Create <strong>file system path trees</strong>: <code>index/a/</code>, <code>index/b/</code>, <code>index/c/</code>, etc.</li>
+<li>The search component <strong>keeps the files open all the time</strong> — <strong>open, but not in memory!</strong></li>
+</ul>
+<p><strong>Multiple files in multithreading: aggregate!</strong> On a multiprocessor machine (several processor chips, separate memory cards, many I/O slots), split index files can be read by <strong>parallel threads</strong> and the results aggregated.</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.5 Auxiliary Structures (book p. 154)</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#84-practice">§8.4</a></p>
+</blockquote>
+<h3 id="84-practice">8.4 Practice</h3>
+<h4 id="what-does-seek-return">What does seek return?</h4>
+<p>A file <code>Test.txt</code> is <code>Hello world!</code> / <code>This is a test file.</code> / <code>For explaining how seek works.</code> (three lines). What do <code>f.seek(4); f.readline()</code> and <code>f.seek(13); f.readline()</code> return?</p>
+<details>
+<summary>Solution</summary>
+
+<ul>
+<li><code>seek(4)</code> puts the file position after <code>Hell</code>, so <code>readline()</code> returns the rest of line 1: <code>&#39;o world!\n&#39;</code>.</li>
+<li><code>&quot;Hello world!\n&quot;</code> is 13 bytes (12 characters + newline), so <code>seek(13)</code> lands at the start of line 2: <code>&#39;This is a test file.\n&#39;</code>.</li>
+</ul>
+<p>Both match the run in <a href="#81-index-the-index">§8.1</a>. That&#39;s the whole trick of &quot;index the index&quot;: store byte offsets, <code>seek</code> straight there, read one entry.</p>
+</details>
+
+<h2 id="9-distributed-indexing-with-mapreduce">9. Distributed Indexing with MapReduce</h2>
+<p><strong>Scaling it up.</strong> Distributed processing is driven by the need to index and analyze <strong>huge amounts of data</strong> (i.e., the Web), using <strong>large numbers of inexpensive servers</strong> rather than larger, more expensive machines. <strong>MapReduce</strong> is a distributed programming tool designed for indexing and analysis tasks.</p>
+<p><strong>Motivating example</strong>: a large text file of credit card transactions, one card number and an amount per line. <strong>Count the unique card numbers.</strong> A hash table → memory problems; with a <strong>sorted</strong> file, counting is simple. Distributed, the same holds: <strong>sorting and placement are crucial</strong>.</p>
+<h3 id="91-map-shuffle-reduce">9.1 Map, shuffle, reduce</h3>
+<p>MapReduce is a framework that <strong>focuses on data placement and distribution</strong>:</p>
+<ul>
+<li><strong>Mapper</strong>: generally transforms a list of items into <strong>another list of items of the same length</strong>.</li>
+<li><strong>Reducer</strong>: transforms a list of items into a <strong>single item</strong>.</li>
+<li>The definitions aren&#39;t strict about the number of outputs; <strong>many mapper and reducer tasks</strong> run on a cluster.</li>
+</ul>
+<p>The basic process:</p>
+<ol>
+<li><strong>Map</strong> stage: transforms data records into <strong>pairs, each with a key and a value</strong> — e.g. <code>&lt;key=&quot;term&quot;, value=&quot;docId&quot;&gt;</code>.</li>
+<li><strong>Shuffle</strong>: uses a <strong>hash function</strong> so that all pairs with the <strong>same key</strong> end up next to each other <strong>on the same machine</strong> — e.g. <code>hash(term) mod (number of reduce machines)</code>.</li>
+<li><strong>Reduce</strong> stage: processes records in batches where <strong>all pairs with the same key are processed at the same time</strong> — all <code>&lt;term, docId&gt;</code> pairs for one term are on one machine, so it can &quot;reduce&quot; them into the postings list.</li>
+</ol>
+<pre data-language="mermaid"><code class="language-mermaid">flowchart LR
+  I1[input split] --&gt; M1[Map]
+  I2[input split] --&gt; M2[Map]
+  I3[input split] --&gt; M3[Map]
+  M1 -- &quot;hash(key) mod R&quot; --&gt; R1[Reduce]
+  M1 --&gt; R2[Reduce]
+  M2 --&gt; R1
+  M2 --&gt; R2
+  M3 --&gt; R1
+  M3 --&gt; R2
+  R1 --&gt; O1[output]
+  R2 --&gt; O2[output]</code></pre><p>The picture builds up in order: map boxes, then the all-to-all shuffle edges, then the reduce boxes and output.</p>
+<p><strong>Idempotence</strong> of mapper and reducer provides <strong>fault tolerance</strong>: multiple runs on the same input give the same output, so the library can re-run work if a machine <strong>fails</strong> or is <strong>slow</strong> — computations are redundant, avoiding bottlenecks.</p>
+<h3 id="92-the-pseudocode">9.2 The pseudocode</h3>
+<p>Credit cards: the map emits <code>(card, amount)</code>; the shuffle groups by card; the reduce sums each card&#39;s amounts.</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">procedure MapCreditCards(input)
+    while not input.done() do
+        record ← input.next()
+        card ← record.card
+        amount ← record.amount
+        Emit(card, amount)
+    end while
+end procedure
+
+procedure ReduceCreditCards(key, values)
+    total ← 0
+    card ← key
+    while not values.done() do
+        amount ← values.next()
+        total ← total + amount
+    end while
+    Emit(card, total)
+end procedure</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Each reduce call corresponds to one unique card, so the number of output pairs is the number of unique card numbers.</p>
+<p><strong>Indexing</strong>: the map emits <code>(word, docNumber:position)</code> for every token; the reduce writes the word once and then encodes its postings.</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">procedure MapDocumentsToPostings(input)
+    while not input.done() do
+        document ← input.next()
+        number ← document.number
+        position ← 0
+        tokens ← Parse(document)
+        for each word w in tokens do
+            Emit(w, number:position)
+            position = position + 1
+        end for
+    end while
+end procedure
+
+procedure ReducePostingsToLists(key, values)
+    word ← key
+    WriteWord(word)
+    while not values.done() do
+        EncodePosting(values.next())
+    end while
+end procedure</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: The reducer must loop over its own <code>values</code> (<code>values.done()</code>, as in <code>ReduceCreditCards</code>). A loop on an <code>input</code> object would refer to the mapper&#39;s variable, which does not exist inside the reducer.</p>
+</blockquote>
+<p><strong>MapReduce is typically used for data streams</strong>: there&#39;s <strong>no end</strong>, <strong>no &quot;final index&quot;</strong> — only a <strong>temporarily valid</strong> index.</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.6.3 Parallelism and Distribution (book p. 158)</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR Ch 4 (distributed indexing)</a></p>
+</blockquote>
+<h2 id="10-updating-the-index">10. Updating the Index</h2>
+<p><strong>Dynamic collections!</strong> The web changes continuously.</p>
+<ul>
+<li><strong>Index merging</strong> (<a href="#7-external-construction-partial-indexes-and-merging">§7</a>) is a good strategy when updates come in <strong>large batches</strong>.</li>
+<li>For <strong>small updates</strong> it is very inefficient. Instead, create a <strong>separate index for new documents</strong> and <strong>merge the results</strong> of searching both indexes <em>a posteriori</em>. The small index could be <strong>in memory</strong>: fast to update and to search.</li>
+<li><strong>Deletions</strong> are handled with a <strong>delete list</strong>. <strong>Modifications</strong> = put the old version on the delete list + add the new version to the new-documents index.</li>
+</ul>
+<p>In the architecture picture this is a second, small <strong>Index</strong> box next to the main one, and a <strong>&quot;Deleted Pages&quot;</strong> store beside it. This is the <strong>delayed updating strategy</strong>: <strong>temporary (and much smaller) auxiliary index structures</strong> for <strong>updated pages</strong> and <strong>removed pages</strong>, with a <strong>veto system</strong> between them and ranking, so deleted pages are filtered out before results reach the user interface.</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.6.4 Update (book p. 164)</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR Ch 4 (dynamic indexing)</a></p>
+</blockquote>
+<h2 id="11-quick-reference--top-5-things-to-remember">11. Quick Reference &amp; Top 5 Things to Remember</h2>
+<p><strong>Index vocabulary</strong></p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dictionary</td>
+<td>The set of terms (with document frequency)</td>
+</tr>
+<tr>
+<td>Postings list / inverted list</td>
+<td>The docIDs (and more) for one term, sorted by docID</td>
+</tr>
+<tr>
+<td>Posting</td>
+<td>One entry; its document part is the <em>pointer</em></td>
+</tr>
+<tr>
+<td>Document frequency (df)</td>
+<td>Number of documents containing the term</td>
+</tr>
+<tr>
+<td>Extent</td>
+<td>Contiguous region of a document (a field), as word positions</td>
+</tr>
+<tr>
+<td>Biword index</td>
+<td>Every consecutive pair of terms is a dictionary term</td>
+</tr>
+<tr>
+<td>Lexicon</td>
+<td>Term → byte offset of its list in the inverted file</td>
+</tr>
+</tbody></table>
+<p><strong>Indexer steps</strong></p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Tokenize + linguistic modules</td>
+<td>modified tokens</td>
+</tr>
+<tr>
+<td>Emit pairs</td>
+<td>(term, docID) in text order</td>
+</tr>
+<tr>
+<td>Sort</td>
+<td>by term, then docID</td>
+</tr>
+<tr>
+<td>Merge</td>
+<td>one dictionary entry per term + df + postings</td>
+</tr>
+</tbody></table>
+<p><strong>What a posting can store</strong></p>
+<table>
+<thead>
+<tr>
+<th>Posting stores</th>
+<th>Enables</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>docID</td>
+<td>Boolean queries</td>
+</tr>
+<tr>
+<td>docID:count</td>
+<td>ranking by term frequency</td>
+</tr>
+<tr>
+<td>docID,position</td>
+<td>phrases, proximity</td>
+</tr>
+<tr>
+<td>extent list</td>
+<td>field restrictions, title boosts</td>
+</tr>
+<tr>
+<td>docID:score</td>
+<td>fast ranking; less flexible</td>
+</tr>
+</tbody></table>
+<p><strong>Sizes and latencies</strong></p>
+<table>
+<thead>
+<tr>
+<th>Fact</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Incidence matrix, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">10^6</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span></span></span></span> docs × 500K terms</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>11</mn></msup></mrow><annotation encoding="application/x-tex">5 \times 10^{11}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">11</span></span></span></span></span></span></span></span></span></span></span></span> cells, at most <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>9</mn></msup></mrow><annotation encoding="application/x-tex">10^9</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">9</span></span></span></span></span></span></span></span></span></span></span> ones</td>
+</tr>
+<tr>
+<td>1M postings with URL docIDs (Python)</td>
+<td>~100 MB</td>
+</tr>
+<tr>
+<td>URL vs int docIDs, 200K postings</td>
+<td>20 MB vs 5.6 MB (28%)</td>
+</tr>
+<tr>
+<td>Int size</td>
+<td>4 bytes C/C++/Java, 28 bytes Python</td>
+</tr>
+<tr>
+<td>Memory reference vs disk seek</td>
+<td>50–75 ns vs up to 2 ms</td>
+</tr>
+<tr>
+<td>Disk block size</td>
+<td>8–256 KB</td>
+</tr>
+<tr>
+<td>Positional vs non-positional index (compressed)</td>
+<td>2–4× as large; 35–50% of the text</td>
+</tr>
+</tbody></table>
+<p><strong>Top 5 things to remember</strong></p>
+<ol>
+<li>The incidence matrix is far too big but extremely sparse; an inverted index stores <strong>only the 1s</strong>: <strong>term → postings list of docIDs</strong>, sorted by docID, plus df in the dictionary.</li>
+<li>The indexer emits <strong>(term, docID) pairs, sorts by term then docID, and merges</strong> repeats within a document; <strong>df</strong> = number of documents, not occurrences. Use <strong>integer docIDs</strong> with an auxiliary URL map.</li>
+<li>Postings can carry <strong>counts</strong> (ranking), <strong>positions</strong> (phrases, proximity), <strong>extents</strong> (fields) or <strong>precomputed scores</strong> (speed vs flexibility). Biword indexes give false positives and blow up the dictionary, so a <strong>positional index</strong> (2–4× larger) is the standard, sometimes mixed with n-grams.</li>
+<li>A disk seek costs tens of thousands of memory references, so build <strong>partial indexes</strong> in memory, write each <strong>sorted</strong>, and <strong>multi-way merge</strong> them with big buffered reads; MapReduce does the same across machines (map → shuffle by <code>hash(term)</code> → reduce).</li>
+<li>At query time, <strong>index the index</strong>: keep a small term → byte-offset lexicon in memory and <code>seek</code>. Handle updates with a small auxiliary index plus a <strong>delete list</strong>, merging in batches.</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="Note navigation" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/~kazuhak/notes/cs-121/topic-text-processing/en-US/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Previous · Topic · Text Processing</span><span class="pager-title" data-astro-cid-gxyjxt6l>Text Processing</span></a><a class="card interactive pager-card pager-next" href="/~kazuhak/notes/cs-121/topic-retrieval-models/en-US/" rel="next" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>Topic · Retrieval Models: Boolean, tf-idf &amp; Vector Space · Next<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>Retrieval Models: Boolean, tf-idf &amp; Vector Space</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>Shortcuts<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> Previous</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> Next</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> Switch language</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="Table of Contents" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>Top</button><script type="module" src="/~kazuhak/_astro/NoteReader.astro_astro_type_script_index_0_lang.D_DIoJ7q.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/~kazuhak/assets/js/bento.js" defer></script><script src="/~kazuhak/assets/js/chat-widget.js" defer></script></body></html>

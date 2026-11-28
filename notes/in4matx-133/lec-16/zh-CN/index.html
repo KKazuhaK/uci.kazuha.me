@@ -1,0 +1,689 @@
+<!DOCTYPE html><html lang="zh-CN"><head><title>IN4MATX 133 数据库与本地存储 | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="远程数据与本地数据，WebView 应用可用的存储方式（cookies、Web storage、Capacitor Preferences、通过 ionic-storage 使用的 IndexedDB、设备上的 SQLite、远程数据库），在 Ionic 应用中用 Preferences 和 IndexedDB 保存数据，以及完成 A4 的计划。"><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-16/zh-CN/"><link rel="icon" href="/~kazuhak/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/~kazuhak/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-16/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-16/zh-CN/"><link rel="stylesheet" href="/~kazuhak/_astro/BaseLayout.D6FvEM2t.css"><link rel="stylesheet" href="/~kazuhak/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/~kazuhak/_astro/katex.D1M0OS0E.css"><link rel="stylesheet" href="/~kazuhak/_astro/index.BWdCFSBs.css"></head><body data-nav-path="/~kazuhak/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/~kazuhak/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/~kazuhak/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/~kazuhak/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/~kazuhak/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/~kazuhak/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="zh-CN" data-viz-base="/~kazuhak/assets/viz/" data-viz-version="1795857754" data-source-url="/~kazuhak/notes/in4matx-133/lec-16/zh-CN/source.md" data-editor-url="/~kazuhak/tools/md-editor/" data-alt-url="/~kazuhak/notes/in4matx-133/lec-16/en-US/" data-prev-url="/~kazuhak/notes/in4matx-133/lec-15/zh-CN/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="上一篇 / 下一篇" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/~kazuhak/notes/in4matx-133/lec-15/zh-CN/" title="上一篇: 设备资源与 Signals ([)" aria-label="上一篇: 第 15 讲" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>第 15 讲</span></a><label class="rb-title" title="跳到其他讲" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>IN4MATX 133</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>第 16 讲</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg><select class="rb-jump" data-rb-jump aria-label="跳到其他讲" autocomplete="off" data-astro-cid-gxyjxt6l><option value="/~kazuhak/notes/in4matx-133/lec-01/zh-CN/" data-astro-cid-gxyjxt6l>第 1 讲 — 课程介绍与计算历史</option><option value="/~kazuhak/notes/in4matx-133/lec-02/zh-CN/" data-astro-cid-gxyjxt6l>第 2 讲 — HTML 与无障碍</option><option value="/~kazuhak/notes/in4matx-133/lec-03/zh-CN/" data-astro-cid-gxyjxt6l>第 3 讲 — CSS</option><option value="/~kazuhak/notes/in4matx-133/lec-04/zh-CN/" data-astro-cid-gxyjxt6l>第 4 讲 — 响应式设计与 JavaScript（一）</option><option value="/~kazuhak/notes/in4matx-133/lec-05/zh-CN/" data-astro-cid-gxyjxt6l>第 5 讲 — JavaScript（二）</option><option value="/~kazuhak/notes/in4matx-133/lec-06/zh-CN/" data-astro-cid-gxyjxt6l>第 6 讲 — DOM 操作与包管理</option><option value="/~kazuhak/notes/in4matx-133/lec-07/zh-CN/" data-astro-cid-gxyjxt6l>第 7 讲 — TypeScript 与数据可视化工具</option><option value="/~kazuhak/notes/in4matx-133/lec-08/zh-CN/" data-astro-cid-gxyjxt6l>第 8 讲 — AJAX、Fetch 与 Promise</option><option value="/~kazuhak/notes/in4matx-133/lec-09/zh-CN/" data-astro-cid-gxyjxt6l>第 9 讲 — 服务器端开发、身份验证与授权</option><option value="/~kazuhak/notes/in4matx-133/lec-10/zh-CN/" data-astro-cid-gxyjxt6l>第 10 讲 — Angular 中的组件</option><option value="/~kazuhak/notes/in4matx-133/lec-11/zh-CN/" data-astro-cid-gxyjxt6l>第 11 讲 — Angular 中的分离</option><option value="/~kazuhak/notes/in4matx-133/lec-12/zh-CN/" data-astro-cid-gxyjxt6l>第 12 讲 — 混合与原生架构</option><option value="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/" data-astro-cid-gxyjxt6l>第 13 讲 — Ionic 组件</option><option value="/~kazuhak/notes/in4matx-133/lec-14/zh-CN/" data-astro-cid-gxyjxt6l>第 14 讲 — 移动设计原则</option><option value="/~kazuhak/notes/in4matx-133/lec-15/zh-CN/" data-astro-cid-gxyjxt6l>第 15 讲 — 设备资源与 Signals</option><option value="/~kazuhak/notes/in4matx-133/lec-16/zh-CN/" selected data-astro-cid-gxyjxt6l>第 16 讲 — 数据库与本地存储</option></select></label><a class="rb-btn rb-lang" href="/~kazuhak/notes/in4matx-133/lec-16/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>EN</span></a><a class="rb-btn rb-hub rb-side-next" href="/~kazuhak/notes/in4matx-133/" title="课程主页" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>课程主页</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/~kazuhak/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/~kazuhak/notes/in4matx-133/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>IN4MATX 133</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>第 16 讲</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/~kazuhak/notes/in4matx-133/lec-16/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>English</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>目录</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>在编辑器中打开</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>第 16 讲 · 用户界面软件课程阅读笔记</h2><p id="reader-description" data-astro-cid-gxyjxt6l>这页整理的是 IN4MATX 133 第 16 讲 的课程笔记，适合按讲复习 HTML、CSS、JavaScript、DOM 和 UI 工具，并配有可编辑运行的实时演示。下面这条路径可以带你回到 Notes、Course Notes、课程主页，或定位到当前笔记。将鼠标悬停在右侧的 ≡ 图标上可以打开目录。</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>最后编辑于 2026 年 11 月 19 日</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="in4matx-133-user-interface-software--lecture-16数据库与本地存储">IN4MATX 133: User Interface Software — Lecture 16：数据库与本地存储</h1>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#1-%E5%BA%94%E7%94%A8%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%AD%98%E5%82%A8%E6%95%B0%E6%8D%AE">1. 应用为什么要存储数据</a></li>
+<li><a href="#2-webview-%E5%BA%94%E7%94%A8%E7%9A%84%E5%AD%98%E5%82%A8%E6%96%B9%E5%BC%8F">2. WebView 应用的存储方式</a></li>
+<li><a href="#3-%E6%B5%8F%E8%A7%88%E5%99%A8%E5%AD%98%E5%82%A8cookies-%E4%B8%8E-web-storage">3. 浏览器存储：cookies 与 Web storage</a></li>
+<li><a href="#4-%E5%BA%94%E7%94%A8%E5%81%8F%E5%A5%BD%E8%AE%BE%E7%BD%AEpreferences">4. 应用偏好设置（Preferences）</a></li>
+<li><a href="#5-indexeddb">5. IndexedDB</a></li>
+<li><a href="#6-%E8%AE%BE%E5%A4%87%E5%85%B3%E7%B3%BB%E5%9E%8B%E5%AD%98%E5%82%A8">6. 设备关系型存储</a></li>
+<li><a href="#7-%E8%BF%9C%E7%A8%8B%E5%AD%98%E5%82%A8%E4%B8%8E%E6%9C%AC%E5%9C%B0%E5%AD%98%E5%82%A8">7. 远程存储与本地存储</a></li>
+<li><a href="#8-%E5%AE%8C%E6%88%90-a4">8. 完成 A4</a></li>
+<li><a href="#9-%E8%AF%BE%E5%A0%82%E9%97%AE%E9%A2%98%E4%B8%8E%E6%BC%94%E7%A4%BA%E9%99%84%E8%A7%A3%E7%AD%94">9. 课堂问题与演示（附解答）</a></li>
+<li><a href="#10-%E9%80%9F%E6%9F%A5%E4%B8%8E%E5%BF%85%E8%AE%B0%E7%9A%84-5-%E4%B8%AA%E8%A6%81%E7%82%B9">10. 速查与必记的 5 个要点</a></li>
+</ul>
+<blockquote>
+<p>UCI IN4MATX 133: User Interface Software — Prof. Travis Linden Reid，2026 年秋季学期，周四 11/19（第 8 周）<br>内容整理自 Lecture 16 的幻灯片（共 28 页）和 demo 仓库文件夹 <code>W8_L2_Databases</code>。内容按概念组织，而不是按来源组织。</p>
+</blockquote>
+<blockquote>
+<p>📅 <strong>课程安排</strong>：今天之后，A4 需要的内容就全部讲完了——<strong>A4 截止于周一午夜</strong>。别忘了填写搭档问卷（partner survey）。资源链接都在课程 Slack 上。<br>感恩节那周：周二照常上课；答疑时间改为<strong>周二 2–3pm</strong>，中午到上课前办公室门开着，可以来问 A5。周四没有课。</p>
+</blockquote>
+<p>今天的目标（幻灯片 3、27）：说明浏览器应用和移动应用可用的存储方式；为 WebView 应用中的本地数据选择合适的存储方式；在 Ionic 应用中使用两种存储方式（Preferences 和 IndexedDB）。</p>
+<hr>
+<h2 id="1-应用为什么要存储数据">1. 应用为什么要存储数据</h2>
+<p>数据存在两种地方之一（幻灯片 4）：</p>
+<table>
+<thead>
+<tr>
+<th>远程存储</th>
+<th>本地存储</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>用户账户</td>
+<td>应用设置 / 用户偏好</td>
+</tr>
+<tr>
+<td>用户发布的内容（帖子）</td>
+<td>用户产生的数据</td>
+</tr>
+<tr>
+<td></td>
+<td>游戏存档</td>
+</tr>
+</tbody></table>
+<p>如今很多应用（包括游戏）即使是右栏这类数据，也主要依赖<strong>云端</strong>存储。</p>
+<p>因为 133 是前端课，这一讲只是对各种方式的快速概览（幻灯片 5）。后端有专门的课：数据库在 <strong>CS 122A &amp; B</strong>，远程存储和服务器通信在 <strong>SWE 124</strong>。</p>
+<p>引出问题的场景（幻灯片 6）：刷新一下 A4 的睡眠记录应用，<strong>所有记录都没了</strong>。组件变量只存在于内存里。想保留数据，就必须明确让浏览器或应用把它存到某个地方。</p>
+<h2 id="2-webview-应用的存储方式">2. WebView 应用的存储方式</h2>
+<p>WebView 应用（Ionic/Capacitor 应用，<a href="/~kazuhak/notes/in4matx-133/lec-12/zh-CN/">Lecture 12</a>）既可以用<strong>浏览器</strong>提供的存储，<em>也</em>可以用<strong>移动设备</strong>提供的存储（幻灯片 7）：</p>
+<ul>
+<li>浏览器存储（cookies、Web storage）——<a href="#3-%E6%B5%8F%E8%A7%88%E5%99%A8%E5%AD%98%E5%82%A8cookies-%E4%B8%8E-web-storage">第 3 节</a></li>
+<li>应用 Preferences——<a href="#4-%E5%BA%94%E7%94%A8%E5%81%8F%E5%A5%BD%E8%AE%BE%E7%BD%AEpreferences">第 4 节</a></li>
+<li>IndexedDB——<a href="#5-indexeddb">第 5 节</a></li>
+<li>设备上的关系型数据库——<a href="#6-%E8%AE%BE%E5%A4%87%E5%85%B3%E7%B3%BB%E5%9E%8B%E5%AD%98%E5%82%A8">第 6 节</a></li>
+<li>远程数据库——<a href="#7-%E8%BF%9C%E7%A8%8B%E5%AD%98%E5%82%A8%E4%B8%8E%E6%9C%AC%E5%9C%B0%E5%AD%98%E5%82%A8">第 7 节</a></li>
+</ul>
+<p>五种方式的对比见<a href="#10-%E9%80%9F%E6%9F%A5%E4%B8%8E%E5%BF%85%E8%AE%B0%E7%9A%84-5-%E4%B8%AA%E8%A6%81%E7%82%B9">速查</a>。</p>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria">MDN：存储配额与清除标准</a> · <a href="https://capacitorjs.com/docs/guides/storage">Capacitor：存储指南</a> · <a href="https://ionicframework.com/docs/angular/storage">Ionic：Angular 存储</a></p>
+</blockquote>
+<h2 id="3-浏览器存储cookies-与-web-storage">3. 浏览器存储：cookies 与 Web storage</h2>
+<p><strong>Cookies</strong>（幻灯片 8）：</p>
+<ul>
+<li>在浏览器和服务器之间来回传递的小块数据；</li>
+<li>用来维持<strong>会话（session）</strong>；</li>
+<li><strong>非常小</strong>——不是放应用数据的地方。</li>
+</ul>
+<p><strong>Web storage</strong>（幻灯片 9）是浏览器的本地存储：</p>
+<ul>
+<li><strong>只用于 Web</strong>；</li>
+<li><strong>同步</strong>操作，所以扩展性差——每次读写都会阻塞；</li>
+<li>浏览器<strong>不</strong>推荐用它存大量数据；</li>
+<li>没有流行的 Ionic/Capacitor 插件封装它。</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：在本课程里，这两者都不是存应用数据的答案。cookies 用于会话；Web storage 是同步的、只用于 Web、也没有 Ionic/Capacitor 插件。在<a href="#9-%E8%AF%BE%E5%A0%82%E9%97%AE%E9%A2%98%E4%B8%8E%E6%BC%94%E7%A4%BA%E9%99%84%E8%A7%A3%E7%AD%94">课堂问题</a>里它们都是错误选项。</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies">MDN：使用 HTTP cookies</a> · <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API">MDN：Web Storage API</a></p>
+</blockquote>
+<h2 id="4-应用偏好设置preferences">4. 应用偏好设置（Preferences）</h2>
+<p>应用偏好设置（幻灯片 10）：</p>
+<ul>
+<li>用于<strong>少量数据</strong>——比如语言、深色/浅色模式这类应用设置；</li>
+<li><strong>永久</strong>保存；</li>
+<li><strong>不加密</strong>；</li>
+<li><strong>同步</strong>操作，所以扩展性差；</li>
+<li>在 Ionic 中：<strong>Capacitor Preferences</strong> 插件（<code>@capacitor/preferences</code>）。它只能存<strong>字符串</strong>（iOS 支持所有基本类型，但别依赖这一点）。</li>
+</ul>
+<p>它是一个键–值存储。demo 应用（幻灯片 24）用它保存用户的名字。三个调用，取自 <code>home.page.ts</code>（solution）：</p>
+<div class="code-collapse is-collapsed"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Preferences</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@capacitor/preferences'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C8C8C8">nameKey</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">string</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">"name"</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C8C8C8">name</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">string</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">""</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// save: key + string value</span></span>
+<span class="line"><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> Preferences</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  key:</span><span style="color:#CE9178"> 'name'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  value:</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// load: resolves to { value: string | null }</span></span>
+<span class="line"><span style="color:#9CDCFE">Preferences</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  key:</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">nameKey</span></span>
+<span class="line"><span style="color:#D4D4D4">}).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">`name: </span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#569CD6">}</span><span style="color:#CE9178">`</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#6A9955">  // result value is a string | null,</span></span>
+<span class="line"><span style="color:#6A9955">  // so:</span></span>
+<span class="line"><span style="color:#6A9955">  // 1. ensure nameValue is not null</span></span>
+<span class="line"><span style="color:#6A9955">  // 2. use JavaScript String() fn to convert it to string</span></span>
+<span class="line"><span style="color:#C586C0">  if</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">`</span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#569CD6">}</span><span style="color:#CE9178"> not null`</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">String</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">namedSaved</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// delete one key</span></span>
+<span class="line"><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> Preferences</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">remove</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  key:</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">nameKey</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span></code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="32"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>展开全部（32 行）</span></button><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>每个调用都返回 Promise，所以要用 <code>await</code> 或 <code>.then()</code>。从没保存过的键会返回 <code>{ value: null }</code>，所以代码在使用前先检查 <code>if(resultName.value)</code>。</p>
+<p>在 Chromium 中运行构建好的 demo：还没保存时，控制台输出 <code>name: null</code>；输入 &quot;Kazuha&quot; 并点 Save 后，页面的 <code>localStorage</code> 里是 <code>{&quot;CapacitorStorage.name&quot;:&quot;Kazuha&quot;}</code>；刷新后控制台输出 <code>name: Kazuha</code> 和 <code>Kazuha not null</code>，欢迎页面也回来了。可见在浏览器中，这个插件底层用的是 Web storage，键带 <code>CapacitorStorage.</code> 前缀。</p>
+<blockquote>
+<p>💡 <strong>关键理解</strong>：Preferences 按键存字符串。要存数字、列表或对象，得自己转成字符串（加载时再转回来）——或者换一个为结构化数据设计的存储（<a href="#5-indexeddb">第 5 节</a>）。</p>
+</blockquote>
+<p>完整的应用可以在<a href="#5-indexeddb">第 5 节</a>末尾交互运行。</p>
+<blockquote>
+<p>🧪 <strong>Demo 文件</strong>：<a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/app/home/home.page.ts">solution/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/package.json">package.json</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#93-%E6%BC%94%E7%A4%BA-1%E7%94%A8-preferences-%E4%BF%9D%E5%AD%98%E5%90%8D%E5%AD%97%E7%94%A8-indexeddb-%E4%BF%9D%E5%AD%98%E5%AD%A3%E8%8A%82%E5%B9%BB%E7%81%AF%E7%89%87-24--setup--solution">演示 1</a></p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://github.com/ionic-team/capacitor-plugins/blob/main/preferences/README.md">Capacitor Preferences 插件 README</a> · <a href="https://capacitorjs.com/docs/guides/storage">Capacitor：存储指南</a></p>
+</blockquote>
+<h2 id="5-indexeddb">5. IndexedDB</h2>
+<h3 id="51-它是什么">5.1 它是什么</h3>
+<p><strong>IndexedDB</strong>（幻灯片 11）：</p>
+<ul>
+<li>2015 年提出，2021 年成为标准；</li>
+<li><strong>浏览器原生支持的数据库</strong>；</li>
+<li>如今兼容性相当好——幻灯片里的 caniuse 表格显示，当前的 Chrome、Edge、Safari、Firefox、Opera、Chrome for Android、iOS Safari 和 Samsung Internet 都完全支持；只有 IE 10–11 是部分支持。</li>
+</ul>
+<p>它的特点（幻灯片 12）：</p>
+<ul>
+<li><strong>由浏览器实现</strong>；</li>
+<li>在设备上<strong>不是永久的</strong>——iOS 可能出于空间或隐私原因，在不提示的情况下清除它；</li>
+<li>Angular：<code>ngx-indexed-db</code>——可惜不兼容最新版 Angular；</li>
+<li>Ionic：<strong><code>ionic-storage</code></strong>——好几年没更新了，但仍然能用。demo 用的就是它。</li>
+</ul>
+<p>那它到底带来了什么数据库优势（幻灯片 13）？主要是<strong>一定的结构和组织</strong>，以及一个便于演示的更简单的 API；其他课程会讲得更深入。幻灯片引用了 Ionic 数据存储指南中关于 IndexedDB 的内容：</p>
+<table>
+<thead>
+<tr>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>免费</td>
+<td>操作系统回收空间时数据会丢失</td>
+</tr>
+<tr>
+<td>在浏览器中可用</td>
+<td>不支持加密</td>
+</tr>
+<tr>
+<td>支持查询</td>
+<td>存储容量有限</td>
+</tr>
+<tr>
+<td></td>
+<td>数据难以导出</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://caniuse.com/?search=indexeddb">caniuse：IndexedDB</a> · <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API">MDN：IndexedDB API</a> · <a href="https://github.com/ionic-team/ionic-storage">GitHub：ionic-storage</a> · <a href="https://ionic.io/enterprise-guide/data-storage">Ionic Enterprise Guide：数据存储</a></p>
+</blockquote>
+<h3 id="52-在-demo-应用中使用-ionic-storage">5.2 在 demo 应用中使用 ionic-storage</h3>
+<p>demo 把用户最喜欢的季节存在 IndexedDB 里。分三部分，<code>setup</code> 项目里都已经写好了。</p>
+<p><strong>1. 注册存储模块</strong>（<code>main.ts</code>）——数据库名，以及依次尝试的驱动：先 IndexedDB，退而用 Web storage：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">IonicStorageModule</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@ionic/storage-angular'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Drivers</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@ionic/storage'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">bootstrapApplication</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">AppComponent</span><span style="color:#D4D4D4">, {</span></span>
+<span class="line"><span style="color:#9CDCFE">  providers:</span><span style="color:#D4D4D4"> [</span></span>
+<span class="line"><span style="color:#D4D4D4">    { </span><span style="color:#9CDCFE">provide:</span><span style="color:#9CDCFE"> RouteReuseStrategy</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">useClass:</span><span style="color:#9CDCFE"> IonicRouteStrategy</span><span style="color:#D4D4D4"> },</span></span>
+<span class="line"><span style="color:#DCDCAA">    provideIonicAngular</span><span style="color:#D4D4D4">(),</span></span>
+<span class="line"><span style="color:#DCDCAA">    provideRouter</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">routes</span><span style="color:#D4D4D4">, </span><span style="color:#DCDCAA">withPreloading</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">PreloadAllModules</span><span style="color:#D4D4D4">), </span><span style="color:#DCDCAA">withComponentInputBinding</span><span style="color:#D4D4D4">()),</span></span>
+<span class="line"><span style="color:#DCDCAA">    importProvidersFrom</span><span style="color:#D4D4D4">(</span></span>
+<span class="line"><span style="color:#9CDCFE">      IonicStorageModule</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">forRoot</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">        name:</span><span style="color:#CE9178"> '__mydb'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">        driverOrder:</span><span style="color:#D4D4D4"> [</span><span style="color:#9CDCFE">Drivers</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">IndexedDB</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">Drivers</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">LocalStorage</span><span style="color:#D4D4D4">]</span></span>
+<span class="line"><span style="color:#D4D4D4">      })</span></span>
+<span class="line"><span style="color:#D4D4D4">    )</span></span>
+<span class="line"><span style="color:#D4D4D4">  ],</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>2. 用一个 service 封装</strong>（<code>services/storage.ts</code>，即 <a href="/~kazuhak/notes/in4matx-133/lec-11/zh-CN/">Lecture 11</a> 里的 Angular service）。<code>storage.create()</code> 只打开一次数据库；每个方法都先等它完成：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Injectable</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@angular/core'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Storage</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@ionic/storage-angular'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">@</span><span style="color:#DCDCAA">Injectable</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  providedIn:</span><span style="color:#CE9178"> 'root'</span></span>
+<span class="line"><span style="color:#D4D4D4">})</span></span>
+<span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> class</span><span style="color:#4EC9B0"> StorageService</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">  private</span><span style="color:#9CDCFE"> _storage</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">Promise</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">Storage</span><span style="color:#D4D4D4">>;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  constructor</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">private</span><span style="color:#9CDCFE"> storage</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">Storage</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">_storage</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">create</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  public</span><span style="color:#569CD6"> async</span><span style="color:#DCDCAA"> set</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">string</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">any</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> storage</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">_storage</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    await</span><span style="color:#9CDCFE"> storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  public</span><span style="color:#569CD6"> async</span><span style="color:#DCDCAA"> get</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">string</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> storage</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">_storage</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    let</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  public</span><span style="color:#569CD6"> async</span><span style="color:#DCDCAA"> reset</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> storage</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">_storage</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">clear</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>3. 注入 service 并调用</strong>（<code>home.page.ts</code>，solution）。和 Preferences 不同，<code>set</code> 可以接受任意值，而不只是字符串：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">constructor</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">private</span><span style="color:#9CDCFE"> storage</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">StorageService</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#6A9955">  // … load preferences data (Section 4) …</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">init</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> init</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // load IndexedDB data</span></span>
+<span class="line"><span style="color:#569CD6">  let</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">seasonKey</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"found season value: "</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">  if</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"VALID season value: "</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">setDecorativeText</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">onIonChange</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">event</span><span style="color:#D4D4D4">: </span><span style="color:#9CDCFE">CustomEvent</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">event</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">detail</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">setDecorativeText</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">seasonKey</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> clearData</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#6A9955">  // … Preferences.remove (Section 4) …</span></span>
+<span class="line"><span style="color:#6A9955">  // clear ionic storage data</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">reset</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>季节来自一个 <code>ion-picker</code>（<a href="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/">Lecture 13</a>），它的 <code>(ionChange)</code> 调用 <code>onIonChange($event)</code>；<code>setDecorativeText()</code> 根据季节选出对应的 emoji。</p>
+<p>在 Chromium 中选了 Fall 之后，浏览器里有一个 IndexedDB 数据库 <code>__mydb</code>，其对象仓库 <code>_ionickv</code> 中键 <code>season</code> → <code>&quot;Fall&quot;</code>。刷新后输出 <code>found season value: Fall</code> 和 <code>VALID season value: Fall</code>。<strong>Reset data</strong> 会清空两个存储（<code>localStorage</code> 变成 <code>{}</code>，<code>_ionickv</code> 没有任何键），下次加载输出 <code>name: null</code> 和 <code>found season value: null</code>。</p>
+<h3 id="53-视图没有显示加载出的季节">5.3 视图没有显示加载出的季节</h3>
+<p>solution 里有一个真实的 bug：按上面的步骤刷新后，控制台说季节是 Fall，但屏幕上显示的是 <strong>&quot;Welcome, Kazuha!&quot;，没有 emoji，picker 停在 Spring</strong>。<code>pickerValue</code> 和 <code>decorativeText</code> 是普通字段，并且是在 <strong><code>await</code> 之后</strong>赋值的，所以没有任何东西刷新视图（<a href="/~kazuhak/notes/in4matx-133/lec-15/zh-CN/#5-signals">Lecture 15</a> 讲过的规则）。名字能显示出来，只是因为 <code>namedSaved</code> 是 signal。手动选择季节没问题，是因为用户事件会刷新视图。</p>
+<p>修复：把这两个字段改成 signal，用 <code>.set()</code> 赋值：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">string</span><span style="color:#D4D4D4">>(</span><span style="color:#CE9178">"Spring"</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">decorativeText</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">string</span><span style="color:#D4D4D4">>(</span><span style="color:#CE9178">""</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// in init():  this.pickerValue.set(val);</span></span>
+<span class="line"><span style="color:#6A9955">// in setDecorativeText():  this.decorativeText.set(this.fallText);  (etc.)</span></span>
+<span class="line"><span style="color:#6A9955">// in onIonChange():  this.pickerValue.set(event.detail.value);</span></span>
+<span class="line"><span style="color:#6A9955">//                    this.storage.set(this.seasonKey, this.pickerValue());</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">Welcome, {{name}}! {{decorativeText()}}</span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-picker-column</span><span style="color:#9CDCFE"> [value]</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"pickerValue()"</span><span style="color:#9CDCFE"> (ionChange)</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"onIonChange($event)"</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>改完之后，刷新后的应用会显示 Fall 和 🍂🍁🎃。（文件里本身也问了对应的问题：<em>&quot;why is namedSaved a signal, but not nameKey?&quot;</em>——<code>nameKey</code> 从不改变，所以视图不需要被通知。）</p>
+<p>下面可以动手试：输入名字点 Save，选一个季节，再点 <strong>重新加载应用</strong>（替身“磁盘”会保留数据，就像真实的存储一样）。点下一步会自动跑一遍刷新的场景，再应用修复：</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;演示 1（幻灯片 24 · setup → solution）用 Ionic Web 组件重现；Preferences、ionic-storage 和 signal() 都是替身&quot;, &quot;width&quot;: 375, &quot;height&quot;: 520, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-header&gt;&lt;ion-toolbar&gt;&lt;ion-title&gt;Data Saving Demo&lt;/ion-title&gt;&lt;/ion-toolbar&gt;&lt;/ion-header&gt;\n&lt;ion-content&gt;\n  &lt;div id=\&quot;container\&quot;&gt;&lt;/div&gt;\n&lt;/ion-content&gt;\n&lt;ion-footer&gt;&lt;ion-toolbar&gt;&lt;ion-button id=\&quot;reload\&quot; fill=\&quot;outline\&quot; expand=\&quot;block\&quot;&gt;⟳ 重新加载应用（“磁盘”上的数据保留）&lt;/ion-button&gt;&lt;/ion-toolbar&gt;&lt;/ion-footer&gt;\n&lt;/ion-app&gt;\n&quot;, &quot;css&quot;: &quot;#container { text-align: center; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); }\n&quot;, &quot;js&quot;: &quot;// ---- Stand-ins (the sandbox has no Angular, Capacitor or ionic-storage) ----\n// \&quot;disk\&quot; survives the Reload button, like real storage survives a refresh.\nconst disk = { prefs: new Map(), idb: new Map() };\nconst Preferences = {   // @capacitor/preferences: strings, get() resolves to { value: string | null }\n  get: async ({ key }) =&gt; ({ value: disk.prefs.has(key) ? disk.prefs.get(key) : null }),\n  set: async ({ key, value }) =&gt; { disk.prefs.set(key, value); },\n  remove: async ({ key }) =&gt; { disk.prefs.delete(key); }\n};\nconst storageService = {  // services/storage.ts on top of ionic-storage (IndexedDB opens a bit later)\n  get: (key) =&gt; new Promise(r =&gt; setTimeout(() =&gt; r(disk.idb.has(key) ? disk.idb.get(key) : null), 50)),\n  set: async (key, value) =&gt; { disk.idb.set(key, value); },\n  reset: async () =&gt; { disk.idb.clear(); }\n};\n// A tiny signal(): read with s(), write with s.set(v); set() refreshes the view.\nfunction signal(value) { const s = () =&gt; value; s.set = (v) =&gt; { value = v; render(); }; return s; }\n\n// ---- home.page.ts (solution) ----\nclass HomePage {\n  namedSaved = signal(false);\n  nameKey = \&quot;name\&quot;;\n  name = \&quot;\&quot;;\n  pickerValue = \&quot;Spring\&quot;;\n  decorativeText = \&quot;\&quot;;\n  springText = &#39;\\u{1F326}\\u{1F490}\\u{1F430}&#39;;\n  summerText = &#39;\\u{1F33B}\\u{1F31E}\\u{1F30A}&#39;;\n  fallText = &#39;\\u{1F342}\\u{1F341}\\u{1F383}&#39;;\n  winterText = &#39;\\u{2744}\\u{1F384}\\u{26C4}&#39;;\n  seasonKey = \&quot;season\&quot;;\n\n  constructor(storage) {\n    this.storage = storage;\n    Preferences.get({ key: this.nameKey }).then((resultName) =&gt; {\n      console.log(`name: ${resultName.value}`);\n      if (resultName.value) {\n        this.name = String(resultName.value);\n        this.namedSaved.set(true);\n      }\n    });\n    this.init();\n  }\n  async init() {\n    let val = await this.storage.get(this.seasonKey);\n    console.log(\&quot;found season value: \&quot; + val);\n    if (val) {\n      this.pickerValue = val;      // plain field: nothing refreshes the view here\n      this.setDecorativeText();\n    }\n  }\n  async saveName() {\n    await Preferences.set({ key: &#39;name&#39;, value: this.name });\n    this.namedSaved.set(true);\n  }\n  async clearData() {\n    await Preferences.remove({ key: this.nameKey });\n    this.namedSaved.set(false);\n    this.name = \&quot;\&quot;;\n    this.storage.reset();\n  }\n  onIonChange(event) {\n    this.pickerValue = event.detail.value;\n    this.setDecorativeText();\n    this.storage.set(this.seasonKey, this.pickerValue);\n  }\n  setDecorativeText() {\n    switch (this.pickerValue) {\n      case \&quot;Spring\&quot;: this.decorativeText = this.springText; break;\n      case \&quot;Summer\&quot;: this.decorativeText = this.summerText; break;\n      case \&quot;Fall\&quot;: this.decorativeText = this.fallText; break;\n      case \&quot;Winter\&quot;: this.decorativeText = this.winterText; break;\n    }\n  }\n}\n\n// ---- home.page.html: @if(namedSaved()) { welcome + picker + reset } @else { input + save } ----\n// An event handler refreshes the view when it returns (like Angular); an await inside it doesn&#39;t.\nlet page;\nfunction on(el, ev, fn) { el.addEventListener(ev, (e) =&gt; { fn(e); render(); }); return el; }\nfunction el(tag, attrs = {}, text = \&quot;\&quot;) { const e = document.createElement(tag); for (const k in attrs) e.setAttribute(k, attrs[k]); e.textContent = text; return e; }\nfunction render() {\n  const c = document.getElementById(&#39;container&#39;);\n  c.innerHTML = &#39;&#39;;\n  if (page.namedSaved()) {\n    c.append(el(&#39;ion-item&#39;, {}, `Welcome, ${page.name}! ${page.decorativeText}`), el(&#39;ion-item&#39;, {}, &#39;Your favorite season:&#39;));\n    const col = el(&#39;ion-picker-column&#39;, { value: page.pickerValue });\n    for (const s of [\&quot;Spring\&quot;, \&quot;Summer\&quot;, \&quot;Fall\&quot;, \&quot;Winter\&quot;]) col.append(el(&#39;ion-picker-column-option&#39;, { value: s }, s));\n    on(col, &#39;ionChange&#39;, (e) =&gt; page.onIonChange(e));\n    const picker = el(&#39;ion-picker&#39;); picker.append(col); c.append(picker);\n    c.append(on(el(&#39;ion-button&#39;, {}, &#39;Reset data&#39;), &#39;click&#39;, () =&gt; page.clearData()));\n  } else {\n    const input = el(&#39;ion-input&#39;, { placeholder: &#39;Enter your name&#39; });\n    input.value = page.name;\n    on(input, &#39;ionInput&#39;, (e) =&gt; { page.name = e.target.value; });\n    c.append(el(&#39;ion-item&#39;), on(el(&#39;ion-button&#39;, {}, &#39;Save&#39;), &#39;click&#39;, () =&gt; page.saveName()));\n    c.firstChild.append(input);\n  }\n}\nfunction startApp() { console.log(&#39;--- app start ---&#39;); page = new HomePage(storageService); render(); }\ndocument.getElementById(&#39;reload&#39;).addEventListener(&#39;click&#39;, startApp);\nstartApp();\n&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;自动执行：保存名字 Peter，选 Fall，然后重新加载。控制台显示季节已加载，但视图仍是 Spring，也没有 emoji（pickerValue 是普通字段）。&quot;, &quot;js&quot;: &quot;\n// ---- Scripted: save the name \&quot;Peter\&quot;, pick Fall, then reload the app ----\nsetTimeout(async () =&gt; {\n  page.name = \&quot;Peter\&quot;; await page.saveName();\n  page.onIonChange({ detail: { value: \&quot;Fall\&quot; } }); render();\n  startApp();\n}, 300);\n&quot;}, {&quot;note&quot;: &quot;修复：把 pickerValue 和 decorativeText 改成 signal，异步读完 IndexedDB 后赋值就会刷新视图：重新加载后显示 Fall 和 emoji。&quot;, &quot;js&quot;: &quot;\n// ---- Fix: pickerValue and decorativeText as signals ----\n// In the app: pickerValue = signal&lt;string&gt;(\&quot;Spring\&quot;); ... this.pickerValue.set(val);\n// Here: the same effect, a refresh after the async load.\nHomePage.prototype.init = async function () {\n  let val = await this.storage.get(this.seasonKey);\n  console.log(\&quot;found season value: \&quot; + val);\n  if (val) {\n    this.pickerValue = val;\n    this.setDecorativeText();\n    render();   // what pickerValue.set(val) / decorativeText.set(...) trigger\n  }\n};\n&quot;}], &quot;interactive&quot;: true}</code></pre><blockquote>
+<p>⚠️ <strong>易错点</strong>：读取存储是异步的。在 <code>await</code> 之后（或 <code>.then()</code> 里）从存储读出来再赋值的东西都必须是 signal，否则即使控制台显示了新值，屏幕上仍是旧值。</p>
+</blockquote>
+<blockquote>
+<p>🧪 <strong>Demo 文件</strong>：<a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/main.ts">main.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/app/services/storage.ts">services/storage.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/app/home/home.page.ts">solution/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/app/home/home.page.html">home.page.html</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#93-%E6%BC%94%E7%A4%BA-1%E7%94%A8-preferences-%E4%BF%9D%E5%AD%98%E5%90%8D%E5%AD%97%E7%94%A8-indexeddb-%E4%BF%9D%E5%AD%98%E5%AD%A3%E8%8A%82%E5%B9%BB%E7%81%AF%E7%89%87-24--setup--solution">演示 1</a></p>
+</blockquote>
+<h2 id="6-设备关系型存储">6. 设备关系型存储</h2>
+<p>设备本身上的关系型数据库（幻灯片 14）：</p>
+<ul>
+<li><strong>永久</strong>保存；</li>
+<li><strong>性能好</strong>；</li>
+<li>关系型 = 非常适合<strong>大量的复杂数据</strong>；</li>
+<li><strong>不是由浏览器实现，而是由设备实现</strong>——所以对 WebView 应用来说<strong>只在移动端可用</strong>；</li>
+<li>Ionic 的选择：Capacitor 的 <strong>Enterprise（付费）SQLite</strong> 插件，或 <strong>Capacitor 社区 SQLite</strong> 插件（它在 Web 上也能用，底层用的是 IndexedDB）。</li>
+</ul>
+<blockquote>
+<p>💡 <strong>关键理解</strong>：IndexedDB 是浏览器的数据库，可能被操作系统清除；设备关系型存储是手机的数据库，会一直保留。这个区别决定了<a href="#91-%E9%97%AE%E9%A2%98-1%E6%89%8B%E6%9C%BA%E6%B8%B8%E6%88%8F%E5%AD%98%E6%A1%A3%E6%9C%80%E9%80%82%E5%90%88%E7%94%A8%E5%93%AA%E7%A7%8D%E5%AD%98%E5%82%A8%E5%B9%BB%E7%81%AF%E7%89%87-1720">游戏存档那道题</a>。</p>
+</blockquote>
+<h2 id="7-远程存储与本地存储">7. 远程存储与本地存储</h2>
+<p>选择之前要问的问题（幻灯片 15）：</p>
+<ul>
+<li>谁需要访问这些数据——只有用户自己，还是其他人也要？</li>
+<li>作为开发者，<strong>你</strong>需要访问吗？</li>
+<li>数据敏感吗？</li>
+<li>数据是否重要到绝不能丢？</li>
+</ul>
+<p>当<strong>不只是本地设备</strong>需要这些数据时，远程数据库至关重要（幻灯片 16）：</p>
+<ul>
+<li><strong>跨设备应用</strong>：facebook.com 和 Facebook 手机应用都需要你的个人资料；</li>
+<li><strong>开发者</strong>：为了了解用户的使用习惯，或提供数据驱动的服务；</li>
+<li><strong>社交媒体</strong>：在用户之间分享用户生成的内容。</li>
+</ul>
+<p>另一方面，<strong>如果数据只存在本地，可以保留一定的隐私</strong>。用哪种取决于数据的类型和使用场景。</p>
+<h2 id="8-完成-a4">8. 完成 A4</h2>
+<p>A4 有三项大任务（幻灯片 25–26）：</p>
+<ul>
+<li>用 Ionic 组件搭建界面（<a href="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/">Lecture 13</a>）；</li>
+<li>生成自己的页面和组件，并用路由实现页面跳转；</li>
+<li>使用一个访问原生设备资源（<a href="/~kazuhak/notes/in4matx-133/lec-15/zh-CN/">Lecture 15</a>）或存储（本讲）的插件。</li>
+</ul>
+<p>推荐计划：<strong>从难到易</strong>依次完成。</p>
+<table>
+<thead>
+<tr>
+<th>难度</th>
+<th>任务</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>最难</td>
+<td>让设备资源 / 存储跑起来</td>
+</tr>
+<tr>
+<td>中等</td>
+<td>生成两个页面，配置路由，做一个链接</td>
+</tr>
+<tr>
+<td>简单</td>
+<td>用 Ionic 组件搭建界面，实现应用的功能</td>
+</tr>
+</tbody></table>
+<h2 id="9-课堂问题与演示附解答">9. 课堂问题与演示（附解答）</h2>
+<h3 id="91-问题-1手机游戏存档最适合用哪种存储幻灯片-1720">9.1 问题 1：手机游戏存档最适合用哪种存储？（幻灯片 17–20）</h3>
+<p>Which of these is the best storage option for a mobile game&#39;s save file?</p>
+<ul>
+<li>A. Preferences</li>
+<li>B. Device relational storage</li>
+<li>C. Cookies</li>
+<li>D. IndexedDB</li>
+<li>E. Web storage</li>
+</ul>
+<details>
+<summary>答案</summary>
+
+<p><strong>答案：B——设备关系型存储</strong>（幻灯片没有公布这题的结果；这是根据幻灯片 10–14 推出的）。</p>
+<ul>
+<li><strong>B</strong>：存档是重要的、用户产生的数据，而且是手机应用；设备存储永久、性能好、适合复杂数据。只能在移动端用对手机游戏不是问题。</li>
+<li><strong>A</strong> 错：Preferences 用于少量设置，只存字符串，而且是同步的。</li>
+<li><strong>C</strong> 错：cookies 很小，用于会话。</li>
+<li><strong>D</strong> 是陷阱：它能用，但“在设备上不是永久的”——iOS 可能不提示就清除它，而丢存档是最糟的结果。</li>
+<li><strong>E</strong> 错：只用于 Web、同步、不推荐存大量数据。</li>
+</ul>
+<p>（幻灯片 4 的补充说明同样适用：如今很多游戏改把存档放在云端。）</p>
+</details>
+
+<p>返回<a href="#6-%E8%AE%BE%E5%A4%87%E5%85%B3%E7%B3%BB%E5%9E%8B%E5%AD%98%E5%82%A8">第 6 节</a>。</p>
+<h3 id="92-问题-2a4-的睡眠记录数据最适合用哪种存储幻灯片-2123">9.2 问题 2：A4 的睡眠记录数据最适合用哪种存储？（幻灯片 21–23）</h3>
+<p>Which of these is the best storage option for A4&#39;s sleep tracking data?</p>
+<ul>
+<li>A. Preferences</li>
+<li>B. Device relational storage</li>
+<li>C. Cookies</li>
+<li>D. IndexedDB</li>
+<li>E. Web storage</li>
+</ul>
+<details>
+<summary>答案</summary>
+
+<p><strong>答案：A、B 或 D</strong>——幻灯片 23 把这三个都标亮了。</p>
+<ul>
+<li><strong>A，Preferences</strong>：永久且简单；少量记录可以存成一个字符串。</li>
+<li><strong>B，设备关系型存储</strong>：永久，适合不断增长的结构化数据——但只能在手机上用，<code>ionic serve</code> 里不行。</li>
+<li><strong>D，IndexedDB</strong>（ionic-storage）：浏览器和设备上都能用，可以直接存结构化的值。</li>
+<li><strong>C</strong> 和 <strong>E</strong> 不行，理由和问题 1 一样：cookies 是很小的会话数据，Web storage 只用于 Web，也没有 Ionic/Capacitor 插件。</li>
+</ul>
+</details>
+
+<p>返回<a href="#2-webview-%E5%BA%94%E7%94%A8%E7%9A%84%E5%AD%98%E5%82%A8%E6%96%B9%E5%BC%8F">第 2 节</a>。</p>
+<h3 id="93-演示-1用-preferences-保存名字用-indexeddb-保存季节幻灯片-24--setup--solution">9.3 演示 1：用 Preferences 保存名字，用 IndexedDB 保存季节（幻灯片 24 · setup → solution）</h3>
+<p><strong>任务。</strong> <code>setup</code> 是一个 Ionic + Angular 应用（&quot;Data Saving Demo&quot;），模板、<code>main.ts</code> 的存储配置和 <code>StorageService</code> 都已写好。页面先让用户输入名字；保存后显示 &quot;Welcome, 名字!&quot;，并提供季节选择器和 <strong>Reset data</strong> 按钮。补全 <code>home.page.ts</code> 里的五个 TODO，让两个值在刷新后都能保留：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">constructor</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">private</span><span style="color:#9CDCFE"> storage</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">StorageService</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: load preferences data</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">init</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> init</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: load IndexedDB data</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> saveName</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: save name to preferences</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> clearData</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: clear preferences data</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // TODO: clear IndexedDB data</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">onIonChange</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">event</span><span style="color:#D4D4D4">: </span><span style="color:#9CDCFE">CustomEvent</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO:</span></span>
+<span class="line"><span style="color:#6A9955">  // set picker value</span></span>
+<span class="line"><span style="color:#6A9955">  // set decorative text</span></span>
+<span class="line"><span style="color:#6A9955">  // save to IndexedDB</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<details>
+<summary>答案</summary>
+
+<div class="code-collapse is-collapsed"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">constructor</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">private</span><span style="color:#9CDCFE"> storage</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">StorageService</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#6A9955">  // load preferences data</span></span>
+<span class="line"><span style="color:#9CDCFE">  Preferences</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">    key:</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">nameKey</span></span>
+<span class="line"><span style="color:#D4D4D4">  }).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">`name: </span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#569CD6">}</span><span style="color:#CE9178">`</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">    {</span></span>
+<span class="line"><span style="color:#9CDCFE">      console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">`</span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#569CD6">}</span><span style="color:#CE9178"> not null`</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">      this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">String</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">      this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">namedSaved</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">init</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> init</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // load IndexedDB data</span></span>
+<span class="line"><span style="color:#569CD6">  let</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">seasonKey</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"found season value: "</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">  if</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"VALID season value: "</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">setDecorativeText</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> saveName</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">`saved name: </span><span style="color:#569CD6">${</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#569CD6">}</span><span style="color:#CE9178">`</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">  try</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    await</span><span style="color:#9CDCFE"> Preferences</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">      key:</span><span style="color:#CE9178"> 'name'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      value:</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">    });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">namedSaved</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  } </span><span style="color:#C586C0">catch</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">e</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">e</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> clearData</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#6A9955">  // clear Preferences data</span></span>
+<span class="line"><span style="color:#C586C0">  await</span><span style="color:#9CDCFE"> Preferences</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">remove</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">    key:</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">nameKey</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">namedSaved</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">""</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // clear ionic storage data</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">reset</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">onIonChange</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">event</span><span style="color:#D4D4D4">: </span><span style="color:#9CDCFE">CustomEvent</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">event</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">detail</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">setDecorativeText</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">seasonKey</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="62"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>展开全部（62 行）</span></button><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>首次加载 → 保存 &quot;Kazuha&quot; → 选 Fall → 刷新，控制台输出：</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">name: null
+found season value: null
+saved name: Kazuha
+name: Kazuha
+Kazuha not null
+found season value: Fall
+VALID season value: Fall</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>要点：</p>
+<ul>
+<li><code>Preferences.get</code> resolve 为 <code>{ value: string | null }</code>——使用前先检查 <code>null</code>；</li>
+<li>异步加载完成后 <code>namedSaved.set(true)</code> 让模板的 <code>@if</code> 切换到欢迎页面；</li>
+<li>每次 <code>ionChange</code> 都保存季节，在 <code>init()</code> 里加载；</li>
+<li><code>pickerValue</code> 和 <code>decorativeText</code> 也应该是 signal：按原样写，刷新后加载出的季节不会显示在屏幕上（<a href="#53-%E8%A7%86%E5%9B%BE%E6%B2%A1%E6%9C%89%E6%98%BE%E7%A4%BA%E5%8A%A0%E8%BD%BD%E5%87%BA%E7%9A%84%E5%AD%A3%E8%8A%82">第 5.3 节</a>，含交互演示）。</li>
+</ul>
+</details>
+
+<blockquote>
+<p>🧪 <strong>Demo 文件</strong>：<a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/setup/DatabaseExamples/src/app/home/home.page.ts">setup/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/app/home/home.page.ts">solution/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/app/home/home.page.html">home.page.html</a></p>
+</blockquote>
+<p>返回<a href="#4-%E5%BA%94%E7%94%A8%E5%81%8F%E5%A5%BD%E8%AE%BE%E7%BD%AEpreferences">第 4 节</a> · <a href="#5-indexeddb">第 5 节</a>。</p>
+<h2 id="10-速查与必记的-5-个要点">10. 速查与必记的 5 个要点</h2>
+<p><strong>WebView 应用的存储方式</strong></p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>由谁实现</th>
+<th>永久？</th>
+<th>适用于</th>
+<th>Ionic/Capacitor</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cookies</td>
+<td>浏览器</td>
+<td>—</td>
+<td>会话状态（很小）</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Web storage</td>
+<td>浏览器</td>
+<td>—</td>
+<td>不推荐存大量数据；同步，只用于 Web</td>
+<td>没有流行插件</td>
+</tr>
+<tr>
+<td>Preferences</td>
+<td>设备（浏览器中为 Web storage）</td>
+<td>是，不加密</td>
+<td>少量设置：语言、深色模式；只存字符串；同步</td>
+<td><code>@capacitor/preferences</code></td>
+</tr>
+<tr>
+<td>IndexedDB</td>
+<td>浏览器</td>
+<td>否——iOS 可能清除</td>
+<td>一定的结构；免费、浏览器中可用、可查询</td>
+<td><code>ionic-storage</code>（<code>@ionic/storage-angular</code>）</td>
+</tr>
+<tr>
+<td>设备关系型（SQLite）</td>
+<td>设备</td>
+<td>是</td>
+<td>大量复杂数据；性能好；只在移动端</td>
+<td>Enterprise SQLite（付费）、社区 SQLite</td>
+</tr>
+<tr>
+<td>远程数据库</td>
+<td>服务器</td>
+<td>是</td>
+<td>跨设备、开发者访问、用户间分享</td>
+<td>后端（CS 122A/B、SWE 124）</td>
+</tr>
+</tbody></table>
+<p><strong>demo 中的 API 调用</strong></p>
+<table>
+<thead>
+<tr>
+<th>存储</th>
+<th>保存</th>
+<th>读取</th>
+<th>删除</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Preferences</td>
+<td><code>await Preferences.set({ key, value })</code></td>
+<td><code>Preferences.get({ key })</code> → <code>{ value: string | null }</code></td>
+<td><code>Preferences.remove({ key })</code></td>
+</tr>
+<tr>
+<td>ionic-storage</td>
+<td><code>storage.set(key, value)</code></td>
+<td><code>await storage.get(key)</code></td>
+<td><code>storage.clear()</code>（全部键）</td>
+</tr>
+</tbody></table>
+<p>ionic-storage 的配置：在 <code>main.ts</code> 中 <code>IonicStorageModule.forRoot({ name, driverOrder: [Drivers.IndexedDB, Drivers.LocalStorage] })</code>，使用前先 <code>await storage.create()</code> 一次（即 demo 的 <code>StorageService</code>）。</p>
+<p><strong>必记的 5 个要点</strong></p>
+<ol>
+<li>组件变量刷新就没了；要保留的数据必须明确存起来。</li>
+<li>Preferences = 少量、永久、只存字符串的设置；IndexedDB = 有结构、在浏览器中，但<strong>不是永久的</strong>（iOS 可能清除）。</li>
+<li>设备关系型存储是存大量复杂数据的永久、高性能选择，但在 WebView 应用里只在移动端存在。</li>
+<li>cookies 和 Web storage 都不是存应用数据的答案：cookies 是很小的会话数据；Web storage 是同步的、只用于 Web、没有插件。</li>
+<li>存储调用是异步的：从存储加载的值要通过 <strong>signal</strong> 赋值，否则视图不会显示它。</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="笔记翻页" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/~kazuhak/notes/in4matx-133/lec-15/zh-CN/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>上一篇 · 第 15 讲</span><span class="pager-title" data-astro-cid-gxyjxt6l>设备资源与 Signals</span></a><a class="card interactive pager-card pager-next" href="/~kazuhak/notes/in4matx-133/" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>课程主页<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>IN4MATX 133 · User Interface Software</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>快捷键<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> 上一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> 下一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> 切换语言</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="目录" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>顶部</button><script type="module" src="/~kazuhak/_astro/NoteReader.astro_astro_type_script_index_0_lang.D_DIoJ7q.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/~kazuhak/assets/js/bento.js" defer></script><script src="/~kazuhak/assets/js/chat-widget.js" defer></script></body></html>

@@ -1,0 +1,830 @@
+<!DOCTYPE html><html lang="en-US"><head><title>CS 121 Document Conversion, Storage &amp; Duplicates | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Converting documents to text, character encodings (ASCII, Unicode, UTF-8/UTF-16/UTF-32), storing documents (TREC Web format, compression, BigTable), exact duplicates (checksums, CRC), near duplicates (n-gram fingerprints, Simhash), and removing page noise (content blocks, document slope curve, DOM)."><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-documents/en-US/"><link rel="icon" href="/~kazuhak/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/~kazuhak/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-documents/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-documents/zh-CN/"><link rel="stylesheet" href="/~kazuhak/_astro/BaseLayout.D6FvEM2t.css"><link rel="stylesheet" href="/~kazuhak/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/~kazuhak/_astro/katex.D1M0OS0E.css"><link rel="stylesheet" href="/~kazuhak/_astro/index.BWdCFSBs.css"></head><body data-nav-path="/~kazuhak/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/~kazuhak/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/~kazuhak/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/~kazuhak/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/~kazuhak/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/~kazuhak/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="en-US" data-viz-base="/~kazuhak/assets/viz/" data-viz-version="1795857753" data-source-url="/~kazuhak/notes/cs-121/topic-documents/en-US/source.md" data-editor-url="/~kazuhak/tools/md-editor/" data-alt-url="/~kazuhak/notes/cs-121/topic-documents/zh-CN/" data-prev-url="/~kazuhak/notes/cs-121/topic-crawling/en-US/" data-next-url="/~kazuhak/notes/cs-121/topic-text-processing/en-US/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="Previous / next note" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/~kazuhak/notes/cs-121/topic-crawling/en-US/" title="Previous: Web Crawling ([)" aria-label="Previous: Topic · Web Crawling" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>Topic · Web Crawling</span></a><label class="rb-title" title="Jump to another note" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>CS 121</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>Topic · Document Conversion, Storage &amp; Duplicates</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg><select class="rb-jump" data-rb-jump aria-label="Jump to another note" autocomplete="off" data-astro-cid-gxyjxt6l><option value="/~kazuhak/notes/cs-121/week-01/en-US/" data-astro-cid-gxyjxt6l>Week 1 — Course Intro, IR and the Web, Architecture</option><option value="/~kazuhak/notes/cs-121/week-02/en-US/" data-astro-cid-gxyjxt6l>Week 2 — The Web Corpus, SEO, Web Crawling</option><option value="/~kazuhak/notes/cs-121/week-03/en-US/" data-astro-cid-gxyjxt6l>Week 3 — Web Crawling</option><option value="/~kazuhak/notes/cs-121/week-04/en-US/" data-astro-cid-gxyjxt6l>Week 4 — Encodings, Storing Documents, Duplicates, Zipf&#39;s Law</option><option value="/~kazuhak/notes/cs-121/week-05/en-US/" data-astro-cid-gxyjxt6l>Week 5 — Text Processing, Term-Document Matrices</option><option value="/~kazuhak/notes/cs-121/week-06/en-US/" data-astro-cid-gxyjxt6l>Week 6 — Inverted Index, Index Construction</option><option value="/~kazuhak/notes/cs-121/week-07/en-US/" data-astro-cid-gxyjxt6l>Week 7 — Scaling the Index, Query Processing, tf-idf</option><option value="/~kazuhak/notes/cs-121/week-08/en-US/" data-astro-cid-gxyjxt6l>Week 8 — The Vector Space Model and Cosine Ranking</option><option value="/~kazuhak/notes/cs-121/week-09/en-US/" data-astro-cid-gxyjxt6l>Week 9 — Efficient Scoring, Link Analysis, Evaluation</option><option value="/~kazuhak/notes/cs-121/topic-search-engines/en-US/" data-astro-cid-gxyjxt6l>Topic · Search Engines &amp; the Web — Search Engines &amp; the Web</option><option value="/~kazuhak/notes/cs-121/topic-crawling/en-US/" data-astro-cid-gxyjxt6l>Topic · Web Crawling — Web Crawling</option><option value="/~kazuhak/notes/cs-121/topic-documents/en-US/" selected data-astro-cid-gxyjxt6l>Topic · Document Conversion, Storage &amp; Duplicates — Document Conversion, Storage &amp; Duplicates</option><option value="/~kazuhak/notes/cs-121/topic-text-processing/en-US/" data-astro-cid-gxyjxt6l>Topic · Text Processing — Text Processing</option><option value="/~kazuhak/notes/cs-121/topic-indexing/en-US/" data-astro-cid-gxyjxt6l>Topic · Inverted Indexes &amp; Index Construction — Inverted Indexes &amp; Index Construction</option><option value="/~kazuhak/notes/cs-121/topic-retrieval-models/en-US/" data-astro-cid-gxyjxt6l>Topic · Retrieval Models: Boolean, tf-idf &amp; Vector Space — Retrieval Models: Boolean, tf-idf &amp; Vector Space</option><option value="/~kazuhak/notes/cs-121/topic-query-processing/en-US/" data-astro-cid-gxyjxt6l>Topic · Query Processing &amp; Efficient Top-K — Query Processing &amp; Efficient Top-K</option><option value="/~kazuhak/notes/cs-121/topic-link-analysis/en-US/" data-astro-cid-gxyjxt6l>Topic · Link Analysis: HITS &amp; PageRank — Link Analysis: HITS &amp; PageRank</option><option value="/~kazuhak/notes/cs-121/topic-evaluation/en-US/" data-astro-cid-gxyjxt6l>Topic · Search Engine Evaluation — Search Engine Evaluation</option></select></label><a class="rb-btn rb-lang" href="/~kazuhak/notes/cs-121/topic-documents/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>中</span></a><a class="rb-btn rb-next rb-side-next" href="/~kazuhak/notes/cs-121/topic-text-processing/en-US/" title="Next: Text Processing (])" aria-label="Next: Topic · Text Processing" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>Topic · Text Processing</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/~kazuhak/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/~kazuhak/notes/cs-121/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>CS 121</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>Topic · Document Conversion, Storage &amp; Duplicates</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/~kazuhak/notes/cs-121/topic-documents/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>中文</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>Headings</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>Open in Editor</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>Information Retrieval Reading Notes</h2><p id="reader-description" data-astro-cid-gxyjxt6l>This page presents CS 121 Topic · Document Conversion, Storage &amp; Duplicates notes in a structured reading format so you can review text processing, the web graph, SEO, web crawling, and how search engines index and rank pages week by week. The path below takes you back to Notes, Course Notes, the course page, or this note file. Hover over the ≡ icon on the right side to open the Table of Contents.</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>Last edited on November 25, 2026</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="cs-121-information-retrieval--topic-document-conversion-storage--duplicates">CS 121: Information Retrieval — Topic: Document Conversion, Storage &amp; Duplicates</h1>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-conversion-from-many-formats-to-text">1. Conversion: From Many Formats to Text</a></li>
+<li><a href="#2-character-encoding-unicode--utf-8">2. Character Encoding, Unicode &amp; UTF-8</a></li>
+<li><a href="#3-storing-the-documents-trec-web-compression--bigtable">3. Storing the Documents: TREC Web, Compression &amp; BigTable</a></li>
+<li><a href="#4-exact-duplicates-checksums--crcs">4. Exact Duplicates: Checksums &amp; CRCs</a></li>
+<li><a href="#5-near-duplicates--n-gram-fingerprints">5. Near Duplicates &amp; N-gram Fingerprints</a></li>
+<li><a href="#6-simhash">6. Simhash</a></li>
+<li><a href="#7-removing-noise-finding-content-blocks">7. Removing Noise: Finding Content Blocks</a></li>
+<li><a href="#8-quick-reference--top-5-things-to-remember">8. Quick Reference &amp; Top 5 Things to Remember</a></li>
+</ul>
+<blockquote>
+<p>This chapter follows a crawled page on its way into the search engine: <strong>convert</strong> it to text (§1–2), <strong>store</strong> it (§3), throw away <strong>duplicates</strong> (§4–6) and <strong>noise</strong> (§7). On the architecture map (<a href="/~kazuhak/notes/cs-121/topic-search-engines/en-US/">Search Engines &amp; the Web</a>) that is <em>Text Acquisition → Local Document Store → Text Transformation</em>. Pages arrive from <a href="/~kazuhak/notes/cs-121/topic-crawling/en-US/">Web Crawling</a>; the next step, looking at the words themselves (tokens, Zipf&#39;s law, stemming), is <a href="/~kazuhak/notes/cs-121/topic-text-processing/en-US/">Text Processing</a>.</p>
+<p>📖 Background reading: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft et al., <em>Search Engines: Information Retrieval in Practice</em>, Ch. 3 &quot;Crawls and Feeds&quot; (§3.5–§3.8)</a>.</p>
+</blockquote>
+<h2 id="1-conversion-from-many-formats-to-text">1. Conversion: From Many Formats to Text</h2>
+<p>Before text can be indexed it has to be <strong>converted</strong>:</p>
+<ul>
+<li>Text is stored in <strong>hundreds of incompatible file formats</strong>: raw text, RTF, HTML, XML, Microsoft Word, ODF, PDF.</li>
+<li><strong>Other types of files</strong>, not dedicated to text, are also important: PowerPoint, Excel, Keynote, Pages.</li>
+<li>You typically use a <strong>conversion tool or library</strong>. It <strong>converts the document content into a tagged text format such as HTML or XML</strong> and <strong>retains some of the important formatting</strong> information.</li>
+<li>Some converters <strong>don&#39;t retain formatting</strong> — e.g. the Unix tools <code>pdftotxt</code>, <code>pdf2ps</code> + <code>pdf2ascii</code>.</li>
+</ul>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.5 The Conversion Problem</a></p>
+</blockquote>
+<h2 id="2-character-encoding-unicode--utf-8">2. Character Encoding, Unicode &amp; UTF-8</h2>
+<h3 id="21-glyphs-and-encodings">2.1 Glyphs and encodings</h3>
+<p><strong>Glyphs</strong> (Greek γλυφή, &quot;carving&quot;) are the symbols you see, which encode letters or meanings. A <strong>character encoding</strong> is a <strong>mapping between bits and glyphs</strong> — how you get from the bits in a file to the characters on a screen — and it <strong>can be a major source of incompatibility</strong>.</p>
+<ul>
+<li><strong>ASCII</strong> (since 1963) is the basic encoding for English: <strong>128</strong> letters, numbers, special characters and control characters in <strong>7 bits</strong>, extended with an extra bit for storage in bytes.</li>
+<li><strong>Other languages have many more glyphs</strong>: Chinese has more than <strong>40,000</strong> characters, over <strong>3,000</strong> in common use.</li>
+<li>Many languages have <strong>multiple encoding schemes</strong> — the CJK (Chinese-Japanese-Korean) family, Hindi, Arabic. With those older schemes you <strong>must specify the encoding</strong>, because <strong>the file is not self-describing</strong>, and you <strong>can&#39;t have multiple languages in one file</strong>.</li>
+<li><strong>Unicode</strong> was developed in the late &#39;80s to address these problems.</li>
+</ul>
+<h3 id="22-unicode-and-its-encodings">2.2 Unicode and its encodings</h3>
+<p><strong>Unicode</strong> is a <strong>single mapping from numbers to glyphs</strong> that tries to include every glyph in common use in all known languages. Its reserved (private-use) area even lets you write invented scripts.</p>
+<p>Unicode <strong>solves the number → glyph problem</strong> but <strong>does not uniquely specify the bits → glyph mapping</strong>. That is what the encodings <strong>UTF-8, UTF-16, UTF-32</strong> do: they turn the number (the <strong>code point</strong>) into bytes.</p>
+<p>Why several encodings? <strong>Compatibility and space</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Encoding</th>
+<th>Bytes per character</th>
+<th>Trade-off</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UTF-8</td>
+<td>1 for English (= ASCII), up to <strong>4</strong> (e.g. some traditional Chinese characters)</td>
+<td>Variable length: less space, but string operations are harder (character <em>i</em> isn&#39;t at byte <em>i</em>)</td>
+</tr>
+<tr>
+<td>UTF-32</td>
+<td>Always <strong>4</strong></td>
+<td>More memory, no backward compatibility with ASCII, but fixed width</td>
+</tr>
+</tbody></table>
+<p>You can <strong>mix both</strong>: many applications use <strong>UTF-32 internally</strong> (fast random lookup) and <strong>UTF-8 on disk</strong> (less space).</p>
+<h3 id="23-how-utf-8-works">2.3 How UTF-8 works</h3>
+<p>The code point&#39;s range picks a row of the table; each <code>x</code> is filled with the code point&#39;s bits, high bits first:</p>
+<table>
+<thead>
+<tr>
+<th>Decimal</th>
+<th>Hexadecimal</th>
+<th>Encoding</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0–127</td>
+<td>0–7F</td>
+<td><code>0xxxxxxx</code></td>
+</tr>
+<tr>
+<td>128–2047</td>
+<td>80–7FF</td>
+<td><code>110xxxxx 10xxxxxx</code></td>
+</tr>
+<tr>
+<td>2048–55295</td>
+<td>800–D7FF</td>
+<td><code>1110xxxx 10xxxxxx 10xxxxxx</code></td>
+</tr>
+<tr>
+<td>55296–57343</td>
+<td>D800–DFFF</td>
+<td>Undefined</td>
+</tr>
+<tr>
+<td>57344–65535</td>
+<td>E000–FFFF</td>
+<td><code>1110xxxx 10xxxxxx 10xxxxxx</code></td>
+</tr>
+<tr>
+<td>65536–1114111</td>
+<td>10000–10FFFF</td>
+<td><code>11110xxx 10xxxxxx 10xxxxxx 10xxxxxx</code></td>
+</tr>
+</tbody></table>
+<p>Example: Greek <strong>π is code point 960</strong> = <code>00000011 11000000</code> in binary (3C0 hex). 960 is in the second row, so the encoding is <code>110xxxxx 10xxxxxx</code>: the <strong>high 5 bits</strong> go into the first byte, the <strong>next 6 bits</strong> into the second. The result is <strong><code>11001111 10000000</code> = <code>CF 80</code></strong>. Step through it, or type other characters:</p>
+<pre data-language="viz" data-viz="utf8-encode"><code>{&quot;title&quot;: &quot;UTF-8 encoding of π&quot;, &quot;text&quot;: &quot;π&quot;, &quot;interactive&quot;: true}</code></pre><p>The leading bits give the length (<code>110</code> = 2 bytes, <code>1110</code> = 3, <code>11110</code> = 4); continuation bytes start with <code>10</code>, so an ASCII byte (<code>0xxxxxxx</code>) is never part of a multi-byte character. Python agrees:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"π"</span><span style="color:#D4D4D4">.encode(</span><span style="color:#CE9178">"utf-8"</span><span style="color:#D4D4D4">).hex(</span><span style="color:#CE9178">" "</span><span style="color:#D4D4D4">))       </span><span style="color:#6A9955"># cf 80</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"π"</span><span style="color:#D4D4D4">.encode(</span><span style="color:#CE9178">"utf-32-be"</span><span style="color:#D4D4D4">).hex(</span><span style="color:#CE9178">" "</span><span style="color:#D4D4D4">))   </span><span style="color:#6A9955"># 00 00 03 c0</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"中"</span><span style="color:#D4D4D4">.encode(</span><span style="color:#CE9178">"utf-8"</span><span style="color:#D4D4D4">)))           </span><span style="color:#6A9955"># 3</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">cf 80
+00 00 03 c0
+3</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.5.1 Character Encodings</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#24-practice">§2.4</a></p>
+</blockquote>
+<h3 id="24-practice">2.4 Practice</h3>
+<h4 id="utf-8-encoding-of">UTF-8 encoding of €</h4>
+<p>The euro sign € is Unicode code point 8364 (hex 20AC). What bytes does UTF-8 store, and how many bytes does UTF-32 use?</p>
+<details>
+<summary>Solution</summary>
+
+<p>8364 = <code>0x20AC</code> = <code>00100000 10101100</code>. It&#39;s in 2048–65535, so the template is <code>1110xxxx 10xxxxxx 10xxxxxx</code>, with 4 + 6 + 6 = 16 payload bits: <code>0010</code> | <code>000010</code> | <code>101100</code>. That gives <code>1110</code>+<code>0010</code> = <code>11100010</code>, <code>10</code>+<code>000010</code> = <code>10000010</code>, <code>10</code>+<code>101100</code> = <code>10101100</code>. Result <strong><code>E2 82 AC</code></strong>, 3 bytes (π took 2). UTF-32 always uses 4: <code>00 00 20 AC</code>. Check: <code>&quot;€&quot;.encode(&quot;utf-8&quot;)</code> is <code>e2 82 ac</code>.</p>
+</details>
+
+<h2 id="3-storing-the-documents-trec-web-compression--bigtable">3. Storing the Documents: TREC Web, Compression &amp; BigTable</h2>
+<h3 id="31-why-store-and-what-the-store-needs">3.1 Why store, and what the store needs</h3>
+<p>After documents are converted you need to <strong>store</strong> them. Reasons to keep the converted text:</p>
+<ul>
+<li>it <strong>saves crawling time</strong> when the page hasn&#39;t been updated;</li>
+<li>it gives <strong>efficient access to the text</strong> for <strong>snippet generation</strong>, additional information extraction, and so on.</li>
+</ul>
+<p>Database systems can provide document storage for some applications, but <strong>web search engines use customized document storage systems</strong>. Requirements for a search engine&#39;s document store:</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>What it means</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Random access</strong></td>
+<td>Request a document&#39;s content by its <strong>URL</strong>; normally a <strong>hash function on the URL</strong> finds it</td>
+</tr>
+<tr>
+<td><strong>Compression and large files</strong></td>
+<td>Reduce storage requirements and keep access efficient</td>
+</tr>
+<tr>
+<td><strong>Update</strong></td>
+<td>Handle large volumes of new and modified documents; add new <strong>anchor text</strong> (text of links <em>pointing to</em> the page, found later on other pages)</td>
+</tr>
+</tbody></table>
+<p><strong>Large files</strong>: web pages are small, so store <strong>many pages in a smaller number of large files</strong> instead of one file per document. This <strong>avoids file I/O overhead</strong> (open/close per page) and <strong>reduces seek time relative to read time</strong> — one seek, then a long sequential read. <strong>Compound document formats</strong> store multiple documents in a file, e.g. <strong>TREC Web</strong> (§3.2).</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.6 Storing the Documents</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">§3.6.1 Using a Database System</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">§3.6.2 Random Access</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">§3.6.4 Update</a></p>
+</blockquote>
+<h3 id="32-the-trec-web-format">3.2 The TREC Web format</h3>
+<p>One file, two crawled pages:</p>
+<div class="code-collapse is-collapsed"><pre data-language="xml" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">DOC</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">DOCNO</span><span style="color:#808080">></span><span style="color:#D4D4D4">WTX001-B01-10</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">DOCNO</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">DOCHDR</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">http://www.example.com/test.html 204.244.59.33 19970101013145 text/html 440</span></span>
+<span class="line"><span style="color:#D4D4D4">HTTP/1.0 200 OK</span></span>
+<span class="line"><span style="color:#D4D4D4">Date: Wed, 01 Jan 1997 01:21:13 GMT</span></span>
+<span class="line"><span style="color:#D4D4D4">Server: Apache/1.0.3</span></span>
+<span class="line"><span style="color:#D4D4D4">Content-type: text/html</span></span>
+<span class="line"><span style="color:#D4D4D4">Content-length: 270</span></span>
+<span class="line"><span style="color:#D4D4D4">Last-modified: Mon, 25 Nov 1996 05:31:24 GMT</span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">DOCHDR</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">HTML</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">TITLE</span><span style="color:#808080">></span><span style="color:#D4D4D4">Tropical Fish Store</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">TITLE</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">Coming soon!</span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">HTML</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">DOC</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">DOC</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">DOCNO</span><span style="color:#808080">></span><span style="color:#D4D4D4">WTX001-B01-109</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">DOCNO</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">DOCHDR</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">http://www.example.com/fish.html 204.244.59.33 19970101013149 text/html 440</span></span>
+<span class="line"><span style="color:#D4D4D4">HTTP/1.0 200 OK</span></span>
+<span class="line"><span style="color:#D4D4D4">Date: Wed, 01 Jan 1997 01:21:19 GMT</span></span>
+<span class="line"><span style="color:#D4D4D4">Server: Apache/1.0.3</span></span>
+<span class="line"><span style="color:#D4D4D4">Content-type: text/html</span></span>
+<span class="line"><span style="color:#D4D4D4">Content-length: 270</span></span>
+<span class="line"><span style="color:#D4D4D4">Last-modified: Mon, 25 Nov 1996 05:31:24 GMT</span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">DOCHDR</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">HTML</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">TITLE</span><span style="color:#808080">></span><span style="color:#D4D4D4">Fish Information</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">TITLE</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">This page will soon contain interesting</span></span>
+<span class="line"><span style="color:#D4D4D4">information about tropical fish.</span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">HTML</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">DOC</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="33"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>Show all 33 lines</span></button><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>The parts of the format:</p>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Where</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Document blocks</strong></td>
+<td><code>&lt;DOC&gt;</code> … <code>&lt;/DOC&gt;</code></td>
+<td>One crawled page each; many per file</td>
+</tr>
+<tr>
+<td><strong>Headers</strong></td>
+<td><code>&lt;DOCHDR&gt;</code> … <code>&lt;/DOCHDR&gt;</code></td>
+<td>Crawl record: URL, server IP, crawl timestamp (<code>19970101013145</code>), type, then the HTTP response headers</td>
+</tr>
+<tr>
+<td><strong>Content</strong></td>
+<td><code>&lt;HTML&gt;</code> … <code>&lt;/HTML&gt;</code></td>
+<td>The page itself</td>
+</tr>
+<tr>
+<td><strong>Document identifier</strong></td>
+<td><code>&lt;DOCNO&gt;</code></td>
+<td>Unique ID (<code>WTX001-B01-10</code>, <code>WTX001-B01-109</code>)</td>
+</tr>
+<tr>
+<td><strong>Modification tag</strong></td>
+<td><code>Last-modified:</code></td>
+<td>When the server says the page last changed — what a re-crawl compares against (see freshness and age in <a href="/~kazuhak/notes/cs-121/topic-crawling/en-US/">Web Crawling</a>)</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: This is the &quot;large file&quot; idea in practice: a crawler appends <code>&lt;DOC&gt;</code> blocks to a big file, and a small index from <code>DOCNO</code> (or a URL hash) to a byte offset gives random access.</p>
+</blockquote>
+<h3 id="33-compression">3.3 Compression</h3>
+<p><strong>Text is highly redundant (or predictable)</strong> — Shannon&#39;s 1951 paper &quot;Prediction and Entropy of Printed English&quot; measures exactly that. <strong>Lossless</strong> compression exploits that redundancy to make files smaller <strong>without losing any content</strong>; indexes can be compressed too.</p>
+<ul>
+<li>Popular algorithms compress HTML and XML text by <strong>80%</strong>: e.g. <strong>DEFLATE</strong> (zip, gzip) and <strong>LZW</strong> (Unix <code>compress</code>, PDF).</li>
+<li>Large files may be compressed <strong>in blocks</strong> so that one document can be read without decompressing the whole file.</li>
+</ul>
+<p>Repetitive markup compresses extremely well; real pages are less repetitive, hence the ~80% figure rather than this toy&#39;s 97%:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> zlib</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">page = </span><span style="color:#569CD6">b</span><span style="color:#CE9178">"&#x3C;html>&#x3C;body>"</span><span style="color:#D4D4D4"> + </span><span style="color:#569CD6">b</span><span style="color:#CE9178">"&#x3C;p>Tropical fish include fish found in tropical environments.&#x3C;/p></span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4"> * </span><span style="color:#B5CEA8">50</span><span style="color:#D4D4D4"> + </span><span style="color:#569CD6">b</span><span style="color:#CE9178">"&#x3C;/body>&#x3C;/html>"</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(page), </span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(zlib.compress(page, </span><span style="color:#B5CEA8">9</span><span style="color:#D4D4D4">)))</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">3326 108</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.6.3 Compression and Large Files</a></p>
+</blockquote>
+<h3 id="34-bigtable">3.4 BigTable</h3>
+<p><strong>BigTable</strong> is Google&#39;s document storage system, customized for <strong>storing, finding and updating</strong> web pages and handling large collections on <strong>inexpensive computers</strong>. One <strong>logical table</strong> is split into many <strong>tablets</strong>, each held by a server.</p>
+<p>Organization:</p>
+<ul>
+<li>Logically organized into <strong>rows</strong>; <strong>a row stores the data for a single web page</strong>.</li>
+<li><strong>Columns can have multiple timestamps</strong> (versions). <strong>A row key, a column key and a timestamp point to a single cell.</strong></li>
+<li>A row can have a <strong>huge number of columns</strong>: all rows have the <strong>same column groups</strong>, but <strong>not all rows have the same columns</strong> — important for reducing disk reads.</li>
+<li>Rows are <strong>partitioned into tablets by row key</strong> (e.g. URLs starting with a certain letter in one tablet), which makes it simple to find the right server.</li>
+</ul>
+<p>A sample row:</p>
+<table>
+<thead>
+<tr>
+<th>Row key</th>
+<th><code>text</code></th>
+<th><code>anchor:other.com</code></th>
+<th><code>anchor:null.com</code></th>
+<th><code>title</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>www.example.com</code></td>
+<td>document text</td>
+<td>example</td>
+<td>click here</td>
+<td>example site</td>
+</tr>
+</tbody></table>
+<p><code>anchor:</code> is a column group; each linking site gets its own column holding its anchor text — the &quot;add new anchor text&quot; update from §3.1.</p>
+<p>Advantages and drawbacks:</p>
+<ul>
+<li><strong>No query language</strong>: no complex queries to optimize.</li>
+<li><strong>Only row-level transactions.</strong></li>
+<li>Tablets live in a <strong>replicated file system</strong> accessible by all BigTable servers.</li>
+<li>Any change to a tablet is recorded in a <strong>transaction log</strong>, also in a shared file system.</li>
+<li>If a tablet server crashes, <strong>another server reads the tablet data and log from the file system and takes over</strong>.</li>
+<li>Tablets may be compressed.</li>
+</ul>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.6.5 BigTable</a></p>
+</blockquote>
+<h2 id="4-exact-duplicates-checksums--crcs">4. Exact Duplicates: Checksums &amp; CRCs</h2>
+<h3 id="41-why-duplicates-matter">4.1 Why duplicates matter</h3>
+<p>Duplicates and near duplicates come from <strong>copies, versions, plagiarism, spam and mirror sites</strong>; <strong>30%</strong> of the pages in a large crawl are exact or near duplicates of the rest (<strong>Fetterly et al., 2003</strong>). They <strong>consume significant resources</strong> during crawling, indexing and search, and add little value to most users (but may add value in some use cases). The fix is to detect them with hashes for exact copies and fingerprints for near ones; the crawler-side view is in <a href="/~kazuhak/notes/cs-121/topic-crawling/en-US/">Web Crawling</a>.</p>
+<h3 id="42-checksums-and-crcs">4.2 Checksums and CRCs</h3>
+<p><strong>Exact duplicate detection is relatively easy.</strong> A <strong>checksum</strong> is a value computed from the document&#39;s content — e.g. the <strong>sum of the bytes</strong> in the file:</p>
+<table>
+<thead>
+<tr>
+<th>T</th>
+<th>r</th>
+<th>o</th>
+<th>p</th>
+<th>i</th>
+<th>c</th>
+<th>a</th>
+<th>l</th>
+<th>(space)</th>
+<th>f</th>
+<th>i</th>
+<th>s</th>
+<th>h</th>
+<th>Sum</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>54</td>
+<td>72</td>
+<td>6F</td>
+<td>70</td>
+<td>69</td>
+<td>63</td>
+<td>61</td>
+<td>6C</td>
+<td>20</td>
+<td>66</td>
+<td>69</td>
+<td>73</td>
+<td>68</td>
+<td>508</td>
+</tr>
+</tbody></table>
+<p>All values are hexadecimal: 508 hex = <strong>1,288</strong> decimal.</p>
+<ul>
+<li>Files with different text <strong>can have the same checksum</strong> — a byte sum ignores order, so any rearrangement of the same bytes collides.</li>
+<li>A <strong>cyclic redundancy check (CRC)</strong> also considers the <strong>positions</strong> of the bytes. It&#39;s <strong>still prone to collisions, but very rarely</strong>. Other functions: <strong>BLAKE2/3, MD5, SHA1, SHA2</strong>, etc.</li>
+<li>Whatever you use <strong>needs to be fast</strong> — it runs on every page.</li>
+</ul>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> zlib</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> s </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> [</span><span style="color:#569CD6">b</span><span style="color:#CE9178">"Tropical fish"</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">b</span><span style="color:#CE9178">"Tropical fihs"</span><span style="color:#D4D4D4">]:</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(s, </span><span style="color:#DCDCAA">sum</span><span style="color:#D4D4D4">(s), </span><span style="color:#DCDCAA">hex</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">sum</span><span style="color:#D4D4D4">(s)), </span><span style="color:#DCDCAA">hex</span><span style="color:#D4D4D4">(zlib.crc32(s)))</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">b&#39;Tropical fish&#39; 1288 0x508 0x18f14f94
+b&#39;Tropical fihs&#39; 1288 0x508 0x3ba24de2</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Swapping two letters keeps the byte sum but changes the CRC.</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.7 Detecting Duplicates</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#43-practice">§4.3</a></p>
+</blockquote>
+<h3 id="43-practice">4.3 Practice</h3>
+<h4 id="a-byte-sum-checksum">A byte-sum checksum</h4>
+<p>Sum the bytes of the ASCII strings &quot;Search engine&quot; and &quot;Saerch engine&quot;. Does the byte sum tell the two apart? What would?</p>
+<details>
+<summary>Solution</summary>
+
+<p>In hex, &quot;Search engine&quot; is 53 + 65 + 61 + 72 + 63 + 68 + 20 + 65 + 6E + 67 + 69 + 6E + 65 = <strong>4EC hex = 1,260</strong>. &quot;Saerch engine&quot; has the same bytes with <em>e</em> and <em>a</em> swapped, so it also sums to <strong>1,260</strong>: the byte sum ignores order and calls them duplicates. A CRC weighs each byte by its position: CRC-32 gives <code>0x98149ea5</code> vs <code>0x2bcbd658</code>.</p>
+</details>
+
+<h2 id="5-near-duplicates--n-gram-fingerprints">5. Near Duplicates &amp; N-gram Fingerprints</h2>
+<h3 id="51-defining-near-duplicates">5.1 Defining near duplicates</h3>
+<p><strong>Near-duplicate detection is harder.</strong> Are two pages with the same text but different ads or format near duplicates? A near duplicate is <strong>defined by a threshold on some similarity measure</strong> between two documents — e.g. D1 is a near duplicate of D2 if <strong>more than 90% of the words</strong> are the same. Counting shared words needs exactly the tokenizing and word counting of <a href="/~kazuhak/notes/cs-121/topic-text-processing/en-US/">Text Processing</a>.</p>
+<p>Two scenarios:</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Task</th>
+<th>Cost</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Search</strong></td>
+<td>Find near duplicates of one document D</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><mi>N</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mclose">)</span></span></span></span> comparisons</td>
+</tr>
+<tr>
+<td><strong>Discovery</strong></td>
+<td>Find <strong>all pairs</strong> of near duplicates in the collection</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><msup><mi>N</mi><mn>2</mn></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(N^2)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span> comparisons</td>
+</tr>
+</tbody></table>
+<p>Normal IR techniques work for search; for discovery, you need compact representations called <strong>fingerprints</strong>.</p>
+<h3 id="52-the-fingerprint-algorithm">5.2 The fingerprint algorithm</h3>
+<ol>
+<li><strong>Parse the document into words</strong>; punctuation, HTML tags and extra whitespace are removed.</li>
+<li><strong>Group the words into contiguous n-grams</strong> for some n — usually overlapping.</li>
+<li><strong>Select some of the n-grams</strong> to represent the document.</li>
+<li><strong>Hash the selected n-grams</strong> — faster retrieval, smaller representation.</li>
+<li><strong>Store the hash values</strong>, typically in an inverted index (see <a href="/~kazuhak/notes/cs-121/topic-indexing/en-US/">Inverted Indexes &amp; Index Construction</a>).</li>
+<li><strong>Compare documents by the overlap of their fingerprints.</strong></li>
+</ol>
+<p>The example is built one stage at a time:</p>
+<ul>
+<li>(a) Text: &quot;Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species.&quot;</li>
+<li>(b) 3-grams: tropical fish include, fish include fish, include fish found, …, salt water species — 18 words give <strong>16</strong> 3-grams.</li>
+<li>(c) Hash values: <code>938 664 463 822 492 798 78 969 143 236 913 908 694 553 870 779</code>.</li>
+<li>(d) Selected using <strong>0 mod 4</strong>: <code>664 492 236 908</code>.</li>
+</ul>
+<p>(The example hashes every n-gram and then selects; steps 3 and 4 above in the other order are the same idea.) Step through the 16 n-grams; edit the text to use a demo hash:</p>
+<pre data-language="viz" data-viz="shingle-fingerprint"><code>{&quot;title&quot;: &quot;N-gram fingerprint of the tropical fish text&quot;, &quot;interactive&quot;: true}</code></pre><p>Reproducing the stages in Python (the hash values are the example&#39;s, not a real hash function):</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">text = </span><span style="color:#CE9178">"Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species."</span></span>
+<span class="line"><span style="color:#D4D4D4">HASH = [</span><span style="color:#B5CEA8">938</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">664</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">463</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">822</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">492</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">798</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">78</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">969</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">143</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">236</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">913</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">908</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">694</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">553</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">870</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">779</span><span style="color:#D4D4D4">]</span></span>
+<span class="line"><span style="color:#D4D4D4">words = [w.strip(</span><span style="color:#CE9178">",."</span><span style="color:#D4D4D4">).lower() </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> w </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> text.split()]</span></span>
+<span class="line"><span style="color:#D4D4D4">grams = [</span><span style="color:#CE9178">" "</span><span style="color:#D4D4D4">.join(words[i:i + </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">]) </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> i </span><span style="color:#C586C0">in</span><span style="color:#DCDCAA"> range</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(words) - </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">)]</span></span>
+<span class="line"><span style="color:#D4D4D4">fp = {h </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> h </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> HASH </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> h % </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4"> == </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">}</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(words), </span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(grams), </span><span style="color:#DCDCAA">sorted</span><span style="color:#D4D4D4">(fp))</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">([g </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> g, h </span><span style="color:#C586C0">in</span><span style="color:#DCDCAA"> zip</span><span style="color:#D4D4D4">(grams, HASH) </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> h % </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4"> == </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">])</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">18 16 [236, 492, 664, 908]
+[&#39;fish include fish&#39;, &#39;found in tropical&#39;, &#39;the world including&#39;, &#39;including both freshwater&#39;]</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<h3 id="53-comparing-fingerprints">5.3 Comparing fingerprints</h3>
+<p>With fingerprints <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>A</mi></msub></mrow><annotation encoding="application/x-tex">F_A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>B</mi></msub></mrow><annotation encoding="application/x-tex">F_B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>, the similarity is the size of the intersection over the size of the union:</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>S</mi><mrow><mi>A</mi><mo separator="true">,</mo><mi>B</mi></mrow></msub><mo>=</mo><mfrac><mrow><mi mathvariant="normal">∣</mi><msub><mi>F</mi><mi>A</mi></msub><mo>∩</mo><msub><mi>F</mi><mi>B</mi></msub><mi mathvariant="normal">∣</mi></mrow><mrow><mi mathvariant="normal">∣</mi><msub><mi>F</mi><mi>A</mi></msub><mo>∪</mo><msub><mi>F</mi><mi>B</mi></msub><mi mathvariant="normal">∣</mi></mrow></mfrac><mspace width="2em"/><msub><mi>S</mi><mrow><mi>A</mi><mo separator="true">,</mo><mi>B</mi></mrow></msub><mo>≥</mo><mi>τ</mi><mtext>  </mtext><mo>⟹</mo><mtext>  </mtext><mtext>A and B are near duplicates</mtext></mrow><annotation encoding="application/x-tex">S_{A,B} = \frac{|F_A \cap F_B|}{|F_A \cup F_B|} \qquad S_{A,B} \ge \tau \implies \text{A and B are near duplicates}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">A</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.363em;vertical-align:-0.936em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.427em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∪</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">∣</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∩</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">∣</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:2em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">A</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.549em;vertical-align:-0.024em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⟹</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord text"><span class="mord">A and B are near duplicates</span></span></span></span></span></span></div>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">∣</mi><mi>F</mi><mi mathvariant="normal">∣</mi></mrow><annotation encoding="application/x-tex">|F|</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">∣</span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="mord">∣</span></span></span></span> is the number of hash values in a set (its cardinality), and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi></mrow><annotation encoding="application/x-tex">\tau</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span></span></span></span> is a threshold <strong>you</strong> choose: they are near duplicates &quot;under your definition of threshold&quot;.</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> jaccard</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">a</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">b</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#DCDCAA"> len</span><span style="color:#D4D4D4">(a &#x26; b) / </span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(a | b)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(jaccard(fp, {</span><span style="color:#B5CEA8">664</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">492</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">100</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">200</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">236</span><span style="color:#D4D4D4">}))</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">0.5</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: &quot;0 mod p&quot; selection keeps only about <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi mathvariant="normal">/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">1/p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/</span><span class="mord mathnormal">p</span></span></span></span> of the n-grams, and which ones depends only on their hash values, so two copies of the same text select the same ones. Selecting by position (&quot;every 4th n-gram&quot;) would not: insert one word at the top and every selected n-gram changes.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.7 Detecting Duplicates</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#54-practice">§5.4</a></p>
+</blockquote>
+<h3 id="54-practice">5.4 Practice</h3>
+<h4 id="which-fingerprint-values-does-0-mod-4-select">Which fingerprint values does &quot;0 mod 4&quot; select?</h4>
+<p>The text &quot;salt water fish and tropical fish both swim in warm water&quot; has 11 words. Its overlapping 3-grams, in order, hash to 499, 302, 944, 311, 505, 301, 114, 639, 942. How many 3-grams are there, which hash values does &quot;0 mod 4&quot; select, and what does the result say about choosing the selection rule?</p>
+<details>
+<summary>Solution</summary>
+
+<p>11 words → 11 − 3 + 1 = 9 3-grams. Remainders mod 4:</p>
+<table>
+<thead>
+<tr>
+<th>Hash</th>
+<th>499</th>
+<th>302</th>
+<th>944</th>
+<th>311</th>
+<th>505</th>
+<th>301</th>
+<th>114</th>
+<th>639</th>
+<th>942</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>mod 4</td>
+<td>3</td>
+<td>2</td>
+<td><strong>0</strong></td>
+<td>3</td>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>2</td>
+</tr>
+</tbody></table>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi></mrow><annotation encoding="application/x-tex">F</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span></span></span></span> = {944}: only &quot;fish and tropical&quot; is kept, 1 of 9 values. &quot;0 mod p&quot; keeps about <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi mathvariant="normal">/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">1/p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/</span><span class="mord mathnormal">p</span></span></span></span> of the n-grams on average, but on a short text it can keep almost none, so two short documents may share no selected value even when they overlap. Use a smaller <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span> (or keep the smallest few hashes) for short texts. Comparison is still <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">∣</mi><msub><mi>F</mi><mi>A</mi></msub><mo>∩</mo><msub><mi>F</mi><mi>B</mi></msub><mi mathvariant="normal">∣</mi><mi mathvariant="normal">/</mi><mi mathvariant="normal">∣</mi><msub><mi>F</mi><mi>A</mi></msub><mo>∪</mo><msub><mi>F</mi><mi>B</mi></msub><mi mathvariant="normal">∣</mi><mo>≥</mo><mi>τ</mi></mrow><annotation encoding="application/x-tex">|F_A \cap F_B| / |F_A \cup F_B| \ge \tau</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∩</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">∣/∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∪</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">∣</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span></span></span></span>.</p>
+</details>
+
+<h2 id="6-simhash">6. Simhash</h2>
+<h3 id="61-motivation">6.1 Motivation</h3>
+<p>Similarity comparisons on <strong>word-based representations</strong> (cosine similarity, see <a href="/~kazuhak/notes/cs-121/topic-retrieval-models/en-US/">Retrieval Models</a>) find near duplicates <strong>more effectively</strong> than n-gram fingerprints; their problem is <strong>efficiency</strong>. <strong>Simhash</strong> (Charikar, 2002) combines the advantages of word-based similarity with the efficiency of hash fingerprints: the <strong>cosine correlation</strong> between two pages is proportional to the <strong>number of bits that are the same</strong> in their simhash fingerprints.</p>
+<h3 id="62-the-algorithm">6.2 The algorithm</h3>
+<ol>
+<li>Process the document into a <strong>set of features with weights</strong> — here, <strong>words weighted by their frequency</strong>.</li>
+<li>Generate a <strong>b-bit hash</strong> for each word (b = the fingerprint size); unique per word.</li>
+<li>In a b-dimensional vector <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span>, for every word <strong>add its weight</strong> to component <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> if bit <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> of its hash is <strong>1</strong>, <strong>subtract</strong> it if the bit is <strong>0</strong>.</li>
+<li>After all words, the fingerprint&#39;s bit <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> is <strong>1 if <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">V_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> is positive</strong>, 0 otherwise.</li>
+</ol>
+<p>The example uses the same text as §5:</p>
+<ul>
+<li>(b) Words with weights: tropical 2, fish 2, include 1, found 1, environments 1, around 1, world 1, including 1, both 1, freshwater 1, salt 1, water 1, species 1 (in, the, and are left out).</li>
+<li>(c) 8-bit hash values:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Word</th>
+<th>Hash</th>
+<th>Word</th>
+<th>Hash</th>
+<th>Word</th>
+<th>Hash</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>tropical</td>
+<td><code>01100001</code></td>
+<td>fish</td>
+<td><code>10101011</code></td>
+<td>include</td>
+<td><code>11100110</code></td>
+</tr>
+<tr>
+<td>found</td>
+<td><code>00011110</code></td>
+<td>environments</td>
+<td><code>00101101</code></td>
+<td>around</td>
+<td><code>10001011</code></td>
+</tr>
+<tr>
+<td>world</td>
+<td><code>00101010</code></td>
+<td>including</td>
+<td><code>11000000</code></td>
+<td>both</td>
+<td><code>10101110</code></td>
+</tr>
+<tr>
+<td>freshwater</td>
+<td><code>00111111</code></td>
+<td>salt</td>
+<td><code>10110101</code></td>
+<td>water</td>
+<td><code>00100101</code></td>
+</tr>
+<tr>
+<td>species</td>
+<td><code>11101110</code></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<ul>
+<li>(d) <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span> = <strong>1 −5 9 −9 3 1 3 3</strong>.</li>
+<li>(e) Fingerprint = <strong>1 0 1 0 1 1 1 1</strong>.</li>
+</ul>
+<p>Check the last component by hand: tropical <code>01100001</code> → <code>- + + - - - - +</code>, fish → <code>+ - + - + - + +</code>, include → <code>+ + + - - + + -</code>, and down the last column: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>=</mo><mn>2</mn><mo>+</mo><mn>2</mn><mo>−</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">3 = 2 + 2 - 1 - 1 + 1 + 1 - 1 - 1 - 1 + 1 + 1 + 1 - 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">3</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>. The demo adds one word per step:</p>
+<pre data-language="viz" data-viz="simhash"><code>{&quot;title&quot;: &quot;Simhash of the tropical fish text&quot;, &quot;interactive&quot;: true}</code></pre><p>As code, including what happens when one word is removed from the text:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> collections </span><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> Counter</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">H = {</span><span style="color:#CE9178">"tropical"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"01100001"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"fish"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"10101011"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"include"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"11100110"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">     "found"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"00011110"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"environments"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"00101101"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"around"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"10001011"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">     "world"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"00101010"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"including"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"11000000"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"both"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"10101110"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">     "freshwater"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"00111111"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"salt"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"10110101"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"water"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"00100101"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">     "species"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"11101110"</span><span style="color:#D4D4D4">}</span></span>
+<span class="line"><span style="color:#D4D4D4">text = </span><span style="color:#CE9178">"Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species."</span></span>
+<span class="line"><span style="color:#D4D4D4">words = [w.strip(</span><span style="color:#CE9178">",."</span><span style="color:#D4D4D4">).lower() </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> w </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> text.split()]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> simhash</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">counts</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#D4D4D4">    V = [</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">] * </span><span style="color:#B5CEA8">8</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> w, c </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> counts.items():</span></span>
+<span class="line"><span style="color:#C586C0">        for</span><span style="color:#D4D4D4"> i, b </span><span style="color:#C586C0">in</span><span style="color:#DCDCAA"> enumerate</span><span style="color:#D4D4D4">(H[w]):</span></span>
+<span class="line"><span style="color:#D4D4D4">            V[i] += c </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> b == </span><span style="color:#CE9178">"1"</span><span style="color:#C586C0"> else</span><span style="color:#D4D4D4"> -c</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> V, </span><span style="color:#CE9178">""</span><span style="color:#D4D4D4">.join(</span><span style="color:#CE9178">"1"</span><span style="color:#C586C0"> if</span><span style="color:#D4D4D4"> v > </span><span style="color:#B5CEA8">0</span><span style="color:#C586C0"> else</span><span style="color:#CE9178"> "0"</span><span style="color:#C586C0"> for</span><span style="color:#D4D4D4"> v </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> V)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">counts = Counter(w </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> w </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> words </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> w </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> H)</span></span>
+<span class="line"><span style="color:#D4D4D4">V, f = simhash(counts)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(V, f)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">counts2 = counts.copy()</span></span>
+<span class="line"><span style="color:#D4D4D4">counts2[</span><span style="color:#CE9178">"species"</span><span style="color:#D4D4D4">] = </span><span style="color:#B5CEA8">0</span><span style="color:#6A9955">            # drop one word</span></span>
+<span class="line"><span style="color:#D4D4D4">V2, f2 = simhash(counts2)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(V2, f2, </span><span style="color:#DCDCAA">sum</span><span style="color:#D4D4D4">(a == b </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> a, b </span><span style="color:#C586C0">in</span><span style="color:#DCDCAA"> zip</span><span style="color:#D4D4D4">(f, f2)) / </span><span style="color:#B5CEA8">8</span><span style="color:#D4D4D4">)</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">[1, -5, 9, -9, 3, 1, 3, 3] 10101111
+[0, -6, 8, -8, 2, 0, 2, 4] 00101011 0.75</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Removing one weight-1 word moved every component of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span> by only 1 (a component that reached 0 flips, since the rule needs <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">V_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> strictly positive), so 6 of the 8 bits still agree.</p>
+<h3 id="63-comparing-two-simhashes">6.3 Comparing two simhashes</h3>
+<p>The similarity is the <strong>fraction of the n bits that are the same</strong>:</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>S</mi><mrow><mi>A</mi><mo separator="true">,</mo><mi>B</mi></mrow></msub><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mi>n</mi></munder><mo stretchy="false">(</mo><msub><mi>H</mi><mi>A</mi></msub><msub><mo>≡</mo><mtext>bitwise</mtext></msub><msub><mi>H</mi><mi>B</mi></msub><mo stretchy="false">)</mo></mrow><mi>n</mi></mfrac><mspace width="2em"/><msub><mi>S</mi><mrow><mi>A</mi><mo separator="true">,</mo><mi>B</mi></mrow></msub><mo>≥</mo><mi>τ</mi><mtext>  </mtext><mo>⟹</mo><mtext>  </mtext><mtext>near duplicates</mtext></mrow><annotation encoding="application/x-tex">S_{A,B} = \frac{\sum_n (H_A \equiv_{\text{bitwise}} H_B)}{n} \qquad S_{A,B} \ge \tau \implies \text{near duplicates}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">A</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.1257em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.4397em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">n</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.6897em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.0017em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel"><span class="mrel">≡</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">bitwise</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:2em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">A</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.549em;vertical-align:-0.024em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⟹</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord text"><span class="mord">near duplicates</span></span></span></span></span></span></div>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mi>A</mi></msub><mo separator="true">,</mo><msub><mi>H</mi><mi>B</mi></msub></mrow><annotation encoding="application/x-tex">H_A, H_B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> are the two fingerprints, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>≡</mo><mtext>bitwise</mtext></msub></mrow><annotation encoding="application/x-tex">\equiv_{\text{bitwise}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6138em;vertical-align:-0.15em;"></span><span class="mrel"><span class="mrel">≡</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">bitwise</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> counts 1 for each position where the bits agree, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span> is the number of bits — equivalently <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mtext>Hamming distance</mtext><mi mathvariant="normal">/</mi><mi>n</mi></mrow><annotation encoding="application/x-tex">1 - \text{Hamming distance}/n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Hamming distance</span></span><span class="mord">/</span><span class="mord mathnormal">n</span></span></span></span>.</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: Simhash is the opposite of a normal hash. A good hash changes completely when one byte changes (§4); simhash is built so that similar documents get fingerprints that differ in <strong>few</strong> bits — a one-word edit only moves <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span> by that word&#39;s weight.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.7 Detecting Duplicates</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#64-practice">§6.4</a></p>
+</blockquote>
+<h3 id="64-practice">6.4 Practice</h3>
+<h4 id="simhash-of-a-short-fish-text">Simhash of a short fish text</h4>
+<p>A second document has these words with weights (frequency): fish 3, water 2, salt 2, tropical 1, species 1. Their 8-bit hashes are the same as in §6.2: fish <code>10101011</code>, water <code>00100101</code>, salt <code>10110101</code>, tropical <code>01100001</code>, species <code>11101110</code>. Compute <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span> and the simhash fingerprint, and compare it with the §6.2 fingerprint <code>10101111</code>.</p>
+<details>
+<summary>Solution</summary>
+
+<p>Each word adds +weight for a 1 bit and −weight for a 0 bit. Column by column:</p>
+<table>
+<thead>
+<tr>
+<th>Bit</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span></td>
+<td>3</td>
+<td>−5</td>
+<td>9</td>
+<td>−5</td>
+<td>−1</td>
+<td>1</td>
+<td>−1</td>
+<td>7</td>
+</tr>
+<tr>
+<td>Fingerprint</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p>Bit 1: fish +3, water −2, salt +2, tropical −1, species +1 → 3 &gt; 0 → 1. Bit 5: fish +3, water −2, salt −2, tropical −1, species +1 → −1 → 0. Fingerprint <strong>10100101</strong>. Against <code>10101111</code> the bits agree in positions 1, 2, 3, 4, 6 and 8: 6 of 8 = <strong>0.75</strong>, so the two count as near duplicates only if <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>≤</mo><mn>0.75</mn></mrow><annotation encoding="application/x-tex">\tau \le 0.75</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.75</span></span></span></span>.</p>
+</details>
+
+<h2 id="7-removing-noise-finding-content-blocks">7. Removing Noise: Finding Content Blocks</h2>
+<p>Many web pages contain text, links and pictures <strong>not related to the main content</strong>: banners, navigation, side columns, ads. This material is mostly <strong>noise</strong> that could hurt the page&#39;s ranking. Techniques detect the <strong>content blocks</strong>; non-content material is <strong>ignored or reduced in importance</strong> at indexing time.</p>
+<p>Example: a news page with its banner and side columns as <strong>noise blocks</strong>, and a CNN.com &quot;Science &amp; Space&quot; article (&quot;Aquarium plays whale shark matchmaker&quot;) whose story text is the <strong>content block</strong>, surrounded by navigation, a search box and ads. So how can you detect content?</p>
+<h3 id="71-cumulative-distribution-of-tags-document-slope-curve">7.1 Cumulative distribution of tags (document slope curve)</h3>
+<p>Technique 1 is the <em>document slope curve</em> (Finn, Kushmerick &amp; Smyth, 2001). Walk through the page&#39;s tokens and count the tags seen so far: <strong>token count</strong> (up to about 3,500) on x, <strong>tag count</strong> (up to about 1,000) on y. The curve climbs steadily through tag-heavy navigation, and the <strong>main text is the &quot;plateau&quot; in the middle</strong> (the &quot;text area&quot;, around 1,000–1,500 tokens), where many tokens pass with almost no tags.</p>
+<p>As an optimization problem: represent the page as a <strong>sequence of bits</strong>, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mi>n</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">b_n = 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> if the <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span>th token is a <strong>tag</strong>. Find <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi></mrow><annotation encoding="application/x-tex">j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.854em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.05724em;">j</span></span></span></span> that maximize the number of <strong>tags below <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> and above <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi></mrow><annotation encoding="application/x-tex">j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.854em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.05724em;">j</span></span></span></span></strong> plus the number of <strong>non-tag tokens between <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi></mrow><annotation encoding="application/x-tex">j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.854em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.05724em;">j</span></span></span></span></strong>:</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><munder><mrow><mi>max</mi><mo>⁡</mo></mrow><mrow><mi>i</mi><mo separator="true">,</mo><mtext> </mtext><mi>j</mi></mrow></munder><mtext>  </mtext><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></munderover><msub><mi>b</mi><mi>n</mi></msub><mtext>  </mtext><mo>+</mo><mtext>  </mtext><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mi>i</mi></mrow><mi>j</mi></munderover><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>b</mi><mi>n</mi></msub><mo stretchy="false">)</mo><mtext>  </mtext><mo>+</mo><mtext>  </mtext><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mi>j</mi><mo>+</mo><mn>1</mn></mrow><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></munderover><msub><mi>b</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">\max_{i,\,j} \; \sum_{n=0}^{i-1} b_n \;+\; \sum_{n=i}^{j} (1 - b_n) \;+\; \sum_{n=j+1}^{N-1} b_n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:3.0788em;vertical-align:-1.2671em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-2.3723em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mpunct mtight">,</span><span class="mspace mtight" style="margin-right:0.1952em;"></span><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span></span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">max</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8638em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8117em;"><span style="top:-1.8829em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mrel mtight">=</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2671em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:3.1364em;vertical-align:-1.2777em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8588em;"><span style="top:-1.8723em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mrel mtight">=</span><span class="mord mathnormal mtight">i</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3471em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2777em;"><span></span></span></span></span></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:3.2421em;vertical-align:-1.4138em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8283em;"><span style="top:-1.8723em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mrel mtight">=</span><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">N</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.4138em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></div>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span> is the number of tokens; tokens <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> … <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi></mrow><annotation encoding="application/x-tex">j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.854em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.05724em;">j</span></span></span></span> are the content block. The first and last sums reward tags <em>outside</em> the block, the middle one rewards text <em>inside</em> it.</p>
+<p><strong>Alternative</strong>: cut the curve into vertical <strong>slices</strong>, determine the <strong>slope</strong> inside each, and iterate, reducing the slice size until you find <strong>zero-slope windows</strong>.</p>
+<h3 id="72-dom-and-layout-approaches">7.2 DOM and layout approaches</h3>
+<p><strong>Other approaches</strong> use the <strong>Document Object Model (DOM)</strong> structure and <strong>visual (layout) features</strong>: an HTML parser turns HTML into a DOM tree. For the CNN page the tree is <code>#document</code> → <code>HTML</code> → <code>HEAD</code>, <code>BODY</code> (<code>contentArea</code>), with <code>DIV</code>s and <code>TABLE</code>s named <code>cnnCeil</code>, <code>cnnBreakingNewsBanner</code>, <code>iframecnnBreakingNewsBanner</code>, <code>cnnCeilSearch</code>, <code>cnnArticleWireFrame</code>, <code>cnnFootBox</code>, <code>csiIframe</code> — and, the one that matters, <code>TABLE</code> → <code>TBODY</code> → <code>TR</code> → <strong><code>TD</code> <code>cnnArticleContent</code></strong>, the article.</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.8 Removing Noise</a></p>
+</blockquote>
+<h2 id="8-quick-reference--top-5-things-to-remember">8. Quick Reference &amp; Top 5 Things to Remember</h2>
+<table>
+<thead>
+<tr>
+<th>Encoding</th>
+<th>Bytes per character</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ASCII</td>
+<td>1 (7 bits used)</td>
+<td>128 characters, English only</td>
+</tr>
+<tr>
+<td>UTF-8</td>
+<td>1–4</td>
+<td>ASCII-compatible; templates <code>0xxxxxxx</code>, <code>110xxxxx 10xxxxxx</code>, <code>1110xxxx</code> + 2, <code>11110xxx</code> + 3</td>
+</tr>
+<tr>
+<td>UTF-32</td>
+<td>4</td>
+<td>Fixed width: fast random access, more memory</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Duplicate-detection method</th>
+<th>Detects</th>
+<th>How</th>
+<th>Similarity</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Checksum (byte sum)</td>
+<td>Exact</td>
+<td>Sum of bytes</td>
+<td>Equal or not; order-blind collisions</td>
+</tr>
+<tr>
+<td>CRC, MD5, SHA, BLAKE</td>
+<td>Exact</td>
+<td>Position-aware hash</td>
+<td>Equal or not; rare collisions</td>
+</tr>
+<tr>
+<td>N-gram fingerprint</td>
+<td>Near</td>
+<td>n-grams → hashes → keep 0 mod p</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">∣</mo><msub><mi>F</mi><mi>A</mi></msub><mo>∩</mo><msub><mi>F</mi><mi>B</mi></msub><mo stretchy="false">∣</mo><mi mathvariant="normal">/</mi><mo stretchy="false">∣</mo><msub><mi>F</mi><mi>A</mi></msub><mo>∪</mo><msub><mi>F</mi><mi>B</mi></msub><mo stretchy="false">∣</mo><mo>≥</mo><mi>τ</mi></mrow><annotation encoding="application/x-tex">\lvert F_A \cap F_B\rvert / \lvert F_A \cup F_B\rvert \ge \tau</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∩</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">∣</span><span class="mord">/</span><span class="mopen">∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∪</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">∣</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span></span></span></span></td>
+</tr>
+<tr>
+<td>Simhash</td>
+<td>Near</td>
+<td>weights × ±hash bits → sign of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span></td>
+<td>equal bits / n <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≥</mo><mi>τ</mi></mrow><annotation encoding="application/x-tex">\ge \tau</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span></span></span></span></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Storage / noise</th>
+<th>Key idea</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Large files, TREC Web</td>
+<td>Many <code>&lt;DOC&gt;</code> blocks per file: less file I/O, seek once</td>
+</tr>
+<tr>
+<td>Compression</td>
+<td>Lossless, ~80% on HTML/XML (DEFLATE, LZW), in blocks</td>
+</tr>
+<tr>
+<td>BigTable</td>
+<td>Row = page; (row key, column key, timestamp) → cell; tablets by row key</td>
+</tr>
+<tr>
+<td>Content blocks</td>
+<td>Plateau of the cumulative tag curve; maximize tags outside + text inside <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mi>i</mi><mo separator="true">,</mo><mi>j</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[i, j]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord mathnormal">i</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.05724em;">j</span><span class="mclose">]</span></span></span></span></td>
+</tr>
+</tbody></table>
+<p><strong>Top 5 things to remember</strong></p>
+<ol>
+<li>Unicode maps glyphs to numbers; UTF-8/16/32 map numbers to bytes. π = U+03C0 = 960 → <code>110</code>01111 <code>10</code>000000 = <code>CF 80</code>.</li>
+<li>Search engines store documents in big compound files (TREC Web) or BigTable — random access by URL hash, compression, updates — not one file per page.</li>
+<li>Exact duplicates: checksums/CRCs; near duplicates: n-gram fingerprints (&quot;0 mod p&quot; selection, intersection over union ≥ τ) or simhash (fraction of equal bits ≥ τ).</li>
+<li>Simhash: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">V_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> += weight if bit <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> is 1, −= weight if 0; bit = 1 if <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mi>i</mi></msub><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">V_i &gt; 0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span> — similar documents get similar fingerprints.</li>
+<li>Strip noise before indexing: the main text is the plateau of the cumulative tag curve (or the content block of the DOM tree). For word statistics such as Zipf&#39;s law, see <a href="/~kazuhak/notes/cs-121/topic-text-processing/en-US/">Text Processing</a>.</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="Note navigation" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/~kazuhak/notes/cs-121/topic-crawling/en-US/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Previous · Topic · Web Crawling</span><span class="pager-title" data-astro-cid-gxyjxt6l>Web Crawling</span></a><a class="card interactive pager-card pager-next" href="/~kazuhak/notes/cs-121/topic-text-processing/en-US/" rel="next" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>Topic · Text Processing · Next<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>Text Processing</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>Shortcuts<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> Previous</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> Next</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> Switch language</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="Table of Contents" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>Top</button><script type="module" src="/~kazuhak/_astro/NoteReader.astro_astro_type_script_index_0_lang.D_DIoJ7q.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/~kazuhak/assets/js/bento.js" defer></script><script src="/~kazuhak/assets/js/chat-widget.js" defer></script></body></html>

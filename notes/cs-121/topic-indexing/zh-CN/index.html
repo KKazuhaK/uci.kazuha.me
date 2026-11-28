@@ -1,0 +1,1462 @@
+<!DOCTYPE html><html lang="zh-CN"><head><title>CS 121 倒排索引与索引构建 | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="为何词项-文档关联矩阵无法扩展；倒排索引（词典、postings、docID、文档频率）；索引器的词元-排序-合并步骤与内存中的 BuildIndex；带计数、位置、区段与分数的 postings；用于短语查询的双词索引与位置索引；硬件限制与磁盘寻道；带部分索引与多路合并的分块外部构建；索引工程（为索引建索引、seek、词汇表、辅助结构）；MapReduce 分布式索引；以及带删除列表的索引更新。"><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-indexing/zh-CN/"><link rel="icon" href="/~kazuhak/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/~kazuhak/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-indexing/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-indexing/zh-CN/"><link rel="stylesheet" href="/~kazuhak/_astro/BaseLayout.D6FvEM2t.css"><link rel="stylesheet" href="/~kazuhak/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/~kazuhak/_astro/katex.D1M0OS0E.css"><link rel="stylesheet" href="/~kazuhak/_astro/index.BWdCFSBs.css"></head><body data-nav-path="/~kazuhak/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/~kazuhak/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/~kazuhak/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/~kazuhak/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/~kazuhak/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/~kazuhak/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="zh-CN" data-viz-base="/~kazuhak/assets/viz/" data-viz-version="1795857753" data-source-url="/~kazuhak/notes/cs-121/topic-indexing/zh-CN/source.md" data-editor-url="/~kazuhak/tools/md-editor/" data-alt-url="/~kazuhak/notes/cs-121/topic-indexing/en-US/" data-prev-url="/~kazuhak/notes/cs-121/topic-text-processing/zh-CN/" data-next-url="/~kazuhak/notes/cs-121/topic-retrieval-models/zh-CN/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="上一篇 / 下一篇" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/~kazuhak/notes/cs-121/topic-text-processing/zh-CN/" title="上一篇: 文本处理 ([)" aria-label="上一篇: 话题 · 文本处理" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>话题 · 文本处理</span></a><label class="rb-title" title="跳到其他讲" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>CS 121</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>话题 · 倒排索引与索引构建</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg><select class="rb-jump" data-rb-jump aria-label="跳到其他讲" autocomplete="off" data-astro-cid-gxyjxt6l><option value="/~kazuhak/notes/cs-121/week-01/zh-CN/" data-astro-cid-gxyjxt6l>第 1 周 — 课程介绍、信息检索与网络、搜索引擎架构</option><option value="/~kazuhak/notes/cs-121/week-02/zh-CN/" data-astro-cid-gxyjxt6l>第 2 周 — 网络语料、搜索引擎优化与网络爬虫</option><option value="/~kazuhak/notes/cs-121/week-03/zh-CN/" data-astro-cid-gxyjxt6l>第 3 周 — 网络爬虫</option><option value="/~kazuhak/notes/cs-121/week-04/zh-CN/" data-astro-cid-gxyjxt6l>第 4 周 — 字符编码、文档存储、重复检测与 Zipf 定律</option><option value="/~kazuhak/notes/cs-121/week-05/zh-CN/" data-astro-cid-gxyjxt6l>第 5 周 — 文本处理、词项-文档矩阵</option><option value="/~kazuhak/notes/cs-121/week-06/zh-CN/" data-astro-cid-gxyjxt6l>第 6 周 — 倒排索引、索引构建</option><option value="/~kazuhak/notes/cs-121/week-07/zh-CN/" data-astro-cid-gxyjxt6l>第 7 周 — 扩展索引、查询处理、tf-idf</option><option value="/~kazuhak/notes/cs-121/week-08/zh-CN/" data-astro-cid-gxyjxt6l>第 8 周 — 向量空间模型与余弦排序</option><option value="/~kazuhak/notes/cs-121/week-09/zh-CN/" data-astro-cid-gxyjxt6l>第 9 周 — 高效打分、链接分析、评价</option><option value="/~kazuhak/notes/cs-121/topic-search-engines/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 搜索引擎与 Web — 搜索引擎与 Web</option><option value="/~kazuhak/notes/cs-121/topic-crawling/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 网络爬虫 — 网络爬虫</option><option value="/~kazuhak/notes/cs-121/topic-documents/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 文档转换、存储与去重 — 文档转换、存储与去重</option><option value="/~kazuhak/notes/cs-121/topic-text-processing/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 文本处理 — 文本处理</option><option value="/~kazuhak/notes/cs-121/topic-indexing/zh-CN/" selected data-astro-cid-gxyjxt6l>话题 · 倒排索引与索引构建 — 倒排索引与索引构建</option><option value="/~kazuhak/notes/cs-121/topic-retrieval-models/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 检索模型：布尔、tf-idf 与向量空间 — 检索模型：布尔、tf-idf 与向量空间</option><option value="/~kazuhak/notes/cs-121/topic-query-processing/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 查询处理与高效 Top-K — 查询处理与高效 Top-K</option><option value="/~kazuhak/notes/cs-121/topic-link-analysis/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 链接分析：HITS 与 PageRank — 链接分析：HITS 与 PageRank</option><option value="/~kazuhak/notes/cs-121/topic-evaluation/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 搜索引擎评测 — 搜索引擎评测</option></select></label><a class="rb-btn rb-lang" href="/~kazuhak/notes/cs-121/topic-indexing/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>EN</span></a><a class="rb-btn rb-next rb-side-next" href="/~kazuhak/notes/cs-121/topic-retrieval-models/zh-CN/" title="下一篇: 检索模型：布尔、tf-idf 与向量空间 (])" aria-label="下一篇: 话题 · 检索模型：布尔、tf-idf 与向量空间" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>话题 · 检索模型：布尔、tf-idf 与向量空间</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/~kazuhak/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/~kazuhak/notes/cs-121/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>CS 121</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>话题 · 倒排索引与索引构建</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/~kazuhak/notes/cs-121/topic-indexing/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>English</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>目录</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>在编辑器中打开</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>信息检索课程阅读笔记</h2><p id="reader-description" data-astro-cid-gxyjxt6l>这页整理的是 CS 121 话题 · 倒排索引与索引构建 的课程笔记，适合按周复习文本处理、网络图、SEO、网络爬虫，以及搜索引擎如何索引网页并为其排序。下面这条路径可以带你回到 Notes、Course Notes、课程主页，或定位到当前笔记。将鼠标悬停在右侧的 ≡ 图标上可以打开目录。</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>最后编辑于 2026 年 11 月 25 日</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="cs-121-information-retrieval--话题倒排索引与索引构建">CS 121: Information Retrieval — 话题：倒排索引与索引构建</h1>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#1-%E4%BB%8E%E5%85%B3%E8%81%94%E7%9F%A9%E9%98%B5%E5%88%B0%E7%B4%A2%E5%BC%95">1. 从关联矩阵到索引</a></li>
+<li><a href="#2-%E5%80%92%E6%8E%92%E7%B4%A2%E5%BC%95%E8%AF%8D%E5%85%B8%E4%B8%8E-postings">2. 倒排索引：词典与 postings</a></li>
+<li><a href="#3-%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%E6%9E%84%E5%BB%BA%E7%B4%A2%E5%BC%95">3. 在内存中构建索引</a></li>
+<li><a href="#4-%E6%9B%B4%E4%B8%B0%E5%AF%8C%E7%9A%84-postings%E8%AE%A1%E6%95%B0%E4%BD%8D%E7%BD%AE%E5%8C%BA%E6%AE%B5%E5%88%86%E6%95%B0">4. 更丰富的 postings：计数、位置、区段、分数</a></li>
+<li><a href="#5-%E7%9F%AD%E8%AF%AD%E6%9F%A5%E8%AF%A2%E5%8F%8C%E8%AF%8D%E7%B4%A2%E5%BC%95%E4%B8%8E%E4%BD%8D%E7%BD%AE%E7%B4%A2%E5%BC%95">5. 短语查询：双词索引与位置索引</a></li>
+<li><a href="#6-%E7%B4%A2%E5%BC%95%E6%94%BE%E4%B8%8D%E8%BF%9B%E5%86%85%E5%AD%98%E6%97%B6%E5%86%85%E5%AD%98%E4%B8%8E%E7%A1%AC%E4%BB%B6">6. 索引放不进内存时：内存与硬件</a></li>
+<li><a href="#7-%E5%A4%96%E9%83%A8%E6%9E%84%E5%BB%BA%E9%83%A8%E5%88%86%E7%B4%A2%E5%BC%95%E4%B8%8E%E5%90%88%E5%B9%B6">7. 外部构建：部分索引与合并</a></li>
+<li><a href="#8-%E7%B4%A2%E5%BC%95%E5%B7%A5%E7%A8%8B%E8%AF%BB%E5%8F%96%E6%AF%94%E5%86%85%E5%AD%98%E6%9B%B4%E5%A4%A7%E7%9A%84%E7%B4%A2%E5%BC%95">8. 索引工程：读取比内存更大的索引</a></li>
+<li><a href="#9-%E7%94%A8-mapreduce-%E8%BF%9B%E8%A1%8C%E5%88%86%E5%B8%83%E5%BC%8F%E7%B4%A2%E5%BC%95">9. 用 MapReduce 进行分布式索引</a></li>
+<li><a href="#10-%E6%9B%B4%E6%96%B0%E7%B4%A2%E5%BC%95">10. 更新索引</a></li>
+<li><a href="#11-%E9%80%9F%E6%9F%A5%E4%B8%8E%E4%BA%94%E6%9D%A1%E8%A6%81%E7%82%B9">11. 速查与五条要点</a></li>
+</ul>
+<blockquote>
+<p>本章讲的是搜索引擎架构中的<strong>索引创建</strong>（Index Creation）模块（<a href="/~kazuhak/notes/cs-121/topic-search-engines/zh-CN/">搜索引擎与 Web</a>）：把经过处理的文本（<a href="/~kazuhak/notes/cs-121/topic-text-processing/zh-CN/">文本处理</a>）变成一种能快速回答查询的数据结构。索引如何被<em>使用</em>——为 AND 合并 postings、跳表指针、按文档处理与按词项处理的打分——见 <a href="/~kazuhak/notes/cs-121/topic-query-processing/zh-CN/">查询处理与高效 Top-K</a>；布尔模型与排序函数见 <a href="/~kazuhak/notes/cs-121/topic-retrieval-models/zh-CN/">检索模型：布尔、tf-idf 与向量空间</a>。</p>
+</blockquote>
+<h2 id="1-从关联矩阵到索引">1. 从关联矩阵到索引</h2>
+<h3 id="11-词项-文档关联矩阵">1.1 词项-文档关联矩阵</h3>
+<p>设想一个莎士比亚剧本的小型语料库，问：<strong>哪些剧本同时包含 Brutus 和 Caesar，但不包含 Calpurnia？</strong> 你可以在所有剧本中 grep Brutus 和 Caesar，再去掉含有 Calpurnia 的行。但这并不是可接受的搜索答案：</p>
+<ul>
+<li>对大型语料库来说，它<strong>很慢</strong>。</li>
+<li><strong>NOT Calpurnia</strong> 并不简单。</li>
+<li>其他操作，例如找出 <em>Romans</em> <strong>靠近</strong> <em>countrymen</em> 的位置，无法实现。</li>
+<li><strong>排序检索</strong>做不到，而用户想要的是排好序的文档。</li>
+</ul>
+<p><strong>词项-文档关联矩阵</strong>（term-document incidence matrix）是一个布尔矩阵：行是<strong>词项</strong>，列是<strong>文档</strong>；若剧本包含该词则值为 1，否则为 0。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Antony and Cleopatra</th>
+<th>Julius Caesar</th>
+<th>The Tempest</th>
+<th>Hamlet</th>
+<th>Othello</th>
+<th>Macbeth</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Antony</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Brutus</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Caesar</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Calpurnia</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Cleopatra</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>mercy</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>worser</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+</tbody></table>
+<p><strong>关联向量</strong>：每个词项都有一个 0/1 向量，即它所在的行。要回答查询，取 Brutus、Caesar 和 Calpurnia 的行，把 Calpurnia 的行<strong>取反</strong>，然后做<strong>按位 AND</strong>：</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>R</mi><mo>=</mo><msub><mi>I</mi><mrow><mi>B</mi><mi>r</mi><mi>u</mi></mrow></msub><mo>∧</mo><msub><mi>I</mi><mrow><mi>C</mi><mi>a</mi><mi>e</mi></mrow></msub><mo>∧</mo><mi mathvariant="normal">¬</mi><msub><mi>I</mi><mrow><mi>C</mi><mi>a</mi><mi>l</mi></mrow></msub></mrow><annotation encoding="application/x-tex">R = I_{Bru} \wedge I_{Cae} \wedge \neg I_{Cal}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span><span class="mord mathnormal mtight">u</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.07153em;">C</span><span class="mord mathnormal mtight">a</span><span class="mord mathnormal mtight">e</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord">¬</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.07153em;">C</span><span class="mord mathnormal mtight">a</span><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></div>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">I_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 是词项 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span> 的行，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∧</mo></mrow><annotation encoding="application/x-tex">\wedge</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5556em;"></span><span class="mord">∧</span></span></span></span> 是按位 AND，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">¬</mi></mrow><annotation encoding="application/x-tex">\neg</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord">¬</span></span></span></span> 把每一位取反。</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">(Brutus)         1 1 0 1 0 0  AND
+(Caesar)         1 1 0 1 1 1  AND
+(NOT Calpurnia)  1 0 1 1 1 1  =
+                 1 0 0 1 0 0</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>结果中的 1 在第 1 列和第 4 列：<strong>Antony and Cleopatra</strong> 和 <strong>Hamlet</strong>。<em>Julius Caesar</em> 两个名字都有，但也包含 Calpurnia，所以被 NOT 排除了。可以逐步演示这一过程，也可以输入其他查询（对这些词项使用 AND / OR / NOT）：</p>
+<pre data-language="viz" data-viz="incidence-matrix"><code>{&quot;title&quot;: &quot;Brutus AND Caesar AND NOT Calpurnia（布尔关联矩阵演示）&quot;, &quot;terms&quot;: &quot;Antony: 1 1 0 0 0 1; Brutus: 1 1 0 1 0 0; Caesar: 1 1 0 1 1 1; Calpurnia: 0 1 0 0 0 0; Cleopatra: 1 0 0 0 0 0; mercy: 1 0 1 1 1 1; worser: 1 0 1 1 1 0&quot;, &quot;docs&quot;: &quot;Antony and Cleopatra, Julius Caesar, The Tempest, Hamlet, Othello, Macbeth&quot;, &quot;query&quot;: &quot;Brutus AND Caesar AND NOT Calpurnia&quot;, &quot;lang&quot;: &quot;zh&quot;, &quot;interactive&quot;: true}</code></pre><p>匹配的两个文档，恰好是两个名字同时出现的剧本：</p>
+<ul>
+<li><em>Antony and Cleopatra</em>，第三幕第二场——Agrippa [旁白给 Domitius Enobarbus]：&quot;Why, Enobarbus, / When Antony found Julius <strong>Caesar</strong> dead, / He cried almost to roaring; and he wept / When at Philippi he found <strong>Brutus</strong> slain.&quot;</li>
+<li><em>Hamlet</em>，第三幕第二场——Lord Polonius：&quot;I did enact Julius <strong>Caesar</strong> I was killed i&#39; the / Capitol; <strong>Brutus</strong> killed me.&quot;</li>
+</ul>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">Manning 等，<em>Introduction to Information Retrieval</em>，第 1 章</a></p>
+</blockquote>
+<h3 id="12-为什么这个矩阵无法扩展">1.2 为什么这个矩阵无法扩展</h3>
+<p>这种方法能用于更大的集合吗？设：</p>
+<ul>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">N = 10^6</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span></span></span></span> 篇文档，每篇约 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">10^3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span> 个词；</li>
+<li>每个词约 6 字节（含空格和标点）→ 约 <strong>6 GB</strong> 数据；</li>
+<li>其中有 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>500</mn><mtext>K</mtext></mrow><annotation encoding="application/x-tex">M = 500\text{K}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">500</span><span class="mord text"><span class="mord">K</span></span></span></span></span> 个<strong>不同</strong>的词项。</li>
+</ul>
+<p>那么词项-文档矩阵是 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>500</mn><mtext>K</mtext><mo>×</mo><mn>1</mn><mtext>M</mtext></mrow><annotation encoding="application/x-tex">500\text{K} \times 1\text{M}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord">500</span><span class="mord text"><span class="mord">K</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">1</span><span class="mord text"><span class="mord">M</span></span></span></span></span>：有<strong>五千亿</strong>个 0 和 1，因此<strong>无法在内存中构建</strong>。但其中<strong>最多只有十亿个 1</strong>——最多 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">10^6 \times 10^3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span> 个，每个词的出现最多贡献一个 1。这个矩阵<strong>极其稀疏</strong>。</p>
+<blockquote>
+<p>💡 <strong>关键洞见</strong>：更好的表示方法是<strong>只记录 1 的位置</strong>。对每个词项，保存包含它的文档列表。这就是 <a href="#2-%E5%80%92%E6%8E%92%E7%B4%A2%E5%BC%95%E8%AF%8D%E5%85%B8%E4%B8%8E-postings">§2</a> 中的倒排索引。</p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#13-%E7%BB%83%E4%B9%A0">§1.3</a></p>
+</blockquote>
+<h3 id="13-练习">1.3 练习</h3>
+<h4 id="关联矩阵有多大">关联矩阵有多大？</h4>
+<p>一个集合有 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">N = 10^6</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span></span></span></span> 篇文档，每篇约 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">10^3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span> 个词，每词约 6 字节，有 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>500</mn><mtext>K</mtext></mrow><annotation encoding="application/x-tex">M = 500\text{K}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">500</span><span class="mord text"><span class="mord">K</span></span></span></span></span> 个不同词项。文本有多少？关联矩阵有多少个格子？其中最多有多少个 1？</p>
+<details>
+<summary>解答</summary>
+
+<p>文本：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>3</mn></msup><mo>×</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">10^6 \times 10^3 \times 6</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">6</span></span></span></span> 字节 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo><mn>6</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>9</mn></msup></mrow><annotation encoding="application/x-tex">= 6 \times 10^9</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">6</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">9</span></span></span></span></span></span></span></span></span></span></span> 字节 ≈ <strong>6 GB</strong>。矩阵：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>5</mn></msup><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup><mo>=</mo><mn>5</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>11</mn></msup></mrow><annotation encoding="application/x-tex">5 \times 10^5 \times 10^6 = 5 \times 10^{11}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">5</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">11</span></span></span></span></span></span></span></span></span></span></span></span> 个格子，即<strong>五千亿</strong>。1 的个数：每次词的出现最多贡献一个，所以最多 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>3</mn></msup><mo>=</mo><mn>1</mn><msup><mn>0</mn><mn>9</mn></msup></mrow><annotation encoding="application/x-tex">10^6 \times 10^3 = 10^9</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">9</span></span></span></span></span></span></span></span></span></span></span>，即<strong>十亿</strong>。最多 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>9</mn></msup><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mn>5</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>11</mn></msup><mo stretchy="false">)</mo><mo>=</mo><mn>0.2</mn><mi mathvariant="normal">%</mi></mrow><annotation encoding="application/x-tex">10^9 / (5 \times 10^{11}) = 0.2\%</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">9</span></span></span></span></span></span></span></span><span class="mord">/</span><span class="mopen">(</span><span class="mord">5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">11</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8056em;vertical-align:-0.0556em;"></span><span class="mord">0.2%</span></span></span></span> 的格子为 1，因此只存储 1 的位置。</p>
+</details>
+
+<h2 id="2-倒排索引词典与-postings">2. 倒排索引：词典与 postings</h2>
+<h3 id="21-每个词项一个列表">2.1 每个词项一个列表</h3>
+<p><strong>对每个词项 <em>t</em>，存储一个包含 <em>t</em> 的所有文档的列表。</strong> 每个文档由一个 <strong>docID</strong>（文档序号）标识。</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">Brutus    → 1  2  4  11  31  45  173  174
+Caesar    → 1  2  4   5   6  16   57  132
+Calpurnia → 2  31 54 101</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>能否对这些列表使用定长数组？如果把词 <em>Caesar</em> 加入文档 14 会怎样？列表必须保持有序，所以 14 要插在 6 和 16 之间，这意味着后面的所有元素都要后移，而满了的数组还得换成更大的（在 <a href="#24-%E7%BB%83%E4%B9%A0">§2.4</a> 中有详细计算）。列表会随词项逐个增长和缩小，因此需要<strong>变长的 postings 列表</strong>：</p>
+<ul>
+<li><strong>在磁盘上</strong>，<strong>连续存放的一串 postings</strong> 是最优方案。</li>
+<li><strong>在内存中</strong>，可以使用链表、变长数组或关联数组，需要在<strong>大小与插入的便利性</strong>之间权衡。</li>
+</ul>
+<p>词汇表：</p>
+<table>
+<thead>
+<tr>
+<th>部分</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>词典</strong>（Dictionary）</td>
+<td>词项（Brutus、Caesar、Calpurnia）</td>
+</tr>
+<tr>
+<td><strong>Postings</strong></td>
+<td>所有列表合在一起</td>
+</tr>
+<tr>
+<td><strong>Posting</strong></td>
+<td>列表中的一项（一个 docID）</td>
+</tr>
+</tbody></table>
+<p>列表按 <strong>docID 排序</strong>；原因是回答 AND 查询时的合并操作（<a href="/~kazuhak/notes/cs-121/topic-query-processing/zh-CN/">查询处理与高效 Top-K</a>）。</p>
+<p>在代码中，倒排索引通常是一个以词项为键、以 postings 列表为值的映射（map / dictionary）：<code>friend → 2, 4, …</code>，<code>roman → 1, 2, …</code>，<code>countryman → 13, 16</code>。</p>
+<h3 id="22-索引的概念与术语">2.2 索引的概念与术语</h3>
+<p><strong>索引是为加速搜索而设计的数据结构。</strong> 文本搜索有其特殊需求，因此产生了特殊的数据结构。其中最常见的是<strong>倒排索引</strong>：</p>
+<ul>
+<li>它是<strong>一类结构的统称</strong>，而不是某一种固定的布局；</li>
+<li>之所以叫&quot;倒排&quot;，是因为它把<strong>词与文档的关系颠倒过来</strong>：从词关联到文档，而不是从文档关联到词，类似于书末的索引（concordance）。</li>
+</ul>
+<p>Croft 的术语：</p>
+<ul>
+<li>每个索引词项都关联一个<strong>postings 列表</strong>（inverted list），其中包含文档列表（或文档中词出现位置的列表）以及其他信息。</li>
+<li>每一项是一个 <strong>posting</strong>。posting 中指向某个具体文档或位置的部分称为<strong>指针</strong>（pointer）。</li>
+<li>集合中的每个文档都有一个<strong>唯一编号</strong>。</li>
+<li>列表通常按<strong>文档顺序</strong>排列（按文档编号排序）。</li>
+</ul>
+<h3 id="23-运行示例s1s4">2.3 运行示例：S1–S4</h3>
+<p>下面这个标准小例子为四个关于热带鱼的句子建立索引，后面各节会反复使用。</p>
+<ul>
+<li><strong>S1</strong> Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species.</li>
+<li><strong>S2</strong> Fishkeepers often use the term tropical fish to refer only those requiring fresh water, with saltwater tropical fish referred to as marine fish.</li>
+<li><strong>S3</strong> Tropical fish are popular aquarium fish, due to their often bright coloration.</li>
+<li><strong>S4</strong> In freshwater fish, this coloration typically derives from iridescence, while salt water fish are generally pigmented.</li>
+</ul>
+<p>它的<strong>简单倒排索引</strong>（每个 posting 是句子编号；共 46 个词项）：</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">and          1          marine       2           species      1
+aquarium     3          often        2 3         term         2
+are          3 4        only         2           the          1 2
+around       1          pigmented    4           their        3
+as           2          popular      3           this         4
+both         1          refer        2           those        2
+bright       3          referred     2           to           2 3
+coloration   3 4        requiring    2           tropical     1 2 3
+derives      4          salt         1 4         typically    4
+due          3          saltwater    2           use          2
+environments 1          fish         1 2 3 4     water        1 2 4
+fishkeepers  2          found        1           while        4
+fresh        2          freshwater   1 4         with         2
+from         4          generally    4           world        1
+in           1 4        include      1
+including    1          iridescence  4</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>💡 <strong>关键洞见</strong>：索引从不存储 0。<code>fish</code> 有 4 个 posting，<code>marine</code> 只有 1 个——存储空间随（词项，文档）对的数量增长，而不是随词项数 × 文档数增长。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.3 Inverted Indexes 与 §5.3.1 Documents（书中第 129、131 页）</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR 第 1–2 章</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#24-%E7%BB%83%E4%B9%A0">§2.4</a></p>
+</blockquote>
+<h3 id="24-练习">2.4 练习</h3>
+<h4 id="为文档-14-加入-caesar">为文档 14 加入 Caesar</h4>
+<p><em>Caesar</em> 的 postings 存放在一个定长数组 <code>1 2 4 5 6 16 57 132</code> 中，共 8 个位置。现在把 <em>Caesar</em> 加入文档 14，会发生什么？</p>
+<details>
+<summary>解答</summary>
+
+<p>列表必须保持按 docID 有序，所以 14 应当放在 6 和 16 之间：<code>1 2 4 5 6 14 16 57 132</code>。在定长数组中，这意味着把 16、57 和 132 <strong>右移</strong>一个位置；而数组已经满了（8 个位置，8 个元素），因此需要一个<strong>更大的数组</strong>。列表会随词项增减，所以定长数组行不通：我们需要<strong>变长的 postings 列表</strong>——磁盘上是一段连续存放的数据，内存中则用链表、变长数组或关联数组，需要在大小与插入便利性之间权衡。</p>
+</details>
+
+<h2 id="3-在内存中构建索引">3. 在内存中构建索引</h2>
+<h3 id="31-流水线">3.1 流水线</h3>
+<p>倒排索引的构建分为若干阶段：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>待索引的文档</td>
+<td><code>Friends, Romans, countrymen.</code></td>
+</tr>
+<tr>
+<td><strong>分词器</strong>（Tokenizer）→ 词元流</td>
+<td><code>Friends</code> <code>Romans</code> <code>Countrymen</code></td>
+</tr>
+<tr>
+<td><strong>文本处理：语言学模块</strong> → 修改后的词元</td>
+<td><code>friend</code> <code>roman</code> <code>countryman</code></td>
+</tr>
+<tr>
+<td><strong>索引器</strong>（Indexer）→ 倒排索引</td>
+<td><code>friend → 2 → 4</code>，<code>roman → 1 → 2</code>，<code>countryman → 13 → 16</code></td>
+</tr>
+</tbody></table>
+<p><strong>文本处理的典型最小阶段</strong>包括：<strong>分词</strong>（把字符序列切分为词元，处理 &quot;John&#39;s&quot; 和 <em>a state-of-the-art solution</em>）、<strong>规范化</strong>（把文本与查询词映射到同一形式：希望 <em>U.S.A.</em> 与 <em>USA</em> 能匹配）、<strong>可能的词干提取</strong>（<em>authorize</em>、<em>authorization</em>），以及<strong>可能的停用词去除</strong>（<em>the, a, to, of</em>，可以去掉，也可以保留）。详情见 <a href="/~kazuhak/notes/cs-121/topic-text-processing/zh-CN/">文本处理</a>。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：对文档词元做的任何处理，都必须对<strong>查询</strong>词也做一遍（这正是&quot;把文本与查询词映射到同一形式&quot;的含义）。如果索引中对 <em>authorization</em> 做了词干提取，而查询中没做，查询就会漏掉结果。</p>
+</blockquote>
+<h3 id="32-词元序列排序与合并">3.2 词元序列、排序与合并</h3>
+<p>有两份文档：</p>
+<ul>
+<li><strong>Doc 1</strong>：<em>I did enact Julius Caesar I was killed i&#39; the Capitol; Brutus killed me.</em></li>
+<li><strong>Doc 2</strong>：<em>So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious</em></li>
+</ul>
+<ol>
+<li><strong>词元序列</strong>：按文本顺序排列的 <strong>（修改后的词元，文档 ID）对</strong>，即 <code>(I, 1) (did, 1) (enact, 1) … (me, 1) (so, 2) … (ambitious, 2)</code>，共 29 对。</li>
+<li><strong>排序</strong>：先按词项，再按 docID 排序：<code>(ambitious, 2) (be, 2) (brutus, 1) (brutus, 2) (caesar, 1) (caesar, 2) (caesar, 2) (capitol, 1) …</code>。</li>
+<li><strong>合并与拆分</strong>：同一文档中某词项的多个条目被<strong>合并</strong>；结果被拆分为<strong>词典</strong>和 <strong>postings</strong>；<strong>文档频率</strong>（df，即包含该词的文档数）被加入词典。</li>
+</ol>
+<p>结果共 22 个词项。其中 <code>brutus</code>、<code>caesar</code>、<code>the</code>、<code>was</code> 有两条 posting（df = 2，postings 为 <code>1 → 2</code>），其他词项的 df 都是 1。例如 <code>hath</code> 只出现在 Doc 2 中，所以它的 posting 就是 <code>2</code>。下面是这些步骤的 Python 实现：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> re</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">docs = {</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"I did enact Julius Caesar I was killed i' the Capitol; Brutus killed me."</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#B5CEA8">        2</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious"</span><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># 1. token sequence: (modified token, docID) pairs in text order</span></span>
+<span class="line"><span style="color:#D4D4D4">pairs = [(t, d) </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> d, text </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> docs.items()</span></span>
+<span class="line"><span style="color:#C586C0">         for</span><span style="color:#D4D4D4"> t </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> re.findall(</span><span style="color:#569CD6">r</span><span style="color:#D16969">"</span><span style="color:#CE9178">[</span><span style="color:#D16969">a-z0-9'</span><span style="color:#CE9178">]</span><span style="color:#D7BA7D">+</span><span style="color:#D16969">"</span><span style="color:#D4D4D4">, text.lower())]</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(pairs), </span><span style="color:#CE9178">"pairs;"</span><span style="color:#D4D4D4">, </span><span style="color:#DCDCAA">sum</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">1</span><span style="color:#C586C0"> for</span><span style="color:#D4D4D4"> _, d </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> pairs </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> d == </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">), </span><span style="color:#CE9178">"from doc 1,"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#DCDCAA">      sum</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">1</span><span style="color:#C586C0"> for</span><span style="color:#D4D4D4"> _, d </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> pairs </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> d == </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">), </span><span style="color:#CE9178">"from doc 2"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># 2. sort by term, then docID</span></span>
+<span class="line"><span style="color:#D4D4D4">pairs.sort()</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(pairs[:</span><span style="color:#B5CEA8">8</span><span style="color:#D4D4D4">])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># 3. merge repeats within a document, split into dictionary (term, df) and postings</span></span>
+<span class="line"><span style="color:#D4D4D4">postings = {}</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> term, d </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> pairs:</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#569CD6"> not</span><span style="color:#D4D4D4"> postings.get(term) </span><span style="color:#569CD6">or</span><span style="color:#D4D4D4"> postings[term][-</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">] != d:</span></span>
+<span class="line"><span style="color:#D4D4D4">        postings.setdefault(term, []).append(d)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(postings), </span><span style="color:#CE9178">"terms"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> term, plist </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> postings.items():</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#DCDCAA"> len</span><span style="color:#D4D4D4">(plist) > </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#DCDCAA">        print</span><span style="color:#D4D4D4">(term, </span><span style="color:#CE9178">"df ="</span><span style="color:#D4D4D4">, </span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(plist), plist)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"killed"</span><span style="color:#D4D4D4">, postings[</span><span style="color:#CE9178">"killed"</span><span style="color:#D4D4D4">], </span><span style="color:#CE9178">"hath"</span><span style="color:#D4D4D4">, postings[</span><span style="color:#CE9178">"hath"</span><span style="color:#D4D4D4">])</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">29 pairs; 14 from doc 1, 15 from doc 2
+[(&#39;ambitious&#39;, 2), (&#39;be&#39;, 2), (&#39;brutus&#39;, 1), (&#39;brutus&#39;, 2), (&#39;caesar&#39;, 1), (&#39;caesar&#39;, 2), (&#39;caesar&#39;, 2), (&#39;capitol&#39;, 1)]
+22 terms
+brutus df = 2 [1, 2]
+caesar df = 2 [1, 2]
+the df = 2 [1, 2]
+was df = 2 [1, 2]
+killed [1] hath [2]</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>killed</code> 在 Doc 1 中出现两次，但 df = 1，只有一条 posting：合并是按文档进行的。可以逐步演示构建过程，也可以输入自己的文档（<code>docID: text; docID: text</code>）：</p>
+<pre data-language="viz" data-viz="inverted-index"><code>{&quot;title&quot;: &quot;Doc 1 与 Doc 2 的索引器步骤&quot;, &quot;docs&quot;: &quot;1: I did enact Julius Caesar I was killed i&#39; the Capitol; Brutus killed me. ; 2: So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious&quot;, &quot;postings&quot;: &quot;docs&quot;, &quot;lang&quot;: &quot;zh&quot;, &quot;interactive&quot;: true}</code></pre><p>结果包含两部分，都需要存储：<strong>词项与计数</strong>（词典），以及 <strong>docID 列表</strong>（postings）。实现 IR 系统要回答两个问题：<strong>如何高效地建立索引？</strong> 以及<strong>需要多少存储空间？</strong> 下面 <a href="#33-%E7%AE%80%E5%8D%95%E7%9A%84%E5%86%85%E5%AD%98%E7%B4%A2%E5%BC%95%E5%99%A8buildindex">§3.3</a> 到 <a href="#6-%E7%B4%A2%E5%BC%95%E6%94%BE%E4%B8%8D%E8%BF%9B%E5%86%85%E5%AD%98%E6%97%B6%E5%86%85%E5%AD%98%E4%B8%8E%E7%A1%AC%E4%BB%B6">§6</a> 依次讨论这两个问题。</p>
+<h3 id="33-简单的内存索引器buildindex">3.3 简单的内存索引器：BuildIndex</h3>
+<p>最简单的索引器把整个索引保存在一个哈希表中，逐篇读取文档，并把每篇文档的编号追加到它所包含的每个不同词元的列表中：</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">procedure BuildIndex(D)                      ▷ D is a set of text documents
+    I ← HashTable()                          ▷ Inverted list storage
+    n ← 0                                    ▷ Document numbering
+    for all documents d ∈ D do
+        n ← n + 1
+        T ← Parse(d)                         ▷ Parse document into tokens
+        Remove duplicates from T
+        for all tokens t ∈ T do
+            if I_t ∉ I then
+                I_t ← List&lt;Posting&gt;()
+            end if
+            I_t.append(Posting(n))
+        end for
+    end for
+    return I
+end procedure</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>需要注意的几处：</p>
+<ul>
+<li><code>n ← 0</code> / <code>n ← n + 1</code>：<strong>文档编号</strong>。docID 是一个计数器，而不是 URL（<a href="#34-docidurl-%E8%BF%98%E6%98%AF%E6%95%B4%E6%95%B0">§3.4</a>）。</li>
+<li><code>List&lt;Posting&gt;()</code> / <code>Posting(n)</code>：posting 中放什么（<a href="#35-%E4%B8%80%E4%B8%AA-posting-%E5%8C%85%E5%90%AB%E4%BB%80%E4%B9%88">§3.5</a>）。</li>
+<li><code>I ← HashTable()</code> 和 <code>return I</code>：整个索引存放在一个内存哈希表中。如果内存用完了会怎样？→ 见 <a href="#6-%E7%B4%A2%E5%BC%95%E6%94%BE%E4%B8%8D%E8%BF%9B%E5%86%85%E5%AD%98%E6%97%B6%E5%86%85%E5%AD%98%E4%B8%8E%E7%A1%AC%E4%BB%B6">§6</a>。</li>
+</ul>
+<p>下面是可运行的 Python 版本，其中的 <code>Posting</code> 类保存了频率计数：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> re</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">class</span><span style="color:#4EC9B0"> Posting</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#569CD6">    def</span><span style="color:#DCDCAA"> __init__</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">self</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">docid</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">tfidf</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">fields</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#569CD6">        self</span><span style="color:#D4D4D4">.docid = docid</span></span>
+<span class="line"><span style="color:#569CD6">        self</span><span style="color:#D4D4D4">.tfidf = tfidf  </span><span style="color:#6A9955"># use freq counts for now</span></span>
+<span class="line"><span style="color:#569CD6">        self</span><span style="color:#D4D4D4">.fields = fields</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> parse</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">text</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> re.findall(</span><span style="color:#569CD6">r</span><span style="color:#D16969">"</span><span style="color:#CE9178">[</span><span style="color:#D16969">a-z0-9'</span><span style="color:#CE9178">]</span><span style="color:#D7BA7D">+</span><span style="color:#D16969">"</span><span style="color:#D4D4D4">, text.lower())</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> build_index</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">docs</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#CE9178">    """BuildIndex(D) with docIDs 1, 2, ..."""</span></span>
+<span class="line"><span style="color:#D4D4D4">    index = {}                          </span><span style="color:#6A9955"># I &#x3C;- HashTable()</span></span>
+<span class="line"><span style="color:#D4D4D4">    n = </span><span style="color:#B5CEA8">0</span><span style="color:#6A9955">                               # document numbering</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> d </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> docs:</span></span>
+<span class="line"><span style="color:#D4D4D4">        n += </span><span style="color:#B5CEA8">1</span></span>
+<span class="line"><span style="color:#D4D4D4">        tokens = parse(d)               </span><span style="color:#6A9955"># T &#x3C;- Parse(d)</span></span>
+<span class="line"><span style="color:#C586C0">        for</span><span style="color:#D4D4D4"> t </span><span style="color:#C586C0">in</span><span style="color:#4EC9B0"> set</span><span style="color:#D4D4D4">(tokens):           </span><span style="color:#6A9955"># remove duplicates</span></span>
+<span class="line"><span style="color:#C586C0">            if</span><span style="color:#D4D4D4"> t </span><span style="color:#569CD6">not</span><span style="color:#569CD6"> in</span><span style="color:#D4D4D4"> index:</span></span>
+<span class="line"><span style="color:#D4D4D4">                index[t] = []           </span><span style="color:#6A9955"># List&#x3C;Posting>()</span></span>
+<span class="line"><span style="color:#D4D4D4">            index[t].append(Posting(n, tokens.count(t), []))</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> index</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">docs = [</span><span style="color:#CE9178">"I did enact Julius Caesar I was killed i' the Capitol; Brutus killed me."</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">        "So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious"</span><span style="color:#D4D4D4">]</span></span>
+<span class="line"><span style="color:#D4D4D4">index = build_index(docs)</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> term </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> [</span><span style="color:#CE9178">"brutus"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"caesar"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"killed"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"hath"</span><span style="color:#D4D4D4">]:</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(term, [(p.docid, p.tfidf) </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> p </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> index[term]])</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(index), </span><span style="color:#CE9178">"terms"</span><span style="color:#D4D4D4">)</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">brutus [(1, 1), (2, 1)]
+caesar [(1, 1), (2, 2)]
+killed [(1, 2)]
+hath [(2, 1)]
+22 terms</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>这与 <a href="#32-%E8%AF%8D%E5%85%83%E5%BA%8F%E5%88%97%E6%8E%92%E5%BA%8F%E4%B8%8E%E5%90%88%E5%B9%B6">§3.2</a> 中基于排序的步骤得到的是同样的 22 个词项。文档按 docID 顺序处理，因此每个列表无需排序就已按 docID 有序。</p>
+<h3 id="34-docidurl-还是整数">3.4 docID：URL 还是整数</h3>
+<p><strong>如果 docID 是 URL</strong>，<code>https://www.ics.uci.edu/~aburtsev/238P/lectures/lecture03-calling-conventions</code> 有 <strong>77 个字符</strong>：在 C++ 中占 77 字节，在 Java 中占 352 字节，在 Python 3 中则超过 100 字节（具体数字取决于解释器版本：用于下面检查的 Python 3.13 中为 118 字节，较早的 3.x 版本为 126 字节）。docID 会出现在 postings 列表中，取决于 posting 的结构，还可能在同一列表中<strong>多次出现</strong>。<strong>字符串的存储和比较都非常浪费。</strong></p>
+<p><strong>在处理文档时把 URL 映射为整数</strong>：</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">0 → https://www.ics.uci.edu/~aburtsev/238P/lectures/lecture03-calling-conventions
+1 → https://www.ics.uci.edu/~goodrich/teach/ics247/notes
+2 → https://www.ics.uci.edu/~thornton/ics184/MidtermSolutions.html
+…</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>在 <strong>C、C++ 和 Java</strong> 中，整数占 <strong>4 字节</strong>；在 <strong>Python</strong> 中占 <strong>28 字节</strong>——无论字符串多长，整数的大小几乎都是固定的。（Python 3 只有一种任意精度的 <code>int</code>；&quot;整数溢出时转换为 long&quot; 的行为属于 Python 2。）</p>
+<p>对 Python 3 的估算：10,000 个索引词项，每个词项约 20 条 posting，平均 URL 为 51 个字符（约 100 字节）：</p>
+<table>
+<thead>
+<tr>
+<th>DocID 形式</th>
+<th>大小</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>URL</td>
+<td>10,000 × 20 × 100 ≈ <strong>20,000,000 字节（20 MB）</strong></td>
+</tr>
+<tr>
+<td>整数</td>
+<td>10,000 × 20 × 28 ≈ <strong>5,600,000 字节（5.6 MB）</strong></td>
+</tr>
+</tbody></table>
+<p>整数版本只占字符串版本的 <strong>28%</strong>，也就是说内存中大约能多放 <strong>4 倍</strong>的 postings，并且<strong>排序明显更快</strong>。检查这些数字：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> sys</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">url = </span><span style="color:#CE9178">"https://www.ics.uci.edu/~aburtsev/238P/lectures/lecture03-calling-conventions"</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(url), </span><span style="color:#CE9178">"chars ->"</span><span style="color:#D4D4D4">, sys.getsizeof(url), </span><span style="color:#CE9178">"bytes as a Python 3 str;"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">      "int ->"</span><span style="color:#D4D4D4">, sys.getsizeof(</span><span style="color:#B5CEA8">12345</span><span style="color:#D4D4D4">), </span><span style="color:#CE9178">"bytes"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">terms, per_term = </span><span style="color:#B5CEA8">10_000</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">20</span></span>
+<span class="line"><span style="color:#D4D4D4">avg_url = </span><span style="color:#B5CEA8">100</span><span style="color:#6A9955">                     # ~51-character URL as a Python 3 str</span></span>
+<span class="line"><span style="color:#D4D4D4">as_urls = terms * per_term * avg_url</span></span>
+<span class="line"><span style="color:#D4D4D4">as_ints = terms * per_term * sys.getsizeof(</span><span style="color:#B5CEA8">12345</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"URLs:"</span><span style="color:#D4D4D4">, as_urls, </span><span style="color:#CE9178">"bytes;"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"ints:"</span><span style="color:#D4D4D4">, as_ints, </span><span style="color:#CE9178">"bytes;"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">      "ratio:"</span><span style="color:#D4D4D4">, </span><span style="color:#DCDCAA">round</span><span style="color:#D4D4D4">(as_ints / as_urls, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">))</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">77 chars -&gt; 118 bytes as a Python 3 str; int -&gt; 28 bytes
+URLs: 20000000 bytes; ints: 5600000 bytes; ratio: 0.28</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>你必须把这个映射保存在某处</strong>：展示搜索结果时需要它（用户要的是 URL，而不是数字）。它通常<strong>不属于倒排索引本身</strong>，而是一个<strong>辅助性质的记账结构</strong>，序列化保存到文件中（见 <a href="#82-%E5%85%B6%E4%BB%96%E8%BE%85%E5%8A%A9%E7%BB%93%E6%9E%84">§8.2</a>）。</p>
+<h3 id="35-一个-posting-包含什么">3.5 一个 posting 包含什么</h3>
+<p><strong>postings 包含词项在文档中出现的上下文</strong>：<strong>doc id</strong>、<strong>频率计数或 tf-idf</strong> 分数、<strong>字段</strong>、<strong>位置</strong>等。一个 posting 至少需要 doc id 和频率计数（或 tf-idf）：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">class</span><span style="color:#4EC9B0"> Posting</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#569CD6">    def</span><span style="color:#DCDCAA"> __init__</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">self</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">docid</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">tfidf</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">fields</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#569CD6">        self</span><span style="color:#D4D4D4">.docid = docid</span></span>
+<span class="line"><span style="color:#569CD6">        self</span><span style="color:#D4D4D4">.tfidf = tfidf  </span><span style="color:#6A9955"># use freq counts for now</span></span>
+<span class="line"><span style="color:#569CD6">        self</span><span style="color:#D4D4D4">.fields = fields</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><a href="#4-%E6%9B%B4%E4%B8%B0%E5%AF%8C%E7%9A%84-postings%E8%AE%A1%E6%95%B0%E4%BD%8D%E7%BD%AE%E5%8C%BA%E6%AE%B5%E5%88%86%E6%95%B0">§4</a> 介绍了一个 posting 还能携带哪些信息。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.6.1 Simple Construction（书中第 156 页）</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.5 Auxiliary Structures（第 154 页）、§5.6 Index Construction（第 156 页）</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR 第 1、2、4 章（索引构建）</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#36-%E7%BB%83%E4%B9%A0">§3.6</a></p>
+</blockquote>
+<h3 id="36-练习">3.6 练习</h3>
+<h4 id="为两个文档建立索引">为两个文档建立索引</h4>
+<p>Doc 1：<em>I did enact Julius Caesar I was killed i&#39; the Capitol; Brutus killed me.</em> Doc 2：<em>So let it be with Caesar. The noble Brutus hath told you Caesar was ambitious</em>。把词元转为小写，然后建立词典（包含文档频率）和 postings。</p>
+<details>
+<summary>解答</summary>
+
+<ol>
+<li>词元序列：29 个 (词项, docID) 对，其中 14 个来自 Doc 1，15 个来自 Doc 2（<code>i</code> 出现两次，<code>killed</code> 出现两次，Doc 2 中 <code>caesar</code> 出现两次）。</li>
+<li>按词项、再按 docID 排序。</li>
+<li>合并同一文档中的重复项，并统计文档数：</li>
+</ol>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">term       df  postings     term       df  postings
+ambitious  1   2            julius     1   1
+be         1   2            killed     1   1
+brutus     2   1 → 2        let        1   2
+caesar     2   1 → 2        me         1   1
+capitol    1   1            noble      1   2
+did        1   1            so         1   2
+enact      1   1            the        2   1 → 2
+hath       1   2            told       1   2
+i          1   1            was        2   1 → 2
+i&#39;         1   1            with       1   2
+it         1   2            you        1   2</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>共 22 个词项。<code>killed</code> 在 Doc 1 中出现两次，但 df = 1，只有一条 posting：合并是按文档进行的。</p>
+</details>
+
+<h4 id="docid-用-url-还是整数">docID 用 URL 还是整数</h4>
+<p>一个索引有 10,000 个词项，每个词项约 20 条 posting。平均 URL 为 51 个字符（在 Python 3 中约 100 字节），Python 整数为 28 字节。比较 docID 为 URL 与为整数时 postings 的大小。</p>
+<details>
+<summary>解答</summary>
+
+<p>URL：10,000 × 20 × 100 = 20,000,000 字节 ≈ <strong>20 MB</strong>。整数：10,000 × 20 × 28 = 5,600,000 字节 ≈ <strong>5.6 MB</strong>——是 URL 版本的 28%，因此在相同内存中大约能多放 3.6 倍（100 / 28 ≈ 3.6，接近 4 倍）的 postings；整数的排序和比较也快得多。代价是：需要保存一个 docID → URL 的辅助映射，以便展示结果。</p>
+</details>
+
+<h2 id="4-更丰富的-postings计数位置区段分数">4. 更丰富的 postings：计数、位置、区段、分数</h2>
+<p>从 <a href="#23-%E8%BF%90%E8%A1%8C%E7%A4%BA%E4%BE%8Bs1s4">§2.3</a> 的 S1–S4 索引出发，可以一次为每条 posting 增加一种信息。</p>
+<h3 id="41-计数">4.1 计数</h3>
+<p><strong>带计数的倒排索引</strong>：每个 posting 是 <code>docID:count</code>，即该词在该文档中出现的次数。它<strong>支持更好的排序算法</strong>。</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">fish      1:2  2:3  3:2  4:2
+tropical  1:2  2:2  3:1
+to        2:2  3:1
+the       1:1  2:1</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>（其他词在它所在的每个文档中计数都是 1。）</p>
+<h3 id="42-位置与邻近匹配">4.2 位置与邻近匹配</h3>
+<p><strong>带位置的倒排索引</strong>：每个 posting 是 <code>docID,position</code>（词在句子中的序号），每次出现对应一个 posting。它<strong>支持邻近匹配</strong>。</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">tropical  1,1  1,7  2,6  2,17  3,1
+fish      1,2  1,4  2,7  2,18  2,23  3,2  3,6  4,3  4,13
+water     1,17  2,14  4,12</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>邻近匹配</strong>指匹配<strong>短语</strong>（&quot;tropical fish&quot;），或匹配<strong>窗口内的词</strong>（在 <em>fish</em> 的 5 个词之内找 <em>tropical</em>）。如果 posting 存储了位置，即 <code>[docID, 词位置]</code>，这些查询特征就能<strong>高效</strong>实现：对齐两个列表，查找同一文档中位于 <em>tropical</em> 位置 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span> 之后、位置 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">p+1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> 处的 <code>fish</code>。</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">tropical  1,1        1,7  2,6  2,17        3,1
+fish      1,2  1,4        2,7  2,18  2,23  3,2  3,6  4,3  4,13</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>短语 <em>tropical fish</em> 出现在 1,1–2、2,6–7、2,17–18 和 3,1–2 处（S4 中没有 <em>tropical</em>）。下面是完整的位置索引，可逐步查看构建过程：</p>
+<pre data-language="viz" data-viz="inverted-index"><code>{&quot;title&quot;: &quot;S1–S4 的位置索引&quot;, &quot;docs&quot;: &quot;1: Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species. ; 2: Fishkeepers often use the term tropical fish to refer only those requiring fresh water, with saltwater tropical fish referred to as marine fish. ; 3: Tropical fish are popular aquarium fish, due to their often bright coloration. ; 4: In freshwater fish, this coloration typically derives from iridescence, while salt water fish are generally pigmented.&quot;, &quot;postings&quot;: &quot;positions&quot;, &quot;lang&quot;: &quot;zh&quot;}</code></pre><p><a href="#5-%E7%9F%AD%E8%AF%AD%E6%9F%A5%E8%AF%A2%E5%8F%8C%E8%AF%8D%E7%B4%A2%E5%BC%95%E4%B8%8E%E4%BD%8D%E7%BD%AE%E7%B4%A2%E5%BC%95">§5</a> 说明短语查询如何使用这些列表，以及它们的代价。</p>
+<h3 id="43-字段与区段">4.3 字段与区段</h3>
+<p><strong>文档结构对搜索有用</strong>（参见 <a href="/~kazuhak/notes/cs-121/topic-text-processing/zh-CN/">文本处理</a> 中的标记与字段）：</p>
+<ul>
+<li><strong>字段限制</strong>，例如日期、<code>from:</code> 等；</li>
+<li><strong>某些字段中的词更重要</strong>，例如标题！</li>
+</ul>
+<p>在索引中捕获这一信息的选项：</p>
+<ol>
+<li><strong>为每种字段类型建立单独的倒排索引</strong>；</li>
+<li><strong>在 postings 中加入字段信息</strong>；</li>
+<li>使用<strong>区段列表</strong>（extent lists）。</li>
+</ol>
+<p><strong>区段列表</strong>：<strong>区段</strong>（extent）是文档中一段<strong>连续的区域</strong>，用词位置表示。某个<strong>字段类型</strong>的postings 列表记录了该字段的所有区段：</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">fish   1,2  1,4  2,7  2,18  2,23  3,2  3,6  4,3  4,13
+title  1:(1,3)  2:(1,5)  4:(9,15)</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>1:(1,3)</code> 表示文档 1 中的一个标题区段，由词位置 1 和 3 给出。要匹配<strong>标题中的 fish</strong>，对齐两个列表：<code>1,2</code> 落在 <code>1:(1,3)</code> 之内，<code>4,13</code> 落在 <code>4:(9,15)</code> 之内；文档 2 的标题区段 <code>(1,5)</code> 中没有 <code>fish</code> 的 posting，文档 3 则没有标题区段。</p>
+<h3 id="44-分数与按分数排序的列表">4.4 分数与按分数排序的列表</h3>
+<p><strong>其他可能性</strong>：</p>
+<ul>
+<li><strong>存储预先计算的分数</strong>：例如 <em>fish</em> 的列表为 <code>[(1:3.6), (3:2.2)]</code>，其中 3.6 是文档 1 的特征值总和。这<strong>提高了速度，但降低了灵活性</strong>：一旦更改排序方法，就必须重建索引。</li>
+<li><strong>建立按分数排序的列表</strong>：查询处理引擎可以<strong>只关注每个postings 列表的顶部</strong>，那里是分数最高的文档。这对<strong>单词查询非常高效</strong>。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Posting 存储的内容</th>
+<th>示例</th>
+<th>支持的功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>docID</td>
+<td><code>fish 1 2 3 4</code></td>
+<td>布尔查询（AND/OR/NOT）</td>
+</tr>
+<tr>
+<td>docID:count</td>
+<td><code>fish 1:2 2:3 3:2 4:2</code></td>
+<td>更好的排序（词频）</td>
+</tr>
+<tr>
+<td>docID,position</td>
+<td><code>fish 1,2 1,4 …</code></td>
+<td>短语、邻近窗口</td>
+</tr>
+<tr>
+<td>每个字段的区段列表</td>
+<td><code>title 1:(1,3) …</code></td>
+<td>字段限制、标题加权</td>
+</tr>
+<tr>
+<td>docID:score</td>
+<td><code>fish (1:3.6) (3:2.2)</code></td>
+<td>快速排序；灵活性较低</td>
+</tr>
+</tbody></table>
+<p>这些存储特征如何参与打分，见 <a href="/~kazuhak/notes/cs-121/topic-retrieval-models/zh-CN/">检索模型：布尔、tf-idf 与向量空间</a> 和 <a href="/~kazuhak/notes/cs-121/topic-query-processing/zh-CN/">查询处理与高效 Top-K</a>。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.3.2 Counts（第 133 页）、§5.3.3 Positions（第 134 页）、§5.3.4 Fields and Extents（第 136 页）、§5.3.5 Scores（第 138 页）、§5.3.6 Ordering（第 139 页）</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR 第 2 章（位置 postings 与短语查询）</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#45-%E7%BB%83%E4%B9%A0">§4.5</a></p>
+</blockquote>
+<h3 id="45-练习">4.5 练习</h3>
+<h4 id="找出短语-tropical-fish">找出短语 &quot;tropical fish&quot;</h4>
+<p>在下面的位置索引中，短语 <em>tropical fish</em> 出现在哪里？</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">tropical  1,1  1,7  2,6  2,17  3,1
+fish      1,2  1,4  2,7  2,18  2,23  3,2  3,6  4,3  4,13</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<details>
+<summary>解答</summary>
+
+<p>短语匹配要求：在与 <code>tropical</code> 位于位置 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span> 的同一文档中，<code>fish</code> 位于位置 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">p+1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>：</p>
+<table>
+<thead>
+<tr>
+<th>tropical</th>
+<th>需要 fish 位于</th>
+<th>是否找到</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1,1</td>
+<td>1,2</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>1,7</td>
+<td>1,8</td>
+<td>✗（S1 中第 8 个词是 <em>environments</em>）</td>
+</tr>
+<tr>
+<td>2,6</td>
+<td>2,7</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>2,17</td>
+<td>2,18</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>3,1</td>
+<td>3,2</td>
+<td>✓</td>
+</tr>
+</tbody></table>
+<p>短语出现 <strong>4 次</strong>，位于<strong>文档 1、2 和 3</strong> 中。文档 4 包含 <em>fish</em> 但不包含 <em>tropical</em>，因此只有文档级的索引（<code>tropical 1 2 3</code>、<code>fish 1 2 3 4</code>）无法把短语与两个词各自出现在任意位置区分开来——这正是位置信息的价值。</p>
+<p>同样的检查用 Python 实现如下：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">tropical = [(</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">6</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">17</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">)]</span></span>
+<span class="line"><span style="color:#D4D4D4">fish = [(</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">18</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">23</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">6</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">), (</span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">13</span><span style="color:#D4D4D4">)]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> phrase</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">first</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">second</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#CE9178">    """Positions where `second` immediately follows `first` in the same document."""</span></span>
+<span class="line"><span style="color:#D4D4D4">    later = </span><span style="color:#4EC9B0">set</span><span style="color:#D4D4D4">(second)</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> [(d, p) </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> d, p </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> first </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> (d, p + </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">in</span><span style="color:#D4D4D4"> later]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">hits = phrase(tropical, fish)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(hits, </span><span style="color:#CE9178">"-> docs"</span><span style="color:#D4D4D4">, </span><span style="color:#DCDCAA">sorted</span><span style="color:#D4D4D4">({d </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> d, _ </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> hits}))</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">[(1, 1), (2, 6), (2, 17), (3, 1)] -&gt; docs [1, 2, 3]</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+</details>
+
+<h2 id="5-短语查询双词索引与位置索引">5. 短语查询：双词索引与位置索引</h2>
+<p>我们希望回答诸如 <strong>&quot;university of california&quot;</strong> 这样的查询——<strong>作为一个短语</strong>。句子 <em>&quot;I went to university in california&quot;</em> <strong>不</strong>匹配。</p>
+<ul>
+<li>短语查询已被证明<strong>易于用户理解</strong>：是为数不多确实有效的&quot;高级搜索&quot;想法之一。</li>
+<li>还有许多查询是<strong>隐式</strong>的短语查询。</li>
+<li>为此，只存储 <code>&lt;term : docs&gt;</code> 条目<strong>已经不够了</strong>。</li>
+</ul>
+<h3 id="51-双词bigram索引">5.1 双词（bigram）索引</h3>
+<p><strong>第一次尝试：双词索引。</strong> 把文本中<strong>每对相邻词项</strong>都作为一个短语来索引。<em>&quot;Friends, Romans, Countrymen&quot;</em> 会生成双词（即 bigram）<strong>friends romans</strong> 和 <strong>romans countrymen</strong>。每个双词现在都是一个<strong>词典词项</strong>：所有 bigram 都被索引，<strong>两词短语查询可以直接回答</strong>。对较小的 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span> 可以采用，但<strong>对任意大小都不可行</strong>。</p>
+<p><strong>更长的短语</strong>会被拆分：<em>University of California Irvine</em> 变成对 bigram 的布尔查询：</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">university of AND of california AND california irvine</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>如果没有文档本身，我们<strong>无法验证</strong>匹配这一布尔查询的文档是否包含<strong>连续</strong>的短语。<strong>它可能产生假阳性！</strong></p>
+<p><strong>问题</strong>：</p>
+<ul>
+<li>如上所述的假阳性；</li>
+<li>词典变大导致<strong>索引膨胀</strong>：超过双词就不可行，即使是全部双词也很大——不过超大型搜索引擎会对较小的 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span> 支持一些 n-gram；</li>
+<li>因此为<strong>所有</strong> bigram 建索引<strong>不是标准做法</strong>，但它可以作为<strong>组合策略的一部分</strong>。</li>
+</ul>
+<h3 id="52-位置索引">5.2 位置索引</h3>
+<p><strong>更好的做法</strong>：在 postings 中，为每个词项存储它的词元出现的<strong>位置</strong>。位置 postings 本身已经在 <a href="#42-%E4%BD%8D%E7%BD%AE%E4%B8%8E%E9%82%BB%E8%BF%91%E5%8C%B9%E9%85%8D">§4.2</a> 中建立过（<em>tropical fish</em> 的例子）；本节补充的是短语查询如何使用它们，以及它们的代价。</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">&lt;term, number of docs containing term;
+ doc1: position1, position2 … ;
+ doc2: position1, position2 … ;
+ etc.&gt;</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>例如：</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">&lt;be: 993427;
+ 1: 7, 18, 34, 72, 86, 231;
+ 2: 3, 149;
+ 4: 17, 191, 291, 430, 434;
+ 5: 363, 367, …&gt;</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>文档 1、2、4、5 中，哪些可能包含 &quot;to be or not to be&quot;？</strong></p>
+<ul>
+<li>对于短语查询，我们在<strong>文档层面递归地使用合并算法</strong>：先找出包含所有词项的文档，再在每篇文档内部比较位置。</li>
+<li><strong>预先清理</strong>列表，只保留那些满足查询中重复出现的词之间<strong>距离</strong>的文档：&quot;to be or not to be&quot; 中两个 <em>be</em> <strong>相隔 4 个位置</strong>。</li>
+<li>这时处理的<strong>不再只是相等</strong>，还有 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">p+1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>、<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">p+4</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">4</span></span></span></span> 这样的偏移。</li>
+</ul>
+<p>只有文档 <strong>4</strong>（430、434）和文档 <strong>5</strong>（363、367）有两个恰好相隔 4 的 <em>be</em>，所以在检查其他词项之前，文档 1 和 2 就已经被排除了。</p>
+<p><strong>处理短语查询</strong>：取出每个不同词项（<em>to、be、or、not</em>）的倒排索引条目，合并它们的 doc:position 列表，枚举出所有可能是 &quot;to be or not to be&quot; 的位置：</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">to: 2:1,17,74,222,551; 4:8,16,190,429,433; 7:13,23,191; ...
+be: 1:17,19; 4:17,191,291,430,434; 5:14,19,101; ...</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>在文档 4 中，<em>to</em> 位于 429 和 433，<em>be</em> 位于 430 和 434，两者正好对齐：短语可以从<strong>位置 429</strong> 开始（to 429、be 430、……、to 433、be 434）。<strong>同样的通用方法</strong>也适用于<strong>邻近搜索</strong>（&quot;相距 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span> 个词以内&quot;）。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：这两个 <em>be</em> 列表只是两个独立的示例（文档 1 在一个列表中是 <code>7, 18, …</code>，在另一个中是 <code>17, 19</code>，文档 5 也不同）；只有文档 4 的位置在两者中一致。不要把它们合并成一个索引。</p>
+</blockquote>
+<h3 id="53-位置索引的大小">5.3 位置索引的大小</h3>
+<ul>
+<li>位置索引会<strong>大幅增加 postings 的存储量</strong>，即使索引可以压缩也是如此。</li>
+<li><strong>尽管如此，位置索引现在已是标准做法</strong>，因为短语查询和邻近查询功能强大、用途广泛，无论是<strong>显式</strong>使用，还是在排序检索系统中<strong>隐式</strong>使用。</li>
+<li>它需要<strong>为每次出现建立一项</strong>，而不只是每个文档一项，因此其大小取决于<strong>平均文档长度</strong>：一个普通网页的词项通常不到 1,000 个，而 SEC 文件、书籍，甚至一些史诗，很容易就有 100,000 个。</li>
+</ul>
+<p><strong>经验法则</strong>，适用于&quot;类英语&quot;语言：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>经验法则</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>压缩后的位置索引 与 非位置索引 相比</td>
+<td>大 <strong>2–4 倍</strong></td>
+</tr>
+<tr>
+<td>位置索引 与 原始文本 相比</td>
+<td>为原文体积的 <strong>35–50%</strong></td>
+</tr>
+</tbody></table>
+<h3 id="54-混合方案">5.4 混合方案</h3>
+<p><strong>n-gram 与位置方法可以结合使用。</strong> 对于特定短语（<em>&quot;Michael Jackson&quot;</em>、<em>&quot;Britney Spears&quot;</em>），反复合并位置 postings 列表效率很低，对 <em>&quot;The Who&quot;</em>（两个停用词）更是如此。一种更精巧的混合索引方案（Williams 等，2004）在典型的网络查询组合上，用时仅为纯位置索引的 <strong>¼</strong>，而空间多出 <strong>26%</strong>。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.3.3 Positions（书中第 134 页）</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR 第 2 章（双词索引、位置索引、组合方案）</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#55-%E7%BB%83%E4%B9%A0">§5.5</a></p>
+</blockquote>
+<h3 id="55-练习">5.5 练习</h3>
+<h4 id="把-university-of-california-irvine-拆成双词">把 &quot;University of California Irvine&quot; 拆成双词</h4>
+<p>在双词索引上，哪个布尔查询能回答 <em>University of California Irvine</em> 这个短语？它可能出错吗？</p>
+<details>
+<summary>解答</summary>
+
+<p>相邻词对：<code>university of AND of california AND california irvine</code>。</p>
+<p>会出错。<strong>假阳性</strong>是指一篇文档包含这三个双词，但并不是作为一个连续短语出现的，例如 &quot;university of&quot; 出现在一句话中，而 &quot;of california&quot;、&quot;california irvine&quot; 出现在别处。没有文档文本（或位置信息），双词索引无法验证这个短语。</p>
+</details>
+
+<h4 id="哪些文档可能包含-to-be-or-not-to-be">哪些文档可能包含 &quot;to be or not to be&quot;？</h4>
+<p><em>be</em> 的位置：<code>1: 7, 18, 34, 72, 86, 231; 2: 3, 149; 4: 17, 191, 291, 430, 434; 5: 363, 367, …</code>。文档 1、2、4、5 中哪些可能包含短语 <em>to be or not to be</em>？然后，给定文档 4 中 <em>to</em> 的位置（<code>8, 16, 190, 429, 433</code>）和 <em>be</em> 的位置（<code>17, 191, 291, 430, 434</code>），短语在文档 4 中从哪里开始？</p>
+<details>
+<summary>解答</summary>
+
+<p>&quot;to be or not to be&quot; 中 <em>be</em> 位于偏移 1 和 5 处——<strong>两个 <em>be</em> 相隔 4 个位置</strong>。先清理 <em>be</em> 列表：</p>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>相隔 4 的 <em>be</em> 位置对</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>无</td>
+</tr>
+<tr>
+<td>2</td>
+<td>无</td>
+</tr>
+<tr>
+<td>4</td>
+<td>(430, 434)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>(363, 367)</td>
+</tr>
+</tbody></table>
+<p>只有<strong>文档 4 和 5</strong> 可能包含该短语（文档 5 还需要检查 <em>to</em>、<em>or</em>、<em>not</em>）。</p>
+<p>在文档 4 中，起始位置 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span> 需要 <em>to</em> 位于 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span> 和 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">p+4</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">4</span></span></span></span>，<em>be</em> 位于 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">p+1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> 和 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>+</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">p+5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5</span></span></span></span>。<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>429</mn></mrow><annotation encoding="application/x-tex">p = 429</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">429</span></span></span></span>：to 429 ✓，be 430 ✓，to 433 ✓，be 434 ✓。短语从<strong>位置 429</strong> 开始（<em>or</em> 和 <em>not</em> 则必须位于 431 和 432）。</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">be = {</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">: [</span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">18</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">34</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">72</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">86</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">231</span><span style="color:#D4D4D4">], </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">: [</span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">149</span><span style="color:#D4D4D4">],</span></span>
+<span class="line"><span style="color:#B5CEA8">      4</span><span style="color:#D4D4D4">: [</span><span style="color:#B5CEA8">17</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">191</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">291</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">430</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">434</span><span style="color:#D4D4D4">], </span><span style="color:#B5CEA8">5</span><span style="color:#D4D4D4">: [</span><span style="color:#B5CEA8">363</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">367</span><span style="color:#D4D4D4">]}</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> d, ps </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> be.items():</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(d, [(p, p + </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> p </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> ps </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> p + </span><span style="color:#B5CEA8">4</span><span style="color:#569CD6"> in</span><span style="color:#D4D4D4"> ps])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># doc 4: phrase starts at p if to@p, be@p+1, to@p+4, be@p+5</span></span>
+<span class="line"><span style="color:#D4D4D4">to4, be4 = {</span><span style="color:#B5CEA8">8</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">16</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">190</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">429</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">433</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">17</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">191</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">291</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">430</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">434</span><span style="color:#D4D4D4">}</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">([p </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> p </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> to4 </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> p + </span><span style="color:#B5CEA8">1</span><span style="color:#569CD6"> in</span><span style="color:#D4D4D4"> be4 </span><span style="color:#569CD6">and</span><span style="color:#D4D4D4"> p + </span><span style="color:#B5CEA8">4</span><span style="color:#569CD6"> in</span><span style="color:#D4D4D4"> to4 </span><span style="color:#569CD6">and</span><span style="color:#D4D4D4"> p + </span><span style="color:#B5CEA8">5</span><span style="color:#569CD6"> in</span><span style="color:#D4D4D4"> be4])</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">1 []
+2 []
+4 [(430, 434)]
+5 [(363, 367)]
+[429]</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+</details>
+
+<h2 id="6-索引放不进内存时内存与硬件">6. 索引放不进内存时：内存与硬件</h2>
+<h3 id="61-索引能放进内存吗">6.1 索引能放进内存吗？</h3>
+<p><strong>小数据的倒排索引。</strong> 如果能放进内存，就使用 Python 的字典 <code>{}</code>（或 Java 的 <code>HashMap</code>）：</p>
+<ul>
+<li>索引时往里填充；</li>
+<li>把它写入文件；</li>
+<li>搜索时再把它加载回字典 / HashMap。</li>
+</ul>
+<p>这非常简单……<strong>但在任何真实的网络搜索引擎中都行不通。</strong></p>
+<p><strong>大数据的倒排索引</strong>——粗略估算：</p>
+<table>
+<thead>
+<tr>
+<th>量</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>词汇表</td>
+<td>50,000 个词元</td>
+</tr>
+<tr>
+<td>平均 postings 列表长度</td>
+<td>20</td>
+</tr>
+<tr>
+<td>Postings 数</td>
+<td>50,000 × 20 = <strong>1,000,000</strong></td>
+</tr>
+<tr>
+<td>DocID = URL，平均 50 个字符</td>
+<td>每个约 100 字节（Python）</td>
+</tr>
+<tr>
+<td>Postings 存储</td>
+<td>1,000,000 × 100 = <strong>100,000,000 字节 = 100 MB</strong></td>
+</tr>
+<tr>
+<td>每条 posting 的附加载荷（如 tf-idf），每个 4 字节</td>
+<td>还要再多出很多 MB</td>
+</tr>
+</tbody></table>
+<p>而网络上的文档远不止 10⁶ 个（仅主机就超过 10⁹）。因此<strong>索引通常无法一次全部放进内存</strong>，会出现内存不足（out-of-memory）错误。</p>
+<blockquote>
+<p>💡 <strong>关键洞见</strong>：这一估算指出两个方向：让 postings 变小（用整数 docID 代替 URL，见 <a href="#34-docidurl-%E8%BF%98%E6%98%AF%E6%95%B4%E6%95%B0">§3.4</a>），以及不再假设整个索引都在内存中（即本章其余部分）。</p>
+</blockquote>
+<h3 id="62-硬件基础">6.2 硬件基础</h3>
+<p><strong>内存中的索引构建无法扩展</strong>：你无法把整个文档集合放进内存。那么，在考虑内存、磁盘、速度等硬件约束的前提下，如何为非常大的集合构建索引？</p>
+<ul>
+<li>IR 系统所用的服务器通常有<strong>几 GB 的主存</strong>，有时达到数百 GB；可用<strong>磁盘空间比内存大 2–3 个数量级</strong>。</li>
+<li>但<strong>容错非常昂贵</strong>：用许多<strong>普通机器</strong>比用一台容错机器便宜得多，而普通机器的内存要小得多。</li>
+<li>大规模存储基于<strong>机械硬盘</strong>。访问内存中的数据比访问磁盘上的数据<strong>快得多</strong>。</li>
+<li><strong>磁盘寻道</strong>：磁头定位期间不传输任何数据。因此，把<strong>一大块</strong>数据从磁盘传到内存，比传输<strong>许多小块</strong>要快。</li>
+<li><strong>磁盘 I/O 以块为单位</strong>：读写的是整块，而不是更小的片段。块大小为 <strong>8 KB 到 256 KB</strong>。</li>
+</ul>
+<p>Jeff Dean 的 <strong>&quot;Latency Numbers Every Programmer Should Know&quot;</strong>（2020 年更新版）：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>延迟</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>L1 缓存访问</td>
+<td>0.5–1.5 ns</td>
+</tr>
+<tr>
+<td>L2 缓存访问</td>
+<td>5–7 ns</td>
+</tr>
+<tr>
+<td>L3 缓存访问</td>
+<td>16–25 ns</td>
+</tr>
+<tr>
+<td>互斥锁加锁/解锁</td>
+<td>25 ns</td>
+</tr>
+<tr>
+<td>访问 64 MB 主存</td>
+<td>50–75 ns</td>
+</tr>
+<tr>
+<td>通过 100 Gbps HPC 网络发送 4 KB</td>
+<td>1,040 ns</td>
+</tr>
+<tr>
+<td>用 Zippy 压缩 1 KB</td>
+<td>2,000 ns（2 µs）</td>
+</tr>
+<tr>
+<td>从内存顺序读取 1 MB</td>
+<td>3,000 ns（3 µs）</td>
+</tr>
+<tr>
+<td>通过 10 Gbps 以太网发送 4 KB</td>
+<td>10,000 ns（10 µs）</td>
+</tr>
+<tr>
+<td>从 SSD 顺序读取 1 MB</td>
+<td>49,000 ns（49 µs）</td>
+</tr>
+<tr>
+<td>从 HDD 顺序读取 1 MB</td>
+<td>825,000 ns（825 µs）</td>
+</tr>
+<tr>
+<td>磁盘寻道（最长）</td>
+<td>2,000,000 ns（2,000 µs）</td>
+</tr>
+<tr>
+<td>发送数据包 CA → 荷兰 → CA</td>
+<td>150,000,000 ns（150,000 µs）</td>
+</tr>
+</tbody></table>
+<p>回到索引器中的 <code>I ← HashTable()</code>：<strong>它能直接是一个文件吗？</strong> <strong>不能。</strong> 把最长 2 ms 的磁盘寻道与上表中 50–75 ns 的内存访问相比，差距一目了然。</p>
+<p><strong>把磁盘当作&quot;内存&quot;用？</strong> 能否在更大的集合上运行同样的算法，只是把磁盘换成内存？<strong>不能</strong>：在磁盘上访问和修改 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>≈</mo><mn>1</mn><msup><mn>0</mn><mn>8</mn></msup></mrow><annotation encoding="application/x-tex">T \approx 10^8</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">8</span></span></span></span></span></span></span></span></span></span></span>–<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>9</mn></msup></mrow><annotation encoding="application/x-tex">10^9</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">9</span></span></span></span></span></span></span></span></span></span></span> 条记录，意味着<strong>过多的磁盘寻道</strong>（每次最长 2 ms）。<strong>我们需要一个外部算法</strong>（见 <a href="#7-%E5%A4%96%E9%83%A8%E6%9E%84%E5%BB%BA%E9%83%A8%E5%88%86%E7%B4%A2%E5%BC%95%E4%B8%8E%E5%90%88%E5%B9%B6">§7</a>）。</p>
+<blockquote>
+<p>💡 <strong>关键洞见</strong>：一次磁盘寻道的代价相当于数万次内存访问，而传输一大块数据比传输许多小块快。如何构建放不进内存的索引，见下一节。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ai.google/research/people/jeff/">Jeff Dean</a> · <a href="http://norvig.com/21-days.html#answers">原始数据（Norvig）</a> · <a href="https://gist.github.com/eshelman/343a1c46cb3fba142c1afdcdeec17646">2019 版（gist）</a> · <a href="https://colin-scott.github.io/personal_website/research/interactive_latency.html">2020 交互版</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.6.2 Merging（书中第 157 页）</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR 第 4 章（硬件基础）</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#63-%E7%BB%83%E4%B9%A0">§6.3</a></p>
+</blockquote>
+<h3 id="63-练习">6.3 练习</h3>
+<h4 id="索引有多大">索引有多大？</h4>
+<p>词汇表有 50,000 个词元，平均 postings 列表长 20，每个 docID 是约 50 个字符的 URL，在 Python 中约 100 字节。postings 需要多少内存？</p>
+<details>
+<summary>解答</summary>
+
+<p>Postings：50,000 × 20 = 1,000,000。字节数：1,000,000 × 100 = 100,000,000 ≈ <strong>100 MB</strong>——这还没有计入附加载荷（tf-idf 每个占 4 字节，会再增加）。这只是 10⁶ 条 postings；网络上的文档远远超过 10⁶ 个，所以索引通常<strong>无法一次全部放进内存</strong>。</p>
+</details>
+
+<h2 id="7-外部构建部分索引与合并">7. 外部构建：部分索引与合并</h2>
+<h3 id="71-部分索引">7.1 部分索引</h3>
+<p>外部算法如下：</p>
+<ol>
+<li>构建postings 列表结构，<strong>直到达到一定大小</strong>（大小根据可用内存选择，并需实测）。</li>
+<li><strong>把部分索引写入磁盘</strong>，然后开始一个新的。</li>
+<li>最后，磁盘上会有<strong>许多部分索引</strong>，再把它们<strong>合并</strong>。</li>
+</ol>
+<p>部分列表（即部分索引）的设计必须能<strong>分小块合并</strong>，例如<strong>按字母顺序存储</strong>。</p>
+<p>伪代码就是 <a href="#33-%E7%AE%80%E5%8D%95%E7%9A%84%E5%86%85%E5%AD%98%E7%B4%A2%E5%BC%95%E5%99%A8buildindex">§3.3</a> 中的 <code>BuildIndex</code>，但有两处改动：按<strong>批次</strong>读取文档；每批之后把哈希表<strong>排序并写入</strong>磁盘，然后清空。</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">procedure BuildIndex(D)
+  I ← HashTable
+  n ← 0
+  B ← []                          # batch of documents
+  while D is not empty do
+    B ← GetBatch(D)
+    for all documents d in B do
+      n ← n+1
+      T ← Parse(d)
+      RemoveDuplicates(T)
+      for all tokens t in T do
+        if t not in I then
+          I[t] = []
+        I[t].append(Posting(n))
+      end for
+    end for
+    SortAndWriteToDisk(I, name)
+    I.empty()
+  end while</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：<code>n</code> 会跨批次持续计数，因此 docID 在全局上<strong>唯一且递增</strong>：每个部分索引都按 docID 有序，这正是下面的合并中，每个词项只需简单拼接的原因。（如果每批都把 <code>n</code> 重置，拼接后的列表就不再有序，而且不同批次的 docID 会冲突。）</p>
+</blockquote>
+<h3 id="72-合并两个部分索引">7.2 合并两个部分索引</h3>
+<p>索引 A 包含 <code>aardvark 2 3 4 5</code> 和 <code>apple 2 4</code>；索引 B 包含 <code>aardvark 6 9</code> 和 <code>actor 15 42 68</code>。按词项顺序同时遍历两者：<code>aardvark</code> 两边都有，所以 A 的 postings 后面接上 B 的；<code>actor</code> 只在 B 中；<code>apple</code> 只在 A 中。</p>
+<table>
+<thead>
+<tr>
+<th>合并后的索引</th>
+<th>Postings</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>aardvark</td>
+<td>2 3 4 5 6 9</td>
+</tr>
+<tr>
+<td>actor</td>
+<td>15 42 68</td>
+</tr>
+<tr>
+<td>apple</td>
+<td>2 4</td>
+</tr>
+</tbody></table>
+<h3 id="73-如何合并有序的段">7.3 如何合并有序的段？</h3>
+<p><strong>二路合并</strong>：每次合并 <strong>2 个文件</strong>。每一层中，以几 MB 的块读入内存（对 HDD 来说约 10 MB 很常见——<strong>但要实测！</strong>），合并，再写回。下面是从磁盘或 SSD 上合并两个段的过程：</p>
+<table>
+<thead>
+<tr>
+<th>Run 1</th>
+<th></th>
+<th>Run 2</th>
+<th></th>
+<th>合并后的 postings 列表</th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>brutus</td>
+<td>d1,d3</td>
+<td>brutus</td>
+<td>d6,d7</td>
+<td>brutus</td>
+<td>d1,d3,d6,d7</td>
+</tr>
+<tr>
+<td>caesar</td>
+<td>d1,d2,d4</td>
+<td>caesar</td>
+<td>d8,d9</td>
+<td>caesar</td>
+<td>d1,d2,d4,d8,d9</td>
+</tr>
+<tr>
+<td>noble</td>
+<td>d5</td>
+<td>julius</td>
+<td>d10</td>
+<td>julius</td>
+<td>d10</td>
+</tr>
+<tr>
+<td>with</td>
+<td>d1,d2,d3,d5</td>
+<td>killed</td>
+<td>d8</td>
+<td>killed</td>
+<td>d8</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>noble</td>
+<td>d5</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>with</td>
+<td>d1,d2,d3,d5</td>
+</tr>
+</tbody></table>
+<p><strong>多路合并</strong>效率更高：<strong>同时读取所有文件</strong>。</p>
+<ul>
+<li>同时打开<strong>所有</strong>部分索引文件，每个文件配一个<strong>读缓冲区</strong>，输出文件配一个<strong>写缓冲区</strong>。</li>
+<li>每一轮选出尚未处理的<strong>最小 termID</strong>。</li>
+<li>合并该 termID 的<strong>所有 postings 列表</strong>，并写出。</li>
+</ul>
+<p>只要每次把每个块中<strong>足够大的一段</strong>读入内存，并写出足够大的输出段，<strong>就不会被磁盘寻道拖垮</strong>。具体的段大小<strong>必须实际测试</strong>，它取决于硬件和文件系统。</p>
+<p>下面用 <code>heapq.merge</code> 对 Index A 和 B 做多路合并，在所有段之间&quot;选出最小的词项&quot;：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> heapq</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> multiway_merge</span><span style="color:#D4D4D4">(*</span><span style="color:#9CDCFE">runs</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#CE9178">    """Merge partial indexes: each run is a list of</span></span>
+<span class="line"><span style="color:#CE9178">    (term, postings) sorted by term."""</span></span>
+<span class="line"><span style="color:#D4D4D4">    merged = []</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> term, postings </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> heapq.merge(*runs, </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">=</span><span style="color:#569CD6">lambda</span><span style="color:#9CDCFE"> e</span><span style="color:#D4D4D4">: e[</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">]):</span></span>
+<span class="line"><span style="color:#C586C0">        if</span><span style="color:#D4D4D4"> merged </span><span style="color:#569CD6">and</span><span style="color:#D4D4D4"> merged[-</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">][</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">] == term:</span></span>
+<span class="line"><span style="color:#D4D4D4">            merged[-</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">][</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">].extend(postings)   </span><span style="color:#6A9955"># same term: append</span></span>
+<span class="line"><span style="color:#C586C0">        else</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#D4D4D4">            merged.append((term, </span><span style="color:#4EC9B0">list</span><span style="color:#D4D4D4">(postings)))</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> merged</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">index_a = [(</span><span style="color:#CE9178">"aardvark"</span><span style="color:#D4D4D4">, [</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">5</span><span style="color:#D4D4D4">]), (</span><span style="color:#CE9178">"apple"</span><span style="color:#D4D4D4">, [</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">])]</span></span>
+<span class="line"><span style="color:#D4D4D4">index_b = [(</span><span style="color:#CE9178">"aardvark"</span><span style="color:#D4D4D4">, [</span><span style="color:#B5CEA8">6</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">9</span><span style="color:#D4D4D4">]), (</span><span style="color:#CE9178">"actor"</span><span style="color:#D4D4D4">, [</span><span style="color:#B5CEA8">15</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">42</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">68</span><span style="color:#D4D4D4">])]</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> term, postings </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> multiway_merge(index_a, index_b):</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(term, postings)</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">aardvark [2, 3, 4, 5, 6, 9]
+actor [15, 42, 68]
+apple [2, 4]</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>💡 <strong>关键洞见</strong>：每个部分索引都按字母排序，合并才能以流式进行：在真实的索引器中，每个段是一个文件，通过一个缓冲区从头到尾只读一遍，从不来回寻道。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.6.2 Merging（书中第 157 页）</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR 第 4 章（基于块的排序索引）</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#74-%E7%BB%83%E4%B9%A0">§7.4</a></p>
+</blockquote>
+<h3 id="74-练习">7.4 练习</h3>
+<h4 id="合并-index-a-与-index-b">合并 Index A 与 Index B</h4>
+<p>索引 A：<code>aardvark 2 3 4 5</code>、<code>apple 2 4</code>。索引 B：<code>aardvark 6 9</code>、<code>actor 15 42 68</code>。合并后的索引是什么？</p>
+<details>
+<summary>解答</summary>
+
+<p>按字母顺序遍历两个索引，每次取最小的词项：</p>
+<ol>
+<li><code>aardvark</code> 是两个索引中都有的最小词项 → 拼接：<code>2 3 4 5 6 9</code>（A 中的 docID 都小于 B 中的，因此拼接后列表仍然有序）。</li>
+<li><code>actor</code>（只在 B 中）→ <code>15 42 68</code>。</li>
+<li><code>apple</code>（只在 A 中）→ <code>2 4</code>。</li>
+</ol>
+<p>合并后的索引：<code>aardvark 2 3 4 5 6 9 · actor 15 42 68 · apple 2 4</code>——即 <a href="#73-%E5%A6%82%E4%BD%95%E5%90%88%E5%B9%B6%E6%9C%89%E5%BA%8F%E7%9A%84%E6%AE%B5">§7.3</a> 中 <code>multiway_merge</code> 代码的输出。</p>
+</details>
+
+<h2 id="8-索引工程读取比内存更大的索引">8. 索引工程：读取比内存更大的索引</h2>
+<p>在磁盘上建好索引只完成了一半；在<strong>查询时</strong>你还得找到 postings。</p>
+<p><strong>小索引</strong>：把它<strong>整个载入内存</strong>，作为哈希表或字典，按键查找 postings。<em>如果索引比可用内存还大呢？</em></p>
+<p><strong>大索引</strong>：无法放进内存，因此必须<strong>直接在文件中</strong>查找 postings。怎么做？</p>
+<ol>
+<li><strong>扫描文件</strong>查找查询词项。如果文件中的词项<strong>没有排序</strong>呢？那就只能全量扫描，复杂度为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(n)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mclose">)</span></span></span></span>。如果词项<strong>有序</strong>，就可以二分查找：从 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(n)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mclose">)</span></span></span></span> 降到 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><mi>log</mi><mo>⁡</mo><mi>N</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(\log N)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mclose">)</span></span></span></span>——<strong>对查询词项排序</strong>也有帮助。</li>
+<li><strong>直接跳到文件中的正确位置</strong>：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord">1</span><span class="mclose">)</span></span></span></span>。<strong>INDEX THE INDEX！</strong></li>
+</ol>
+<h3 id="81-为索引建索引">8.1 为索引建索引</h3>
+<p>在构建倒排索引的同时，另建一个<strong>记录偏移量的记账文件</strong>，指向倒排索引文件中的位置：</p>
+<ul>
+<li>词项 &quot;ape&quot; 位于位置 1311，&quot;apple&quot; 位于位置 1345，等等——<strong>或者</strong></li>
+<li>以 &quot;b&quot; 开头的词从位置 10035 开始，以 &quot;c&quot; 开头的词从位置 20457 开始，等等。</li>
+</ul>
+<p>这个<strong>二级索引比倒排索引小得多</strong>，所以（通常）能放进内存。<strong>然后调用 <code>seek(position)</code>。</strong></p>
+<p><strong>Seek 操作</strong>，使用一个小测试文件：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">with</span><span style="color:#DCDCAA"> open</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"test.txt"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"w"</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">as</span><span style="color:#D4D4D4"> f:</span></span>
+<span class="line"><span style="color:#D4D4D4">    f.write(</span><span style="color:#CE9178">"Hello world!</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">This is a test file.</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span></span>
+<span class="line"><span style="color:#CE9178">            "For explaining how seek works.</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">f = </span><span style="color:#DCDCAA">open</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"test.txt"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">f.seek(</span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">);  </span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">repr</span><span style="color:#D4D4D4">(f.readline()))</span></span>
+<span class="line"><span style="color:#D4D4D4">f.seek(</span><span style="color:#B5CEA8">13</span><span style="color:#D4D4D4">); </span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">repr</span><span style="color:#D4D4D4">(f.readline()))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># "Index the index": term -> byte offset of its line</span></span>
+<span class="line"><span style="color:#D4D4D4">offsets, pos = {}, </span><span style="color:#B5CEA8">0</span></span>
+<span class="line"><span style="color:#C586C0">with</span><span style="color:#DCDCAA"> open</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"test.txt"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"rb"</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">as</span><span style="color:#D4D4D4"> g:</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> line </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> g:</span></span>
+<span class="line"><span style="color:#D4D4D4">        offsets[line.split()[</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">].decode()] = pos</span></span>
+<span class="line"><span style="color:#D4D4D4">        pos += </span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(line)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(offsets)</span></span>
+<span class="line"><span style="color:#D4D4D4">f.seek(offsets[</span><span style="color:#CE9178">"For"</span><span style="color:#D4D4D4">]); </span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">repr</span><span style="color:#D4D4D4">(f.readline()))</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">&#39;o world!\n&#39;
+&#39;This is a test file.\n&#39;
+{&#39;Hello&#39;: 0, &#39;This&#39;: 13, &#39;For&#39;: 34}
+&#39;For explaining how seek works.\n&#39;</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>seek(4)</code> 落在 &quot;Hello&quot; 中间，所以 <code>readline()</code> 返回第 1 行的剩余部分；<code>&quot;Hello world!\n&quot;</code> 是 13 个字节，所以 <code>seek(13)</code> 正好落在第 2 行的开头。后半部分就是这个记账文件的微型版本：每个条目一个偏移量，每次查找执行一次 seek。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：偏移量是<strong>字节</strong>偏移量。如上所示，用二进制模式（<code>&quot;rb&quot;</code>）读取来生成它们；在文本模式下，多字节的 UTF-8 字符和 Windows 的 <code>\r\n</code> 换行会让字符数与字节位置对不上。</p>
+</blockquote>
+<h3 id="82-其他辅助结构">8.2 其他辅助结构</h3>
+<table>
+<thead>
+<tr>
+<th>结构</th>
+<th>内容</th>
+<th>存储方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>文档 ID</strong></td>
+<td>从 docid 到 URL 的查找表</td>
+<td>内存中的哈希表，集合较大时用 B 树</td>
+</tr>
+<tr>
+<td><strong>词汇表</strong>（vocabulary）或 <strong>lexicon</strong></td>
+<td>从索引词项到其postings 列表在倒排文件中的<strong>字节偏移量</strong> 的查找表</td>
+<td>内存中的哈希表，词汇较多时用 B 树</td>
+</tr>
+<tr>
+<td><strong>词项统计</strong></td>
+<td>例如 df</td>
+<td>放在每个postings 列表的<strong>开头</strong></td>
+</tr>
+<tr>
+<td><strong>集合统计</strong></td>
+<td>例如文档数</td>
+<td>放在<strong>单独的文件</strong>中</td>
+</tr>
+</tbody></table>
+<h3 id="83-替代单一倒排索引的做法">8.3 替代单一倒排索引的做法</h3>
+<ul>
+<li>把倒排索引文件按<strong>字母范围拆分</strong>。</li>
+<li>建立<strong>文件系统路径树</strong>：<code>index/a/</code>、<code>index/b/</code>、<code>index/c/</code>，等等。</li>
+<li>搜索组件<strong>始终保持文件打开</strong>——<strong>打开，但不放在内存中！</strong></li>
+</ul>
+<p><strong>多文件与多线程：汇总！</strong> 在多处理器机器上（多个处理器芯片、各自独立的内存卡、许多 I/O 插槽），拆分后的索引文件可以由<strong>并行线程</strong>读取，再汇总结果。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.5 Auxiliary Structures（书中第 154 页）</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#84-%E7%BB%83%E4%B9%A0">§8.4</a></p>
+</blockquote>
+<h3 id="84-练习">8.4 练习</h3>
+<h4 id="seek-返回什么">seek 返回什么？</h4>
+<p>文件 <code>Test.txt</code> 内容为 <code>Hello world!</code> / <code>This is a test file.</code> / <code>For explaining how seek works.</code>（共三行）。<code>f.seek(4); f.readline()</code> 和 <code>f.seek(13); f.readline()</code> 分别返回什么？</p>
+<details>
+<summary>解答</summary>
+
+<ul>
+<li><code>seek(4)</code> 把文件位置移到 <code>Hell</code> 之后，所以 <code>readline()</code> 返回第 1 行的剩余部分：<code>&#39;o world!\n&#39;</code>。</li>
+<li><code>&quot;Hello world!\n&quot;</code> 是 13 个字节（12 个字符加换行符），所以 <code>seek(13)</code> 落在第 2 行的开头：<code>&#39;This is a test file.\n&#39;</code>。</li>
+</ul>
+<p>这与 <a href="#81-%E4%B8%BA%E7%B4%A2%E5%BC%95%E5%BB%BA%E7%B4%A2%E5%BC%95">§8.1</a> 中的运行结果一致。这就是&quot;为索引建索引&quot;的全部技巧：保存字节偏移量，<code>seek</code> 直接跳过去，读出一条记录。</p>
+</details>
+
+<h2 id="9-用-mapreduce-进行分布式索引">9. 用 MapReduce 进行分布式索引</h2>
+<p><strong>向上扩展。</strong> 分布式处理的动机是需要索引和分析<strong>海量数据</strong>（即整个 Web），而要使用<strong>大量廉价服务器</strong>，而不是更大、更贵的机器。<strong>MapReduce</strong> 是专为索引和分析任务设计的分布式编程工具。</p>
+<p><strong>引例</strong>：一个巨大的信用卡交易文本文件，每行包含一个卡号和一个金额。<strong>统计不同卡号的数量。</strong> 用哈希表会遇到内存问题；如果文件<strong>已排序</strong>，计数就很简单。在分布式环境中同样如此：<strong>排序和数据放置至关重要。</strong></p>
+<h3 id="91-mapshufflereduce">9.1 Map、Shuffle、Reduce</h3>
+<p>MapReduce 是一个<strong>专注于数据放置与分布</strong>的框架：</p>
+<ul>
+<li><strong>Mapper</strong>：一般把一个元素列表变换为<strong>另一个等长的元素列表</strong>。</li>
+<li><strong>Reducer</strong>：把一个元素列表变换为<strong>单个元素</strong>。</li>
+<li>对输出数量的定义并不严格；集群上会运行<strong>许多 mapper 和 reducer 任务</strong>。</li>
+</ul>
+<p>基本流程：</p>
+<ol>
+<li><strong>Map</strong> 阶段：把数据记录转换为<strong>键值对</strong>，例如 <code>&lt;key=&quot;term&quot;, value=&quot;docId&quot;&gt;</code>。</li>
+<li><strong>Shuffle</strong>：使用<strong>哈希函数</strong>，让所有<strong>键相同</strong>的对落在<strong>同一台机器</strong>上、彼此相邻，例如 <code>hash(term) mod (number of reduce machines)</code>。</li>
+<li><strong>Reduce</strong> 阶段：分批处理记录，<strong>同一键的所有对同时处理</strong>——同一词项的所有 <code>&lt;term, docId&gt;</code> 对都在同一台机器上，因此可以把它们归约为 postings 列表。</li>
+</ol>
+<pre data-language="mermaid"><code class="language-mermaid">flowchart LR
+  I1[输入分片] --&gt; M1[Map]
+  I2[输入分片] --&gt; M2[Map]
+  I3[输入分片] --&gt; M3[Map]
+  M1 -- &quot;hash(key) mod R&quot; --&gt; R1[Reduce]
+  M1 --&gt; R2[Reduce]
+  M2 --&gt; R1
+  M2 --&gt; R2
+  M3 --&gt; R1
+  M3 --&gt; R2
+  R1 --&gt; O1[输出]
+  R2 --&gt; O2[输出]</code></pre><p>该图逐步展开：先是 map 方框，然后是全连接的 shuffle 边，最后是 reduce 方框和输出。</p>
+<p>mapper 和 reducer 的<strong>幂等性</strong>提供了<strong>容错能力</strong>：在同一输入上多次运行得到相同输出，因此当某台机器<strong>故障</strong>或<strong>变慢</strong>时，库可以重新执行这部分工作——计算是冗余的，从而避免瓶颈。</p>
+<h3 id="92-伪代码">9.2 伪代码</h3>
+<p>信用卡示例：map 发出 <code>(card, amount)</code>；shuffle 按卡号分组；reduce 把每张卡的金额求和。</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">procedure MapCreditCards(input)
+    while not input.done() do
+        record ← input.next()
+        card ← record.card
+        amount ← record.amount
+        Emit(card, amount)
+    end while
+end procedure
+
+procedure ReduceCreditCards(key, values)
+    total ← 0
+    card ← key
+    while not values.done() do
+        amount ← values.next()
+        total ← total + amount
+    end while
+    Emit(card, total)
+end procedure</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>每次 reduce 调用对应一个唯一的卡号，因此输出对的数量就是唯一卡号的数量。</p>
+<p><strong>建立索引</strong>：map 为每个词发出 <code>(word, docNumber:position)</code>；reduce 写出该词一次，然后对它的 postings 进行编码。</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">procedure MapDocumentsToPostings(input)
+    while not input.done() do
+        document ← input.next()
+        number ← document.number
+        position ← 0
+        tokens ← Parse(document)
+        for each word w in tokens do
+            Emit(w, number:position)
+            position = position + 1
+        end for
+    end while
+end procedure
+
+procedure ReducePostingsToLists(key, values)
+    word ← key
+    WriteWord(word)
+    while not values.done() do
+        EncodePosting(values.next())
+    end while
+end procedure</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：reducer 必须遍历它自己的 <code>values</code>（<code>values.done()</code>，如 <code>ReduceCreditCards</code> 所示）。在 <code>input</code> 对象上循环会引用 mapper 的变量，而该变量在 reducer 内部并不存在。</p>
+</blockquote>
+<p><strong>MapReduce 通常用于数据流</strong>：它<strong>没有终点</strong>，也<strong>没有&quot;最终索引&quot;</strong>——只有一个<strong>暂时有效</strong>的索引。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.6.3 Parallelism and Distribution（书中第 158 页）</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR 第 4 章（分布式索引）</a></p>
+</blockquote>
+<h2 id="10-更新索引">10. 更新索引</h2>
+<p><strong>动态集合！</strong> Web 持续变化。</p>
+<ul>
+<li>当更新以<strong>大批量</strong>到达时，<strong>索引合并</strong>（<a href="#7-%E5%A4%96%E9%83%A8%E6%9E%84%E5%BB%BA%E9%83%A8%E5%88%86%E7%B4%A2%E5%BC%95%E4%B8%8E%E5%90%88%E5%B9%B6">§7</a>）是一个好策略。</li>
+<li>对于<strong>小批量更新</strong>，它的效率很低。改为为新文档建立一个<strong>单独的索引</strong>，然后<em>事后</em>把两个索引的搜索结果<strong>合并</strong>。这个小索引可以<strong>放在内存中</strong>：更新和搜索都很快。</li>
+<li><strong>删除</strong>通过一个<strong>删除列表</strong>处理。<strong>修改</strong> = 把旧版本放入删除列表 + 把新版本加入新文档索引。</li>
+</ul>
+<p>在架构图中，这就是主索引旁边的第二个小 <strong>Index</strong> 方框，以及一个 <strong>&quot;Deleted Pages&quot;</strong> 存储。这就是<strong>延迟更新策略</strong>（delayed updating strategy）：为<strong>更新的页面</strong>和<strong>已删除的页面</strong>分别建立<strong>临时的（且小得多）辅助索引结构</strong>，它们与排序模块之间设有<strong>否决机制</strong>（veto system），因此被删除的页面会在结果到达用户界面之前就被过滤掉。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §5.6.4 Update（书中第 164 页）</a> · <a href="https://nlp.stanford.edu/IR-book/pdf/irbookonlinereading.pdf">IIR 第 4 章（动态索引）</a></p>
+</blockquote>
+<h2 id="11-速查与五条要点">11. 速查与五条要点</h2>
+<p><strong>索引术语</strong></p>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>词典（Dictionary）</td>
+<td>词项的集合（包含文档频率）</td>
+</tr>
+<tr>
+<td>Postings 列表 / postings 列表（inverted list）</td>
+<td>某个词项的 docID（及更多信息），按 docID 排序</td>
+</tr>
+<tr>
+<td>Posting</td>
+<td>一条记录；其中的文档部分称为<em>指针</em></td>
+</tr>
+<tr>
+<td>文档频率（document frequency，df）</td>
+<td>包含该词项的文档数</td>
+</tr>
+<tr>
+<td>区段（Extent）</td>
+<td>文档中一段连续的区域（一个字段），用词位置表示</td>
+</tr>
+<tr>
+<td>双词索引（Biword index）</td>
+<td>每对相邻词项都是一个词典词项</td>
+</tr>
+<tr>
+<td>词汇表（Lexicon）</td>
+<td>词项 → 该词项列表在倒排文件中的字节偏移量</td>
+</tr>
+</tbody></table>
+<p><strong>索引器步骤</strong></p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>分词 + 语言学模块</td>
+<td>修改后的词元</td>
+</tr>
+<tr>
+<td>生成对</td>
+<td>按文本顺序排列的 (term, docID)</td>
+</tr>
+<tr>
+<td>排序</td>
+<td>先按词项，再按 docID</td>
+</tr>
+<tr>
+<td>合并</td>
+<td>每个词项一条词典项 + df + postings</td>
+</tr>
+</tbody></table>
+<p><strong>postings 可以存储的内容</strong></p>
+<table>
+<thead>
+<tr>
+<th>Posting 存储的内容</th>
+<th>支持的功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>docID</td>
+<td>布尔查询</td>
+</tr>
+<tr>
+<td>docID:count</td>
+<td>按词频排序</td>
+</tr>
+<tr>
+<td>docID,position</td>
+<td>短语、邻近</td>
+</tr>
+<tr>
+<td>区段列表</td>
+<td>字段限制、标题加权</td>
+</tr>
+<tr>
+<td>docID:score</td>
+<td>快速排序；灵活性较低</td>
+</tr>
+</tbody></table>
+<p><strong>大小与延迟</strong></p>
+<table>
+<thead>
+<tr>
+<th>事实</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>关联矩阵，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">10^6</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span></span></span></span> 篇文档 × 50 万词项</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><mn>1</mn><msup><mn>0</mn><mn>11</mn></msup></mrow><annotation encoding="application/x-tex">5 \times 10^{11}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">11</span></span></span></span></span></span></span></span></span></span></span></span> 个格子，至多 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>9</mn></msup></mrow><annotation encoding="application/x-tex">10^9</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">9</span></span></span></span></span></span></span></span></span></span></span> 个 1</td>
+</tr>
+<tr>
+<td>使用 URL docID 的 100 万条 postings（Python）</td>
+<td>约 100 MB</td>
+</tr>
+<tr>
+<td>URL 与整数 docID，20 万条 postings</td>
+<td>20 MB 对 5.6 MB（28%）</td>
+</tr>
+<tr>
+<td>整数大小</td>
+<td>C/C++/Java 为 4 字节，Python 为 28 字节</td>
+</tr>
+<tr>
+<td>内存访问与磁盘寻道</td>
+<td>50–75 ns 对 最长 2 ms</td>
+</tr>
+<tr>
+<td>磁盘块大小</td>
+<td>8–256 KB</td>
+</tr>
+<tr>
+<td>位置索引与非位置索引（压缩后）</td>
+<td>大 2–4 倍；为原文的 35–50%</td>
+</tr>
+</tbody></table>
+<p><strong>必记的五件事</strong></p>
+<ol>
+<li>倒排索引只存储关联矩阵中的 1：<strong>词项 → docID 的 postings 列表</strong>，按 docID 排序，另在词典中保存 df。</li>
+<li>索引器生成 <strong>(term, docID) 对，先按词项、再按 docID 排序，并合并同一文档中的重复项</strong>；<strong>df</strong> 统计的是文档数，而不是出现次数。使用<strong>整数 docID</strong>，并配合辅助的 URL 映射。</li>
+<li>Postings 可以携带<strong>计数</strong>（用于排序）、<strong>位置</strong>（用于短语和邻近）、<strong>区段</strong>（用于字段）或<strong>预先计算的分数</strong>（速度与灵活性之间的权衡）。双词索引会产生假阳性并使词典膨胀，因此<strong>位置索引</strong>（大 2–4 倍）是标准做法，有时会与 n-gram 混用。</li>
+<li>磁盘寻道的代价相当于数万次内存访问，所以要在内存中构建<strong>部分索引</strong>，把每个部分索引按<strong>有序</strong>写出，再用带缓冲的大块读取进行<strong>多路合并</strong>；MapReduce 则在多台机器上做同样的事（map → 按 <code>hash(term)</code> shuffle → reduce）。</li>
+<li>查询时要<strong>为索引建索引</strong>：在内存中保存一个从词项到字节偏移量的词汇表，然后 <code>seek</code>。更新通过一个小型辅助索引加<strong>删除列表</strong>处理，并分批合并。</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="笔记翻页" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/~kazuhak/notes/cs-121/topic-text-processing/zh-CN/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>上一篇 · 话题 · 文本处理</span><span class="pager-title" data-astro-cid-gxyjxt6l>文本处理</span></a><a class="card interactive pager-card pager-next" href="/~kazuhak/notes/cs-121/topic-retrieval-models/zh-CN/" rel="next" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>话题 · 检索模型：布尔、tf-idf 与向量空间 · 下一篇<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>检索模型：布尔、tf-idf 与向量空间</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>快捷键<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> 上一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> 下一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> 切换语言</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="目录" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>顶部</button><script type="module" src="/~kazuhak/_astro/NoteReader.astro_astro_type_script_index_0_lang.D_DIoJ7q.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/~kazuhak/assets/js/bento.js" defer></script><script src="/~kazuhak/assets/js/chat-widget.js" defer></script></body></html>

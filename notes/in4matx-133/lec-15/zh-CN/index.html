@@ -1,0 +1,660 @@
+<!DOCTYPE html><html lang="zh-CN"><head><title>IN4MATX 133 设备资源与 Signals | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="用 Capacitor 插件访问原生设备资源，配置 Capacitor 并在模拟器或真机上运行，用 Angular signals 在异步调用后刷新视图，本地通知、地理定位和分享三个插件，插件的质量问题，以及混合应用的优点与缺点。"><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-15/zh-CN/"><link rel="icon" href="/~kazuhak/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/~kazuhak/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-15/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-15/zh-CN/"><link rel="stylesheet" href="/~kazuhak/_astro/BaseLayout.D6FvEM2t.css"><link rel="stylesheet" href="/~kazuhak/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/~kazuhak/_astro/katex.D1M0OS0E.css"><link rel="stylesheet" href="/~kazuhak/_astro/index.BWdCFSBs.css"></head><body data-nav-path="/~kazuhak/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/~kazuhak/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/~kazuhak/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/~kazuhak/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/~kazuhak/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/~kazuhak/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="zh-CN" data-viz-base="/~kazuhak/assets/viz/" data-viz-version="1795857754" data-source-url="/~kazuhak/notes/in4matx-133/lec-15/zh-CN/source.md" data-editor-url="/~kazuhak/tools/md-editor/" data-alt-url="/~kazuhak/notes/in4matx-133/lec-15/en-US/" data-prev-url="/~kazuhak/notes/in4matx-133/lec-14/zh-CN/" data-next-url="/~kazuhak/notes/in4matx-133/lec-16/zh-CN/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="上一篇 / 下一篇" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/~kazuhak/notes/in4matx-133/lec-14/zh-CN/" title="上一篇: 移动设计原则 ([)" aria-label="上一篇: 第 14 讲" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>第 14 讲</span></a><label class="rb-title" title="跳到其他讲" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>IN4MATX 133</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>第 15 讲</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg><select class="rb-jump" data-rb-jump aria-label="跳到其他讲" autocomplete="off" data-astro-cid-gxyjxt6l><option value="/~kazuhak/notes/in4matx-133/lec-01/zh-CN/" data-astro-cid-gxyjxt6l>第 1 讲 — 课程介绍与计算历史</option><option value="/~kazuhak/notes/in4matx-133/lec-02/zh-CN/" data-astro-cid-gxyjxt6l>第 2 讲 — HTML 与无障碍</option><option value="/~kazuhak/notes/in4matx-133/lec-03/zh-CN/" data-astro-cid-gxyjxt6l>第 3 讲 — CSS</option><option value="/~kazuhak/notes/in4matx-133/lec-04/zh-CN/" data-astro-cid-gxyjxt6l>第 4 讲 — 响应式设计与 JavaScript（一）</option><option value="/~kazuhak/notes/in4matx-133/lec-05/zh-CN/" data-astro-cid-gxyjxt6l>第 5 讲 — JavaScript（二）</option><option value="/~kazuhak/notes/in4matx-133/lec-06/zh-CN/" data-astro-cid-gxyjxt6l>第 6 讲 — DOM 操作与包管理</option><option value="/~kazuhak/notes/in4matx-133/lec-07/zh-CN/" data-astro-cid-gxyjxt6l>第 7 讲 — TypeScript 与数据可视化工具</option><option value="/~kazuhak/notes/in4matx-133/lec-08/zh-CN/" data-astro-cid-gxyjxt6l>第 8 讲 — AJAX、Fetch 与 Promise</option><option value="/~kazuhak/notes/in4matx-133/lec-09/zh-CN/" data-astro-cid-gxyjxt6l>第 9 讲 — 服务器端开发、身份验证与授权</option><option value="/~kazuhak/notes/in4matx-133/lec-10/zh-CN/" data-astro-cid-gxyjxt6l>第 10 讲 — Angular 中的组件</option><option value="/~kazuhak/notes/in4matx-133/lec-11/zh-CN/" data-astro-cid-gxyjxt6l>第 11 讲 — Angular 中的分离</option><option value="/~kazuhak/notes/in4matx-133/lec-12/zh-CN/" data-astro-cid-gxyjxt6l>第 12 讲 — 混合与原生架构</option><option value="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/" data-astro-cid-gxyjxt6l>第 13 讲 — Ionic 组件</option><option value="/~kazuhak/notes/in4matx-133/lec-14/zh-CN/" data-astro-cid-gxyjxt6l>第 14 讲 — 移动设计原则</option><option value="/~kazuhak/notes/in4matx-133/lec-15/zh-CN/" selected data-astro-cid-gxyjxt6l>第 15 讲 — 设备资源与 Signals</option><option value="/~kazuhak/notes/in4matx-133/lec-16/zh-CN/" data-astro-cid-gxyjxt6l>第 16 讲 — 数据库与本地存储</option></select></label><a class="rb-btn rb-lang" href="/~kazuhak/notes/in4matx-133/lec-15/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>EN</span></a><a class="rb-btn rb-next rb-side-next" href="/~kazuhak/notes/in4matx-133/lec-16/zh-CN/" title="下一篇: 数据库与本地存储 (])" aria-label="下一篇: 第 16 讲" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>第 16 讲</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/~kazuhak/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/~kazuhak/notes/in4matx-133/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>IN4MATX 133</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>第 15 讲</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/~kazuhak/notes/in4matx-133/lec-15/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>English</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>目录</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>在编辑器中打开</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>第 15 讲 · 用户界面软件课程阅读笔记</h2><p id="reader-description" data-astro-cid-gxyjxt6l>这页整理的是 IN4MATX 133 第 15 讲 的课程笔记，适合按讲复习 HTML、CSS、JavaScript、DOM 和 UI 工具，并配有可编辑运行的实时演示。下面这条路径可以带你回到 Notes、Course Notes、课程主页，或定位到当前笔记。将鼠标悬停在右侧的 ≡ 图标上可以打开目录。</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>最后编辑于 2026 年 11 月 17 日</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="in4matx-133-user-interface-software--lecture-15设备资源与传感器">IN4MATX 133: User Interface Software — Lecture 15：设备资源与传感器</h1>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#1-ionic-%E4%B8%8E-capacitor">1. Ionic 与 Capacitor</a></li>
+<li><a href="#2-%E4%B8%BA%E9%A1%B9%E7%9B%AE%E6%B7%BB%E5%8A%A0-capacitor-%E5%92%8C%E6%8F%92%E4%BB%B6">2. 为项目添加 Capacitor 和插件</a></li>
+<li><a href="#3-%E5%9C%A8%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E8%BF%90%E8%A1%8Cionic-serve">3. 在浏览器中运行：ionic serve</a></li>
+<li><a href="#4-%E5%9C%A8%E6%A8%A1%E6%8B%9F%E5%99%A8%E6%88%96%E7%9C%9F%E6%9C%BA%E4%B8%8A%E8%BF%90%E8%A1%8C">4. 在模拟器或真机上运行</a></li>
+<li><a href="#5-signals">5. Signals</a></li>
+<li><a href="#6-%E6%9C%AC%E5%9C%B0%E9%80%9A%E7%9F%A5">6. 本地通知</a></li>
+<li><a href="#7-%E5%9C%B0%E7%90%86%E5%AE%9A%E4%BD%8D">7. 地理定位</a></li>
+<li><a href="#8-%E5%88%86%E4%BA%AB">8. 分享</a></li>
+<li><a href="#9-%E6%8F%92%E4%BB%B6%E8%B4%A8%E9%87%8F%E4%B8%8E%E6%8F%92%E4%BB%B6%E9%97%AE%E9%A2%98">9. 插件质量与插件问题</a></li>
+<li><a href="#10-%E6%B7%B7%E5%90%88%E5%BA%94%E7%94%A8%E7%9A%84%E4%BC%98%E7%82%B9%E4%B8%8E%E7%BC%BA%E7%82%B9">10. 混合应用的优点与缺点</a></li>
+<li><a href="#11-%E8%AF%BE%E5%A0%82%E9%97%AE%E9%A2%98%E4%B8%8E%E6%BC%94%E7%A4%BA%E9%99%84%E8%A7%A3%E7%AD%94">11. 课堂问题与演示（附解答）</a></li>
+<li><a href="#12-%E9%80%9F%E6%9F%A5%E4%B8%8E%E5%BF%85%E8%AE%B0%E7%9A%84-5-%E4%B8%AA%E8%A6%81%E7%82%B9">12. 速查与必记的 5 个要点</a></li>
+</ul>
+<blockquote>
+<p>UCI IN4MATX 133: User Interface Software — Prof. Travis Linden Reid，2026 年秋季学期，周二 11/17（第 8 周）<br>内容整理自 Lecture 15 的幻灯片（共 35 页）和 demo 仓库文件夹 <code>W8_L1_DeviceResources_Signals</code>。内容按概念组织，而不是按来源组织。</p>
+</blockquote>
+<blockquote>
+<p>📅 <strong>课程安排</strong>：A4 截止于 <strong>11 月 23 日周一午夜</strong>。请在 Canvas 上加入一个 A4 小组。</p>
+</blockquote>
+<p>今天的目标（幻灯片 3、34）：用 Capacitor 插件访问设备资源；在模拟器或真机上运行 Ionic/Capacitor 项目；用 signals 细粒度地追踪变量变化；说明 Web 混合应用的优点和局限。</p>
+<hr>
+<h2 id="1-ionic-与-capacitor">1. Ionic 与 Capacitor</h2>
+<p><strong>Ionic</strong>（幻灯片 4）为移动界面中常见的许多元素提供了 Angular 风格的组件：列表、按钮、滑块、标签页、模态对话框、搜索栏等等（幻灯片上展示了一个 iOS 的“最近对话”列表和一个滑块界面）。这是 UI 那一半，<a href="/~kazuhak/notes/in4matx-133/lec-13/zh-CN/">Lecture 13</a> 已经讲过。</p>
+<p><strong>Capacitor</strong>（幻灯片 5）是另一半：以<strong>插件</strong>形式提供的、连接<strong>设备资源</strong>的库。</p>
+<ul>
+<li>插件有数百个。</li>
+<li>分为<strong>官方</strong>插件（由 Capacitor 团队维护）和<strong>社区</strong>插件。</li>
+<li>有些插件存在已知问题（见<a href="#9-%E6%8F%92%E4%BB%B6%E8%B4%A8%E9%87%8F%E4%B8%8E%E6%8F%92%E4%BB%B6%E9%97%AE%E9%A2%98">第 9 节</a>）。</li>
+</ul>
+<p>所以，Ionic 应用本身是一个 Web 应用（Angular + Ionic 组件），而 Capacitor 是从这段 Web 代码通往手机通知、GPS、分享面板、相机等功能的桥梁。</p>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://ionicframework.com/docs/components/">Ionic UI components</a> · <a href="https://ionicframework.com/docs/native/">Ionic：原生 API / Capacitor 插件</a></p>
+</blockquote>
+<h2 id="2-为项目添加-capacitor-和插件">2. 为项目添加 Capacitor 和插件</h2>
+<p>为<strong>已有的</strong> Ionic 项目添加 Capacitor（幻灯片 6）需要两个 npm 包，之后每种设备资源再装一个包：</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">cd</span><span style="color:#D4D4D4"> [project </span><span style="color:#CE9178">folder]</span></span>
+<span class="line"><span style="color:#DCDCAA">npm</span><span style="color:#CE9178"> install</span><span style="color:#CE9178"> @capacitor/core</span></span>
+<span class="line"><span style="color:#DCDCAA">npm</span><span style="color:#CE9178"> install</span><span style="color:#CE9178"> @capacitor/cli</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># one package per resource, e.g. local notifications</span></span>
+<span class="line"><span style="color:#DCDCAA">npm</span><span style="color:#CE9178"> install</span><span style="color:#CE9178"> @capacitor/local-notifications</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>之后就可以在 TypeScript 中使用该资源：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">LocalNotifications</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> ‘</span><span style="color:#9CDCFE">capacitor</span><span style="color:#D4D4D4">/</span><span style="color:#9CDCFE">local</span><span style="color:#D4D4D4">-</span><span style="color:#9CDCFE">notifications</span><span style="color:#D4D4D4">’;</span></span>
+<span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> notif</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">schedule</span><span style="color:#D4D4D4"> ( { …. } );</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>⚠️ 幻灯片 6 的 import 有两处笔误：弯引号 <code>‘…’</code>（在 TS 里是语法错误），以及漏了 <code>@</code>。正确写法：<code>import { LocalNotifications } from &#39;@capacitor/local-notifications&#39;;</code>——所有官方插件都在 <code>@capacitor/</code> 作用域下。</p>
+<p>在为手机构建之前，还有两步配置（幻灯片 8）：</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955"># initialize Capacitor settings for the project (app name, app id, web dir)</span></span>
+<span class="line"><span style="color:#DCDCAA">npx</span><span style="color:#CE9178"> cap</span><span style="color:#CE9178"> init</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># set up the project for Android or iOS</span></span>
+<span class="line"><span style="color:#DCDCAA">npm</span><span style="color:#CE9178"> install</span><span style="color:#CE9178"> @capacitor/[android</span><span style="color:#CE9178"> or</span><span style="color:#CE9178"> ios]</span></span>
+<span class="line"><span style="color:#DCDCAA">npx</span><span style="color:#CE9178"> cap</span><span style="color:#CE9178"> add</span><span style="color:#D4D4D4"> [android </span><span style="color:#CE9178">or</span><span style="color:#CE9178"> ios]</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>npx cap init</code> 会生成 <code>capacitor.config.ts</code>。demo 项目中的版本（来自仓库）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#C586C0"> type</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">CapacitorConfig</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@capacitor/cli'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> config</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">CapacitorConfig</span><span style="color:#D4D4D4"> = {</span></span>
+<span class="line"><span style="color:#9CDCFE">  appId:</span><span style="color:#CE9178"> 'com.inf133.deviceexamples'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  appName:</span><span style="color:#CE9178"> 'DeviceResourceExamples'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  webDir:</span><span style="color:#CE9178"> 'www'</span></span>
+<span class="line"><span style="color:#D4D4D4">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">export</span><span style="color:#C586C0"> default</span><span style="color:#9CDCFE"> config</span><span style="color:#D4D4D4">;</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>webDir: &#39;www&#39;</code> 是 <code>ionic build</code> 输出编译后 Web 应用的位置，Capacitor 会把它复制到原生项目中。demo 应用的 <code>package.json</code> 包含 <code>@capacitor/core</code>、<code>@capacitor/cli</code>、<code>@capacitor/ios</code>，以及本讲用到的三个插件：<code>@capacitor/local-notifications</code>、<code>@capacitor/geolocation</code>、<code>@capacitor/share</code>。它的 <code>ios/</code> 文件夹（一个 Xcode 项目）就是 <code>npx cap add ios</code> 生成的。</p>
+<blockquote>
+<p>🧪 <strong>Demo 文件</strong>：<a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/solution1/DeviceResourceExamples/capacitor.config.ts">capacitor.config.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/solution1/DeviceResourceExamples/package.json">package.json</a></p>
+</blockquote>
+<h2 id="3-在浏览器中运行ionic-serve">3. 在浏览器中运行：ionic serve</h2>
+<p>在浏览器中运行 Ionic 项目（幻灯片 7）：</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">ionic</span><span style="color:#CE9178"> serve</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Capacitor 会<strong>在运行时判断所在平台和可用资源</strong>。插件会尝试使用原生功能；没有原生功能时（也就是在浏览器里），它会<strong>退回到 Web API</strong>。所以同一句 <code>LocalNotifications.schedule(...)</code>，在手机上是原生通知，在 <code>ionic serve</code> 里则是浏览器通知。</p>
+<p>不同浏览器的能力不同——例如 Firefox 不支持本地通知，而 Safari 支持。</p>
+<p>幻灯片 10 的结论：<strong>如果你没有用 Capacitor 访问原生设备资源，那么上面这些配置和部署命令都不需要</strong>——只用 <code>ionic serve</code> 在浏览器里测试即可。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：“在 <code>ionic serve</code> 里能跑”只测试了 Web 回退。插件在浏览器里的行为可能和真机不同（甚至缺失）——见<a href="#8-%E5%88%86%E4%BA%AB">第 8 节</a>的分享插件。</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://ionicframework.com/docs/cli/commands/serve">Ionic CLI: ionic serve</a> · <a href="https://capacitorjs.com/docs/basics/progressive-web-app">Capacitor：渐进式 Web 应用</a></p>
+</blockquote>
+<h2 id="4-在模拟器或真机上运行">4. 在模拟器或真机上运行</h2>
+<p>部署（幻灯片 9）的流程是：构建 → 同步 → 打开原生 IDE：</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955"># build the Ionic project and sync the web app into the native project</span></span>
+<span class="line"><span style="color:#DCDCAA">ionic</span><span style="color:#CE9178"> build</span></span>
+<span class="line"><span style="color:#DCDCAA">npx</span><span style="color:#CE9178"> cap</span><span style="color:#CE9178"> sync</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955"># open the native project in Android Studio or Xcode</span></span>
+<span class="line"><span style="color:#DCDCAA">npx</span><span style="color:#CE9178"> cap</span><span style="color:#CE9178"> open</span><span style="color:#D4D4D4"> [android </span><span style="color:#CE9178">or</span><span style="color:#CE9178"> ios]</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>然后<strong>在原生 IDE 中</strong>部署到模拟器或真机（Android Studio / Xcode 的 Run 按钮）。</p>
+<p>另一种方式是<strong>实时重载（live reload）</strong>，在你编辑代码时持续更新模拟器或真机：</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">ionic</span><span style="color:#CE9178"> cap</span><span style="color:#CE9178"> run</span><span style="color:#D4D4D4"> [android </span><span style="color:#CE9178">or</span><span style="color:#CE9178"> iOS]</span><span style="color:#569CD6"> -l</span><span style="color:#569CD6"> --external</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>-l</code> 表示实时重载；<code>--external</code> 让开发服务器在你电脑的网络地址上提供服务，手机才能访问到它。（demo 项目的 <code>ios/App/App/Info.plist</code> 把 <code>NSAllowsArbitraryLoads</code> 设为 true，即允许 iOS 应用加载像这个开发服务器一样的纯 <code>http</code> 页面。）</p>
+<table>
+<thead>
+<tr>
+<th>时机</th>
+<th>命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>一次</td>
+<td><code>npx cap init</code></td>
+<td>生成项目的 Capacitor 配置</td>
+</tr>
+<tr>
+<td>每个平台一次</td>
+<td><code>npm install @capacitor/ios</code> + <code>npx cap add ios</code></td>
+<td>创建原生项目</td>
+</tr>
+<tr>
+<td>每次修改</td>
+<td><code>ionic build</code></td>
+<td>把 Web 应用编译到 <code>www/</code></td>
+</tr>
+<tr>
+<td>每次修改</td>
+<td><code>npx cap sync</code></td>
+<td>把 <code>www/</code> 和插件复制进原生项目</td>
+</tr>
+<tr>
+<td>运行</td>
+<td><code>npx cap open ios</code></td>
+<td>打开 Xcode / Android Studio，从那里运行</td>
+</tr>
+<tr>
+<td>或者</td>
+<td><code>ionic cap run ios -l --external</code></td>
+<td>在模拟器/真机上实时重载</td>
+</tr>
+</tbody></table>
+<p><strong>A4 与真机测试</strong>（幻灯片 11–12）。A4 有两个选项：</p>
+<ul>
+<li>使用一种<strong>原生设备资源</strong>，或</li>
+<li>把数据写入<strong>本地存储（local storage）</strong>。</li>
+</ul>
+<p>如果你选择的原生资源必须在真机上测试（浏览器或模拟器不行），那就<strong>先</strong>做这件事：安装 Capacitor，以极其简单的方式用一下这个资源，然后尝试部署到真机。部署到真机可以计入<strong>加分</strong>（A4/A5）。</p>
+<p>为什么值得做：这是很好的经验；要在 App Store / Google Play 上发布应用就必须这样做；而且真机测试并不简单——你做的每个应用都会遇到设备特有的错误，而用户只会在自己的设备上体验你的应用。“不简单，但在真实世界里不可省略。”</p>
+<h2 id="5-signals">5. Signals</h2>
+<p>Angular 的变更检测机制（幻灯片 13）很复杂，并且在今年 7 月有一次重大更新，换成了新的模型。<strong>视图只会在以下情况刷新</strong>：</p>
+<ul>
+<li>某个事件触发，</li>
+<li>某个输入（input）发生变化，</li>
+<li>你手动刷新，或</li>
+<li>某个 <strong>signal</strong> 发生变化。</li>
+</ul>
+<p><strong>signal</strong> 是一个变量包装器，用来通知视图刷新。</p>
+<p><strong>它在哪个位置：Model-View-Controller</strong>（幻灯片 14）。<strong>模型（model）</strong>是应用背后的数据。它在变化时通知视图，允许视图查询数据，也允许控制器修改数据。幻灯片里的图：控制器<em>修改（manipulates）</em>模型，模型<em>更新（updates）</em>视图，用户<em>看到（sees）</em>视图并<em>使用（uses）</em>控制器。signal 就是“模型通知视图”这一条箭头。</p>
+<pre data-language="mermaid"><code class="language-mermaid">flowchart TB
+  M[&quot;MODEL&quot;] -- &quot;UPDATES&quot; --&gt; V[&quot;VIEW&quot;]
+  C[&quot;CONTROLLER&quot;] -- &quot;MANIPULATES&quot; --&gt; M
+  V -- &quot;SEES&quot; --&gt; U((&quot;USER&quot;))
+  U -- &quot;USES&quot; --&gt; C</code></pre><p>signal 的作用（幻灯片 15）：</p>
+<ul>
+<li>包装一个变量；</li>
+<li>值变化时，只更新<strong>模板中用到这个变量的那一部分</strong>——比刷新整个视图更高效；</li>
+<li>确保变量<strong>每次</strong>更新时视图都随之更新。</li>
+</ul>
+<p>Prof. Reid 的经验：<strong>如果你想在异步回调之后刷新视图，就要把变量包在 signal 里</strong>——包括 Capacitor 调用之后，或向远程 API 发起 <code>fetch</code> 之后。</p>
+<p>用法（幻灯片 16）：从 <code>@angular/core</code> 导入 <code>signal</code>，用 <code>signal&lt;type&gt;(defaultValue)</code> 初始化，用 <code>set(newValue)</code> 更新，<strong>通过调用来读取</strong>——<code>readyForSelfie()</code>：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// component.ts file</span></span>
+<span class="line"><span style="color:#6A9955">// at top of file…</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Component</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">signal</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> ‘@</span><span style="color:#9CDCFE">angular</span><span style="color:#D4D4D4">/</span><span style="color:#9CDCFE">core</span><span style="color:#D4D4D4">’;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// in Component variable declarations…</span></span>
+<span class="line"><span style="color:#9CDCFE">readyForSelfie</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">boolean</span><span style="color:#D4D4D4">>(</span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// in some function…</span></span>
+<span class="line"><span style="color:#9CDCFE">readyForSelfie</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">&#x3C;!-- component.html file --></span></span>
+<span class="line"><span style="color:#D4D4D4">@if ( readyForSelfie() )</span></span>
+<span class="line"><span style="color:#D4D4D4">{ … }</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>幻灯片上的两处小错：又是弯引号（应写 <code>&#39;@angular/core&#39;</code>）；在组件方法内部应写 <code>this.readyForSelfie.set(true)</code>。</p>
+<p>demo 应用（solution1 的 <code>home.page.ts</code>）把所有状态都放在 signal 里，并且在 <strong>await</strong> 完 Capacitor 调用<strong>之后</strong>才 set：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> class</span><span style="color:#4EC9B0"> HomePage</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">  finishedReminder</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">boolean</span><span style="color:#D4D4D4">>(</span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  finishedLocation</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">boolean</span><span style="color:#D4D4D4">>(</span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">  latCoord</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">number</span><span style="color:#D4D4D4">>(</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  longCoord</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">number</span><span style="color:#D4D4D4">>(</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  async</span><span style="color:#DCDCAA"> getLocation</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> position</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> Geolocation</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">getCurrentPosition</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">finishedLocation</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">latCoord</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">position</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">coords</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">latitude</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">longCoord</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">position</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">coords</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">longitude</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#6A9955">  // scheduleReminder() and shareStuff(): Sections 6 and 8</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">div</span><span style="color:#9CDCFE"> id</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"container"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">  @if(!finishedReminder())</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> (click)</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"scheduleReminder()"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Schedule a reminder</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">  @if(finishedReminder() &#x26;&#x26; !finishedLocation())</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> (click)</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"getLocation()"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Print geolocation</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">  @if(finishedLocation())</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span><span style="color:#D4D4D4">Coordinates: ({{latCoord()}}, {{longCoord()}})</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-item</span><span style="color:#808080">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ion-button</span><span style="color:#9CDCFE"> (click)</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"shareStuff()"</span><span style="color:#808080">></span><span style="color:#D4D4D4">Share my coordinates</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ion-button</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">div</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>这个说法在本项目（Angular 22）中成立：构建后在 Chromium 中运行，允许通知和定位时，每次点击都会切换到下一个按钮，坐标也会显示出来。把四个 signal 改成普通字段（<code>finishedReminder = false;</code> … <code>this.finishedReminder = true;</code>，模板中去掉 <code>()</code>）后，点击之后页面<strong>一直停在 “Schedule a reminder”</strong>，尽管代码已经执行了——赋值发生在 <code>await</code> 之后，没有任何东西通知视图刷新。</p>
+<p>下面可以动手试：这个页面用 Ionic Web 组件重新实现了 demo 应用（沙箱里没有 Angular，所以 <code>signal()</code> 和三个插件都是为这个页面写的小替身）。依次点击三个按钮，然后按 Next 换成普通变量：</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;演示 1（幻灯片 25 · setup1 → solution1）用 Ionic Web 组件重现；signal() 和三个插件都是替身&quot;, &quot;width&quot;: 375, &quot;height&quot;: 420, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-header&gt;&lt;ion-toolbar&gt;&lt;ion-title&gt;Daily selfie&lt;/ion-title&gt;&lt;/ion-toolbar&gt;&lt;/ion-header&gt;\n&lt;ion-content&gt;\n  &lt;div id=\&quot;container\&quot;&gt;&lt;/div&gt;\n&lt;/ion-content&gt;\n&lt;/ion-app&gt;&quot;, &quot;css&quot;: &quot;#container { text-align: center; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); }&quot;, &quot;js&quot;: &quot;// ---- Stand-ins (the sandbox has no Angular and no Capacitor) ----\n// A tiny signal(): read with s(), write with s.set(v); set() re-renders the template.\nfunction signal(value) {\n  const s = () =&gt; value;\n  s.set = (v) =&gt; { value = v; render(); };\n  return s;\n}\nconst LocalNotifications = {\n  requestPermissions: async () =&gt; ({ display: &#39;granted&#39; }),\n  schedule: async (opts) =&gt; { console.log(&#39;scheduled&#39;, opts.notifications[0].title); return opts; }\n};\nconst Geolocation = {\n  getCurrentPosition: async () =&gt; ({ coords: { latitude: 33.6405, longitude: -117.8443 } })\n};\nconst Share = {\n  share: async () =&gt; { throw new Error(&#39;Share API not available in this browser&#39;); }\n};\n\n// ---- home.page.ts (solution1) ----\nconst finishedReminder = signal(false);\nconst finishedLocation = signal(false);\nconst latCoord = signal(0);\nconst longCoord = signal(0);\n\nasync function scheduleReminder() {\n  console.log(&#39;clicked schedule selfie&#39;);\n  const perm = await LocalNotifications.requestPermissions();\n  if (perm.display == &#39;granted&#39;) {\n    await LocalNotifications.schedule({ notifications: [{ title: &#39;Daily Reminder&#39;, body: &#39;Time to do the thing!&#39;, id: 1, schedule: { at: new Date(Date.now()) } }] });\n    finishedReminder.set(true);\n  }\n}\nasync function getLocation() {\n  const position = await Geolocation.getCurrentPosition();\n  finishedLocation.set(true);\n  latCoord.set(position.coords.latitude);\n  longCoord.set(position.coords.longitude);\n}\nasync function shareStuff() {\n  try {\n    await Share.share({ title: &#39;Share coordinates&#39;, text: `My current coordinates are ${latCoord()}, ${longCoord()}`, dialogTitle: &#39;Share my coordinates&#39; });\n  } catch (e) {\n    console.log(e.message);\n  }\n}\n\n// ---- home.page.html: the three @if blocks ----\nfunction button(label, onClick) {\n  const b = document.createElement(&#39;ion-button&#39;);\n  b.textContent = label;\n  b.addEventListener(&#39;click&#39;, onClick);\n  return b;\n}\nfunction render() {\n  const c = document.getElementById(&#39;container&#39;);\n  c.innerHTML = &#39;&#39;;\n  if (!finishedReminder()) c.append(button(&#39;Schedule a reminder&#39;, scheduleReminder));\n  if (finishedReminder() &amp;&amp; !finishedLocation()) c.append(button(&#39;Print geolocation&#39;, getLocation));\n  if (finishedLocation()) {\n    const item = document.createElement(&#39;ion-item&#39;);\n    item.textContent = `Coordinates: (${latCoord()}, ${longCoord()})`;\n    c.append(item, button(&#39;Share my coordinates&#39;, shareStuff));\n  }\n}\nrender();&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;换成普通变量：set() 只保存值，不会重绘，所以第一个按钮一直不消失（和真实应用把 signal 改成普通字段时的表现一致）。&quot;, &quot;js&quot;: &quot;\n// ---- Without signals: assigning a value doesn&#39;t refresh the view ----\nfunction signal(value) {\n  const s = () =&gt; value;\n  s.set = (v) =&gt; { value = v; };\n  return s;\n}&quot;}], &quot;interactive&quot;: true}</code></pre><blockquote>
+<p>💡 <strong>关键理解</strong>：signal 用 <code>()</code> 读取，用 <code>.set()</code> 写入。模板里忘了 <code>()</code> 会打印出函数本身而不是值；用 <code>=</code> 赋值则会把 signal 替换成普通值，视图从此不再更新。</p>
+</blockquote>
+<blockquote>
+<p>🧪 <strong>Demo 文件</strong>：<a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/solution1/DeviceResourceExamples/src/app/home/home.page.ts">solution1/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/solution1/DeviceResourceExamples/src/app/home/home.page.html">solution1/…/home.page.html</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#111-%E6%BC%94%E7%A4%BA-1%E5%AE%89%E6%8E%92%E6%8F%90%E9%86%92%E8%8E%B7%E5%8F%96%E5%B9%B6%E5%88%86%E4%BA%AB%E4%BD%8D%E7%BD%AE%E5%B9%BB%E7%81%AF%E7%89%87-25--setup1--solution1">演示 1</a></p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://angular.dev/guide/signals">Angular：Signals 指南</a> · <a href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">Wikipedia：Model–view–controller</a></p>
+</blockquote>
+<h2 id="6-本地通知">6. 本地通知</h2>
+<p>幻灯片 17：三个官方插件示例——<strong>本地通知（Local Notification）</strong>、<strong>地理定位（Geolocation）</strong>、<strong>分享（Sharing）</strong>（还有其他插件）。</p>
+<p><strong>目标</strong>（幻灯片 18）：向手机发送一条通知——例如提醒某人记录自己的困倦程度。</p>
+<p><strong>第 1 步——导入并请求权限</strong>（幻灯片 19）。在 service 或组件中导入插件，然后提示用户授权通知，例如在页面初始化时：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">LocalNotifications</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@capacitor/local-notifications'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> ngOnInit</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#C586C0">    await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">requestPermissions</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>不同平台上的提示外观不同。在 Web 上：浏览器栏显示 “<a href="http://localhost:8102">http://localhost:8102</a> wants to — Show notifications — Block / Allow”。在 iOS 上：系统弹窗 ““myApp” Would Like to Send You Notifications … Don&#39;t Allow / Allow”。</p>
+<p><strong>第 2 步——安排通知</strong>（幻灯片 20）。<code>schedule</code> 接收一个通知数组；<code>schedule.at</code> 是一个 <code>Date</code>，所以<strong>可以安排在未来</strong>（这里是 5 秒之后）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">LocalNotifications</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@capacitor/local-notifications'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> notifs</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">schedule</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  notifications:</span><span style="color:#D4D4D4"> [</span></span>
+<span class="line"><span style="color:#D4D4D4">    {</span></span>
+<span class="line"><span style="color:#9CDCFE">      title:</span><span style="color:#CE9178"> "Title"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      body:</span><span style="color:#CE9178"> "Body"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      id:</span><span style="color:#B5CEA8"> 1</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      schedule:</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">at:</span><span style="color:#569CD6"> new</span><span style="color:#DCDCAA"> Date</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">Date</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">now</span><span style="color:#D4D4D4">() + </span><span style="color:#B5CEA8">1000</span><span style="color:#D4D4D4"> * </span><span style="color:#B5CEA8">5</span><span style="color:#D4D4D4">) },</span></span>
+<span class="line"><span style="color:#9CDCFE">      sound:</span><span style="color:#569CD6"> null</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      attachments:</span><span style="color:#569CD6"> null</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      actionTypeId:</span><span style="color:#CE9178"> ""</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      extra:</span><span style="color:#569CD6"> null</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#D4D4D4">  ]</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">'scheduled notifications'</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">notifs</span><span style="color:#D4D4D4">);</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>demo 应用（幻灯片 25 展示了它在浏览器里的样子：“Daily selfie” 页面和一个 “Schedule a selfie reminder” 按钮）在安排通知之前先检查权限结果，然后切换一个 signal：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> scheduleReminder</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"clicked schedule selfie"</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> perm</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">requestPermissions</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#C586C0">  if</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">perm</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">display</span><span style="color:#D4D4D4"> == </span><span style="color:#CE9178">'granted'</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> notif</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">schedule</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">      notifications:</span><span style="color:#D4D4D4"> [</span></span>
+<span class="line"><span style="color:#D4D4D4">        {</span></span>
+<span class="line"><span style="color:#9CDCFE">          title:</span><span style="color:#CE9178"> 'Daily Reminder'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">          body:</span><span style="color:#CE9178"> 'Time to do the thing!'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">          id:</span><span style="color:#B5CEA8"> 1</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">          schedule:</span><span style="color:#D4D4D4"> {</span><span style="color:#9CDCFE">at:</span><span style="color:#569CD6"> new</span><span style="color:#DCDCAA"> Date</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">Date</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">now</span><span style="color:#D4D4D4">())}</span></span>
+<span class="line"><span style="color:#D4D4D4">        }</span></span>
+<span class="line"><span style="color:#D4D4D4">      ]</span></span>
+<span class="line"><span style="color:#D4D4D4">    });</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">finishedReminder</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>当浏览器没有授予通知权限时（无头 Chromium 的默认情况），控制台只显示 <code>clicked schedule selfie</code>，页面停在第一个按钮：<code>perm.display</code> 不是 <code>&#39;granted&#39;</code>，所以什么都没有安排，signal 也没有被 set。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：无论用户同意还是拒绝，<code>requestPermissions()</code> 都会正常 resolve。在依赖通知之前先检查 <code>perm.display == &#39;granted&#39;</code>——用户随时可以点 “Don&#39;t Allow”。</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://capacitorjs.com/docs/apis/local-notifications">Capacitor：Local Notifications API</a></p>
+</blockquote>
+<h2 id="7-地理定位">7. 地理定位</h2>
+<p><strong>目标</strong>（幻灯片 21）：获取设备的位置、朝向和速度。它大概和 A4 关系不大——但能在浏览器中测试、且在浏览器里有意义的 Capacitor 插件很少，这就是其中之一。</p>
+<p>导入 <code>Geolocation</code> 并调用 <code>getCurrentPosition()</code>（幻灯片 22）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Geolocation</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@capacitor/geolocation'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> position</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> Geolocation</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">getCurrentPosition</span><span style="color:#D4D4D4">({});</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>结果中的 <code>coords.latitude</code> / <code>coords.longitude</code> 就是 demo 保存的值（第 5 节的 <code>getLocation()</code>）。在浏览器里它使用浏览器的定位权限；允许定位后，demo 会显示 <code>Coordinates: (&lt;lat&gt;, &lt;long&gt;)</code> 和 “Share my coordinates” 按钮。</p>
+<h2 id="8-分享">8. 分享</h2>
+<p><strong>目标</strong>（幻灯片 23）：把应用中的数据导出到设备上的社交应用——把照片分享到 Facebook，或在短信里分享文字。</p>
+<ul>
+<li>在浏览器中它使用 <strong>Web Share API</strong>——“目前支持情况参差不齐”。</li>
+<li>可以分享 URL、文字和文件（例如图片）。</li>
+<li>某些桌面浏览器中不可用，但手机浏览器通常可以。</li>
+</ul>
+<p>导入插件，然后带上要分享的内容调用 <code>Share.share()</code>（幻灯片 24）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Share</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@capacitor/share'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">let</span><span style="color:#9CDCFE"> shareRet</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> Share</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">share</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  title:</span><span style="color:#CE9178"> 'See cool stuff'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  text:</span><span style="color:#CE9178"> 'Really awesome thing you need to see right meow'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  url:</span><span style="color:#CE9178"> 'http://ionicframework.com/'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  dialogTitle:</span><span style="color:#CE9178"> 'Share with buddies'</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>demo 用 <code>try/catch</code> 包住它，因为<strong>用户取消分享时会抛出错误</strong>（仓库中的注释）：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> shareStuff</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // try/catch because error is thrown if user cancells sharing operation</span></span>
+<span class="line"><span style="color:#C586C0">  try</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    await</span><span style="color:#9CDCFE"> Share</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">share</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">      title:</span><span style="color:#CE9178"> 'Share coordinates'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      text:</span><span style="color:#CE9178"> `Just in case you wanted to know, these are my current coordinates. Perhaps this is an emergency location sharing app idk. My current coordinates are </span><span style="color:#569CD6">${</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">latCoord</span><span style="color:#D4D4D4">()</span><span style="color:#569CD6">}</span><span style="color:#CE9178">, </span><span style="color:#569CD6">${</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">longCoord</span><span style="color:#D4D4D4">()</span><span style="color:#569CD6">}</span><span style="color:#CE9178">`</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      dialogTitle:</span><span style="color:#CE9178"> 'Share my coordinates'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">    });</span></span>
+<span class="line"><span style="color:#D4D4D4">  } </span><span style="color:#C586C0">catch</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">e</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">e</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>注意 <code>this.latCoord()</code>——在模板字符串里读取 signal 同样要调用它。在桌面 Chromium（Linux）中执行的是 catch 分支：控制台显示 <code>CapacitorException: Share API not available in this browser</code>——这正是幻灯片 23 所说的“某些桌面浏览器中不可用”，由同一个 <code>try/catch</code> 接住。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：<code>Share.share()</code> 外面一定要加 <code>try/catch</code>——用户取消时它会 reject，浏览器没有 Web Share API 时也会 reject。</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://capacitorjs.com/docs/apis/share">Capacitor：Share API</a> · <a href="https://web.dev/web-share/">web.dev：Web Share API</a> · <a href="https://github.com/ionic-team/capacitor/issues/910">Capacitor issue #910</a> · <a href="https://ionicframework.com/docs/native/social-sharing">Ionic：Social Sharing 插件</a> · <a href="https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin">SocialSharing-PhoneGap-Plugin（GitHub）</a></p>
+</blockquote>
+<h2 id="9-插件质量与插件问题">9. 插件质量与插件问题</h2>
+<p>Capacitor 插件（幻灯片 26）：有些由官方维护，另一些由社区维护。因此：</p>
+<ul>
+<li>质量差别<strong>极大</strong>；</li>
+<li>功能可能不按预期工作；</li>
+<li>社区信息可能已经过时。</li>
+</ul>
+<p>插件问题（幻灯片 27）：问题很多。例如：Prof. Reid 本想在这堂课的 demo 里用 <strong>Camera（相机）</strong>插件，结果发现它<strong>已经不能在浏览器中使用了</strong>——所以 demo 改用了通知、定位和分享。只有一部分功能可用，插件可能不可靠，而 Capacitor 还在持续改进。</p>
+<p>关于原生资源的思考（幻灯片 31）：</p>
+<ul>
+<li>原生支持的现状“还行而已”。</li>
+<li>你可以 <strong>fork</strong>（复制）一个有问题或不完整的插件，自己打补丁。这比自己从头写插件更好还是更糟？</li>
+<li>这是混合应用相比原生应用的明显缺点：<strong>不能直接使用设备库</strong>——要么依赖社区库，要么自己补上缺失的部分。</li>
+</ul>
+<blockquote>
+<p>🔗 <strong>延伸阅读</strong>：<a href="https://github.com/ionic-team/capacitor/issues">GitHub 上的 Capacitor issues</a></p>
+</blockquote>
+<h2 id="10-混合应用的优点与缺点">10. 混合应用的优点与缺点</h2>
+<table>
+<thead>
+<tr>
+<th>缺点（幻灯片 32）</th>
+<th>优点（幻灯片 33）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>性能问题</td>
+<td>Web 和移动端可以共用一套代码</td>
+</tr>
+<tr>
+<td>与平台不一致</td>
+<td>可以节省时间和精力（有时候）</td>
+</tr>
+<tr>
+<td>对设备能力的访问有限</td>
+<td>容易为各种尺寸的设备设计</td>
+</tr>
+<tr>
+<td></td>
+<td>可以访问<em>部分</em>设备能力</td>
+</tr>
+</tbody></table>
+<p><strong>选择的关键在于分析需求。</strong> 当你需要的设备资源为零、或者都有维护良好的插件时，混合应用占优；当你需要大量原生资源或高性能时，原生应用占优。</p>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#112-%E9%97%AE%E9%A2%98-1%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E5%BC%80%E5%8F%91-web-%E6%B7%B7%E5%90%88%E5%BA%94%E7%94%A8%E6%AF%94%E5%8E%9F%E7%94%9F%E5%BA%94%E7%94%A8%E6%9B%B4%E5%90%88%E9%80%82%E5%B9%BB%E7%81%AF%E7%89%87-2830">问题 1</a></p>
+</blockquote>
+<h2 id="11-课堂问题与演示附解答">11. 课堂问题与演示（附解答）</h2>
+<h3 id="111-演示-1安排提醒获取并分享位置幻灯片-25--setup1--solution1">11.1 演示 1：安排提醒、获取并分享位置（幻灯片 25 · setup1 → solution1）</h3>
+<p><strong>任务。</strong> <code>setup1</code> 是一个 Ionic + Angular + Capacitor 应用（“Daily selfie”），模板、四个 signal 和插件的 import 都已经写好。三个方法是空的：</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> scheduleReminder</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"clicked schedule selfie"</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: request permissions, schedule reminder, update finishedReminder</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> getLocation</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: get current location, update latCoord and longCoord, update finishedLocation</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> shareStuff</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: share current coordinates</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: try/catch because error is thrown if user cancells sharing operation</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>模板（第 5 节）每次只显示一步：“Schedule a reminder” → “Print geolocation” → 坐标和 “Share my coordinates”。</p>
+<details>
+<summary>答案</summary>
+
+<div class="code-collapse is-collapsed"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> scheduleReminder</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"clicked schedule selfie"</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> perm</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">requestPermissions</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#C586C0">  if</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">perm</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">display</span><span style="color:#D4D4D4"> == </span><span style="color:#CE9178">'granted'</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> notif</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> LocalNotifications</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">schedule</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">      notifications:</span><span style="color:#D4D4D4"> [</span></span>
+<span class="line"><span style="color:#D4D4D4">        {</span></span>
+<span class="line"><span style="color:#9CDCFE">          title:</span><span style="color:#CE9178"> 'Daily Reminder'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">          body:</span><span style="color:#CE9178"> 'Time to do the thing!'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">          id:</span><span style="color:#B5CEA8"> 1</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">          schedule:</span><span style="color:#D4D4D4"> {</span><span style="color:#9CDCFE">at:</span><span style="color:#569CD6"> new</span><span style="color:#DCDCAA"> Date</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">Date</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">now</span><span style="color:#D4D4D4">())}</span></span>
+<span class="line"><span style="color:#D4D4D4">        }</span></span>
+<span class="line"><span style="color:#D4D4D4">      ]</span></span>
+<span class="line"><span style="color:#D4D4D4">    });</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">finishedReminder</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> getLocation</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> position</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> Geolocation</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">getCurrentPosition</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">finishedLocation</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">latCoord</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">position</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">coords</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">latitude</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">longCoord</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">position</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">coords</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">longitude</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> shareStuff</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // try/catch because error is thrown if user cancells sharing operation</span></span>
+<span class="line"><span style="color:#C586C0">  try</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    await</span><span style="color:#9CDCFE"> Share</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">share</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">      title:</span><span style="color:#CE9178"> 'Share coordinates'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      text:</span><span style="color:#CE9178"> `Just in case you wanted to know, these are my current coordinates. Perhaps this is an emergency location sharing app idk. My current coordinates are </span><span style="color:#569CD6">${</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">latCoord</span><span style="color:#D4D4D4">()</span><span style="color:#569CD6">}</span><span style="color:#CE9178">, </span><span style="color:#569CD6">${</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">longCoord</span><span style="color:#D4D4D4">()</span><span style="color:#569CD6">}</span><span style="color:#CE9178">`</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      dialogTitle:</span><span style="color:#CE9178"> 'Share my coordinates'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">    });</span></span>
+<span class="line"><span style="color:#D4D4D4">  } </span><span style="color:#C586C0">catch</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">e</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">e</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="38"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>展开全部（38 行）</span></button><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>在允许通知和定位的 Chromium 中的结果：“Schedule a reminder” → “Print geolocation” → <code>Coordinates: (&lt;lat&gt;, &lt;long&gt;)</code> 和 “Share my coordinates”；点击 Share 会输出 <code>CapacitorException: Share API not available in this browser</code>（被 catch 接住）。要点：</p>
+<ul>
+<li><code>await</code> 之后的每次更新都通过 <code>.set()</code> 完成——正是这一点让 <code>@if</code> 块切换（换成普通字段后，页面停在第一个按钮）；</li>
+<li>安排通知前检查 <code>perm.display == &#39;granted&#39;</code>；</li>
+<li><code>Share.share()</code> 外面加 <code>try/catch</code>。</li>
+</ul>
+<p>可交互的重现版本在<a href="#5-signals">第 5 节</a>。</p>
+</details>
+
+<blockquote>
+<p>🧪 <strong>Demo 文件</strong>：<a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/setup1/DeviceResourceExamples/src/app/home/home.page.ts">setup1/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/solution1/DeviceResourceExamples/src/app/home/home.page.ts">solution1/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L1_DeviceResources_Signals/solution1/DeviceResourceExamples/src/app/home/home.page.html">home.page.html</a></p>
+</blockquote>
+<p>回到 <a href="#5-signals">第 5 节</a>。</p>
+<h3 id="112-问题-1什么时候开发-web-混合应用比原生应用更合适幻灯片-2830">11.2 问题 1：什么时候开发 Web 混合应用比原生应用更合适？（幻灯片 28–30）</h3>
+<p>When might developing a web hybrid app be preferable to a native app?</p>
+<ul>
+<li>A. When you need to access a lot of native device resources</li>
+<li>B. When you don&#39;t need any native device resources</li>
+<li>C. When you can use well-maintained libraries to access native resources</li>
+<li>D. When you need high performance</li>
+<li>E. I don&#39;t know, this lecture has scared me away from making hybrid apps</li>
+</ul>
+<details>
+<summary>答案</summary>
+
+<p><strong>答案：B 和 C</strong>（幻灯片没有公布投票结果；这是根据幻灯片 31–33 推出的）。</p>
+<ul>
+<li><strong>B</strong>——不需要任何原生资源时，混合应用最大的弱点（设备访问有限、插件不可靠）就不存在了，同时还保留了它的优点：Web 和移动端一套代码、容易适配各种尺寸。</li>
+<li><strong>C</strong>——缺点在于依赖质量参差的插件；如果你需要的插件维护良好，这个风险就很小。</li>
+<li><strong>A</strong> 错：大量原生资源意味着大量质量不一的插件，或者要自己写/修补——这正是“明显的缺点”（幻灯片 31）。</li>
+<li><strong>D</strong> 错：性能问题是幻灯片 32 列出的第一个缺点。</li>
+<li><strong>E</strong>——这堂课的重点是“分析需求”，而不是“永远不做混合应用”。</li>
+</ul>
+</details>
+
+<p>回到 <a href="#10-%E6%B7%B7%E5%90%88%E5%BA%94%E7%94%A8%E7%9A%84%E4%BC%98%E7%82%B9%E4%B8%8E%E7%BC%BA%E7%82%B9">第 10 节</a>。</p>
+<h2 id="12-速查与必记的-5-个要点">12. 速查与必记的 5 个要点</h2>
+<p><strong>Capacitor 命令</strong></p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>npm install @capacitor/core</code> / <code>@capacitor/cli</code></td>
+<td>为 Ionic 项目添加 Capacitor</td>
+</tr>
+<tr>
+<td><code>npm install @capacitor/local-notifications</code></td>
+<td>添加一个插件（每种资源一个包）</td>
+</tr>
+<tr>
+<td><code>ionic serve</code></td>
+<td>在浏览器中运行（插件退回到 Web API）</td>
+</tr>
+<tr>
+<td><code>npx cap init</code></td>
+<td>生成 Capacitor 配置</td>
+</tr>
+<tr>
+<td><code>npm install @capacitor/ios</code> · <code>npx cap add ios</code></td>
+<td>创建原生项目</td>
+</tr>
+<tr>
+<td><code>ionic build</code> · <code>npx cap sync</code></td>
+<td>构建 Web 应用，复制进原生项目</td>
+</tr>
+<tr>
+<td><code>npx cap open ios</code></td>
+<td>打开 Xcode / Android Studio，在模拟器/真机上运行</td>
+</tr>
+<tr>
+<td><code>ionic cap run ios -l --external</code></td>
+<td>在模拟器/真机上实时重载</td>
+</tr>
+</tbody></table>
+<p><strong>插件调用</strong></p>
+<table>
+<thead>
+<tr>
+<th>插件</th>
+<th>导入</th>
+<th>调用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Local Notifications</td>
+<td><code>@capacitor/local-notifications</code></td>
+<td><code>requestPermissions()</code>、<code>schedule({ notifications: [...] })</code></td>
+</tr>
+<tr>
+<td>Geolocation</td>
+<td><code>@capacitor/geolocation</code></td>
+<td><code>getCurrentPosition()</code> → <code>coords.latitude/longitude</code></td>
+</tr>
+<tr>
+<td>Share</td>
+<td><code>@capacitor/share</code></td>
+<td><code>share({ title, text, url, dialogTitle })</code>（加 try/catch）</td>
+</tr>
+</tbody></table>
+<p><strong>Signals</strong></p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>代码</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>导入</td>
+<td><code>import { Component, signal } from &#39;@angular/core&#39;;</code></td>
+</tr>
+<tr>
+<td>声明</td>
+<td><code>ready = signal&lt;boolean&gt;(false);</code></td>
+</tr>
+<tr>
+<td>写入</td>
+<td><code>this.ready.set(true);</code></td>
+</tr>
+<tr>
+<td>读取（TS 或模板）</td>
+<td><code>this.ready()</code> / <code>@if (ready()) { … }</code></td>
+</tr>
+</tbody></table>
+<p><strong>必记的 5 个要点</strong></p>
+<ol>
+<li>Capacitor 插件把 Web 代码连到设备资源；在浏览器里会退回到 Web API，而各浏览器支持不同（Firefox：没有本地通知；桌面 Chromium：没有 Share）。</li>
+<li>不用原生资源时只需 <code>ionic serve</code>；要上真机就是 <code>ionic build</code> → <code>npx cap sync</code> → <code>npx cap open</code>，然后在原生 IDE 里运行。</li>
+<li>视图只在事件、输入变化、手动刷新和 signal 变化时刷新——所以在 <code>await</code> 之后（Capacitor 调用、<code>fetch</code>）设置的值应该是 signal，用 <code>.set()</code> 写、用 <code>()</code> 读。</li>
+<li><code>requestPermissions()</code> 之后检查 <code>perm.display == &#39;granted&#39;</code>；<code>Share.share()</code> 外面加 <code>try/catch</code>。</li>
+<li>混合还是原生是一个需求问题：混合应用共用一套代码、适配多种尺寸；原生在性能、平台一致性和完整设备访问上占优。</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="笔记翻页" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/~kazuhak/notes/in4matx-133/lec-14/zh-CN/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>上一篇 · 第 14 讲</span><span class="pager-title" data-astro-cid-gxyjxt6l>移动设计原则</span></a><a class="card interactive pager-card pager-next" href="/~kazuhak/notes/in4matx-133/lec-16/zh-CN/" rel="next" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>第 16 讲 · 下一篇<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>数据库与本地存储</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>快捷键<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> 上一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> 下一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> 切换语言</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="目录" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>顶部</button><script type="module" src="/~kazuhak/_astro/NoteReader.astro_astro_type_script_index_0_lang.D_DIoJ7q.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/~kazuhak/assets/js/bento.js" defer></script><script src="/~kazuhak/assets/js/chat-widget.js" defer></script></body></html>
