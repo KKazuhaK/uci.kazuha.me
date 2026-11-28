@@ -1,0 +1,689 @@
+<!DOCTYPE html><html lang="en-US"><head><title>IN4MATX 133 Databases &amp; Local Storage | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Remote vs. local data, the storage options a WebView app can use (cookies, web storage, Capacitor Preferences, IndexedDB via ionic-storage, device SQLite, remote databases), saving data with Preferences and IndexedDB in an Ionic app, and a plan for building A4."><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-16/en-US/"><link rel="icon" href="/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-16/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/in4matx-133/lec-16/zh-CN/"><link rel="stylesheet" href="/_astro/BaseLayout.CnlNRG6h.css"><link rel="stylesheet" href="/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/_astro/katex.mPfuf26R.css"><link rel="stylesheet" href="/_astro/index.BWdCFSBs.css"></head><body data-nav-path="/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="en-US" data-viz-base="/assets/viz/" data-viz-version="1795857809" data-source-url="/notes/in4matx-133/lec-16/en-US/source.md" data-editor-url="/tools/md-editor/" data-alt-url="/notes/in4matx-133/lec-16/zh-CN/" data-prev-url="/notes/in4matx-133/lec-15/en-US/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="Previous / next note" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/notes/in4matx-133/lec-15/en-US/" title="Previous: Device Resources &amp; Signals ([)" aria-label="Previous: Lecture 15" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>Lecture 15</span></a><label class="rb-title" title="Jump to another note" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>IN4MATX 133</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>Lecture 16</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg><select class="rb-jump" data-rb-jump aria-label="Jump to another note" autocomplete="off" data-astro-cid-gxyjxt6l><option value="/notes/in4matx-133/lec-01/en-US/" data-astro-cid-gxyjxt6l>Lecture 1 — Introduction &amp; History</option><option value="/notes/in4matx-133/lec-02/en-US/" data-astro-cid-gxyjxt6l>Lecture 2 — HTML &amp; Accessibility</option><option value="/notes/in4matx-133/lec-03/en-US/" data-astro-cid-gxyjxt6l>Lecture 3 — CSS</option><option value="/notes/in4matx-133/lec-04/en-US/" data-astro-cid-gxyjxt6l>Lecture 4 — Responsive Design &amp; JavaScript 1</option><option value="/notes/in4matx-133/lec-05/en-US/" data-astro-cid-gxyjxt6l>Lecture 5 — JavaScript 2</option><option value="/notes/in4matx-133/lec-06/en-US/" data-astro-cid-gxyjxt6l>Lecture 6 — DOM Manipulation &amp; Package Management</option><option value="/notes/in4matx-133/lec-07/en-US/" data-astro-cid-gxyjxt6l>Lecture 7 — TypeScript &amp; Data Visualization Tools</option><option value="/notes/in4matx-133/lec-08/en-US/" data-astro-cid-gxyjxt6l>Lecture 8 — AJAX, Fetch &amp; Promises</option><option value="/notes/in4matx-133/lec-09/en-US/" data-astro-cid-gxyjxt6l>Lecture 9 — Server-Side Development, Authentication &amp; Authorization</option><option value="/notes/in4matx-133/lec-10/en-US/" data-astro-cid-gxyjxt6l>Lecture 10 — Components in Angular</option><option value="/notes/in4matx-133/lec-11/en-US/" data-astro-cid-gxyjxt6l>Lecture 11 — Separation in Angular</option><option value="/notes/in4matx-133/lec-12/en-US/" data-astro-cid-gxyjxt6l>Lecture 12 — Hybrid and Native Architectures</option><option value="/notes/in4matx-133/lec-13/en-US/" data-astro-cid-gxyjxt6l>Lecture 13 — Ionic Components</option><option value="/notes/in4matx-133/lec-14/en-US/" data-astro-cid-gxyjxt6l>Lecture 14 — Mobile Design Principles</option><option value="/notes/in4matx-133/lec-15/en-US/" data-astro-cid-gxyjxt6l>Lecture 15 — Device Resources &amp; Signals</option><option value="/notes/in4matx-133/lec-16/en-US/" selected data-astro-cid-gxyjxt6l>Lecture 16 — Databases &amp; Local Storage</option></select></label><a class="rb-btn rb-lang" href="/notes/in4matx-133/lec-16/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>中</span></a><a class="rb-btn rb-hub rb-side-next" href="/notes/in4matx-133/" title="Course hub" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>Course hub</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/notes/in4matx-133/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>IN4MATX 133</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>Lecture 16</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/notes/in4matx-133/lec-16/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>中文</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>Headings</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>Open in Editor</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>Lecture 16 · User Interface Software Reading Notes</h2><p id="reader-description" data-astro-cid-gxyjxt6l>This page presents IN4MATX 133 Lecture 16 notes in a structured reading format so you can review HTML, CSS, JavaScript, the DOM, and UI tooling lecture by lecture, with live demos you can edit and run. The path below takes you back to Notes, Course Notes, the course page, or this note file. Hover over the ≡ icon on the right side to open the Table of Contents.</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>Last edited on November 19, 2026</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="in4matx-133-user-interface-software--lecture-16-databases-and-local-storage">IN4MATX 133: User Interface Software — Lecture 16: Databases and Local Storage</h1>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-why-apps-store-data">1. Why apps store data</a></li>
+<li><a href="#2-storage-options-for-webview-apps">2. Storage options for WebView apps</a></li>
+<li><a href="#3-browser-storage-cookies-and-web-storage">3. Browser storage: cookies and web storage</a></li>
+<li><a href="#4-app-preferences">4. App Preferences</a></li>
+<li><a href="#5-indexeddb">5. IndexedDB</a></li>
+<li><a href="#6-device-relational-storage">6. Device relational storage</a></li>
+<li><a href="#7-remote-vs-local-storage">7. Remote vs. local storage</a></li>
+<li><a href="#8-building-a4">8. Building A4</a></li>
+<li><a href="#9-in-class-questions--demos-with-solutions">9. In-class Questions &amp; Demos (with Solutions)</a></li>
+<li><a href="#10-quick-reference--top-5-things-to-remember">10. Quick Reference &amp; Top 5 Things to Remember</a></li>
+</ul>
+<blockquote>
+<p>UCI IN4MATX 133: User Interface Software — Prof. Travis Linden Reid, Fall 2026, Thursday 11/19 (Week 8)<br>Built from the Lecture 16 slides (28 pages) and the demo repo folder <code>W8_L2_Databases</code>. Organized by concept, not by source.</p>
+</blockquote>
+<blockquote>
+<p>📅 <strong>Class logistics</strong>: After today you have everything you need for A4 — <strong>A4 is due Monday at midnight</strong>. Don&#39;t forget the partner survey. Resources are linked on the class Slack.<br>Thanksgiving week: Tuesday class is still on; office hours move to <strong>Tuesday 2–3pm</strong>, and the office door is open from noon until class for help with A5. No class Thursday.</p>
+</blockquote>
+<p>Today&#39;s goals (slides 3, 27): describe the storage options available to browser-based and mobile apps; choose the right option for local data in a WebView app; use two storage options (Preferences and IndexedDB) in an Ionic app.</p>
+<hr>
+<h2 id="1-why-apps-store-data">1. Why apps store data</h2>
+<p>Data lives in one of two places (slide 4):</p>
+<table>
+<thead>
+<tr>
+<th>Remote storage</th>
+<th>Local storage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>user accounts</td>
+<td>app settings / user preferences</td>
+</tr>
+<tr>
+<td>user-made content (posts)</td>
+<td>user-made data</td>
+</tr>
+<tr>
+<td></td>
+<td>game save files</td>
+</tr>
+</tbody></table>
+<p>Many apps, games included, now rely mainly on <strong>cloud</strong> storage even for the things in the right column.</p>
+<p>This lecture is a quick overview of the options, because 133 is a front-end class (slide 5). The back end has its own courses: databases in <strong>CS 122A &amp; B</strong>, remote storage and server communication in <strong>SWE 124</strong>.</p>
+<p>The motivating problem (slide 6): refresh the A4 sleep-tracking app and <strong>every logged entry is gone</strong>. Component variables live in memory only. To keep data you have to tell the browser or the app to store it somewhere.</p>
+<h2 id="2-storage-options-for-webview-apps">2. Storage options for WebView apps</h2>
+<p>A WebView app (an Ionic/Capacitor app, <a href="/notes/in4matx-133/lec-12/en-US/">Lecture 12</a>) can use storage from the <strong>browser</strong> <em>or</em> from the <strong>mobile device</strong> (slide 7):</p>
+<ul>
+<li>browser storage (cookies, web storage) — <a href="#3-browser-storage-cookies-and-web-storage">Section 3</a></li>
+<li>app Preferences — <a href="#4-app-preferences">Section 4</a></li>
+<li>IndexedDB — <a href="#5-indexeddb">Section 5</a></li>
+<li>a device relational database — <a href="#6-device-relational-storage">Section 6</a></li>
+<li>a remote database — <a href="#7-remote-vs-local-storage">Section 7</a></li>
+</ul>
+<p>The comparison of all five is in the <a href="#10-quick-reference--top-5-things-to-remember">Quick Reference</a>.</p>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria">MDN: Storage quotas and eviction criteria</a> · <a href="https://capacitorjs.com/docs/guides/storage">Capacitor: Storage guide</a> · <a href="https://ionicframework.com/docs/angular/storage">Ionic: Angular storage</a></p>
+</blockquote>
+<h2 id="3-browser-storage-cookies-and-web-storage">3. Browser storage: cookies and web storage</h2>
+<p><strong>Cookies</strong> (slide 8):</p>
+<ul>
+<li>small pieces of data sent back and forth between the browser and a server;</li>
+<li>used to maintain a <strong>session</strong>;</li>
+<li><strong>tiny</strong> — not a place for app data.</li>
+</ul>
+<p><strong>Web storage</strong> (slide 9) is the browser&#39;s local storage:</p>
+<ul>
+<li><strong>web only</strong>;</li>
+<li><strong>synchronous</strong>, so it doesn&#39;t scale well — every read and write blocks;</li>
+<li>browsers do <strong>not</strong> recommend it for significant amounts of data;</li>
+<li>no popular Ionic/Capacitor plugins wrap it.</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: neither is the answer for app data in this course. Cookies are for sessions; web storage is synchronous, web-only, and has no Ionic/Capacitor plugin. Both are the wrong options in the <a href="#9-in-class-questions--demos-with-solutions">in-class questions</a>.</p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies">MDN: Using HTTP cookies</a> · <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API">MDN: Web Storage API</a></p>
+</blockquote>
+<h2 id="4-app-preferences">4. App Preferences</h2>
+<p>App preferences (slide 10):</p>
+<ul>
+<li>intended for <strong>small amounts of data</strong> — app settings like language or dark/light mode;</li>
+<li><strong>permanent</strong>;</li>
+<li><strong>unencrypted</strong>;</li>
+<li><strong>synchronous</strong>, so it doesn&#39;t scale well;</li>
+<li>in Ionic: the <strong>Capacitor Preferences</strong> plugin (<code>@capacitor/preferences</code>). It only stores <strong>strings</strong> (iOS supports all basic types, but don&#39;t count on it).</li>
+</ul>
+<p>It&#39;s a key–value store. The demo app (slide 24) saves the user&#39;s name with it. The three calls, from <code>home.page.ts</code> (solution):</p>
+<div class="code-collapse is-collapsed"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Preferences</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@capacitor/preferences'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C8C8C8">nameKey</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">string</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">"name"</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C8C8C8">name</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">string</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">""</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// save: key + string value</span></span>
+<span class="line"><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> Preferences</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  key:</span><span style="color:#CE9178"> 'name'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  value:</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// load: resolves to { value: string | null }</span></span>
+<span class="line"><span style="color:#9CDCFE">Preferences</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  key:</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">nameKey</span></span>
+<span class="line"><span style="color:#D4D4D4">}).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">`name: </span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#569CD6">}</span><span style="color:#CE9178">`</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#6A9955">  // result value is a string | null,</span></span>
+<span class="line"><span style="color:#6A9955">  // so:</span></span>
+<span class="line"><span style="color:#6A9955">  // 1. ensure nameValue is not null</span></span>
+<span class="line"><span style="color:#6A9955">  // 2. use JavaScript String() fn to convert it to string</span></span>
+<span class="line"><span style="color:#C586C0">  if</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">`</span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#569CD6">}</span><span style="color:#CE9178"> not null`</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">String</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">namedSaved</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// delete one key</span></span>
+<span class="line"><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> Preferences</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">remove</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  key:</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">nameKey</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span></code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="32"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>Show all 32 lines</span></button><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Every call returns a Promise, so use <code>await</code> or <code>.then()</code>. A key that was never saved comes back as <code>{ value: null }</code>, which is why the code checks <code>if(resultName.value)</code> before using it.</p>
+<p>Running the built demo in Chromium: before anything is saved the console prints <code>name: null</code>; after typing &quot;Kazuha&quot; and pressing Save, the page&#39;s <code>localStorage</code> holds <code>{&quot;CapacitorStorage.name&quot;:&quot;Kazuha&quot;}</code>, and after a reload the console prints <code>name: Kazuha</code> then <code>Kazuha not null</code> and the welcome screen comes back. So in the browser the plugin is backed by web storage, under a <code>CapacitorStorage.</code> key prefix.</p>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: Preferences stores strings by key. To keep a number, a list or an object, convert it to a string yourself (and back when loading) — or pick a store built for structured data (<a href="#5-indexeddb">Section 5</a>).</p>
+</blockquote>
+<p>The whole app runs interactively at the end of <a href="#5-indexeddb">Section 5</a>.</p>
+<blockquote>
+<p>🧪 <strong>Demo files</strong>: <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/app/home/home.page.ts">solution/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/package.json">package.json</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#93-demo-1-save-a-name-with-preferences-and-a-season-with-indexeddb-slide-24--setup--solution">Demo 1</a></p>
+</blockquote>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://github.com/ionic-team/capacitor-plugins/blob/main/preferences/README.md">Capacitor Preferences plugin README</a> · <a href="https://capacitorjs.com/docs/guides/storage">Capacitor: Storage guide</a></p>
+</blockquote>
+<h2 id="5-indexeddb">5. IndexedDB</h2>
+<h3 id="51-what-it-is">5.1 What it is</h3>
+<p><strong>IndexedDB</strong> (slide 11):</p>
+<ul>
+<li>proposed in 2015, standardized in 2021;</li>
+<li><strong>native database support in browsers</strong>;</li>
+<li>pretty good compatibility these days — the slide&#39;s caniuse table shows full support in current Chrome, Edge, Safari, Firefox, Opera, Chrome for Android, Safari on iOS and Samsung Internet; only IE 10–11 have partial support.</li>
+</ul>
+<p>Its properties (slide 12):</p>
+<ul>
+<li><strong>implemented by the browser</strong>;</li>
+<li><strong>not permanent</strong> on the device — iOS might clean it up without warning, for space or privacy reasons;</li>
+<li>Angular: <code>ngx-indexed-db</code> — sadly not compatible with the most recent Angular version;</li>
+<li>Ionic: <strong><code>ionic-storage</code></strong> — hasn&#39;t been updated in a few years, but still works. This is what the demo uses.</li>
+</ul>
+<p>So what database advantages does it really give you (slide 13)? Mainly <strong>some structure and organization</strong>, and a simpler API for demo purposes; other classes go into more depth. The slide quotes Ionic&#39;s data-storage guide on IndexedDB:</p>
+<table>
+<thead>
+<tr>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Free</td>
+<td>Data loss due to the OS reclaiming space</td>
+</tr>
+<tr>
+<td>Available in browser</td>
+<td>No support for encryption</td>
+</tr>
+<tr>
+<td>Query support</td>
+<td>Limited storage capacity</td>
+</tr>
+<tr>
+<td></td>
+<td>Difficult data export</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>🔗 <strong>Go deeper</strong>: <a href="https://caniuse.com/?search=indexeddb">caniuse: IndexedDB</a> · <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API">MDN: IndexedDB API</a> · <a href="https://github.com/ionic-team/ionic-storage">GitHub: ionic-storage</a> · <a href="https://ionic.io/enterprise-guide/data-storage">Ionic Enterprise Guide: Data storage</a></p>
+</blockquote>
+<h3 id="52-using-ionic-storage-in-the-demo-app">5.2 Using ionic-storage in the demo app</h3>
+<p>The demo saves the user&#39;s favourite season in IndexedDB. Three pieces, all already in the <code>setup</code> project.</p>
+<p><strong>1. Register the storage module</strong> (<code>main.ts</code>) — database name and which drivers to try, IndexedDB first, web storage as fallback:</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">IonicStorageModule</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@ionic/storage-angular'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Drivers</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@ionic/storage'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">bootstrapApplication</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">AppComponent</span><span style="color:#D4D4D4">, {</span></span>
+<span class="line"><span style="color:#9CDCFE">  providers:</span><span style="color:#D4D4D4"> [</span></span>
+<span class="line"><span style="color:#D4D4D4">    { </span><span style="color:#9CDCFE">provide:</span><span style="color:#9CDCFE"> RouteReuseStrategy</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">useClass:</span><span style="color:#9CDCFE"> IonicRouteStrategy</span><span style="color:#D4D4D4"> },</span></span>
+<span class="line"><span style="color:#DCDCAA">    provideIonicAngular</span><span style="color:#D4D4D4">(),</span></span>
+<span class="line"><span style="color:#DCDCAA">    provideRouter</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">routes</span><span style="color:#D4D4D4">, </span><span style="color:#DCDCAA">withPreloading</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">PreloadAllModules</span><span style="color:#D4D4D4">), </span><span style="color:#DCDCAA">withComponentInputBinding</span><span style="color:#D4D4D4">()),</span></span>
+<span class="line"><span style="color:#DCDCAA">    importProvidersFrom</span><span style="color:#D4D4D4">(</span></span>
+<span class="line"><span style="color:#9CDCFE">      IonicStorageModule</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">forRoot</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">        name:</span><span style="color:#CE9178"> '__mydb'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">        driverOrder:</span><span style="color:#D4D4D4"> [</span><span style="color:#9CDCFE">Drivers</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">IndexedDB</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">Drivers</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">LocalStorage</span><span style="color:#D4D4D4">]</span></span>
+<span class="line"><span style="color:#D4D4D4">      })</span></span>
+<span class="line"><span style="color:#D4D4D4">    )</span></span>
+<span class="line"><span style="color:#D4D4D4">  ],</span></span>
+<span class="line"><span style="color:#D4D4D4">});</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>2. Wrap it in a service</strong> (<code>services/storage.ts</code>, an Angular service as in <a href="/notes/in4matx-133/lec-11/en-US/">Lecture 11</a>). <code>storage.create()</code> opens the database once; every method waits for it first:</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Injectable</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@angular/core'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> { </span><span style="color:#9CDCFE">Storage</span><span style="color:#D4D4D4"> } </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> '@ionic/storage-angular'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">@</span><span style="color:#DCDCAA">Injectable</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">  providedIn:</span><span style="color:#CE9178"> 'root'</span></span>
+<span class="line"><span style="color:#D4D4D4">})</span></span>
+<span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> class</span><span style="color:#4EC9B0"> StorageService</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">  private</span><span style="color:#9CDCFE"> _storage</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">Promise</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">Storage</span><span style="color:#D4D4D4">>;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  constructor</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">private</span><span style="color:#9CDCFE"> storage</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">Storage</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">_storage</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">create</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  public</span><span style="color:#569CD6"> async</span><span style="color:#DCDCAA"> set</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">string</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">any</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> storage</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">_storage</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    await</span><span style="color:#9CDCFE"> storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  public</span><span style="color:#569CD6"> async</span><span style="color:#DCDCAA"> get</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">string</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> storage</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">_storage</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    let</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#9CDCFE"> storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  public</span><span style="color:#569CD6"> async</span><span style="color:#DCDCAA"> reset</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> storage</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">_storage</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">clear</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>3. Inject the service and call it</strong> (<code>home.page.ts</code>, solution). Unlike Preferences, <code>set</code> takes any value, not just strings:</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">constructor</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">private</span><span style="color:#9CDCFE"> storage</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">StorageService</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#6A9955">  // … load preferences data (Section 4) …</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">init</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> init</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // load IndexedDB data</span></span>
+<span class="line"><span style="color:#569CD6">  let</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">seasonKey</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"found season value: "</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">  if</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"VALID season value: "</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">setDecorativeText</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">onIonChange</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">event</span><span style="color:#D4D4D4">: </span><span style="color:#9CDCFE">CustomEvent</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">event</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">detail</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">setDecorativeText</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">seasonKey</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> clearData</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#6A9955">  // … Preferences.remove (Section 4) …</span></span>
+<span class="line"><span style="color:#6A9955">  // clear ionic storage data</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">reset</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>The season comes from an <code>ion-picker</code> (<a href="/notes/in4matx-133/lec-13/en-US/">Lecture 13</a>) whose <code>(ionChange)</code> calls <code>onIonChange($event)</code>; <code>setDecorativeText()</code> picks the emoji for the season.</p>
+<p>In Chromium, after picking Fall the browser has an IndexedDB database <code>__mydb</code> with object store <code>_ionickv</code> holding key <code>season</code> → <code>&quot;Fall&quot;</code>. A reload prints <code>found season value: Fall</code> and <code>VALID season value: Fall</code>. <strong>Reset data</strong> empties both stores (<code>localStorage</code> becomes <code>{}</code>, <code>_ionickv</code> has no keys) and the next load prints <code>name: null</code> and <code>found season value: null</code>.</p>
+<h3 id="53-the-view-doesnt-show-the-loaded-season">5.3 The view doesn&#39;t show the loaded season</h3>
+<p>One real bug in the solution: after the reload above, the console says the season is Fall, but the screen shows <strong>&quot;Welcome, Kazuha!&quot; with no emoji and the picker on Spring</strong>. <code>pickerValue</code> and <code>decorativeText</code> are plain fields set <strong>after an <code>await</code></strong>, so nothing refreshes the view (the rule from <a href="/notes/in4matx-133/lec-15/en-US/#5-signals">Lecture 15</a>). The name shows only because <code>namedSaved</code> is a signal. Picking a season works because a user event refreshes the view.</p>
+<p>Fix: make both fields signals and set them with <code>.set()</code>:</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">string</span><span style="color:#D4D4D4">>(</span><span style="color:#CE9178">"Spring"</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">decorativeText</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">signal</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#4EC9B0">string</span><span style="color:#D4D4D4">>(</span><span style="color:#CE9178">""</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// in init():  this.pickerValue.set(val);</span></span>
+<span class="line"><span style="color:#6A9955">// in setDecorativeText():  this.decorativeText.set(this.fallText);  (etc.)</span></span>
+<span class="line"><span style="color:#6A9955">// in onIonChange():  this.pickerValue.set(event.detail.value);</span></span>
+<span class="line"><span style="color:#6A9955">//                    this.storage.set(this.seasonKey, this.pickerValue());</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="html" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">Welcome, {{name}}! {{decorativeText()}}</span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">ion-picker-column</span><span style="color:#9CDCFE"> [value]</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"pickerValue()"</span><span style="color:#9CDCFE"> (ionChange)</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"onIonChange($event)"</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>With that change, the reloaded app shows Fall and 🍂🍁🎃. (The file itself asks the matching question: <em>&quot;why is namedSaved a signal, but not nameKey?&quot;</em> — <code>nameKey</code> never changes, so the view never needs telling.)</p>
+<p>Try it below: type a name and Save, pick a season, then press <strong>Reload app</strong> (the stand-in &quot;disk&quot; keeps the data, like real storage). Next runs the reload scenario automatically, then applies the fix:</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Slide 24 demo (setup → solution) re-created with Ionic web components; Preferences, ionic-storage and signal() are stand-ins&quot;, &quot;width&quot;: 375, &quot;height&quot;: 520, &quot;html&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/css/ionic.bundle.css\&quot;&gt;\n&lt;script type=\&quot;module\&quot; src=\&quot;https://cdn.jsdelivr.net/npm/@ionic/core@8.8.19/dist/ionic/ionic.esm.js\&quot;&gt;&lt;/script&gt;\n&lt;ion-app&gt;\n&lt;ion-header&gt;&lt;ion-toolbar&gt;&lt;ion-title&gt;Data Saving Demo&lt;/ion-title&gt;&lt;/ion-toolbar&gt;&lt;/ion-header&gt;\n&lt;ion-content&gt;\n  &lt;div id=\&quot;container\&quot;&gt;&lt;/div&gt;\n&lt;/ion-content&gt;\n&lt;ion-footer&gt;&lt;ion-toolbar&gt;&lt;ion-button id=\&quot;reload\&quot; fill=\&quot;outline\&quot; expand=\&quot;block\&quot;&gt;⟳ Reload app (data on \&quot;disk\&quot; stays)&lt;/ion-button&gt;&lt;/ion-toolbar&gt;&lt;/ion-footer&gt;\n&lt;/ion-app&gt;\n&quot;, &quot;css&quot;: &quot;#container { text-align: center; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); }\n&quot;, &quot;js&quot;: &quot;// ---- Stand-ins (the sandbox has no Angular, Capacitor or ionic-storage) ----\n// \&quot;disk\&quot; survives the Reload button, like real storage survives a refresh.\nconst disk = { prefs: new Map(), idb: new Map() };\nconst Preferences = {   // @capacitor/preferences: strings, get() resolves to { value: string | null }\n  get: async ({ key }) =&gt; ({ value: disk.prefs.has(key) ? disk.prefs.get(key) : null }),\n  set: async ({ key, value }) =&gt; { disk.prefs.set(key, value); },\n  remove: async ({ key }) =&gt; { disk.prefs.delete(key); }\n};\nconst storageService = {  // services/storage.ts on top of ionic-storage (IndexedDB opens a bit later)\n  get: (key) =&gt; new Promise(r =&gt; setTimeout(() =&gt; r(disk.idb.has(key) ? disk.idb.get(key) : null), 50)),\n  set: async (key, value) =&gt; { disk.idb.set(key, value); },\n  reset: async () =&gt; { disk.idb.clear(); }\n};\n// A tiny signal(): read with s(), write with s.set(v); set() refreshes the view.\nfunction signal(value) { const s = () =&gt; value; s.set = (v) =&gt; { value = v; render(); }; return s; }\n\n// ---- home.page.ts (solution) ----\nclass HomePage {\n  namedSaved = signal(false);\n  nameKey = \&quot;name\&quot;;\n  name = \&quot;\&quot;;\n  pickerValue = \&quot;Spring\&quot;;\n  decorativeText = \&quot;\&quot;;\n  springText = &#39;\\u{1F326}\\u{1F490}\\u{1F430}&#39;;\n  summerText = &#39;\\u{1F33B}\\u{1F31E}\\u{1F30A}&#39;;\n  fallText = &#39;\\u{1F342}\\u{1F341}\\u{1F383}&#39;;\n  winterText = &#39;\\u{2744}\\u{1F384}\\u{26C4}&#39;;\n  seasonKey = \&quot;season\&quot;;\n\n  constructor(storage) {\n    this.storage = storage;\n    Preferences.get({ key: this.nameKey }).then((resultName) =&gt; {\n      console.log(`name: ${resultName.value}`);\n      if (resultName.value) {\n        this.name = String(resultName.value);\n        this.namedSaved.set(true);\n      }\n    });\n    this.init();\n  }\n  async init() {\n    let val = await this.storage.get(this.seasonKey);\n    console.log(\&quot;found season value: \&quot; + val);\n    if (val) {\n      this.pickerValue = val;      // plain field: nothing refreshes the view here\n      this.setDecorativeText();\n    }\n  }\n  async saveName() {\n    await Preferences.set({ key: &#39;name&#39;, value: this.name });\n    this.namedSaved.set(true);\n  }\n  async clearData() {\n    await Preferences.remove({ key: this.nameKey });\n    this.namedSaved.set(false);\n    this.name = \&quot;\&quot;;\n    this.storage.reset();\n  }\n  onIonChange(event) {\n    this.pickerValue = event.detail.value;\n    this.setDecorativeText();\n    this.storage.set(this.seasonKey, this.pickerValue);\n  }\n  setDecorativeText() {\n    switch (this.pickerValue) {\n      case \&quot;Spring\&quot;: this.decorativeText = this.springText; break;\n      case \&quot;Summer\&quot;: this.decorativeText = this.summerText; break;\n      case \&quot;Fall\&quot;: this.decorativeText = this.fallText; break;\n      case \&quot;Winter\&quot;: this.decorativeText = this.winterText; break;\n    }\n  }\n}\n\n// ---- home.page.html: @if(namedSaved()) { welcome + picker + reset } @else { input + save } ----\n// An event handler refreshes the view when it returns (like Angular); an await inside it doesn&#39;t.\nlet page;\nfunction on(el, ev, fn) { el.addEventListener(ev, (e) =&gt; { fn(e); render(); }); return el; }\nfunction el(tag, attrs = {}, text = \&quot;\&quot;) { const e = document.createElement(tag); for (const k in attrs) e.setAttribute(k, attrs[k]); e.textContent = text; return e; }\nfunction render() {\n  const c = document.getElementById(&#39;container&#39;);\n  c.innerHTML = &#39;&#39;;\n  if (page.namedSaved()) {\n    c.append(el(&#39;ion-item&#39;, {}, `Welcome, ${page.name}! ${page.decorativeText}`), el(&#39;ion-item&#39;, {}, &#39;Your favorite season:&#39;));\n    const col = el(&#39;ion-picker-column&#39;, { value: page.pickerValue });\n    for (const s of [\&quot;Spring\&quot;, \&quot;Summer\&quot;, \&quot;Fall\&quot;, \&quot;Winter\&quot;]) col.append(el(&#39;ion-picker-column-option&#39;, { value: s }, s));\n    on(col, &#39;ionChange&#39;, (e) =&gt; page.onIonChange(e));\n    const picker = el(&#39;ion-picker&#39;); picker.append(col); c.append(picker);\n    c.append(on(el(&#39;ion-button&#39;, {}, &#39;Reset data&#39;), &#39;click&#39;, () =&gt; page.clearData()));\n  } else {\n    const input = el(&#39;ion-input&#39;, { placeholder: &#39;Enter your name&#39; });\n    input.value = page.name;\n    on(input, &#39;ionInput&#39;, (e) =&gt; { page.name = e.target.value; });\n    c.append(el(&#39;ion-item&#39;), on(el(&#39;ion-button&#39;, {}, &#39;Save&#39;), &#39;click&#39;, () =&gt; page.saveName()));\n    c.firstChild.append(input);\n  }\n}\nfunction startApp() { console.log(&#39;--- app start ---&#39;); page = new HomePage(storageService); render(); }\ndocument.getElementById(&#39;reload&#39;).addEventListener(&#39;click&#39;, startApp);\nstartApp();\n&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;Scripted: save the name Peter, pick Fall, reload. The console shows the season was loaded, but the view still shows Spring and no emoji (pickerValue is a plain field).&quot;, &quot;js&quot;: &quot;\n// ---- Scripted: save the name \&quot;Peter\&quot;, pick Fall, then reload the app ----\nsetTimeout(async () =&gt; {\n  page.name = \&quot;Peter\&quot;; await page.saveName();\n  page.onIonChange({ detail: { value: \&quot;Fall\&quot; } }); render();\n  startApp();\n}, 300);\n&quot;}, {&quot;note&quot;: &quot;Fix: make pickerValue and decorativeText signals, so setting them after the async IndexedDB read refreshes the view: after the reload, Fall and the emoji appear.&quot;, &quot;js&quot;: &quot;\n// ---- Fix: pickerValue and decorativeText as signals ----\n// In the app: pickerValue = signal&lt;string&gt;(\&quot;Spring\&quot;); ... this.pickerValue.set(val);\n// Here: the same effect, a refresh after the async load.\nHomePage.prototype.init = async function () {\n  let val = await this.storage.get(this.seasonKey);\n  console.log(\&quot;found season value: \&quot; + val);\n  if (val) {\n    this.pickerValue = val;\n    this.setDecorativeText();\n    render();   // what pickerValue.set(val) / decorativeText.set(...) trigger\n  }\n};\n&quot;}], &quot;interactive&quot;: true}</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall</strong>: storage reads are async. Anything you assign from them after an <code>await</code> (or in a <code>.then()</code>) must be a signal, or the screen keeps the old value even though the console shows the new one.</p>
+</blockquote>
+<blockquote>
+<p>🧪 <strong>Demo files</strong>: <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/main.ts">main.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/app/services/storage.ts">services/storage.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/app/home/home.page.ts">solution/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/app/home/home.page.html">home.page.html</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#93-demo-1-save-a-name-with-preferences-and-a-season-with-indexeddb-slide-24--setup--solution">Demo 1</a></p>
+</blockquote>
+<h2 id="6-device-relational-storage">6. Device relational storage</h2>
+<p>A relational database on the device itself (slide 14):</p>
+<ul>
+<li><strong>permanent</strong>;</li>
+<li><strong>performant</strong>;</li>
+<li>relational = great for <strong>high volumes of complex data</strong>;</li>
+<li><strong>not implemented by the browser but by the device</strong> — so for a WebView app it&#39;s <strong>only available on mobile</strong>;</li>
+<li>Ionic options: Capacitor&#39;s <strong>Enterprise (paid) SQLite</strong> plugin, or the <strong>Capacitor community SQLite</strong> plugin (which also works on the web by using IndexedDB underneath).</li>
+</ul>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: IndexedDB is the browser&#39;s database and can be wiped by the OS; device relational storage is the phone&#39;s database and stays. That difference decides the <a href="#91-question-1-best-storage-for-a-mobile-games-save-file-slides-1720">game-save question</a>.</p>
+</blockquote>
+<h2 id="7-remote-vs-local-storage">7. Remote vs. local storage</h2>
+<p>Questions to ask before choosing (slide 15):</p>
+<ul>
+<li>Who needs access to the data — just the user, or others?</li>
+<li>As a developer, do <strong>you</strong> need access?</li>
+<li>Is the data sensitive?</li>
+<li>Is the data valuable enough that it must not be lost?</li>
+</ul>
+<p>Remote databases are crucial when <strong>more than the local device</strong> needs the data (slide 16):</p>
+<ul>
+<li><strong>cross-device apps</strong>: facebook.com and the Facebook mobile app both need your profile information;</li>
+<li><strong>developers</strong>: to understand habits across users or to provide a data-driven service;</li>
+<li><strong>social media</strong>: to share user-generated content across users.</li>
+</ul>
+<p>On the other hand, <strong>some privacy can be preserved if data is only stored locally</strong>. Which to use depends on the type of data and the context.</p>
+<h2 id="8-building-a4">8. Building A4</h2>
+<p>A4 has three big tasks (slides 25–26):</p>
+<ul>
+<li>build an interface with Ionic components (<a href="/notes/in4matx-133/lec-13/en-US/">Lecture 13</a>);</li>
+<li>generate your own pages and components, and use the router for page navigation;</li>
+<li>use a plugin for a native device resource (<a href="/notes/in4matx-133/lec-15/en-US/">Lecture 15</a>) or for storage (this lecture).</li>
+</ul>
+<p>Recommended plan: <strong>tackle them from hardest to easiest</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Difficulty</th>
+<th>Task</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Hardest</td>
+<td>get the device resource / storage working</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>generate two pages, configure the router, make a link</td>
+</tr>
+<tr>
+<td>Easy</td>
+<td>build the interface with Ionic components to make the app&#39;s features</td>
+</tr>
+</tbody></table>
+<h2 id="9-in-class-questions--demos-with-solutions">9. In-class Questions &amp; Demos (with Solutions)</h2>
+<h3 id="91-question-1-best-storage-for-a-mobile-games-save-file-slides-1720">9.1 Question 1: Best storage for a mobile game&#39;s save file (slides 17–20)</h3>
+<p>Which of these is the best storage option for a mobile game&#39;s save file?</p>
+<ul>
+<li>A. Preferences</li>
+<li>B. Device relational storage</li>
+<li>C. Cookies</li>
+<li>D. IndexedDB</li>
+<li>E. Web storage</li>
+</ul>
+<details>
+<summary>Answer</summary>
+
+<p><strong>Answer: B — device relational storage</strong> (the slides don&#39;t reveal the result for this question; this follows from slides 10–14).</p>
+<ul>
+<li><strong>B</strong>: a save file is valuable user-made data on a mobile app, and device storage is permanent, performant and made for complex data. Being mobile-only doesn&#39;t matter for a mobile game.</li>
+<li><strong>A</strong> is wrong: Preferences is for small settings, strings only, synchronous.</li>
+<li><strong>C</strong> is wrong: cookies are tiny and for sessions.</li>
+<li><strong>D</strong> is the trap: it works, but it&#39;s &quot;not permanent on device&quot; — iOS may clear it without warning, and losing a save file is the worst outcome.</li>
+<li><strong>E</strong> is wrong: web only, synchronous, not recommended for significant data.</li>
+</ul>
+<p>(Slide 4&#39;s caveat applies: many games now keep saves in the cloud instead.)</p>
+</details>
+
+<p>Back to <a href="#6-device-relational-storage">Section 6</a>.</p>
+<h3 id="92-question-2-best-storage-for-a4s-sleep-tracking-data-slides-2123">9.2 Question 2: Best storage for A4&#39;s sleep tracking data (slides 21–23)</h3>
+<p>Which of these is the best storage option for A4&#39;s sleep tracking data?</p>
+<ul>
+<li>A. Preferences</li>
+<li>B. Device relational storage</li>
+<li>C. Cookies</li>
+<li>D. IndexedDB</li>
+<li>E. Web storage</li>
+</ul>
+<details>
+<summary>Answer</summary>
+
+<p><strong>Answer: A, B or D</strong> — slide 23 highlights all three.</p>
+<ul>
+<li><strong>A, Preferences</strong>: permanent and simple; a small log can be stored as a string.</li>
+<li><strong>B, device relational storage</strong>: permanent and built for growing structured data — but only on a phone, not in <code>ionic serve</code>.</li>
+<li><strong>D, IndexedDB</strong> (ionic-storage): works in the browser and on the device, and stores structured values directly.</li>
+<li><strong>C</strong> and <strong>E</strong> are out for the same reasons as in Question 1: cookies are tiny session data, and web storage is web-only with no Ionic/Capacitor plugin.</li>
+</ul>
+</details>
+
+<p>Back to <a href="#2-storage-options-for-webview-apps">Section 2</a>.</p>
+<h3 id="93-demo-1-save-a-name-with-preferences-and-a-season-with-indexeddb-slide-24--setup--solution">9.3 Demo 1: Save a name with Preferences and a season with IndexedDB (slide 24 · setup → solution)</h3>
+<p><strong>Task.</strong> <code>setup</code> is an Ionic + Angular app (&quot;Data Saving Demo&quot;) with the template, <code>main.ts</code> storage config and <code>StorageService</code> already done. The page asks for a name; once saved, it says &quot;Welcome, name!&quot; and offers a season picker and a <strong>Reset data</strong> button. Fill in the five TODOs in <code>home.page.ts</code> so both values survive a reload:</p>
+<div class="code-wrap"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">constructor</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">private</span><span style="color:#9CDCFE"> storage</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">StorageService</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: load preferences data</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">init</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> init</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: load IndexedDB data</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> saveName</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: save name to preferences</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> clearData</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO: clear preferences data</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // TODO: clear IndexedDB data</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">onIonChange</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">event</span><span style="color:#D4D4D4">: </span><span style="color:#9CDCFE">CustomEvent</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#6A9955">  // TODO:</span></span>
+<span class="line"><span style="color:#6A9955">  // set picker value</span></span>
+<span class="line"><span style="color:#6A9955">  // set decorative text</span></span>
+<span class="line"><span style="color:#6A9955">  // save to IndexedDB</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<details>
+<summary>Answer</summary>
+
+<div class="code-collapse is-collapsed"><pre data-language="typescript" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">constructor</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">private</span><span style="color:#9CDCFE"> storage</span><span style="color:#D4D4D4">:</span><span style="color:#9CDCFE">StorageService</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#6A9955">  // load preferences data</span></span>
+<span class="line"><span style="color:#9CDCFE">  Preferences</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">    key:</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">nameKey</span></span>
+<span class="line"><span style="color:#D4D4D4">  }).</span><span style="color:#DCDCAA">then</span><span style="color:#D4D4D4">((</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">=></span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">`name: </span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#569CD6">}</span><span style="color:#CE9178">`</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">    {</span></span>
+<span class="line"><span style="color:#9CDCFE">      console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">`</span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#569CD6">}</span><span style="color:#CE9178"> not null`</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">      this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">String</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">resultName</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">      this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">namedSaved</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">init</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> init</span><span style="color:#D4D4D4"> () {</span></span>
+<span class="line"><span style="color:#6A9955">  // load IndexedDB data</span></span>
+<span class="line"><span style="color:#569CD6">  let</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">await</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">seasonKey</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"found season value: "</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">  if</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"VALID season value: "</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">setDecorativeText</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> saveName</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">`saved name: </span><span style="color:#569CD6">${</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#569CD6">}</span><span style="color:#CE9178">`</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">  try</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    await</span><span style="color:#9CDCFE"> Preferences</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">      key:</span><span style="color:#CE9178"> 'name'</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      value:</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">    });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">    this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">namedSaved</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  } </span><span style="color:#C586C0">catch</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">e</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">  {</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">e</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9CDCFE">async</span><span style="color:#DCDCAA"> clearData</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#6A9955">  // clear Preferences data</span></span>
+<span class="line"><span style="color:#C586C0">  await</span><span style="color:#9CDCFE"> Preferences</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">remove</span><span style="color:#D4D4D4">({</span></span>
+<span class="line"><span style="color:#9CDCFE">    key:</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">nameKey</span></span>
+<span class="line"><span style="color:#D4D4D4">  });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">namedSaved</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">false</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">""</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // clear ionic storage data</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">reset</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">onIonChange</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">event</span><span style="color:#D4D4D4">: </span><span style="color:#9CDCFE">CustomEvent</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">event</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">detail</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">setDecorativeText</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">storage</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">seasonKey</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pickerValue</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="62"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>Show all 62 lines</span></button><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Console for first load → save &quot;Kazuha&quot; → pick Fall → reload:</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">name: null
+found season value: null
+saved name: Kazuha
+name: Kazuha
+Kazuha not null
+found season value: Fall
+VALID season value: Fall</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Key points:</p>
+<ul>
+<li><code>Preferences.get</code> resolves to <code>{ value: string | null }</code> — check for <code>null</code> before using it;</li>
+<li><code>namedSaved.set(true)</code> after the async load switches the template&#39;s <code>@if</code> to the welcome screen;</li>
+<li>the season is saved on every <code>ionChange</code> and loaded in <code>init()</code>;</li>
+<li><code>pickerValue</code> and <code>decorativeText</code> should also be signals: as written, the reloaded season doesn&#39;t appear on screen (<a href="#53-the-view-doesnt-show-the-loaded-season">Section 5.3</a>, with the interactive version).</li>
+</ul>
+</details>
+
+<blockquote>
+<p>🧪 <strong>Demo files</strong>: <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/setup/DatabaseExamples/src/app/home/home.page.ts">setup/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/app/home/home.page.ts">solution/…/home.page.ts</a> · <a href="https://github.com/travislindenreid/INF33-Demos/blob/main/W8_L2_Databases/solution/DatabaseExamples/src/app/home/home.page.html">home.page.html</a></p>
+</blockquote>
+<p>Back to <a href="#4-app-preferences">Section 4</a> · <a href="#5-indexeddb">Section 5</a>.</p>
+<h2 id="10-quick-reference--top-5-things-to-remember">10. Quick Reference &amp; Top 5 Things to Remember</h2>
+<p><strong>Storage options for a WebView app</strong></p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Implemented by</th>
+<th>Permanent?</th>
+<th>Good for</th>
+<th>Ionic/Capacitor</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cookies</td>
+<td>browser</td>
+<td>—</td>
+<td>session state (tiny)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Web storage</td>
+<td>browser</td>
+<td>—</td>
+<td>not recommended for significant data; synchronous, web only</td>
+<td>no popular plugin</td>
+</tr>
+<tr>
+<td>Preferences</td>
+<td>device (web storage in a browser)</td>
+<td>yes, unencrypted</td>
+<td>small settings: language, dark mode; strings only; synchronous</td>
+<td><code>@capacitor/preferences</code></td>
+</tr>
+<tr>
+<td>IndexedDB</td>
+<td>browser</td>
+<td>no — iOS may clear it</td>
+<td>some structure; free, in the browser, queries</td>
+<td><code>ionic-storage</code> (<code>@ionic/storage-angular</code>)</td>
+</tr>
+<tr>
+<td>Device relational (SQLite)</td>
+<td>device</td>
+<td>yes</td>
+<td>high volumes of complex data; performant; mobile only</td>
+<td>Enterprise SQLite (paid), community SQLite</td>
+</tr>
+<tr>
+<td>Remote database</td>
+<td>server</td>
+<td>yes</td>
+<td>cross-device, developer access, sharing between users</td>
+<td>back end (CS 122A/B, SWE 124)</td>
+</tr>
+</tbody></table>
+<p><strong>API calls from the demo</strong></p>
+<table>
+<thead>
+<tr>
+<th>Store</th>
+<th>Save</th>
+<th>Load</th>
+<th>Delete</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Preferences</td>
+<td><code>await Preferences.set({ key, value })</code></td>
+<td><code>Preferences.get({ key })</code> → <code>{ value: string | null }</code></td>
+<td><code>Preferences.remove({ key })</code></td>
+</tr>
+<tr>
+<td>ionic-storage</td>
+<td><code>storage.set(key, value)</code></td>
+<td><code>await storage.get(key)</code></td>
+<td><code>storage.clear()</code> (all keys)</td>
+</tr>
+</tbody></table>
+<p>Setup for ionic-storage: <code>IonicStorageModule.forRoot({ name, driverOrder: [Drivers.IndexedDB, Drivers.LocalStorage] })</code> in <code>main.ts</code>, then <code>await storage.create()</code> once before use (the demo&#39;s <code>StorageService</code>).</p>
+<p><strong>Top 5 things to remember</strong></p>
+<ol>
+<li>Component variables vanish on refresh; data you want to keep must be stored explicitly.</li>
+<li>Preferences = small, permanent, string-only settings; IndexedDB = structured, in the browser, but <strong>not permanent</strong> (iOS may clear it).</li>
+<li>Device relational storage is the permanent, performant choice for lots of complex data, but in a WebView app it exists only on mobile.</li>
+<li>Cookies and web storage are the wrong answers for app data: cookies are tiny session data; web storage is synchronous, web-only and plugin-less.</li>
+<li>Storage calls are async: set anything loaded from storage through a <strong>signal</strong>, or the view won&#39;t show it.</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="Note navigation" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/notes/in4matx-133/lec-15/en-US/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Previous · Lecture 15</span><span class="pager-title" data-astro-cid-gxyjxt6l>Device Resources &amp; Signals</span></a><a class="card interactive pager-card pager-next" href="/notes/in4matx-133/" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>Course hub<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>IN4MATX 133 · User Interface Software</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>Shortcuts<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> Previous</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> Next</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> Switch language</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="Table of Contents" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>Top</button><script type="module" src="/_astro/NoteReader.astro_astro_type_script_index_0_lang.C9lxm8KA.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/assets/js/bento.js" defer></script><script src="/assets/js/chat-widget.js" defer></script></body></html>

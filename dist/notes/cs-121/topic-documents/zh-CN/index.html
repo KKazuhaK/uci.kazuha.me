@@ -1,0 +1,830 @@
+<!DOCTYPE html><html lang="zh-CN"><head><title>CS 121 文档转换、存储与去重 | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="将文档转换为文本，字符编码（ASCII、Unicode、UTF-8/UTF-16/UTF-32），文档存储（TREC Web 格式、压缩、BigTable），精确重复（校验和、CRC），近似重复（N-gram 指纹、Simhash），以及去除页面噪声（内容块、文档斜率曲线、DOM）。"><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-documents/zh-CN/"><link rel="icon" href="/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-documents/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-documents/zh-CN/"><link rel="stylesheet" href="/_astro/BaseLayout.CnlNRG6h.css"><link rel="stylesheet" href="/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/_astro/katex.mPfuf26R.css"><link rel="stylesheet" href="/_astro/index.BWdCFSBs.css"></head><body data-nav-path="/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="zh-CN" data-viz-base="/assets/viz/" data-viz-version="1795857807" data-source-url="/notes/cs-121/topic-documents/zh-CN/source.md" data-editor-url="/tools/md-editor/" data-alt-url="/notes/cs-121/topic-documents/en-US/" data-prev-url="/notes/cs-121/topic-crawling/zh-CN/" data-next-url="/notes/cs-121/topic-text-processing/zh-CN/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="上一篇 / 下一篇" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/notes/cs-121/topic-crawling/zh-CN/" title="上一篇: 网络爬虫 ([)" aria-label="上一篇: 话题 · 网络爬虫" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>话题 · 网络爬虫</span></a><label class="rb-title" title="跳到其他讲" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>CS 121</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>话题 · 文档转换、存储与去重</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg><select class="rb-jump" data-rb-jump aria-label="跳到其他讲" autocomplete="off" data-astro-cid-gxyjxt6l><option value="/notes/cs-121/week-01/zh-CN/" data-astro-cid-gxyjxt6l>第 1 周 — 课程介绍、信息检索与网络、搜索引擎架构</option><option value="/notes/cs-121/week-02/zh-CN/" data-astro-cid-gxyjxt6l>第 2 周 — 网络语料、搜索引擎优化与网络爬虫</option><option value="/notes/cs-121/week-03/zh-CN/" data-astro-cid-gxyjxt6l>第 3 周 — 网络爬虫</option><option value="/notes/cs-121/week-04/zh-CN/" data-astro-cid-gxyjxt6l>第 4 周 — 字符编码、文档存储、重复检测与 Zipf 定律</option><option value="/notes/cs-121/week-05/zh-CN/" data-astro-cid-gxyjxt6l>第 5 周 — 文本处理、词项-文档矩阵</option><option value="/notes/cs-121/week-06/zh-CN/" data-astro-cid-gxyjxt6l>第 6 周 — 倒排索引、索引构建</option><option value="/notes/cs-121/week-07/zh-CN/" data-astro-cid-gxyjxt6l>第 7 周 — 扩展索引、查询处理、tf-idf</option><option value="/notes/cs-121/week-08/zh-CN/" data-astro-cid-gxyjxt6l>第 8 周 — 向量空间模型与余弦排序</option><option value="/notes/cs-121/week-09/zh-CN/" data-astro-cid-gxyjxt6l>第 9 周 — 高效打分、链接分析、评价</option><option value="/notes/cs-121/topic-search-engines/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 搜索引擎与 Web — 搜索引擎与 Web</option><option value="/notes/cs-121/topic-crawling/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 网络爬虫 — 网络爬虫</option><option value="/notes/cs-121/topic-documents/zh-CN/" selected data-astro-cid-gxyjxt6l>话题 · 文档转换、存储与去重 — 文档转换、存储与去重</option><option value="/notes/cs-121/topic-text-processing/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 文本处理 — 文本处理</option><option value="/notes/cs-121/topic-indexing/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 倒排索引与索引构建 — 倒排索引与索引构建</option><option value="/notes/cs-121/topic-retrieval-models/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 检索模型：布尔、tf-idf 与向量空间 — 检索模型：布尔、tf-idf 与向量空间</option><option value="/notes/cs-121/topic-query-processing/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 查询处理与高效 Top-K — 查询处理与高效 Top-K</option><option value="/notes/cs-121/topic-link-analysis/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 链接分析：HITS 与 PageRank — 链接分析：HITS 与 PageRank</option><option value="/notes/cs-121/topic-evaluation/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 搜索引擎评测 — 搜索引擎评测</option></select></label><a class="rb-btn rb-lang" href="/notes/cs-121/topic-documents/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>EN</span></a><a class="rb-btn rb-next rb-side-next" href="/notes/cs-121/topic-text-processing/zh-CN/" title="下一篇: 文本处理 (])" aria-label="下一篇: 话题 · 文本处理" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>话题 · 文本处理</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/notes/cs-121/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>CS 121</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>话题 · 文档转换、存储与去重</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/notes/cs-121/topic-documents/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>English</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>目录</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>在编辑器中打开</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>信息检索课程阅读笔记</h2><p id="reader-description" data-astro-cid-gxyjxt6l>这页整理的是 CS 121 话题 · 文档转换、存储与去重 的课程笔记，适合按周复习文本处理、网络图、SEO、网络爬虫，以及搜索引擎如何索引网页并为其排序。下面这条路径可以带你回到 Notes、Course Notes、课程主页，或定位到当前笔记。将鼠标悬停在右侧的 ≡ 图标上可以打开目录。</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>最后编辑于 2026 年 11 月 25 日</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="cs-121-information-retrieval--话题文档转换存储与去重">CS 121: Information Retrieval — 话题：文档转换、存储与去重</h1>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#1-%E4%BB%8E%E5%A4%9A%E7%A7%8D%E6%A0%BC%E5%BC%8F%E5%88%B0%E6%96%87%E6%9C%AC%E7%9A%84%E8%BD%AC%E6%8D%A2">1. 从多种格式到文本的转换</a></li>
+<li><a href="#2-%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81unicode-%E4%B8%8E-utf-8">2. 字符编码、Unicode 与 UTF-8</a></li>
+<li><a href="#3-%E6%96%87%E6%A1%A3%E5%AD%98%E5%82%A8trec-web%E5%8E%8B%E7%BC%A9%E4%B8%8E-bigtable">3. 文档存储：TREC Web、压缩与 BigTable</a></li>
+<li><a href="#4-%E7%B2%BE%E7%A1%AE%E9%87%8D%E5%A4%8D%E6%A0%A1%E9%AA%8C%E5%92%8C%E4%B8%8E-crc">4. 精确重复：校验和与 CRC</a></li>
+<li><a href="#5-%E8%BF%91%E4%BC%BC%E9%87%8D%E5%A4%8D%E4%B8%8E-n-gram-%E6%8C%87%E7%BA%B9">5. 近似重复与 N-gram 指纹</a></li>
+<li><a href="#6-simhash">6. Simhash</a></li>
+<li><a href="#7-%E5%8E%BB%E9%99%A4%E5%99%AA%E5%A3%B0%E6%9F%A5%E6%89%BE%E5%86%85%E5%AE%B9%E5%9D%97">7. 去除噪声：查找内容块</a></li>
+<li><a href="#8-%E9%80%9F%E6%9F%A5%E4%B8%8E%E4%BA%94%E6%9D%A1%E8%A6%81%E7%82%B9">8. 速查与五条要点</a></li>
+</ul>
+<blockquote>
+<p>本章跟随一个被爬取的页面进入搜索引擎：先把它<strong>转换</strong>为文本（§1–2），再<strong>存储</strong>它（§3），然后剔除<strong>重复</strong>（§4–6）和<strong>噪声</strong>（§7）。在架构图（<a href="/notes/cs-121/topic-search-engines/zh-CN/">搜索引擎与 Web</a>）上，这一路径是<em>文本获取 → 本地文档库 → 文本转换</em>。页面来自<a href="/notes/cs-121/topic-crawling/zh-CN/">网络爬虫</a>；下一步是研究词本身（token、Zipf 定律、词干提取），即<a href="/notes/cs-121/topic-text-processing/zh-CN/">文本处理</a>。</p>
+<p>📖 <strong>背景阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft 等人，<em>Search Engines: Information Retrieval in Practice</em>，第 3 章 &quot;Crawls and Feeds&quot;（§3.5–§3.8）</a>。</p>
+</blockquote>
+<h2 id="1-从多种格式到文本的转换">1. 从多种格式到文本的转换</h2>
+<p>在文本可以被索引之前，必须先对它进行<strong>转换</strong>：</p>
+<ul>
+<li>文本以<strong>数百种互不兼容的文件格式</strong>存在：纯文本、RTF、HTML、XML、Microsoft Word、ODF、PDF。</li>
+<li><strong>其他并非专为文本设计的文件类型</strong>同样重要：PowerPoint、Excel、Keynote、Pages。</li>
+<li>通常使用<strong>转换工具或库</strong>，它把文档内容<strong>转换为带标签的文本格式（如 HTML 或 XML）</strong>，并<strong>保留其中一部分重要的格式信息</strong>。</li>
+<li>有些转换器<strong>不保留格式</strong>，例如 Unix 工具 <code>pdftotxt</code>、<code>pdf2ps</code> + <code>pdf2ascii</code>。</li>
+</ul>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.5 The Conversion Problem</a></p>
+</blockquote>
+<h2 id="2-字符编码unicode-与-utf-8">2. 字符编码、Unicode 与 UTF-8</h2>
+<h3 id="21-字形与编码">2.1 字形与编码</h3>
+<p><strong>字形</strong>（glyph，来自希腊语 γλυφή，意为&quot;雕刻&quot;）是你看到的符号，它们编码字母或含义。<strong>字符编码</strong>是<strong>比特与字形之间的映射</strong>，即从文件中的比特得到屏幕上字符的方式，它<strong>可能是造成不兼容的主要原因</strong>。</p>
+<ul>
+<li><strong>ASCII</strong>（自 1963 年起）是英语的基础编码：用 <strong>7 位</strong>表示 <strong>128</strong> 个字母、数字、特殊字符和控制字符，并额外加一位以便按字节存储。</li>
+<li><strong>其他语言的字形要多得多</strong>：中文有 <strong>40,000</strong> 多个字符，其中常用的超过 <strong>3,000</strong> 个。</li>
+<li>许多语言有<strong>多种编码方案</strong>，例如 CJK（中日韩）系列、印地语和阿拉伯语。使用这些旧方案时必须<strong>指定编码</strong>，因为<strong>文件不是自描述的</strong>，并且<strong>一个文件中无法同时包含多种语言</strong>。</li>
+<li><strong>Unicode</strong> 开发于 80 年代末，正是为了解决这些问题。</li>
+</ul>
+<h3 id="22-unicode-及其编码">2.2 Unicode 及其编码</h3>
+<p><strong>Unicode</strong> 是从数字到字形的<strong>单一映射</strong>，尽量包含所有已知语言中常用的字形。它的保留（私用）区域甚至可以用来书写自创的文字。</p>
+<p>Unicode <strong>解决了&quot;数字 → 字形&quot;的问题</strong>，但<strong>没有唯一确定&quot;比特 → 字形&quot;的映射</strong>。UTF-8、UTF-16、UTF-32 这些编码正是做这件事的：它们把数字（<strong>码位</strong>，code point）转换为字节。</p>
+<p>为什么要有多种编码？出于<strong>兼容性与空间</strong>的考虑：</p>
+<table>
+<thead>
+<tr>
+<th>编码</th>
+<th>每个字符的字节数</th>
+<th>权衡</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UTF-8</td>
+<td>英文为 1（与 ASCII 相同），最多 <strong>4</strong>（例如某些繁体中文字符）</td>
+<td>可变长度：占用空间少，但字符串操作更难（第 <em>i</em> 个字符不在第 <em>i</em> 个字节处）</td>
+</tr>
+<tr>
+<td>UTF-32</td>
+<td>始终为 <strong>4</strong></td>
+<td>占用内存更多，与 ASCII 不向后兼容，但宽度固定</td>
+</tr>
+</tbody></table>
+<p>你可以<strong>两者混用</strong>：许多应用在内部使用 <strong>UTF-32</strong>（便于快速随机查找），在磁盘上使用 <strong>UTF-8</strong>（占用空间更少）。</p>
+<h3 id="23-utf-8-的工作原理">2.3 UTF-8 的工作原理</h3>
+<p>码位所在的范围决定表中的行；每个 <code>x</code> 依次由码位的比特填充，高位在前：</p>
+<table>
+<thead>
+<tr>
+<th>十进制</th>
+<th>十六进制</th>
+<th>编码</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0–127</td>
+<td>0–7F</td>
+<td><code>0xxxxxxx</code></td>
+</tr>
+<tr>
+<td>128–2047</td>
+<td>80–7FF</td>
+<td><code>110xxxxx 10xxxxxx</code></td>
+</tr>
+<tr>
+<td>2048–55295</td>
+<td>800–D7FF</td>
+<td><code>1110xxxx 10xxxxxx 10xxxxxx</code></td>
+</tr>
+<tr>
+<td>55296–57343</td>
+<td>D800–DFFF</td>
+<td>未定义</td>
+</tr>
+<tr>
+<td>57344–65535</td>
+<td>E000–FFFF</td>
+<td><code>1110xxxx 10xxxxxx 10xxxxxx</code></td>
+</tr>
+<tr>
+<td>65536–1114111</td>
+<td>10000–10FFFF</td>
+<td><code>11110xxx 10xxxxxx 10xxxxxx 10xxxxxx</code></td>
+</tr>
+</tbody></table>
+<p>示例：希腊字母 <strong>π 的码位是 960</strong>，二进制为 <code>00000011 11000000</code>（十六进制 3C0）。960 位于第二行，因此编码形式为 <code>110xxxxx 10xxxxxx</code>：<strong>高 5 位</strong>放入第一个字节，<strong>接下来的 6 位</strong>放入第二个字节。结果为 <strong><code>11001111 10000000</code> = <code>CF 80</code></strong>。你可以逐步查看，也可以输入其他字符：</p>
+<pre data-language="viz" data-viz="utf8-encode"><code>{&quot;title&quot;: &quot;π 的 UTF-8 编码&quot;, &quot;text&quot;: &quot;π&quot;, &quot;interactive&quot;: true}</code></pre><p>前导位决定长度（<code>110</code> 表示 2 个字节，<code>1110</code> 表示 3 个，<code>11110</code> 表示 4 个）；后续字节以 <code>10</code> 开头，因此 ASCII 字节（<code>0xxxxxxx</code>）永远不会是多字节字符的一部分。Python 的结果与此一致：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"π"</span><span style="color:#D4D4D4">.encode(</span><span style="color:#CE9178">"utf-8"</span><span style="color:#D4D4D4">).hex(</span><span style="color:#CE9178">" "</span><span style="color:#D4D4D4">))       </span><span style="color:#6A9955"># cf 80</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"π"</span><span style="color:#D4D4D4">.encode(</span><span style="color:#CE9178">"utf-32-be"</span><span style="color:#D4D4D4">).hex(</span><span style="color:#CE9178">" "</span><span style="color:#D4D4D4">))   </span><span style="color:#6A9955"># 00 00 03 c0</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(</span><span style="color:#CE9178">"中"</span><span style="color:#D4D4D4">.encode(</span><span style="color:#CE9178">"utf-8"</span><span style="color:#D4D4D4">)))           </span><span style="color:#6A9955"># 3</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">cf 80
+00 00 03 c0
+3</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.5.1 Character Encodings</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>： <a href="#24-%E7%BB%83%E4%B9%A0">§2.4</a></p>
+</blockquote>
+<h3 id="24-练习">2.4 练习</h3>
+<h4 id="的-utf-8-编码">€ 的 UTF-8 编码</h4>
+<p>欧元符号 € 的 Unicode 码位是 8364（十六进制 20AC）。UTF-8 存储哪些字节？UTF-32 用几个字节？</p>
+<details>
+<summary>解答</summary>
+
+<p>8364 = <code>0x20AC</code> = <code>00100000 10101100</code>。它落在 2048–65535 区间，所以模板是 <code>1110xxxx 10xxxxxx 10xxxxxx</code>，共 4 + 6 + 6 = 16 个有效位：<code>0010</code> | <code>000010</code> | <code>101100</code>。于是得到 <code>1110</code>+<code>0010</code> = <code>11100010</code>、<code>10</code>+<code>000010</code> = <code>10000010</code>、<code>10</code>+<code>101100</code> = <code>10101100</code>。结果是 <strong><code>E2 82 AC</code></strong>，3 个字节（π 只用 2 个）。UTF-32 总是用 4 个字节：<code>00 00 20 AC</code>。核对：<code>&quot;€&quot;.encode(&quot;utf-8&quot;)</code> 的结果是 <code>e2 82 ac</code>。</p>
+</details>
+
+<h2 id="3-文档存储trec-web压缩与-bigtable">3. 文档存储：TREC Web、压缩与 BigTable</h2>
+<h3 id="31-存储的理由与要求">3.1 存储的理由与要求</h3>
+<p>转换之后，需要<strong>存储</strong>文档。保留转换后文本的理由：</p>
+<ul>
+<li>当页面未更新时，它<strong>节省重新爬取的时间</strong>；</li>
+<li>它能<strong>高效访问文本</strong>，用于<strong>摘要生成</strong>、额外信息抽取等。</li>
+</ul>
+<p>数据库系统可以为某些应用提供文档存储，但<strong>网络搜索引擎使用定制的文档存储系统</strong>。搜索引擎文档库的要求如下：</p>
+<table>
+<thead>
+<tr>
+<th>要求</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>随机访问</strong></td>
+<td>通过 <strong>URL</strong> 请求文档内容；通常用<strong>URL 上的哈希函数</strong>定位文档</td>
+</tr>
+<tr>
+<td><strong>压缩与大文件</strong></td>
+<td>减少存储需求，并保持访问效率</td>
+</tr>
+<tr>
+<td><strong>更新</strong></td>
+<td>处理大量新增和修改的文档；添加新的<strong>锚文本</strong>（指向该页面的链接的文本，之后在其他页面上才被发现）</td>
+</tr>
+</tbody></table>
+<p><strong>大文件</strong>：网页很小，因此要把<strong>许多页面存入较少的大文件</strong>，而不是每个文档一个文件。这样可以<strong>避免文件 I/O 开销</strong>（每页的打开与关闭），并且<strong>相对于读取时间降低寻道时间</strong>：一次寻道，然后进行长时间的顺序读取。<strong>复合文档格式</strong>在一个文件中存储多个文档，例如 <strong>TREC Web</strong>（见 §3.2）。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.6 Storing the Documents</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">§3.6.1 Using a Database System</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">§3.6.2 Random Access</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">§3.6.4 Update</a></p>
+</blockquote>
+<h3 id="32-trec-web-格式">3.2 TREC Web 格式</h3>
+<p>一个文件，包含两个被爬取的页面：</p>
+<div class="code-collapse is-collapsed"><pre data-language="xml" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">DOC</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">DOCNO</span><span style="color:#808080">></span><span style="color:#D4D4D4">WTX001-B01-10</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">DOCNO</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">DOCHDR</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">http://www.example.com/test.html 204.244.59.33 19970101013145 text/html 440</span></span>
+<span class="line"><span style="color:#D4D4D4">HTTP/1.0 200 OK</span></span>
+<span class="line"><span style="color:#D4D4D4">Date: Wed, 01 Jan 1997 01:21:13 GMT</span></span>
+<span class="line"><span style="color:#D4D4D4">Server: Apache/1.0.3</span></span>
+<span class="line"><span style="color:#D4D4D4">Content-type: text/html</span></span>
+<span class="line"><span style="color:#D4D4D4">Content-length: 270</span></span>
+<span class="line"><span style="color:#D4D4D4">Last-modified: Mon, 25 Nov 1996 05:31:24 GMT</span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">DOCHDR</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">HTML</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">TITLE</span><span style="color:#808080">></span><span style="color:#D4D4D4">Tropical Fish Store</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">TITLE</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">Coming soon!</span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">HTML</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">DOC</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">DOC</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">DOCNO</span><span style="color:#808080">></span><span style="color:#D4D4D4">WTX001-B01-109</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">DOCNO</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">DOCHDR</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">http://www.example.com/fish.html 204.244.59.33 19970101013149 text/html 440</span></span>
+<span class="line"><span style="color:#D4D4D4">HTTP/1.0 200 OK</span></span>
+<span class="line"><span style="color:#D4D4D4">Date: Wed, 01 Jan 1997 01:21:19 GMT</span></span>
+<span class="line"><span style="color:#D4D4D4">Server: Apache/1.0.3</span></span>
+<span class="line"><span style="color:#D4D4D4">Content-type: text/html</span></span>
+<span class="line"><span style="color:#D4D4D4">Content-length: 270</span></span>
+<span class="line"><span style="color:#D4D4D4">Last-modified: Mon, 25 Nov 1996 05:31:24 GMT</span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">DOCHDR</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">HTML</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">TITLE</span><span style="color:#808080">></span><span style="color:#D4D4D4">Fish Information</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">TITLE</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">This page will soon contain interesting</span></span>
+<span class="line"><span style="color:#D4D4D4">information about tropical fish.</span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">HTML</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">DOC</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="33"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>展开全部（33 行）</span></button><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>格式的各部分：</p>
+<table>
+<thead>
+<tr>
+<th>部分</th>
+<th>位置</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>文档块</strong></td>
+<td><code>&lt;DOC&gt;</code> … <code>&lt;/DOC&gt;</code></td>
+<td>每个被爬取的页面一个；每个文件中有很多个</td>
+</tr>
+<tr>
+<td><strong>头部</strong></td>
+<td><code>&lt;DOCHDR&gt;</code> … <code>&lt;/DOCHDR&gt;</code></td>
+<td>爬取记录：URL、服务器 IP、爬取时间戳（<code>19970101013145</code>）、类型，然后是 HTTP 响应头</td>
+</tr>
+<tr>
+<td><strong>内容</strong></td>
+<td><code>&lt;HTML&gt;</code> … <code>&lt;/HTML&gt;</code></td>
+<td>页面本身</td>
+</tr>
+<tr>
+<td><strong>文档标识符</strong></td>
+<td><code>&lt;DOCNO&gt;</code></td>
+<td>唯一 ID（<code>WTX001-B01-10</code>、<code>WTX001-B01-109</code>）</td>
+</tr>
+<tr>
+<td><strong>修改标记</strong></td>
+<td><code>Last-modified:</code></td>
+<td>服务器声明页面最后修改的时间，是重新爬取时用来比较的依据（参见<a href="/notes/cs-121/topic-crawling/zh-CN/">网络爬虫</a>中关于新鲜度与时效的部分）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>💡 <strong>关键洞见</strong>：这就是&quot;大文件&quot;思想的实际应用：爬虫把 <code>&lt;DOC&gt;</code> 块追加到一个大文件中，而一个从 <code>DOCNO</code>（或 URL 哈希）到字节偏移量的小索引提供随机访问。</p>
+</blockquote>
+<h3 id="33-压缩">3.3 压缩</h3>
+<p><strong>文本高度冗余（或可预测）</strong>。香农 1951 年的论文 &quot;Prediction and Entropy of Printed English&quot; 正是对此进行度量的。<strong>无损</strong>压缩利用这种冗余，在<strong>不丢失任何内容</strong>的前提下使文件变小；索引同样可以压缩。</p>
+<ul>
+<li>常见算法可将 HTML 和 XML 文本压缩 <strong>80%</strong>：例如 <strong>DEFLATE</strong>（zip、gzip）和 <strong>LZW</strong>（Unix <code>compress</code>、PDF）。</li>
+<li>大文件可以<strong>分块</strong>压缩，这样读取一个文档时无需解压整个文件。</li>
+</ul>
+<p>重复的标记压缩效果极好；真实页面的重复性较低，因此是约 80%，而不是这个玩具例子中的 97%：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> zlib</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">page = </span><span style="color:#569CD6">b</span><span style="color:#CE9178">"&#x3C;html>&#x3C;body>"</span><span style="color:#D4D4D4"> + </span><span style="color:#569CD6">b</span><span style="color:#CE9178">"&#x3C;p>Tropical fish include fish found in tropical environments.&#x3C;/p></span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4"> * </span><span style="color:#B5CEA8">50</span><span style="color:#D4D4D4"> + </span><span style="color:#569CD6">b</span><span style="color:#CE9178">"&#x3C;/body>&#x3C;/html>"</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(page), </span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(zlib.compress(page, </span><span style="color:#B5CEA8">9</span><span style="color:#D4D4D4">)))</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">3326 108</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.6.3 Compression and Large Files</a></p>
+</blockquote>
+<h3 id="34-bigtable">3.4 BigTable</h3>
+<p><strong>BigTable</strong> 是 Google 的文档存储系统，专为在<strong>廉价计算机</strong>上<strong>存储、查找和更新</strong>网页并处理大型集合而设计。一个<strong>逻辑表</strong>被切分为许多<strong>子表</strong>（tablet），每个子表由一台服务器持有。</p>
+<p>组织方式：</p>
+<ul>
+<li>在逻辑上按<strong>行</strong>组织；<strong>一行存储单个网页的数据</strong>。</li>
+<li><strong>列可以有多个时间戳</strong>（版本）。<strong>行键、列键和时间戳共同指向一个单元格。</strong></li>
+<li>一行可以有<strong>极多的列</strong>：所有行具有<strong>相同的列组</strong>，但<strong>并非所有行都有相同的列</strong>，这对减少磁盘读取很重要。</li>
+<li>行按<strong>行键</strong>划分为子表（例如以某个字母开头的 URL 位于同一子表中），这使得找到正确的服务器变得简单。</li>
+</ul>
+<p>一个示例行：</p>
+<table>
+<thead>
+<tr>
+<th>行键</th>
+<th><code>text</code></th>
+<th><code>anchor:other.com</code></th>
+<th><code>anchor:null.com</code></th>
+<th><code>title</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>www.example.com</code></td>
+<td>document text</td>
+<td>example</td>
+<td>click here</td>
+<td>example site</td>
+</tr>
+</tbody></table>
+<p><code>anchor:</code> 是一个列组；每个链接来源站点都有自己的一列，用来保存其锚文本，也就是 §3.1 中所说的&quot;添加新锚文本&quot;更新。</p>
+<p>优点与缺点：</p>
+<ul>
+<li><strong>没有查询语言</strong>：无需优化复杂查询。</li>
+<li><strong>只支持行级事务。</strong></li>
+<li>子表存放在一个可被所有 BigTable 服务器访问的<strong>复制文件系统</strong>中。</li>
+<li>对子表的任何更改都会记录在<strong>事务日志</strong>中，该日志同样位于共享文件系统上。</li>
+<li>若子表服务器崩溃，<strong>另一台服务器会从文件系统读取子表的数据和日志并接管</strong>。</li>
+<li>子表可以被压缩。</li>
+</ul>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.6.5 BigTable</a></p>
+</blockquote>
+<h2 id="4-精确重复校验和与-crc">4. 精确重复：校验和与 CRC</h2>
+<h3 id="41-为何重复很重要">4.1 为何重复很重要</h3>
+<p>重复与近似重复来自<strong>副本、版本、抄袭、垃圾信息和镜像站点</strong>；在大型爬取中，<strong>30%</strong> 的页面与其他页面完全相同或近似相同（<strong>Fetterly et al., 2003</strong>）。它们会在爬取、索引和搜索过程中<strong>消耗大量资源</strong>，而对大多数用户几乎没有价值（但在某些用例中可能有价值）。解决办法是用哈希检测精确副本，用指纹检测近似副本；爬虫一侧的视角见<a href="/notes/cs-121/topic-crawling/zh-CN/">网络爬虫</a>。</p>
+<h3 id="42-校验和与-crc">4.2 校验和与 CRC</h3>
+<p><strong>精确重复检测相对容易。</strong> 校验和是由文档内容计算出的一个值，例如<strong>文件中所有字节的和</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>T</th>
+<th>r</th>
+<th>o</th>
+<th>p</th>
+<th>i</th>
+<th>c</th>
+<th>a</th>
+<th>l</th>
+<th>（空格）</th>
+<th>f</th>
+<th>i</th>
+<th>s</th>
+<th>h</th>
+<th>和</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>54</td>
+<td>72</td>
+<td>6F</td>
+<td>70</td>
+<td>69</td>
+<td>63</td>
+<td>61</td>
+<td>6C</td>
+<td>20</td>
+<td>66</td>
+<td>69</td>
+<td>73</td>
+<td>68</td>
+<td>508</td>
+</tr>
+</tbody></table>
+<p>所有数值均为十六进制：508（十六进制）= <strong>1,288</strong>（十进制）。</p>
+<ul>
+<li>文本不同的文件<strong>可能具有相同的校验和</strong>：字节求和忽略顺序，因此同一组字节的任何重排都会产生碰撞。</li>
+<li><strong>循环冗余校验（CRC）</strong>还会考虑字节的<strong>位置</strong>。它<strong>仍可能发生碰撞，但非常罕见</strong>。其他函数包括 <strong>BLAKE2/3、MD5、SHA1、SHA2</strong> 等。</li>
+<li>无论使用哪种方法，<strong>都需要足够快</strong>，因为它要对每个页面运行。</li>
+</ul>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> zlib</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> s </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> [</span><span style="color:#569CD6">b</span><span style="color:#CE9178">"Tropical fish"</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">b</span><span style="color:#CE9178">"Tropical fihs"</span><span style="color:#D4D4D4">]:</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(s, </span><span style="color:#DCDCAA">sum</span><span style="color:#D4D4D4">(s), </span><span style="color:#DCDCAA">hex</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">sum</span><span style="color:#D4D4D4">(s)), </span><span style="color:#DCDCAA">hex</span><span style="color:#D4D4D4">(zlib.crc32(s)))</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">b&#39;Tropical fish&#39; 1288 0x508 0x18f14f94
+b&#39;Tropical fihs&#39; 1288 0x508 0x3ba24de2</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>交换两个字母会保持字节和不变，但会改变 CRC。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.7 Detecting Duplicates</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>： <a href="#43-%E7%BB%83%E4%B9%A0">§4.3</a></p>
+</blockquote>
+<h3 id="43-练习">4.3 练习</h3>
+<h4 id="字节和校验和">字节和校验和</h4>
+<p>分别求 ASCII 字符串 &quot;Search engine&quot; 和 &quot;Saerch engine&quot; 的字节和。字节和能区分这两个字符串吗？什么方法能区分？</p>
+<details>
+<summary>解答</summary>
+
+<p>用十六进制计算，&quot;Search engine&quot; 是 53 + 65 + 61 + 72 + 63 + 68 + 20 + 65 + 6E + 67 + 69 + 6E + 65 = <strong>4EC（十六进制）= 1,260</strong>。&quot;Saerch engine&quot; 只是把 <em>e</em> 和 <em>a</em> 对调，字节完全相同，所以和也是 <strong>1,260</strong>：字节和不考虑顺序，会把两者判为重复。CRC 会按位置给每个字节加权：CRC-32 分别得到 <code>0x98149ea5</code> 和 <code>0x2bcbd658</code>。</p>
+</details>
+
+<h2 id="5-近似重复与-n-gram-指纹">5. 近似重复与 N-gram 指纹</h2>
+<h3 id="51-定义近似重复">5.1 定义近似重复</h3>
+<p><strong>近似重复检测更难。</strong> 两个文本相同、但广告或格式不同的页面是近似重复吗？近似重复由两个文档之间某种相似度度量的<strong>阈值</strong>来定义，例如，若 D1 与 D2 <strong>超过 90% 的词相同</strong>，则 D1 是 D2 的近似重复。计算共享词恰好需要<a href="/notes/cs-121/topic-text-processing/zh-CN/">文本处理</a>中的分词与词频统计。</p>
+<p>两种场景：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>任务</th>
+<th>代价</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>搜索</strong></td>
+<td>找出一个文档 D 的近似重复</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><mi>N</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mclose">)</span></span></span></span> 次比较</td>
+</tr>
+<tr>
+<td><strong>发现</strong></td>
+<td>找出集合中<strong>所有</strong>近似重复的<strong>文档对</strong></td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><msup><mi>N</mi><mn>2</mn></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(N^2)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span> 次比较</td>
+</tr>
+</tbody></table>
+<p>普通的信息检索技术适用于搜索；而对于发现任务，则需要称为<strong>指纹</strong>（fingerprint）的紧凑表示。</p>
+<h3 id="52-指纹算法">5.2 指纹算法</h3>
+<ol>
+<li><strong>把文档解析为词</strong>；去除标点、HTML 标签和多余的空白。</li>
+<li><strong>将词分组为连续的 n-gram</strong>（取某个 n 值），通常是重叠的。</li>
+<li><strong>选出部分 n-gram</strong> 来代表文档。</li>
+<li><strong>对选中的 n-gram 取哈希</strong>，检索更快，表示更小。</li>
+<li><strong>存储哈希值</strong>，通常存放在<a href="/notes/cs-121/topic-indexing/zh-CN/">倒排索引与索引构建</a>中。</li>
+<li><strong>通过比较指纹的重叠程度来比较文档。</strong></li>
+</ol>
+<p>示例逐阶段构建：</p>
+<ul>
+<li>(a) 文本：&quot;Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species.&quot;</li>
+<li>(b) 3-gram：tropical fish include、fish include fish、include fish found、……、salt water species——18 个词得到 <strong>16</strong> 个 3-gram。</li>
+<li>(c) 哈希值：<code>938 664 463 822 492 798 78 969 143 236 913 908 694 553 870 779</code>。</li>
+<li>(d) 使用 <strong>0 mod 4</strong> 选出：<code>664 492 236 908</code>。</li>
+</ul>
+<p>（示例先对每个 n-gram 取哈希，再进行选择；上面第 3 步与第 4 步的顺序与此相反，但思路相同。）逐步查看这 16 个 n-gram；也可以编辑文本，使用演示用的哈希：</p>
+<pre data-language="viz" data-viz="shingle-fingerprint"><code>{&quot;title&quot;: &quot;热带鱼文本的 N-gram 指纹&quot;, &quot;interactive&quot;: true}</code></pre><p>用 Python 复现各阶段（哈希值取自示例，并非真正的哈希函数）：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">text = </span><span style="color:#CE9178">"Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species."</span></span>
+<span class="line"><span style="color:#D4D4D4">HASH = [</span><span style="color:#B5CEA8">938</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">664</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">463</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">822</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">492</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">798</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">78</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">969</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">143</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">236</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">913</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">908</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">694</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">553</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">870</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">779</span><span style="color:#D4D4D4">]</span></span>
+<span class="line"><span style="color:#D4D4D4">words = [w.strip(</span><span style="color:#CE9178">",."</span><span style="color:#D4D4D4">).lower() </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> w </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> text.split()]</span></span>
+<span class="line"><span style="color:#D4D4D4">grams = [</span><span style="color:#CE9178">" "</span><span style="color:#D4D4D4">.join(words[i:i + </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">]) </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> i </span><span style="color:#C586C0">in</span><span style="color:#DCDCAA"> range</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(words) - </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">)]</span></span>
+<span class="line"><span style="color:#D4D4D4">fp = {h </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> h </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> HASH </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> h % </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4"> == </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">}</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(words), </span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(grams), </span><span style="color:#DCDCAA">sorted</span><span style="color:#D4D4D4">(fp))</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">([g </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> g, h </span><span style="color:#C586C0">in</span><span style="color:#DCDCAA"> zip</span><span style="color:#D4D4D4">(grams, HASH) </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> h % </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4"> == </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">])</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">18 16 [236, 492, 664, 908]
+[&#39;fish include fish&#39;, &#39;found in tropical&#39;, &#39;the world including&#39;, &#39;including both freshwater&#39;]</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<h3 id="53-比较指纹">5.3 比较指纹</h3>
+<p>给定指纹 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>A</mi></msub></mrow><annotation encoding="application/x-tex">F_A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 与 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>B</mi></msub></mrow><annotation encoding="application/x-tex">F_B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>，相似度是交集大小与并集大小之比：</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>S</mi><mrow><mi>A</mi><mo separator="true">,</mo><mi>B</mi></mrow></msub><mo>=</mo><mfrac><mrow><mi mathvariant="normal">∣</mi><msub><mi>F</mi><mi>A</mi></msub><mo>∩</mo><msub><mi>F</mi><mi>B</mi></msub><mi mathvariant="normal">∣</mi></mrow><mrow><mi mathvariant="normal">∣</mi><msub><mi>F</mi><mi>A</mi></msub><mo>∪</mo><msub><mi>F</mi><mi>B</mi></msub><mi mathvariant="normal">∣</mi></mrow></mfrac><mspace width="2em"/><msub><mi>S</mi><mrow><mi>A</mi><mo separator="true">,</mo><mi>B</mi></mrow></msub><mo>≥</mo><mi>τ</mi><mtext>  </mtext><mo>⟹</mo><mtext>  </mtext><mtext>A and B are near duplicates</mtext></mrow><annotation encoding="application/x-tex">S_{A,B} = \frac{|F_A \cap F_B|}{|F_A \cup F_B|} \qquad S_{A,B} \ge \tau \implies \text{A and B are near duplicates}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">A</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.363em;vertical-align:-0.936em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.427em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∪</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">∣</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∩</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">∣</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:2em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">A</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.549em;vertical-align:-0.024em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⟹</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord text"><span class="mord">A and B are near duplicates</span></span></span></span></span></span></div>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">∣</mi><mi>F</mi><mi mathvariant="normal">∣</mi></mrow><annotation encoding="application/x-tex">|F|</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">∣</span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="mord">∣</span></span></span></span> 是集合中哈希值的个数（即其基数），<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi></mrow><annotation encoding="application/x-tex">\tau</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span></span></span></span> 是<strong>你</strong>选择的阈值：在&quot;你所定义的阈值&quot;之下，它们即为近似重复。</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> jaccard</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">a</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">b</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#DCDCAA"> len</span><span style="color:#D4D4D4">(a &#x26; b) / </span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(a | b)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(jaccard(fp, {</span><span style="color:#B5CEA8">664</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">492</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">100</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">200</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">236</span><span style="color:#D4D4D4">}))</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">0.5</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：&quot;0 mod p&quot; 的选择只保留大约 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi mathvariant="normal">/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">1/p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/</span><span class="mord mathnormal">p</span></span></span></span> 的 n-gram，而且选中哪些只取决于它们的哈希值，因此同一文本的两个副本会选中相同的 n-gram。若按位置选择（&quot;每隔 4 个 n-gram 取一个&quot;），则不然：在开头插入一个词，所有被选中的 n-gram 都会随之改变。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.7 Detecting Duplicates</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>： <a href="#54-%E7%BB%83%E4%B9%A0">§5.4</a></p>
+</blockquote>
+<h3 id="54-练习">5.4 练习</h3>
+<h4 id="0-mod-4-会选出哪些指纹值">0 mod 4 会选出哪些指纹值？</h4>
+<p>文本 &quot;salt water fish and tropical fish both swim in warm water&quot; 有 11 个词。它相互重叠的 3-gram 依次哈希为 499、302、944、311、505、301、114、639、942。一共有多少个 3-gram？&quot;0 mod 4&quot; 会选出哪些哈希值？这个结果对选择规则的取法说明了什么？</p>
+<details>
+<summary>解答</summary>
+
+<p>11 个词 → 11 − 3 + 1 = 9 个 3-gram。各哈希值模 4 的余数：</p>
+<table>
+<thead>
+<tr>
+<th>哈希</th>
+<th>499</th>
+<th>302</th>
+<th>944</th>
+<th>311</th>
+<th>505</th>
+<th>301</th>
+<th>114</th>
+<th>639</th>
+<th>942</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>对 4 取余</td>
+<td>3</td>
+<td>2</td>
+<td><strong>0</strong></td>
+<td>3</td>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>2</td>
+</tr>
+</tbody></table>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi></mrow><annotation encoding="application/x-tex">F</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span></span></span></span> = {944}：只保留了 &quot;fish and tropical&quot;，9 个值中只有 1 个。&quot;0 mod p&quot; 平均保留约 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi mathvariant="normal">/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">1/p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/</span><span class="mord mathnormal">p</span></span></span></span> 的 n-gram，但在短文本上可能几乎什么都不留，于是两篇短文档即使有重叠，选出的值也可能完全不同。对短文本应使用更小的 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span>（或保留最小的几个哈希值）。比较方法仍是 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">∣</mi><msub><mi>F</mi><mi>A</mi></msub><mo>∩</mo><msub><mi>F</mi><mi>B</mi></msub><mi mathvariant="normal">∣</mi><mi mathvariant="normal">/</mi><mi mathvariant="normal">∣</mi><msub><mi>F</mi><mi>A</mi></msub><mo>∪</mo><msub><mi>F</mi><mi>B</mi></msub><mi mathvariant="normal">∣</mi><mo>≥</mo><mi>τ</mi></mrow><annotation encoding="application/x-tex">|F_A \cap F_B| / |F_A \cup F_B| \ge \tau</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∩</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">∣/∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∪</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">∣</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span></span></span></span>。</p>
+</details>
+
+<h2 id="6-simhash">6. Simhash</h2>
+<h3 id="61-动机">6.1 动机</h3>
+<p>基于<strong>词的表示</strong>上的相似度比较（余弦相似度，参见<a href="/notes/cs-121/topic-retrieval-models/zh-CN/">检索模型：布尔、tf-idf 与向量空间</a>），比 n-gram 指纹更有效地找到近似重复；它的问题在于<strong>效率</strong>。<strong>Simhash</strong>（Charikar, 2002）结合了基于词的相似度的优点与哈希指纹的效率：两个页面之间的<strong>余弦相关性</strong>与它们 simhash 指纹中<strong>相同比特的数量</strong>成正比。</p>
+<h3 id="62-算法">6.2 算法</h3>
+<ol>
+<li>把文档处理为一组<strong>带权重的特征</strong>，这里是<strong>按词频加权的词</strong>。</li>
+<li>为每个词生成一个 <strong>b 位哈希</strong>（b 为指纹的大小）；每个词的哈希都是唯一的。</li>
+<li>在 b 维向量 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span> 中，对每个词：若其哈希的第 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> 位为 <strong>1</strong>，就把它的权重<strong>加到</strong>分量 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> 上；若该位为 <strong>0</strong>，则<strong>减去</strong>它的权重。</li>
+<li>处理完所有词后，指纹的第 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> 位在 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">V_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 为正时为 <strong>1</strong>，否则为 0。</li>
+</ol>
+<p>示例与第 5 节使用相同的文本：</p>
+<ul>
+<li>(b) 带权重的词：tropical 2、fish 2、include 1、found 1、environments 1、around 1、world 1、including 1、both 1、freshwater 1、salt 1、water 1、species 1（in、the、and 被略去）。</li>
+<li>(c) 8 位哈希值：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>词</th>
+<th>哈希</th>
+<th>词</th>
+<th>哈希</th>
+<th>词</th>
+<th>哈希</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>tropical</td>
+<td><code>01100001</code></td>
+<td>fish</td>
+<td><code>10101011</code></td>
+<td>include</td>
+<td><code>11100110</code></td>
+</tr>
+<tr>
+<td>found</td>
+<td><code>00011110</code></td>
+<td>environments</td>
+<td><code>00101101</code></td>
+<td>around</td>
+<td><code>10001011</code></td>
+</tr>
+<tr>
+<td>world</td>
+<td><code>00101010</code></td>
+<td>including</td>
+<td><code>11000000</code></td>
+<td>both</td>
+<td><code>10101110</code></td>
+</tr>
+<tr>
+<td>freshwater</td>
+<td><code>00111111</code></td>
+<td>salt</td>
+<td><code>10110101</code></td>
+<td>water</td>
+<td><code>00100101</code></td>
+</tr>
+<tr>
+<td>species</td>
+<td><code>11101110</code></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<ul>
+<li>(d) <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span> = <strong>1 −5 9 −9 3 1 3 3</strong>。</li>
+<li>(e) 指纹 = <strong>1 0 1 0 1 1 1 1</strong>。</li>
+</ul>
+<p>手工检查最后一个分量：tropical <code>01100001</code> → <code>- + + - - - - +</code>，fish → <code>+ - + - + - + +</code>，include → <code>+ + + - - + + -</code>，沿最后一列向下：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>=</mo><mn>2</mn><mo>+</mo><mn>2</mn><mo>−</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">3 = 2 + 2 - 1 - 1 + 1 + 1 - 1 - 1 - 1 + 1 + 1 + 1 - 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">3</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>。演示每一步加入一个词：</p>
+<pre data-language="viz" data-viz="simhash"><code>{&quot;title&quot;: &quot;热带鱼文本的 Simhash&quot;, &quot;interactive&quot;: true}</code></pre><p>用代码表示（包括从文本中删去一个词时会发生什么）：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> collections </span><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> Counter</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">H = {</span><span style="color:#CE9178">"tropical"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"01100001"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"fish"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"10101011"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"include"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"11100110"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">     "found"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"00011110"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"environments"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"00101101"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"around"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"10001011"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">     "world"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"00101010"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"including"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"11000000"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"both"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"10101110"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">     "freshwater"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"00111111"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"salt"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"10110101"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"water"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"00100101"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">     "species"</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">"11101110"</span><span style="color:#D4D4D4">}</span></span>
+<span class="line"><span style="color:#D4D4D4">text = </span><span style="color:#CE9178">"Tropical fish include fish found in tropical environments around the world, including both freshwater and salt water species."</span></span>
+<span class="line"><span style="color:#D4D4D4">words = [w.strip(</span><span style="color:#CE9178">",."</span><span style="color:#D4D4D4">).lower() </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> w </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> text.split()]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> simhash</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">counts</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#D4D4D4">    V = [</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">] * </span><span style="color:#B5CEA8">8</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> w, c </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> counts.items():</span></span>
+<span class="line"><span style="color:#C586C0">        for</span><span style="color:#D4D4D4"> i, b </span><span style="color:#C586C0">in</span><span style="color:#DCDCAA"> enumerate</span><span style="color:#D4D4D4">(H[w]):</span></span>
+<span class="line"><span style="color:#D4D4D4">            V[i] += c </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> b == </span><span style="color:#CE9178">"1"</span><span style="color:#C586C0"> else</span><span style="color:#D4D4D4"> -c</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> V, </span><span style="color:#CE9178">""</span><span style="color:#D4D4D4">.join(</span><span style="color:#CE9178">"1"</span><span style="color:#C586C0"> if</span><span style="color:#D4D4D4"> v > </span><span style="color:#B5CEA8">0</span><span style="color:#C586C0"> else</span><span style="color:#CE9178"> "0"</span><span style="color:#C586C0"> for</span><span style="color:#D4D4D4"> v </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> V)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">counts = Counter(w </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> w </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> words </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> w </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> H)</span></span>
+<span class="line"><span style="color:#D4D4D4">V, f = simhash(counts)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(V, f)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">counts2 = counts.copy()</span></span>
+<span class="line"><span style="color:#D4D4D4">counts2[</span><span style="color:#CE9178">"species"</span><span style="color:#D4D4D4">] = </span><span style="color:#B5CEA8">0</span><span style="color:#6A9955">            # drop one word</span></span>
+<span class="line"><span style="color:#D4D4D4">V2, f2 = simhash(counts2)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(V2, f2, </span><span style="color:#DCDCAA">sum</span><span style="color:#D4D4D4">(a == b </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> a, b </span><span style="color:#C586C0">in</span><span style="color:#DCDCAA"> zip</span><span style="color:#D4D4D4">(f, f2)) / </span><span style="color:#B5CEA8">8</span><span style="color:#D4D4D4">)</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">[1, -5, 9, -9, 3, 1, 3, 3] 10101111
+[0, -6, 8, -8, 2, 0, 2, 4] 00101011 0.75</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>删去一个权重为 1 的词，使 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span> 的每个分量只变化了 1（恰好变为 0 的分量会翻转，因为规则要求 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">V_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 严格为正），因此 8 位中仍有 6 位相同。</p>
+<h3 id="63-比较两个-simhash">6.3 比较两个 simhash</h3>
+<p>相似度是<strong>相同比特所占的比例</strong>：</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>S</mi><mrow><mi>A</mi><mo separator="true">,</mo><mi>B</mi></mrow></msub><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mi>n</mi></munder><mo stretchy="false">(</mo><msub><mi>H</mi><mi>A</mi></msub><msub><mo>≡</mo><mtext>bitwise</mtext></msub><msub><mi>H</mi><mi>B</mi></msub><mo stretchy="false">)</mo></mrow><mi>n</mi></mfrac><mspace width="2em"/><msub><mi>S</mi><mrow><mi>A</mi><mo separator="true">,</mo><mi>B</mi></mrow></msub><mo>≥</mo><mi>τ</mi><mtext>  </mtext><mo>⟹</mo><mtext>  </mtext><mtext>near duplicates</mtext></mrow><annotation encoding="application/x-tex">S_{A,B} = \frac{\sum_n (H_A \equiv_{\text{bitwise}} H_B)}{n} \qquad S_{A,B} \ge \tau \implies \text{near duplicates}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">A</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.1257em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.4397em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">n</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.6897em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.0017em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel"><span class="mrel">≡</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">bitwise</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:2em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">A</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.549em;vertical-align:-0.024em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⟹</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord text"><span class="mord">near duplicates</span></span></span></span></span></span></div>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mi>A</mi></msub><mo separator="true">,</mo><msub><mi>H</mi><mi>B</mi></msub></mrow><annotation encoding="application/x-tex">H_A, H_B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 是两个指纹，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>≡</mo><mtext>bitwise</mtext></msub></mrow><annotation encoding="application/x-tex">\equiv_{\text{bitwise}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6138em;vertical-align:-0.15em;"></span><span class="mrel"><span class="mrel">≡</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">bitwise</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 在两者比特一致的每个位置计为 1，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span> 是比特数。它等价于 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mtext>Hamming distance</mtext><mi mathvariant="normal">/</mi><mi>n</mi></mrow><annotation encoding="application/x-tex">1 - \text{Hamming distance}/n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Hamming distance</span></span><span class="mord">/</span><span class="mord mathnormal">n</span></span></span></span>，即 1 减去汉明距离与 n 之比。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：Simhash 与普通哈希恰恰相反。好的哈希在一个字节改变时会完全改变（§4）；simhash 的设计目标则是让相似文档的指纹只在<strong>少数</strong>比特上不同：只改动一个词，只会使 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span> 改变该词权重那么多。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.7 Detecting Duplicates</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>： <a href="#64-%E7%BB%83%E4%B9%A0">§6.4</a></p>
+</blockquote>
+<h3 id="64-练习">6.4 练习</h3>
+<h4 id="一段短的鱼类文本的-simhash">一段短的鱼类文本的 Simhash</h4>
+<p>另一篇文档包含以下词及其权重（词频）：fish 3、water 2、salt 2、tropical 1、species 1。它们的 8 位哈希与 §6.2 中相同：fish <code>10101011</code>、water <code>00100101</code>、salt <code>10110101</code>、tropical <code>01100001</code>、species <code>11101110</code>。计算 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span> 和 simhash 指纹，并与 §6.2 的指纹 <code>10101111</code> 比较。</p>
+<details>
+<summary>解答</summary>
+
+<p>每个词在为 1 的位上加上权重，在为 0 的位上减去权重。逐列计算：</p>
+<table>
+<thead>
+<tr>
+<th>位</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span></td>
+<td>3</td>
+<td>−5</td>
+<td>9</td>
+<td>−5</td>
+<td>−1</td>
+<td>1</td>
+<td>−1</td>
+<td>7</td>
+</tr>
+<tr>
+<td>指纹</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p>第 1 位：fish +3、water −2、salt +2、tropical −1、species +1 → 3 &gt; 0 → 1。第 5 位：fish +3、water −2、salt −2、tropical −1、species +1 → −1 → 0。指纹为 <strong>10100101</strong>。与 <code>10101111</code> 相比，第 1、2、3、4、6、8 位相同：8 位中有 6 位一致，即 <strong>0.75</strong>，因此只有当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>≤</mo><mn>0.75</mn></mrow><annotation encoding="application/x-tex">\tau \le 0.75</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.75</span></span></span></span> 时两者才算近似重复。</p>
+</details>
+
+<h2 id="7-去除噪声查找内容块">7. 去除噪声：查找内容块</h2>
+<p>许多网页包含与<strong>主要内容无关</strong>的文本、链接和图片：横幅、导航、侧栏和广告。这些材料大多是<strong>噪声</strong>，可能会损害页面的排名。一些技术用于检测<strong>内容块</strong>；在建立索引时，非内容材料会被<strong>忽略或降低重要性</strong>。</p>
+<p>示例：一个新闻页面的横幅与侧栏被标为<strong>噪声块</strong>；CNN.com 的 &quot;Science &amp; Space&quot; 文章（&quot;Aquarium plays whale shark matchmaker&quot;）中，正文是<strong>内容块</strong>，周围是导航、搜索框和广告。那么，如何检测出内容？</p>
+<h3 id="71-标签的累积分布文档斜率曲线">7.1 标签的累积分布（文档斜率曲线）</h3>
+<p>技术一是<em>文档斜率曲线</em>（Finn, Kushmerick &amp; Smyth, 2001）。沿页面的 token 逐个遍历，统计到目前为止见到的标签数：横轴为 <strong>token 数</strong>（最多约 3,500），纵轴为<strong>标签数</strong>（最多约 1,000）。曲线在标签密集的导航区域稳步上升，而<strong>正文是中间的&quot;平台&quot;</strong>（标为 &quot;Text area&quot;，约 1,000–1,500 个 token），在那里许多 token 经过时几乎没有标签。</p>
+<p>作为优化问题：把页面表示为一个<strong>比特序列</strong>，若第 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span> 个 token 是<strong>标签</strong>则 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mi>n</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">b_n = 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>。寻找 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> 和 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi></mrow><annotation encoding="application/x-tex">j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.854em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.05724em;">j</span></span></span></span>，使得 <strong><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> 之前和 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi></mrow><annotation encoding="application/x-tex">j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.854em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.05724em;">j</span></span></span></span> 之后的标签数</strong>，加上 <strong><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> 与 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi></mrow><annotation encoding="application/x-tex">j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.854em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.05724em;">j</span></span></span></span> 之间的非标签 token 数</strong>，达到最大：</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><munder><mrow><mi>max</mi><mo>⁡</mo></mrow><mrow><mi>i</mi><mo separator="true">,</mo><mtext> </mtext><mi>j</mi></mrow></munder><mtext>  </mtext><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></munderover><msub><mi>b</mi><mi>n</mi></msub><mtext>  </mtext><mo>+</mo><mtext>  </mtext><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mi>i</mi></mrow><mi>j</mi></munderover><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>b</mi><mi>n</mi></msub><mo stretchy="false">)</mo><mtext>  </mtext><mo>+</mo><mtext>  </mtext><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mi>j</mi><mo>+</mo><mn>1</mn></mrow><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></munderover><msub><mi>b</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">\max_{i,\,j} \; \sum_{n=0}^{i-1} b_n \;+\; \sum_{n=i}^{j} (1 - b_n) \;+\; \sum_{n=j+1}^{N-1} b_n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:3.0788em;vertical-align:-1.2671em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-2.3723em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mpunct mtight">,</span><span class="mspace mtight" style="margin-right:0.1952em;"></span><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span></span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">max</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8638em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8117em;"><span style="top:-1.8829em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mrel mtight">=</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2671em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:3.1364em;vertical-align:-1.2777em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8588em;"><span style="top:-1.8723em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mrel mtight">=</span><span class="mord mathnormal mtight">i</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3471em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2777em;"><span></span></span></span></span></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:3.2421em;vertical-align:-1.4138em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8283em;"><span style="top:-1.8723em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mrel mtight">=</span><span class="mord mathnormal mtight" style="margin-right:0.05724em;">j</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">N</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.4138em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></div>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span> 是 token 的数量；token <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> … <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi></mrow><annotation encoding="application/x-tex">j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.854em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.05724em;">j</span></span></span></span> 构成内容块。第一项和第三项奖励块<strong>外部</strong>的标签，中间一项奖励块<strong>内部</strong>的文本。</p>
+<p><strong>替代方法</strong>：把曲线切分为纵向<strong>片段</strong>，求每个片段内的<strong>斜率</strong>，并迭代，不断缩小片段大小，直到找到<strong>零斜率窗口</strong>。</p>
+<h3 id="72-dom-与版面方法">7.2 DOM 与版面方法</h3>
+<p><strong>其他方法</strong>利用<strong>文档对象模型（DOM）</strong>结构和<strong>视觉（版面）特征</strong>：HTML 解析器把 HTML 转换为 DOM 树。CNN 页面的树为 <code>#document</code> → <code>HTML</code> → <code>HEAD</code>、<code>BODY</code>（<code>contentArea</code>），其中的 <code>DIV</code> 和 <code>TABLE</code> 分别名为 <code>cnnCeil</code>、<code>cnnBreakingNewsBanner</code>、<code>iframecnnBreakingNewsBanner</code>、<code>cnnCeilSearch</code>、<code>cnnArticleWireFrame</code>、<code>cnnFootBox</code>、<code>csiIframe</code>；而真正重要的是 <code>TABLE</code> → <code>TBODY</code> → <code>TR</code> → <strong><code>TD</code> <code>cnnArticleContent</code></strong>，即文章本身。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.8 Removing Noise</a></p>
+</blockquote>
+<h2 id="8-速查与五条要点">8. 速查与五条要点</h2>
+<table>
+<thead>
+<tr>
+<th>编码</th>
+<th>每个字符的字节数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ASCII</td>
+<td>1（只用 7 位）</td>
+<td>128 个字符，仅限英语</td>
+</tr>
+<tr>
+<td>UTF-8</td>
+<td>1–4</td>
+<td>与 ASCII 兼容；模板 <code>0xxxxxxx</code>、<code>110xxxxx 10xxxxxx</code>、<code>1110xxxx</code> + 2、<code>11110xxx</code> + 3</td>
+</tr>
+<tr>
+<td>UTF-32</td>
+<td>4</td>
+<td>宽度固定：随机访问快，但占用内存更多</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>重复检测方法</th>
+<th>检测对象</th>
+<th>方式</th>
+<th>相似度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>校验和（字节和）</td>
+<td>精确</td>
+<td>字节求和</td>
+<td>相等与否；忽略顺序导致碰撞</td>
+</tr>
+<tr>
+<td>CRC、MD5、SHA、BLAKE</td>
+<td>精确</td>
+<td>考虑位置的哈希</td>
+<td>相等与否；碰撞罕见</td>
+</tr>
+<tr>
+<td>N-gram 指纹</td>
+<td>近似</td>
+<td>n-gram → 哈希 → 保留 0 mod p</td>
+<td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">∣</mo><msub><mi>F</mi><mi>A</mi></msub><mo>∩</mo><msub><mi>F</mi><mi>B</mi></msub><mo stretchy="false">∣</mo><mi mathvariant="normal">/</mi><mo stretchy="false">∣</mo><msub><mi>F</mi><mi>A</mi></msub><mo>∪</mo><msub><mi>F</mi><mi>B</mi></msub><mo stretchy="false">∣</mo><mo>≥</mo><mi>τ</mi></mrow><annotation encoding="application/x-tex">\lvert F_A \cap F_B\rvert / \lvert F_A \cup F_B\rvert \ge \tau</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∩</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">∣</span><span class="mord">/</span><span class="mopen">∣</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∪</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">∣</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span></span></span></span></td>
+</tr>
+<tr>
+<td>Simhash</td>
+<td>近似</td>
+<td>权重 × ±哈希位 → <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi></mrow><annotation encoding="application/x-tex">V</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.22222em;">V</span></span></span></span> 的符号</td>
+<td>相同比特数 / n <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≥</mo><mi>τ</mi></mrow><annotation encoding="application/x-tex">\ge \tau</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span></span></span></span></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>存储 / 噪声</th>
+<th>关键思路</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>大文件、TREC Web</td>
+<td>每个文件中有许多 <code>&lt;DOC&gt;</code> 块：减少文件 I/O，只需寻道一次</td>
+</tr>
+<tr>
+<td>压缩</td>
+<td>无损，对 HTML/XML 约 80%（DEFLATE、LZW），分块进行</td>
+</tr>
+<tr>
+<td>BigTable</td>
+<td>行 = 页面；（行键，列键，时间戳）→ 单元格；按行键划分子表</td>
+</tr>
+<tr>
+<td>内容块</td>
+<td>标签累积曲线的平台；最大化 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mi>i</mi><mo separator="true">,</mo><mi>j</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[i, j]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord mathnormal">i</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.05724em;">j</span><span class="mclose">]</span></span></span></span> 之外的标签数与之内的文本数</td>
+</tr>
+</tbody></table>
+<p><strong>必记的 5 件事</strong></p>
+<ol>
+<li>Unicode 把字形映射为数字；UTF-8/16/32 把数字映射为字节。π = U+03C0 = 960 → <code>110</code>01111 <code>10</code>000000 = <code>CF 80</code>。</li>
+<li>搜索引擎把文档存储在大型复合文件（TREC Web）或 BigTable 中：通过 URL 哈希实现随机访问，并支持压缩与更新，而不是每个页面一个文件。</li>
+<li>精确重复：校验和/CRC；近似重复：N-gram 指纹（&quot;0 mod p&quot; 选择，交集除以并集 ≥ τ），或 Simhash（相同比特的比例 ≥ τ）。</li>
+<li>Simhash：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">V_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 在比特 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> 为 1 时加上权重，为 0 时减去权重；当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mi>i</mi></msub><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">V_i &gt; 0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.22222em;">V</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span> 时比特为 1。相似的文档得到相似的指纹。</li>
+<li>索引之前先去除噪声：主文本是累积标签曲线上的平台（或 DOM 树中的内容块）。关于词的统计（如 Zipf 定律），参见<a href="/notes/cs-121/topic-text-processing/zh-CN/">文本处理</a>。</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="笔记翻页" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/notes/cs-121/topic-crawling/zh-CN/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>上一篇 · 话题 · 网络爬虫</span><span class="pager-title" data-astro-cid-gxyjxt6l>网络爬虫</span></a><a class="card interactive pager-card pager-next" href="/notes/cs-121/topic-text-processing/zh-CN/" rel="next" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>话题 · 文本处理 · 下一篇<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>文本处理</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>快捷键<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> 上一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> 下一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> 切换语言</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="目录" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>顶部</button><script type="module" src="/_astro/NoteReader.astro_astro_type_script_index_0_lang.C9lxm8KA.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/assets/js/bento.js" defer></script><script src="/assets/js/chat-widget.js" defer></script></body></html>

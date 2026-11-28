@@ -1,0 +1,1059 @@
+<!DOCTYPE html><html lang="zh-CN"><head><title>ICS 46 哈希表 | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="哈希表：桶、哈希码与压缩、冲突、拉链法（负载因子、重新哈希）、线性探测（墓碑、主聚集、探测次数、扩容）以及二次探测。"><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/ics-46/topic-hashing/zh-CN/"><link rel="icon" href="/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/ics-46/topic-hashing/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/ics-46/topic-hashing/zh-CN/"><link rel="stylesheet" href="/_astro/BaseLayout.CnlNRG6h.css"><link rel="stylesheet" href="/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/_astro/katex.mPfuf26R.css"><link rel="stylesheet" href="/_astro/index.BWdCFSBs.css"></head><body data-nav-path="/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="zh-CN" data-viz-base="/assets/viz/" data-viz-version="1795857806" data-source-url="/notes/ics-46/topic-hashing/zh-CN/source.md" data-editor-url="/tools/md-editor/" data-alt-url="/notes/ics-46/topic-hashing/en-US/" data-prev-url="/notes/ics-46/topic-search-trees/zh-CN/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="上一篇 / 下一篇" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/notes/ics-46/topic-search-trees/zh-CN/" title="上一篇: 搜索树 ([)" aria-label="上一篇: 话题 · 搜索树" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>话题 · 搜索树</span></a><label class="rb-title" title="跳到其他讲" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>ICS 46</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>话题 · 哈希表</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg><select class="rb-jump" data-rb-jump aria-label="跳到其他讲" autocomplete="off" data-astro-cid-gxyjxt6l><option value="/notes/ics-46/lec-00/zh-CN/" data-astro-cid-gxyjxt6l>第 0 讲 — 课程介绍、单元测试与模板</option><option value="/notes/ics-46/lec-01/zh-CN/" data-astro-cid-gxyjxt6l>第 1 讲 — 随机数、引用与指针</option><option value="/notes/ics-46/lec-02/zh-CN/" data-astro-cid-gxyjxt6l>第 2 讲 — 智能指针、多维数组与经验分析</option><option value="/notes/ics-46/lec-03/zh-CN/" data-astro-cid-gxyjxt6l>第 3 讲 — 算法分析与 ArrayList</option><option value="/notes/ics-46/lec-04/zh-CN/" data-astro-cid-gxyjxt6l>第 4 讲 — 链表与栈</option><option value="/notes/ics-46/lec-05/zh-CN/" data-astro-cid-gxyjxt6l>第 5 讲 — 队列、双端队列与栈的应用</option><option value="/notes/ics-46/lec-06/zh-CN/" data-astro-cid-gxyjxt6l>第 6 讲 — 递归的复杂度分析</option><option value="/notes/ics-46/lec-07/zh-CN/" data-astro-cid-gxyjxt6l>第 7 讲 — 排序</option><option value="/notes/ics-46/lec-08/zh-CN/" data-astro-cid-gxyjxt6l>第 8 讲 — 归并排序与快速排序</option><option value="/notes/ics-46/lec-09/zh-CN/" data-astro-cid-gxyjxt6l>第 9 讲 — 快速排序</option><option value="/notes/ics-46/lec-10/zh-CN/" data-astro-cid-gxyjxt6l>第 10 讲 — 树</option><option value="/notes/ics-46/lec-11/zh-CN/" data-astro-cid-gxyjxt6l>第 11 讲 — 堆与优先队列</option><option value="/notes/ics-46/lec-12/zh-CN/" data-astro-cid-gxyjxt6l>第 12 讲 — 堆排序与二叉搜索树</option><option value="/notes/ics-46/lec-14/zh-CN/" data-astro-cid-gxyjxt6l>第 14 讲 — 2-3 树与红黑 BST</option><option value="/notes/ics-46/lec-15/zh-CN/" data-astro-cid-gxyjxt6l>第 15 讲 — 哈希表</option><option value="/notes/ics-46/topic-cpp/zh-CN/" data-astro-cid-gxyjxt6l>话题 · C++ 基础 — C++ 基础</option><option value="/notes/ics-46/topic-analysis/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 算法分析 — 算法分析</option><option value="/notes/ics-46/topic-linear/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 列表、栈与队列 — 列表、栈与队列</option><option value="/notes/ics-46/topic-sorting/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 排序 — 排序</option><option value="/notes/ics-46/topic-trees/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 树与遍历 — 树与遍历</option><option value="/notes/ics-46/topic-heaps/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 堆与优先队列 — 堆与优先队列</option><option value="/notes/ics-46/topic-search-trees/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 搜索树 — 搜索树</option><option value="/notes/ics-46/topic-hashing/zh-CN/" selected data-astro-cid-gxyjxt6l>话题 · 哈希表 — 哈希表</option><option value="/notes/ics-46/midterm-review/zh-CN/" data-astro-cid-gxyjxt6l>复习 — 期中复习</option></select></label><a class="rb-btn rb-lang" href="/notes/ics-46/topic-hashing/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>EN</span></a><a class="rb-btn rb-hub rb-side-next" href="/notes/ics-46/" title="课程主页" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>课程主页</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/notes/ics-46/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>ICS 46</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>话题 · 哈希表</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/notes/ics-46/topic-hashing/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>English</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>目录</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>在编辑器中打开</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>数据结构课程阅读笔记</h2><p id="reader-description" data-astro-cid-gxyjxt6l>这页整理的是 ICS 46 话题 · 哈希表 的课程笔记，适合按讲复习 C++ 模板、指针与所有权、算法分析和各类数据结构的实现。下面这条路径可以带你回到 Notes、Course Notes、课程主页，或定位到当前笔记。将鼠标悬停在右侧的 ≡ 图标上可以打开目录。</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>最后编辑于 2026 年 11 月 24 日</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="information-and-computer-science-46--话题哈希表">Information and Computer Science 46 — 话题：哈希表</h1>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#1-%E5%93%88%E5%B8%8C%E8%A1%A8%E7%9A%84%E6%80%9D%E6%83%B3">1. 哈希表的思想</a></li>
+<li><a href="#2-%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0%E5%93%88%E5%B8%8C%E7%A0%81--%E5%8E%8B%E7%BC%A9">2. 哈希函数：哈希码 + 压缩</a></li>
+<li><a href="#3-%E5%86%B2%E7%AA%81">3. 冲突</a></li>
+<li><a href="#4-%E6%8B%89%E9%93%BE%E6%B3%95separate-chaining">4. 拉链法（Separate Chaining）</a></li>
+<li><a href="#5-%E7%BA%BF%E6%80%A7%E6%8E%A2%E6%B5%8Blinear-probing">5. 线性探测（Linear Probing）</a></li>
+<li><a href="#6-%E4%BA%8C%E6%AC%A1%E6%8E%A2%E6%B5%8Bquadratic-probing">6. 二次探测（Quadratic Probing）</a></li>
+<li><a href="#7-%E5%AE%8C%E6%95%B4%E5%AE%9E%E7%8E%B0">7. 完整实现</a></li>
+<li><a href="#8-%E9%80%9F%E6%9F%A5%E4%B8%8E%E4%BA%94%E4%B8%AA%E8%A6%81%E7%82%B9">8. 速查与五个要点</a></li>
+</ul>
+<blockquote>
+<p>本章从思想出发，逐步构建哈希表：哈希函数、冲突，以及两类冲突解决方法（拉链法，和使用线性探测、二次探测的开放寻址），并附完整的 C++ 代码。本章假定读者已经了解数组与链表（<a href="/notes/ics-46/topic-linear/zh-CN/">线性结构</a>）和大 O 分析（<a href="/notes/ics-46/topic-analysis/zh-CN/">分析</a>），并以平衡搜索树的字典操作作为比较对象（<a href="/notes/ics-46/topic-search-trees/zh-CN/">搜索树</a>）。</p>
+</blockquote>
+<h2 id="1-哈希表的思想">1. 哈希表的思想</h2>
+<p>平衡 BST 的查找、插入和删除都是 O(log n)，并且按序保存键（<a href="/notes/ics-46/topic-search-trees/zh-CN/">搜索树</a>）。<strong>哈希表</strong>的目标是让键值对的查找、插入和删除达到<strong>平均 O(1)</strong>；代价是键不再有序。</p>
+<p>打个比方：要在一堆衣服里找一件衬衫，可以逐件翻找这堆无序的衣服（无序列表），也可以把衣服两两比较并建成一棵树（BST）。而实际做法是<strong>把衣服放进抽屉</strong>。物品自身的信息告诉你<strong>放到哪里</strong>，之后也告诉你<strong>去哪里找</strong>：哈希表在每次操作中都利用数据本身的线索来决定位置。</p>
+<p>它的结构由大量称为<strong>桶</strong>（<code>[0] … [m-1]</code>）的小集合组成，它们共同构成哈希表；此外还有一条<strong>规则，即哈希函数</strong>，把每个元素映射到它所在的桶（衬衫 → 哈希函数 → 3，即衬衫抽屉；毛衣 0、夹克 1、裤子 2、衬衫 3、袜子 4）。要找某个东西，只需查看它所在的桶。</p>
+<h2 id="2-哈希函数哈希码--压缩">2. 哈希函数：哈希码 + 压缩</h2>
+<ul>
+<li><strong>哈希函数</strong>：生成哈希表的索引。目标：<strong>均匀哈希</strong>，即键被均匀分散，从而尽量减少冲突。</li>
+<li><strong>第一步，哈希码</strong>：把输入的键转换为整数，并把数据尽量均匀地分散开。</li>
+<li><strong>第二步，压缩（取模）</strong>：把哈希码映射为合法的桶索引，即 <code>hash_code % num_buckets</code>。</li>
+</ul>
+<p>第一次尝试：把字符串的长度当作它的哈希值。问题在于 &quot;banana&quot; 的长度为 6，而只有 5 个桶的表只有索引 0–4，因此这个值必须被压缩到桶的范围之内。于是分成两部分：</p>
+<ol>
+<li><code>hashCode()</code> 把输入映射为一个整数（<strong>哈希码</strong>）；</li>
+<li><strong>压缩</strong>把哈希码映射到桶的范围内：<strong><code>hash = hashCode(input) % numBuckets</code></strong>。</li>
+</ol>
+<p>插入和查找使用同一个函数。取 5 个桶，并以 <code>len</code> 作为哈希码：</p>
+<table>
+<thead>
+<tr>
+<th>输入</th>
+<th>hashCode = len</th>
+<th>% 5</th>
+<th>桶</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&quot;banana&quot;</td>
+<td>6</td>
+<td>6 % 5</td>
+<td>1</td>
+</tr>
+<tr>
+<td>&quot;cherry&quot;</td>
+<td>6</td>
+<td>6 % 5</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p>好的哈希函数应当是<strong>确定性的</strong>（相等的键总是得到相同的哈希值）、<strong>快速的</strong>，并且把键<strong>均匀分布</strong>到 0 … m−1 上。<code>len</code> 在最后一条性质上表现极差：长度相同的字符串全部冲突。对于整数键，常用的选择是<strong>取模哈希</strong> <code>k % m</code>，其中 <strong>m 为素数</strong>，这样键中的规律就不会与 m 对齐。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：algs4 §3.4 深入讨论了哈希码，Thornton 的笔记则用一个信用卡号的例子说明，有偏的数字如何破坏哈希函数。</p>
+</blockquote>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：在 C++ 中，<strong>负数</strong>的 <code>%</code> 结果仍是负数，因此对有符号整数计算的 <code>hashCode(key) % m</code> 可能得到 −2 这样的索引。应使用无符号哈希（<code>std::hash</code> 返回 <code>size_t</code>），或在用作索引之前先修正符号。</p>
+</blockquote>
+<h2 id="3-冲突">3. 冲突</h2>
+<p>当多个元素哈希到同一个桶时，就发生了<strong>冲突</strong>：&quot;banana&quot; 与 &quot;cherry&quot; 都落入桶 1（就像找到自己的座位时，发现座位已被别人占了）。一般情况下冲突无法避免：可能的键远多于桶的数量，即使在均匀哈希假设下也会发生冲突。因此哈希表需要冲突解决策略。基本问题是：如何让一个桶容纳多个元素，以及哪种结构能使插入很快：为每个桶配一个链表。共有三种方法：</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>思路</th>
+<th>技术</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>允许每个桶内存放多个元素</td>
+<td><strong>拉链法</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>溢出到其他桶</td>
+<td><strong>线性探测</strong>（以及二次探测）</td>
+</tr>
+<tr>
+<td>3</td>
+<td>把已有的数据踢出去</td>
+<td><strong>布谷鸟哈希</strong>（本章不涉及）</td>
+</tr>
+</tbody></table>
+<p>第 4–6 节分别介绍拉链法、线性探测和二次探测。</p>
+<h2 id="4-拉链法separate-chaining">4. 拉链法（Separate Chaining）</h2>
+<h3 id="41-结构与跟踪">4.1 结构与跟踪</h3>
+<p>结构是一个<strong>链表数组</strong>（或数组列表的数组）。哈希值直接索引到正确的桶，每个数组元素（即桶）保存一个链表的<strong>头指针</strong>。设共有 b 个桶：</p>
+<ol>
+<li><strong>哈希</strong>：把键映射为 0 到 b − 1 之间的整数 i。</li>
+<li><strong>插入</strong>：若第 i 条链中<strong>还不存在</strong>该项，则把它加入。这需要先扫描该链以检查是否重复（若键已存在，则更新其值）。</li>
+<li><strong>查找</strong>：只在第 i 条链中查找。</li>
+</ol>
+<p>下面是 b = 5 个桶的跟踪过程，其中&quot;值&quot;为插入序号，新节点加在所在链的<strong>头部</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>S</th>
+<th>E</th>
+<th>A</th>
+<th>R</th>
+<th>C</th>
+<th>H</th>
+<th>E</th>
+<th>X</th>
+<th>A</th>
+<th>M</th>
+<th>P</th>
+<th>L</th>
+<th>E</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>哈希</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+<td>0</td>
+<td>2</td>
+<td>0</td>
+<td>4</td>
+<td>3</td>
+<td>3</td>
+<td>0</td>
+</tr>
+<tr>
+<td>值</td>
+<td>0</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>4</td>
+<td>5</td>
+<td>6</td>
+<td>7</td>
+<td>8</td>
+<td>9</td>
+<td>10</td>
+<td>11</td>
+<td>12</td>
+</tr>
+</tbody></table>
+<p>第二个 E（值 6）、第二个 A（值 8）和第三个 E（值 12）是<strong>更新</strong>，而不是新节点。最终的表为：0: A,8 → E,12 · 1: 空 · 2: X,7 → S,0 · 3: L,11 → P,10 · 4: M,9 → H,5 → C,4 → R,3。你可以逐步查看，也可以输入自己的键，或切换到探测（演示区域获得焦点时，← / → 键可用）：</p>
+<pre data-language="viz" data-viz="hash-table"><code>{&quot;title&quot;: &quot;拉链法，m = 5&quot;, &quot;m&quot;: 5, &quot;hashes&quot;: &quot;S:2, E:0, A:0, R:4, C:4, H:4, X:2, M:4, P:3, L:3&quot;, &quot;ops&quot;: &quot;put(S); put(E); put(A); put(R); put(C); put(H); put(E); put(X); put(A); put(M); put(P); put(L); put(E)&quot;, &quot;interactive&quot;: true}</code></pre><h3 id="42-实现">4.2 实现</h3>
+<p>表是一个由 <code>m</code> 个头指针组成的数组 <code>dict</code>；哈希函数即哈希码经 <code>% m</code> 压缩。本章所有代码都用 <code>size_t</code> 表示大小和索引，<code>n</code> 表示存储的键值对个数，<code>m</code> 表示桶或槽的个数：</p>
+<div class="code-wrap"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">template</span><span style="color:#D4D4D4"> &#x3C;</span><span style="color:#569CD6">typename</span><span style="color:#4EC9B0"> Key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">typename</span><span style="color:#4EC9B0"> Value</span><span style="color:#D4D4D4">></span></span>
+<span class="line"><span style="color:#569CD6">class</span><span style="color:#4EC9B0"> SeparateChaining</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">private:</span></span>
+<span class="line"><span style="color:#569CD6">  struct</span><span style="color:#4EC9B0"> Node</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#4EC9B0">    Key</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">    Value</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">    Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> next</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  };</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#9CDCFE"> m</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                // number of buckets</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#9CDCFE"> n</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">            // number of key-value pairs</span></span>
+<span class="line"><span style="color:#9CDCFE">  Node</span><span style="color:#D4D4D4">** </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">             // dict[i] = head of chain i</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#DCDCAA"> hashFunction</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#4EC9B0"> std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">hash</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#9CDCFE">Key</span><span style="color:#D4D4D4">>{}(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) % </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">  // hash code, then compression</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#569CD6">public:</span></span>
+<span class="line"><span style="color:#569CD6">  explicit</span><span style="color:#DCDCAA"> SeparateChaining</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> buckets</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">      : </span><span style="color:#DCDCAA">m</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">buckets</span><span style="color:#D4D4D4">), </span><span style="color:#DCDCAA">dict</span><span style="color:#D4D4D4">(</span><span style="color:#C586C0">new</span><span style="color:#9CDCFE"> Node</span><span style="color:#D4D4D4">*[</span><span style="color:#9CDCFE">buckets</span><span style="color:#D4D4D4">]()) {}</span><span style="color:#6A9955">  // () zero-initializes: all nullptr</span></span>
+<span class="line"><span style="color:#6A9955">  // ...</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>get</code> 与 <code>put</code> 各自只对键做一次哈希，并且只遍历第 i 条链：</p>
+<div class="code-wrap"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#4EC9B0">  Value</span><span style="color:#DCDCAA"> get</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">hashFunction</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955">                       // compute hash value</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">Node</span><span style="color:#D4D4D4">* </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">]; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                 // return when found</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#DCDCAA"> Value</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  void</span><span style="color:#DCDCAA"> put</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Value</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">hashFunction</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">Node</span><span style="color:#D4D4D4">* </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">]; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) { </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">; </span><span style="color:#C586C0">return</span><span style="color:#D4D4D4">; }</span><span style="color:#6A9955">      // already there: update</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#9CDCFE">    dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">] = </span><span style="color:#C586C0">new</span><span style="color:#9CDCFE"> Node</span><span style="color:#D4D4D4">{</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">]};</span><span style="color:#6A9955">              // insert at head</span></span>
+<span class="line"><span style="color:#9CDCFE">    n</span><span style="color:#D4D4D4">++;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>put</code> 先扫描链（若找到则更新），然后把新节点链接到头部：它的 <code>next</code> 指向旧的头 <code>dict[i]</code>，随后 <code>dict[i]</code> 指向它。扫描之后，这一步是 O(1)。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：有两个容易犯的错误。其一，忘记初始化头指针数组：写成 <code>new Node*[m]</code>（没有 <code>()</code>）会留下垃圾指针而不是 <code>nullptr</code>，于是任何链的第一次扫描都会崩溃。其二，<code>Node</code> 是没有构造函数的聚合类型，因此必须用花括号创建，即 <code>new Node{key, val, dict[i]}</code>；<code>new Node(key, val, dict[i])</code> 在 C++17 中无法编译。</p>
+</blockquote>
+<p>使用拉链法删除很简单：在第 i 条链中找到节点，并像链表一样把它摘下；其他部分都不会移动。通过指向<em>链接</em>的指针（<code>Node**</code>）来遍历，可以避免对头节点做特殊处理：</p>
+<div class="code-wrap"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">  void</span><span style="color:#DCDCAA"> remove</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">hashFunction</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#4EC9B0">    Node</span><span style="color:#569CD6">**</span><span style="color:#9CDCFE"> p</span><span style="color:#D4D4D4"> = &#x26;</span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">];</span><span style="color:#6A9955">                                // the link that may need fixing</span></span>
+<span class="line"><span style="color:#C586C0">    while</span><span style="color:#D4D4D4"> (*</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4"> &#x26;&#x26; (*</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4">)-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> != </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4"> = &#x26;(*</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4">)-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> (*</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#4EC9B0">      Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4"> = *</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">      *</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                                     // unlink</span></span>
+<span class="line"><span style="color:#C586C0">      delete</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">      n</span><span style="color:#D4D4D4">--;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>由于表拥有堆上分配的节点，析构函数必须删除每一条链以及数组，并且禁止拷贝（见 <a href="#7-%E5%AE%8C%E6%95%B4%E5%AE%9E%E7%8E%B0">第 7 节</a>）。</p>
+<h3 id="43-分析负载因子">4.3 分析：负载因子</h3>
+<p><strong>最坏情况 O(n)</strong>：所有键都哈希到同一个桶，查找时就要遍历那一条链。<strong>平均情况取决于哈希函数的强度</strong>。若哈希函数足够强，能把 n 个元素均匀分布到 m 个桶中：</p>
+<ul>
+<li>平均每个桶中有 <strong>n / m</strong> 个元素；</li>
+<li>查找和插入的平均代价为 <strong>n / m</strong>：与对单个列表做顺序查找相比，每次查找检查的键大约少了 m 倍。</li>
+</ul>
+<p><strong>n / m 就是负载因子</strong>：它告诉我们哈希表有多满。要使查找和插入达到 <strong>O(1)</strong>，应选择与 n 成正比的 m，使 n / m 保持为常数（随着 n 增长而调整数组大小）。这样，平均查找和插入时间就是常数。</p>
+<ul>
+<li>负载因子过高（m 过小）→ 链很长，操作变慢；</li>
+<li>负载因子过低（m 过大）→ 内存浪费，大量空链。</li>
+</ul>
+<p>扩容就是<strong>重新哈希</strong>：每个键所在的桶都取决于 m（<code>hash % m</code>），因此每个节点都必须根据新 m 下的哈希值重新链接到新数组中。这一次操作的代价为 O(n)；由于表的大小按几何级数增长，这一代价平摊到每次插入上为均摊 O(1)：</p>
+<div class="code-wrap"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">  void</span><span style="color:#DCDCAA"> rehash</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> newM</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#4EC9B0">    Node</span><span style="color:#569CD6">**</span><span style="color:#9CDCFE"> old</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> oldM</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    dict</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">new</span><span style="color:#9CDCFE"> Node</span><span style="color:#D4D4D4">*[</span><span style="color:#9CDCFE">newM</span><span style="color:#D4D4D4">]();</span></span>
+<span class="line"><span style="color:#9CDCFE">    m</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">newM</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">oldM</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">++) {</span></span>
+<span class="line"><span style="color:#4EC9B0">      Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">old</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">];</span></span>
+<span class="line"><span style="color:#C586C0">      while</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#4EC9B0">        Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> next</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">        size_t</span><span style="color:#9CDCFE"> j</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">hashFunction</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955">                // new hash value</span></span>
+<span class="line"><span style="color:#9CDCFE">        x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">j</span><span style="color:#D4D4D4">];</span></span>
+<span class="line"><span style="color:#9CDCFE">        dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">j</span><span style="color:#D4D4D4">] = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">      }</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#C586C0">    delete[]</span><span style="color:#9CDCFE"> old</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><strong>有序操作</strong>（最小值、最大值、按序输出所有键、区间查询）<strong>不被支持</strong>；这些操作请使用（平衡的）BST（见 <a href="/notes/ics-46/topic-search-trees/zh-CN/">搜索树</a>）。插入、查找和删除的平均情况为 O(1)，最坏情况为 O(n)。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：负载因子在两类方法中的含义不同。在拉链法中，α = n/m 是平均链长，可以大于 1（每个桶 10 个键仍然可用，只是更慢）。在线性探测或二次探测中，每个键都需要自己的槽位，因此 α 是数组中被占用的比例，<strong>必须保持在 1 以下</strong>。（algs4 §3.4）</p>
+</blockquote>
+<h3 id="44-练习">4.4 练习</h3>
+<h4 id="拉链法m--7">拉链法，m = 7</h4>
+<p>对整数键使用拉链法，桶数 <strong>m = 7</strong>，哈希函数为 <strong>h(k) = k % m</strong>。新节点加在链的头部。</p>
+<ul>
+<li><strong>任务 A</strong>：按顺序插入键值对 (47, 0)、(3, 1)、(28, 2)、(14, 3)、(9, 4)、(47, 5)，并给出得到的表。</li>
+<li><strong>任务 B</strong>：查找键 28 和键 47 各需要多少次比较？</li>
+<li><strong>任务 C</strong>：删除键 14，并给出该表。</li>
+</ul>
+<blockquote>
+<p>提示：47 出现了两次。</p>
+</blockquote>
+<details>
+<summary>解答</summary>
+
+<p>哈希值：47 % 7 = 5，3 % 7 = 3，28 % 7 = 0，14 % 7 = 0，9 % 7 = 2。</p>
+<p><strong>任务 A 之后</strong>：第二个 (47, 5) 在链 5 中找到 47，并<strong>更新</strong>其值；14 放在 28 前面：</p>
+<table>
+<thead>
+<tr>
+<th>桶</th>
+<th>链（头部在前）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>(14, 3) → (28, 2)</td>
+</tr>
+<tr>
+<td>1</td>
+<td>—</td>
+</tr>
+<tr>
+<td>2</td>
+<td>(9, 4)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>(3, 1)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>—</td>
+</tr>
+<tr>
+<td>5</td>
+<td>(47, 5)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<p><strong>任务 B</strong>：查找 28 → 链 0，先与 14 比较，再与 28 比较：<strong>2 次比较</strong>。查找 47 → 链 5，与 47 比较：<strong>1 次比较</strong>。</p>
+<p><strong>任务 C 之后</strong>：链 0 变为 (28, 2)，其他部分不变。可以这样验证：</p>
+<pre data-language="viz" data-viz="hash-table"><code>{&quot;title&quot;: &quot;拉链法检查&quot;, &quot;m&quot;: 7, &quot;ops&quot;: &quot;put(47, 0); put(3, 1); put(28, 2); put(14, 3); put(9, 4); put(47, 5); get(28); get(47); remove(14)&quot;}</code></pre><p><a href="#7-%E5%AE%8C%E6%95%B4%E5%AE%9E%E7%8E%B0">第 7 节</a>中编译后的程序会打印相同的表。</p>
+</details>
+
+<h2 id="5-线性探测linear-probing">5. 线性探测（Linear Probing）</h2>
+<h3 id="51-插入与查找">5.1 插入与查找</h3>
+<p><strong>线性探测</strong>把所有键都保存在数组本身中：当某个桶被占用时，就<strong>溢出到下一个位置</strong>（这一类方法称为<em>开放寻址</em>）。每个槽最多保存一个键，键的探测序列为 h, h+1, h+2, …（模 m）：</p>
+<ul>
+<li><strong>插入</strong>：要插入 x，计算 h(x) 并尝试把 x 放在那里。若该位置已满，则逐个位置在数组中移动，<strong>绕过末尾回到开头</strong>，直到找到空位。</li>
+<li><strong>查找</strong>：计算 h(x) 并从那里开始查找。沿环移动，<strong>直到找到该元素或检测到空位</strong>。空位证明 x 不在表中，因为插入 x 时它本应被放在那里。</li>
+<li>使用负载因子 n/m 防止表被填满到容量上限。</li>
+</ul>
+<p>设想这张表是一个由 m = 16 个槽组成的环，槽中依次存放 z（2）、x（7）、w（8）、r（9）和 y（14），其中 w 的本位槽为 7，r 的本位槽为 8（它们各自被顺移了一格）。<strong>查找 h(a) = 8 的 a</strong>：槽 8（w）、9（r），10 为空 → a 不在表中。<strong>插入 h(b) = 7 的 b</strong>：槽 7、8、9 都已占用，因此 b 放入槽 10：</p>
+<pre data-language="viz" data-viz="hash-table"><code>{&quot;title&quot;: &quot;环形 16 槽上的线性探测&quot;, &quot;mode&quot;: &quot;linear&quot;, &quot;m&quot;: 16, &quot;hashes&quot;: &quot;z:2, x:7, w:7, r:8, y:14, b:7, a:8&quot;, &quot;ops&quot;: &quot;put(z); put(x); put(w); put(r); put(y); get(a); put(b); remove(w); get(r)&quot;, &quot;interactive&quot;: true}</code></pre><p>在代码中，<code>find</code> 沿探测序列前进，并统计检查过的槽数；<code>put</code> 记住第一个可复用的槽（空槽或墓碑，见下一节），但会继续扫描，直到遇到空槽，这样位于更远处的已有键会被更新而不是重复插入：</p>
+<div class="code-collapse is-collapsed"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">template</span><span style="color:#D4D4D4"> &#x3C;</span><span style="color:#569CD6">typename</span><span style="color:#4EC9B0"> Key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">typename</span><span style="color:#4EC9B0"> Value</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">bool</span><span style="color:#4EC9B0"> Quadratic</span><span style="color:#D4D4D4"> = false></span></span>
+<span class="line"><span style="color:#569CD6">class</span><span style="color:#4EC9B0"> OpenAddressing</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">private:</span></span>
+<span class="line"><span style="color:#569CD6">  enum</span><span style="color:#569CD6"> class</span><span style="color:#4EC9B0"> State</span><span style="color:#D4D4D4"> { </span><span style="color:#4FC1FF">Empty</span><span style="color:#D4D4D4">, </span><span style="color:#4FC1FF">Full</span><span style="color:#D4D4D4">, </span><span style="color:#4FC1FF">Deleted</span><span style="color:#D4D4D4"> };</span></span>
+<span class="line"><span style="color:#569CD6">  struct</span><span style="color:#4EC9B0"> Slot</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#4EC9B0">    Key</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">{};</span></span>
+<span class="line"><span style="color:#4EC9B0">    Value</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">{};</span></span>
+<span class="line"><span style="color:#4EC9B0">    State</span><span style="color:#9CDCFE"> state</span><span style="color:#D4D4D4"> = </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Empty</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  };</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#9CDCFE"> m</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                // number of slots</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#9CDCFE"> n</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">            // number of full slots</span></span>
+<span class="line"><span style="color:#4EC9B0">  Slot</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> table</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#DCDCAA"> home</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> { </span><span style="color:#C586C0">return</span><span style="color:#4EC9B0"> std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">hash</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#9CDCFE">Key</span><span style="color:#D4D4D4">>{}(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) % </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">; }</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#DCDCAA"> probe</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> Quadratic</span><span style="color:#D4D4D4"> ? (</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> * </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">) % </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4"> : (</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">) % </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">   // i-th slot of the probe sequence</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#569CD6">public:</span></span>
+<span class="line"><span style="color:#569CD6">  static</span><span style="color:#569CD6"> constexpr</span><span style="color:#569CD6"> size_t</span><span style="color:#9CDCFE"> npos</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">static_cast</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#569CD6">size_t</span><span style="color:#D4D4D4">>(-</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // Slot holding key, or npos. probes counts the slots examined.</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#DCDCAA"> find</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">size_t&#x26;</span><span style="color:#9CDCFE"> probes</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">home</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">    probes</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">++) {</span></span>
+<span class="line"><span style="color:#569CD6">      size_t</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">probe</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">      probes</span><span style="color:#D4D4D4">++;</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> == </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Empty</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#9CDCFE"> npos</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">           // blank spot: stop</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> == </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Full</span><span style="color:#D4D4D4"> &#x26;&#x26; </span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">      // a tombstone or another key: keep going</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> npos</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // Returns false only if no free slot was reachable.</span></span>
+<span class="line"><span style="color:#569CD6">  bool</span><span style="color:#DCDCAA"> put</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Value</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">home</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">), </span><span style="color:#9CDCFE">firstFree</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">npos</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">++) {</span></span>
+<span class="line"><span style="color:#569CD6">      size_t</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">probe</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> == </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Full</span><span style="color:#D4D4D4"> &#x26;&#x26; </span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#9CDCFE">        table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                                      // update</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#569CD6"> true</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">      }</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> != </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Full</span><span style="color:#D4D4D4"> &#x26;&#x26; </span><span style="color:#9CDCFE">firstFree</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">npos</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#9CDCFE">        firstFree</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                                           // empty or tombstone</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> == </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Empty</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">break</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                 // key cannot be further on</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">firstFree</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">npos</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#569CD6"> false</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">firstFree</span><span style="color:#D4D4D4">] = </span><span style="color:#9CDCFE">Slot</span><span style="color:#D4D4D4">{</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">, </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Full</span><span style="color:#D4D4D4">};</span></span>
+<span class="line"><span style="color:#9CDCFE">    n</span><span style="color:#D4D4D4">++;</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#569CD6"> true</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#6A9955">  // ...</span></span></code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="53"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>展开全部（53 行）</span></button><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>同一个模板覆盖两种探测方式：<code>Quadratic = false</code> 时探测为 <code>(h + i) % m</code>；第 6 节会切换这个标志。</p>
+<h3 id="52-删除墓碑">5.2 删除：墓碑</h3>
+<p>删除比拉链法更棘手。若只是查找到元素并清空其槽位，就会出问题：<strong>先删除 w，再查找 r</strong>。r 被放在槽 9，是因为槽 8 当时已被 w 占用；如果现在槽 8 变为空，那么从 8 开始查找 r 就会在这里停下，并错误地报告 r 不存在。</p>
+<p>解决办法是<strong>墓碑</strong>，它用来区分<em>已删除</em>与<em>空</em>：</p>
+<ul>
+<li>删除元素时，把该单元标记为<strong>空但曾被占用</strong>（墓碑）。</li>
+<li>查找时<strong>不要在墓碑处停止</strong>，继续向下查找。</li>
+<li>插入时可以<strong>替换墓碑</strong>（复用该槽）。</li>
+</ul>
+<p>在上面的演示中，最后两个操作先删除 w（槽 8 变为 †），然后通过越过墓碑来查找 r。在代码中，删除只会改变槽位的状态：</p>
+<div class="code-wrap"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">  void</span><span style="color:#DCDCAA"> remove</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> probes</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">find</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">probes</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4"> != </span><span style="color:#9CDCFE">npos</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#9CDCFE">      table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> = </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Deleted</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                           // tombstone, not Empty</span></span>
+<span class="line"><span style="color:#9CDCFE">      n</span><span style="color:#D4D4D4">--;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：墓碑对<em>查找</em>而言不是空的，但对<em>插入</em>而言是可用的。若在墓碑处停止查找，就会丢失键；若从不复用墓碑，表就会被墓碑填满（重新哈希到新数组会清除它们）。</p>
+</blockquote>
+<h3 id="53-实际表现速度与主聚集">5.3 实际表现：速度与主聚集</h3>
+<p>线性探测是<strong>最快的通用哈希策略之一</strong>：</p>
+<ul>
+<li><strong>内存开销低</strong>：只需要一个数组和一个哈希函数（没有节点，没有 <code>next</code> 指针）；</li>
+<li><strong>局部性极好</strong>：查找访问的是相邻的位置；</li>
+<li><strong>缓存性能出色</strong>：上述两点的结合。</li>
+</ul>
+<p>它的弱点是<strong>主聚集</strong>。<strong>聚集</strong>是一段连续被占用的槽位。新键很可能哈希到<strong>大聚集的中部</strong>（大聚集就是大靶子），而每个这样的键都被放在聚集的末端，使聚集变得更大，因此冲突的数量会随着已有的冲突而增长。</p>
+<h3 id="54-时间分析与扩容">5.4 时间分析与扩容</h3>
+<p>在均匀哈希假设下，设负载因子为 <strong>α = n/m</strong>（n 为键的数量，m 为表的大小），平均探测次数为（Knuth 1963）：</p>
+<ul>
+<li>查找命中：½ (1 + 1 / (1 − α))</li>
+<li>查找未命中与插入：½ (1 + 1 / (1 − α)²)</li>
+</ul>
+<p>这些公式仅在 α &lt; 1 时有意义。在 α = ½ 以及接近 1 时：</p>
+<table>
+<thead>
+<tr>
+<th>α</th>
+<th>查找命中</th>
+<th>查找未命中 / 插入</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1/2</td>
+<td>1.5 次探测</td>
+<td>2.5 次探测</td>
+</tr>
+<tr>
+<td>0.9</td>
+<td>5.5 次探测</td>
+<td>50.5 次探测</td>
+</tr>
+</tbody></table>
+<p>表接近满时，未命中的探测次数急剧增长。<strong>典型选择是 n/m = ½</strong>，这样每次操作的平均工作量为常数。通过在 n/m ≥ ½ 时<strong>加倍</strong>表的大小、在 n/m ≤ ⅛ 时<strong>减半</strong>，把它维持在这一水平。</p>
+<p>改变哈希表大小的代价是多少？每个键的槽位都取决于 m（<code>hash % m</code>），因此扩容必须把<strong>每个键都重新哈希</strong>到新数组中，这一次操作为 O(n)。由于大小每次加倍或减半（与 ArrayList 相同），这一代价被分摊到导致它的那些操作上：每次操作<strong>均摊 O(1)</strong>。</p>
+<div class="code-wrap"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">  void</span><span style="color:#DCDCAA"> rehash</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> newM</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#4EC9B0">    Slot</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> old</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> oldM</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    table</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">new</span><span style="color:#9CDCFE"> Slot</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">newM</span><span style="color:#D4D4D4">];</span></span>
+<span class="line"><span style="color:#9CDCFE">    m</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">newM</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    n</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">oldM</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">++)</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">old</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> == </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Full</span><span style="color:#D4D4D4">) </span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">old</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">old</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">    delete[]</span><span style="color:#9CDCFE"> old</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：你不能把旧数组逐个槽位地复制到更大的数组中：键仍停留在它们旧的 <code>% m</code> 位置上，而用新的 m 进行的查找会漏掉它们。重新哈希还会丢弃所有墓碑。（Thornton, Hash Tables）Thornton 的笔记还会<strong>向后</strong>探测（i − 1、i − 2、……）；只要插入、查找和删除使用相同的探测序列，哪个方向都可以，而 algs4 与本章相同，向前移动，即 (h + i) % m。</p>
+</blockquote>
+<h3 id="55-练习">5.5 练习</h3>
+<h4 id="带删除的线性探测">带删除的线性探测</h4>
+<p>一张表有 m = 13 个槽（索引 0–12），h(x) = x mod 13，使用带墓碑的线性探测。依次插入键 18、3、16、22、21、8；然后删除 16 和 21；然后查找 8；然后插入 20 和 7。请分别给出插入之后、删除之后以及最终的表。</p>
+<blockquote>
+<p>提示：删除会留下墓碑，而查找 8 必须越过其中一个墓碑。</p>
+</blockquote>
+<details>
+<summary>解答</summary>
+
+<p>插入：18 → 5；3 → 3；16 → 3 已占用 → <strong>4</strong>；22 → 9；21 → 8；8 → 8 已占用，9 已占用 → <strong>10</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>槽</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+<th>12</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>插入后</td>
+<td></td>
+<td></td>
+<td></td>
+<td>3</td>
+<td>16</td>
+<td>18</td>
+<td></td>
+<td></td>
+<td>21</td>
+<td>22</td>
+<td>8</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>删除后</td>
+<td></td>
+<td></td>
+<td></td>
+<td>3</td>
+<td>†</td>
+<td>18</td>
+<td></td>
+<td></td>
+<td>†</td>
+<td>22</td>
+<td>8</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>最终</td>
+<td></td>
+<td></td>
+<td></td>
+<td>3</td>
+<td>†</td>
+<td>18</td>
+<td></td>
+<td>20</td>
+<td>7</td>
+<td>22</td>
+<td>8</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>删除 16 和 21 → 在槽 4 和槽 8 留下墓碑（†）。<strong>查找 8</strong>：槽 8 是墓碑（继续查找），9 中是 22，10 中是 8 → <strong>3 次探测后找到</strong>。若没有墓碑，查找会在空槽 8 处停止，并错误地判定未找到。</p>
+<p>插入 20 → 槽 7（空）。插入 7 → 槽 7 中是 20；槽 8 是墓碑，因此 <strong>7 复用槽 8</strong>。（稳妥的做法是在使用墓碑之前，先检查 7 是否已存在于更后面的位置（9、10，然后是空的 11）；结果相同。）</p>
+<pre data-language="viz" data-viz="hash-table"><code>{&quot;title&quot;: &quot;线性探测检查&quot;, &quot;mode&quot;: &quot;linear&quot;, &quot;m&quot;: 13, &quot;ops&quot;: &quot;put(18); put(3); put(16); put(22); put(21); put(8); remove(16); remove(21); get(8); put(20); put(7)&quot;}</code></pre><p><a href="#7-%E5%AE%8C%E6%95%B4%E5%AE%9E%E7%8E%B0">第 7 节</a>中编译后的程序会重现这些表（<code>X</code> 标记墓碑）。</p>
+</details>
+
+<h2 id="6-二次探测quadratic-probing">6. 二次探测（Quadratic Probing）</h2>
+<h3 id="61-探测序列">6.1 探测序列</h3>
+<p>修改探测序列，使得</p>
+<p><strong>h(k, i) = (h(k) + c₁·i + c₂·i²) % m，其中 c₂ ≠ 0</strong>，i 是该键迄今为止发生的冲突次数（i = 0 为第一次尝试）。</p>
+<p>当 c₂ = 0 时，二次探测退化为线性探测。跳跃的步长逐渐增大（在 c₁ = 0、c₂ = 1 时，相对于本位槽的偏移依次为 1、4、9、……），因此发生冲突的键不会全部堆到同一段连续的聚集上。查找和删除使用<strong>相同的探测序列</strong>和<strong>墓碑</strong>，与线性探测完全一样。在第 5 节的代码中，只有 <code>probe</code> 函数会改变，类通过其 <code>Quadratic</code> 模板参数来选择它（c₁ = 0，c₂ = 1）：</p>
+<div class="code-wrap"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#DCDCAA"> probe</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> Quadratic</span><span style="color:#D4D4D4"> ? (</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> * </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">) % </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4"> : (</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">) % </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：探测序列不一定会访问每一个槽位。当 h(k, i) = (h(k) + i²) % 13 时，偏移量 i² % 13 只取 7 个不同的值（0, 1, 3, 4, 9, 10, 12），因此即使表中仍有空槽，插入也可能失败。在编译后的程序中，13 个都哈希到槽 0 的键只能填满 13 个槽中的 7 个。这是保持低负载因子的又一个理由。</p>
+</blockquote>
+<h3 id="62-练习">6.2 练习</h3>
+<h4 id="带删除的二次探测">带删除的二次探测</h4>
+<p>使用 h(k) = k % m，探测序列为 h(k, i) = (h(k) + i²) % m，其中 m = 13，并使用墓碑。依次插入键值对 (17,0)、(33,1)、(18,2)、(20,3)、(44,4)、(11,5)、(19,6)、(7,7)（17 落在槽 4）；这里 i 是该键迄今为止发生的冲突次数。然后删除 44，查找 19，并插入 5。</p>
+<blockquote>
+<p>提示：19 和 7 各自需要不止一次冲突；对于 7，第四次尝试（i = 3）会绕回。</p>
+</blockquote>
+<details>
+<summary>解答</summary>
+
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>h(k)</th>
+<th>探测（i = 0, 1, 2, …）</th>
+<th>槽</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>17</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr>
+<td>33</td>
+<td>7</td>
+<td>7</td>
+<td>7</td>
+</tr>
+<tr>
+<td>18</td>
+<td>5</td>
+<td>5</td>
+<td>5</td>
+</tr>
+<tr>
+<td>20</td>
+<td>7</td>
+<td>7 ✗, 8</td>
+<td>8</td>
+</tr>
+<tr>
+<td>44</td>
+<td>5</td>
+<td>5 ✗, 6</td>
+<td>6</td>
+</tr>
+<tr>
+<td>11</td>
+<td>11</td>
+<td>11</td>
+<td>11</td>
+</tr>
+<tr>
+<td>19</td>
+<td>6</td>
+<td>6 ✗, 7 ✗, 10</td>
+<td>10</td>
+</tr>
+<tr>
+<td>7</td>
+<td>7</td>
+<td>7 ✗, 8 ✗, 11 ✗, 16 % 13 = 3</td>
+<td>3</td>
+</tr>
+</tbody></table>
+<p>插入之后：3: (7,7) · 4: (17,0) · 5: (18,2) · 6: (44,4) · 7: (33,1) · 8: (20,3) · 10: (19,6) · 11: (11,5)。</p>
+<ul>
+<li><strong>删除 44</strong>：探测 5（18）、6（44）→ 槽 6 变为<strong>墓碑</strong>。</li>
+<li><strong>查找 19</strong>：6 是墓碑（继续查找），7（33），10（19）→ <strong>3 次探测后找到</strong>。</li>
+<li><strong>插入 5</strong>：h = 5 处为 18；i = 1 → 槽 6 是墓碑 → <strong>5 放入槽 6</strong>。</li>
+</ul>
+<pre data-language="viz" data-viz="hash-table"><code>{&quot;title&quot;: &quot;二次探测检查&quot;, &quot;mode&quot;: &quot;quadratic&quot;, &quot;m&quot;: 13, &quot;ops&quot;: &quot;put(17, 0); put(33, 1); put(18, 2); put(20, 3); put(44, 4); put(11, 5); put(19, 6); put(7, 7); remove(44); get(19); put(5)&quot;}</code></pre></details>
+
+<h2 id="7-完整实现">7. 完整实现</h2>
+<p>本章的两个类模板涵盖全部内容：<code>SeparateChaining</code>（m 个桶、节点链、<code>rehash</code>、析构函数），以及 <code>OpenAddressing</code>，这是一个模板，由其 <code>Quadratic</code> 标志选择线性探测或二次探测（墓碑作为 <code>Deleted</code> 状态，<code>rehash</code> 会清除它们）。<code>main</code> 重演三道练习题；表的大小由构造函数设定（7 和 13）。<code>X</code> 标记墓碑，<code>.</code> 标记空槽。</p>
+<div class="code-collapse is-collapsed"><pre data-language="cpp" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">#include</span><span style="color:#CE9178"> &#x3C;cstddef></span></span>
+<span class="line"><span style="color:#C586C0">#include</span><span style="color:#CE9178"> &#x3C;functional></span></span>
+<span class="line"><span style="color:#C586C0">#include</span><span style="color:#CE9178"> &#x3C;iostream></span></span>
+<span class="line"><span style="color:#C586C0">#include</span><span style="color:#CE9178"> &#x3C;string></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// ---------------------------------------------------------------------------</span></span>
+<span class="line"><span style="color:#6A9955">// Separate chaining: an array of m singly linked lists.</span></span>
+<span class="line"><span style="color:#6A9955">// ---------------------------------------------------------------------------</span></span>
+<span class="line"><span style="color:#569CD6">template</span><span style="color:#D4D4D4"> &#x3C;</span><span style="color:#569CD6">typename</span><span style="color:#4EC9B0"> Key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">typename</span><span style="color:#4EC9B0"> Value</span><span style="color:#D4D4D4">></span></span>
+<span class="line"><span style="color:#569CD6">class</span><span style="color:#4EC9B0"> SeparateChaining</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">private:</span></span>
+<span class="line"><span style="color:#569CD6">  struct</span><span style="color:#4EC9B0"> Node</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#4EC9B0">    Key</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">    Value</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">    Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> next</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  };</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#9CDCFE"> m</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                // number of buckets</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#9CDCFE"> n</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">            // number of key-value pairs</span></span>
+<span class="line"><span style="color:#9CDCFE">  Node</span><span style="color:#D4D4D4">** </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">             // dict[i] = head of chain i</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#DCDCAA"> hashFunction</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#4EC9B0"> std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">hash</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#9CDCFE">Key</span><span style="color:#D4D4D4">>{}(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) % </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">  // hash code, then compression</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">public:</span></span>
+<span class="line"><span style="color:#569CD6">  explicit</span><span style="color:#DCDCAA"> SeparateChaining</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> buckets</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">      : </span><span style="color:#DCDCAA">m</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">buckets</span><span style="color:#D4D4D4">), </span><span style="color:#DCDCAA">dict</span><span style="color:#D4D4D4">(</span><span style="color:#C586C0">new</span><span style="color:#9CDCFE"> Node</span><span style="color:#D4D4D4">*[</span><span style="color:#9CDCFE">buckets</span><span style="color:#D4D4D4">]()) {}</span><span style="color:#6A9955">  // () zero-initializes: all nullptr</span></span>
+<span class="line"><span style="color:#DCDCAA">  SeparateChaining</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> SeparateChaining</span><span style="color:#569CD6">&#x26;</span><span style="color:#D4D4D4">) = </span><span style="color:#569CD6">delete</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">  SeparateChaining</span><span style="color:#569CD6">&#x26;</span><span style="color:#C586C0"> operator=</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> SeparateChaining</span><span style="color:#569CD6">&#x26;</span><span style="color:#D4D4D4">) = </span><span style="color:#569CD6">delete</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">  ~SeparateChaining</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">++) {</span></span>
+<span class="line"><span style="color:#C586C0">      while</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">] != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#4EC9B0">        Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">];</span></span>
+<span class="line"><span style="color:#9CDCFE">        dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">] = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">        delete</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">      }</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#C586C0">    delete[]</span><span style="color:#9CDCFE"> dict</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#DCDCAA"> size</span><span style="color:#D4D4D4">() </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> { </span><span style="color:#C586C0">return</span><span style="color:#9CDCFE"> n</span><span style="color:#D4D4D4">; }</span></span>
+<span class="line"><span style="color:#569CD6">  double</span><span style="color:#DCDCAA"> loadFactor</span><span style="color:#D4D4D4">() </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> { </span><span style="color:#C586C0">return</span><span style="color:#569CD6"> static_cast</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#569CD6">double</span><span style="color:#D4D4D4">>(</span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4">) / </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">; }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#4EC9B0">  Value</span><span style="color:#DCDCAA"> get</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">hashFunction</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955">                       // compute hash value</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">Node</span><span style="color:#D4D4D4">* </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">]; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                 // return when found</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#DCDCAA"> Value</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  void</span><span style="color:#DCDCAA"> put</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Value</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">hashFunction</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">Node</span><span style="color:#D4D4D4">* </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">]; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) { </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">; </span><span style="color:#C586C0">return</span><span style="color:#D4D4D4">; }</span><span style="color:#6A9955">      // already there: update</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#9CDCFE">    dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">] = </span><span style="color:#C586C0">new</span><span style="color:#9CDCFE"> Node</span><span style="color:#D4D4D4">{</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">]};</span><span style="color:#6A9955">              // insert at head</span></span>
+<span class="line"><span style="color:#9CDCFE">    n</span><span style="color:#D4D4D4">++;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  void</span><span style="color:#DCDCAA"> remove</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">hashFunction</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#4EC9B0">    Node</span><span style="color:#569CD6">**</span><span style="color:#9CDCFE"> p</span><span style="color:#D4D4D4"> = &#x26;</span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">];</span><span style="color:#6A9955">                                // the link that may need fixing</span></span>
+<span class="line"><span style="color:#C586C0">    while</span><span style="color:#D4D4D4"> (*</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4"> &#x26;&#x26; (*</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4">)-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> != </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4"> = &#x26;(*</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4">)-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> (*</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#4EC9B0">      Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4"> = *</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">      *</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                                     // unlink</span></span>
+<span class="line"><span style="color:#C586C0">      delete</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">      n</span><span style="color:#D4D4D4">--;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // Rehash every node into a new array of newM buckets.</span></span>
+<span class="line"><span style="color:#569CD6">  void</span><span style="color:#DCDCAA"> rehash</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> newM</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#4EC9B0">    Node</span><span style="color:#569CD6">**</span><span style="color:#9CDCFE"> old</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> oldM</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    dict</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">new</span><span style="color:#9CDCFE"> Node</span><span style="color:#D4D4D4">*[</span><span style="color:#9CDCFE">newM</span><span style="color:#D4D4D4">]();</span></span>
+<span class="line"><span style="color:#9CDCFE">    m</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">newM</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">oldM</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">++) {</span></span>
+<span class="line"><span style="color:#4EC9B0">      Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">old</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">];</span></span>
+<span class="line"><span style="color:#C586C0">      while</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#4EC9B0">        Node</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> next</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">        size_t</span><span style="color:#9CDCFE"> j</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">hashFunction</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span><span style="color:#6A9955">                // new hash value</span></span>
+<span class="line"><span style="color:#9CDCFE">        x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">j</span><span style="color:#D4D4D4">];</span></span>
+<span class="line"><span style="color:#9CDCFE">        dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">j</span><span style="color:#D4D4D4">] = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">        x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">      }</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#C586C0">    delete[]</span><span style="color:#9CDCFE"> old</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  void</span><span style="color:#DCDCAA"> print</span><span style="color:#D4D4D4">() </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">++) {</span></span>
+<span class="line"><span style="color:#4EC9B0">      std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">':'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">      for</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">Node</span><span style="color:#D4D4D4">* </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">dict</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">]; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> != </span><span style="color:#569CD6">nullptr</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">next</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#4EC9B0">        std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">" ("</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">','</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">x</span><span style="color:#D4D4D4">-></span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">')'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">      std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">'</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// ---------------------------------------------------------------------------</span></span>
+<span class="line"><span style="color:#6A9955">// Open addressing: one array of slots. Quadratic = false -> linear probing,</span></span>
+<span class="line"><span style="color:#6A9955">// Quadratic = true -> h(k, i) = (h(k) + i*i) % m.</span></span>
+<span class="line"><span style="color:#6A9955">// ---------------------------------------------------------------------------</span></span>
+<span class="line"><span style="color:#569CD6">template</span><span style="color:#D4D4D4"> &#x3C;</span><span style="color:#569CD6">typename</span><span style="color:#4EC9B0"> Key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">typename</span><span style="color:#4EC9B0"> Value</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">bool</span><span style="color:#4EC9B0"> Quadratic</span><span style="color:#D4D4D4"> = false></span></span>
+<span class="line"><span style="color:#569CD6">class</span><span style="color:#4EC9B0"> OpenAddressing</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">private:</span></span>
+<span class="line"><span style="color:#569CD6">  enum</span><span style="color:#569CD6"> class</span><span style="color:#4EC9B0"> State</span><span style="color:#D4D4D4"> { </span><span style="color:#4FC1FF">Empty</span><span style="color:#D4D4D4">, </span><span style="color:#4FC1FF">Full</span><span style="color:#D4D4D4">, </span><span style="color:#4FC1FF">Deleted</span><span style="color:#D4D4D4"> };</span></span>
+<span class="line"><span style="color:#569CD6">  struct</span><span style="color:#4EC9B0"> Slot</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#4EC9B0">    Key</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">{};</span></span>
+<span class="line"><span style="color:#4EC9B0">    Value</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">{};</span></span>
+<span class="line"><span style="color:#4EC9B0">    State</span><span style="color:#9CDCFE"> state</span><span style="color:#D4D4D4"> = </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Empty</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  };</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#9CDCFE"> m</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                // number of slots</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#9CDCFE"> n</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">            // number of full slots</span></span>
+<span class="line"><span style="color:#4EC9B0">  Slot</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> table</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#DCDCAA"> home</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> { </span><span style="color:#C586C0">return</span><span style="color:#4EC9B0"> std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">hash</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#9CDCFE">Key</span><span style="color:#D4D4D4">>{}(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) % </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">; }</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#DCDCAA"> probe</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> Quadratic</span><span style="color:#D4D4D4"> ? (</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> * </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">) % </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4"> : (</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">) % </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">public:</span></span>
+<span class="line"><span style="color:#569CD6">  static</span><span style="color:#569CD6"> constexpr</span><span style="color:#569CD6"> size_t</span><span style="color:#9CDCFE"> npos</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">static_cast</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#569CD6">size_t</span><span style="color:#D4D4D4">>(-</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  explicit</span><span style="color:#DCDCAA"> OpenAddressing</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> slots</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">13</span><span style="color:#D4D4D4">) : </span><span style="color:#DCDCAA">m</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">slots</span><span style="color:#D4D4D4">), </span><span style="color:#DCDCAA">table</span><span style="color:#D4D4D4">(</span><span style="color:#C586C0">new</span><span style="color:#9CDCFE"> Slot</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">slots</span><span style="color:#D4D4D4">]) {}</span></span>
+<span class="line"><span style="color:#DCDCAA">  OpenAddressing</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> OpenAddressing</span><span style="color:#569CD6">&#x26;</span><span style="color:#D4D4D4">) = </span><span style="color:#569CD6">delete</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">  OpenAddressing</span><span style="color:#569CD6">&#x26;</span><span style="color:#C586C0"> operator=</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> OpenAddressing</span><span style="color:#569CD6">&#x26;</span><span style="color:#D4D4D4">) = </span><span style="color:#569CD6">delete</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">  ~OpenAddressing</span><span style="color:#D4D4D4">() { </span><span style="color:#C586C0">delete[]</span><span style="color:#9CDCFE"> table</span><span style="color:#D4D4D4">; }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#DCDCAA"> size</span><span style="color:#D4D4D4">() </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> { </span><span style="color:#C586C0">return</span><span style="color:#9CDCFE"> n</span><span style="color:#D4D4D4">; }</span></span>
+<span class="line"><span style="color:#569CD6">  double</span><span style="color:#DCDCAA"> loadFactor</span><span style="color:#D4D4D4">() </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> { </span><span style="color:#C586C0">return</span><span style="color:#569CD6"> static_cast</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#569CD6">double</span><span style="color:#D4D4D4">>(</span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4">) / </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">; }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // Slot holding key, or npos. probes counts the slots examined.</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#DCDCAA"> find</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">size_t&#x26;</span><span style="color:#9CDCFE"> probes</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">home</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">    probes</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">++) {</span></span>
+<span class="line"><span style="color:#569CD6">      size_t</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">probe</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">      probes</span><span style="color:#D4D4D4">++;</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> == </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Empty</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#9CDCFE"> npos</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">           // blank spot: stop</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> == </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Full</span><span style="color:#D4D4D4"> &#x26;&#x26; </span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">      // a tombstone or another key: keep going</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> npos</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#4EC9B0">  Value</span><span style="color:#DCDCAA"> get</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> probes</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">find</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">probes</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">npos</span><span style="color:#D4D4D4"> ? </span><span style="color:#DCDCAA">Value</span><span style="color:#D4D4D4">() : </span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // Returns false only if no free slot was reachable.</span></span>
+<span class="line"><span style="color:#569CD6">  bool</span><span style="color:#DCDCAA"> put</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Value</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> val</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> h</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">home</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">), </span><span style="color:#9CDCFE">firstFree</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">npos</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> i</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">++) {</span></span>
+<span class="line"><span style="color:#569CD6">      size_t</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">probe</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">h</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">i</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> == </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Full</span><span style="color:#D4D4D4"> &#x26;&#x26; </span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#9CDCFE">        table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                                      // update</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#569CD6"> true</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">      }</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> != </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Full</span><span style="color:#D4D4D4"> &#x26;&#x26; </span><span style="color:#9CDCFE">firstFree</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">npos</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#9CDCFE">        firstFree</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                                           // empty or tombstone</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> == </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Empty</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">break</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                 // key cannot be further on</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">firstFree</span><span style="color:#D4D4D4"> == </span><span style="color:#9CDCFE">npos</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">return</span><span style="color:#569CD6"> false</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">firstFree</span><span style="color:#D4D4D4">] = </span><span style="color:#9CDCFE">Slot</span><span style="color:#D4D4D4">{</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">, </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Full</span><span style="color:#D4D4D4">};</span></span>
+<span class="line"><span style="color:#9CDCFE">    n</span><span style="color:#D4D4D4">++;</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#569CD6"> true</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  void</span><span style="color:#DCDCAA"> remove</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">const</span><span style="color:#4EC9B0"> Key</span><span style="color:#569CD6">&#x26;</span><span style="color:#9CDCFE"> key</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> probes</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">find</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">probes</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4"> != </span><span style="color:#9CDCFE">npos</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#9CDCFE">      table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> = </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Deleted</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">                           // tombstone, not Empty</span></span>
+<span class="line"><span style="color:#9CDCFE">      n</span><span style="color:#D4D4D4">--;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // Rehash every key into a new array; this also discards all tombstones.</span></span>
+<span class="line"><span style="color:#569CD6">  void</span><span style="color:#DCDCAA"> rehash</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> newM</span><span style="color:#D4D4D4">) {</span></span>
+<span class="line"><span style="color:#4EC9B0">    Slot</span><span style="color:#569CD6">*</span><span style="color:#9CDCFE"> old</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    size_t</span><span style="color:#9CDCFE"> oldM</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    table</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">new</span><span style="color:#9CDCFE"> Slot</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">newM</span><span style="color:#D4D4D4">];</span></span>
+<span class="line"><span style="color:#9CDCFE">    m</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">newM</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    n</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">oldM</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">++)</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">old</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> == </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Full</span><span style="color:#D4D4D4">) </span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">old</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">old</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">val</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">    delete[]</span><span style="color:#9CDCFE"> old</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">  void</span><span style="color:#DCDCAA"> print</span><span style="color:#D4D4D4">() </span><span style="color:#569CD6">const</span><span style="color:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#C586C0">    for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">size_t</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#9CDCFE">m</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">++) {</span></span>
+<span class="line"><span style="color:#C586C0">      if</span><span style="color:#D4D4D4"> (</span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> == </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Full</span><span style="color:#D4D4D4">) </span><span style="color:#4EC9B0">std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">      else</span><span style="color:#4EC9B0"> std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; (</span><span style="color:#9CDCFE">table</span><span style="color:#D4D4D4">[</span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4">].</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4"> == </span><span style="color:#4EC9B0">State</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">Deleted</span><span style="color:#D4D4D4"> ? </span><span style="color:#CE9178">"X"</span><span style="color:#D4D4D4"> : </span><span style="color:#CE9178">"."</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#4EC9B0">      std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">' '</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    }</span></span>
+<span class="line"><span style="color:#4EC9B0">    std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">'</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  }</span></span>
+<span class="line"><span style="color:#D4D4D4">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">int</span><span style="color:#DCDCAA"> main</span><span style="color:#D4D4D4">() {</span></span>
+<span class="line"><span style="color:#6A9955">  // Separate chaining, m = 7</span></span>
+<span class="line"><span style="color:#4EC9B0">  SeparateChaining</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#569CD6">int</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">int</span><span style="color:#D4D4D4">> </span><span style="color:#DCDCAA">chain</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  int</span><span style="color:#9CDCFE"> pairs</span><span style="color:#D4D4D4">[][</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">] = {{</span><span style="color:#B5CEA8">47</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">28</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">14</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">9</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">47</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">5</span><span style="color:#D4D4D4">}};</span></span>
+<span class="line"><span style="color:#C586C0">  for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">auto&#x26;</span><span style="color:#9CDCFE"> p</span><span style="color:#D4D4D4"> : </span><span style="color:#9CDCFE">pairs</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">chain</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4">[</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">], </span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4">[</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">]);</span></span>
+<span class="line"><span style="color:#9CDCFE">  chain</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#4EC9B0">  std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"get(28) = "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">chain</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">28</span><span style="color:#D4D4D4">) &#x3C;&#x3C; </span><span style="color:#CE9178">", get(47) = "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">chain</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">47</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">            &#x3C;&#x3C; </span><span style="color:#CE9178">", n = "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">chain</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">size</span><span style="color:#D4D4D4">() &#x3C;&#x3C; </span><span style="color:#CE9178">", load factor = "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">chain</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">loadFactor</span><span style="color:#D4D4D4">() &#x3C;&#x3C; </span><span style="color:#CE9178">'</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">'</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">  chain</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">remove</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">14</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#4EC9B0">  std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"after remove(14):</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">  chain</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#9CDCFE">  chain</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">rehash</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">14</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#4EC9B0">  std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"after rehash(14):</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">  chain</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // Linear probing, m = 13</span></span>
+<span class="line"><span style="color:#4EC9B0">  std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">linear probing</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">  OpenAddressing</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#569CD6">int</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">int</span><span style="color:#D4D4D4">> </span><span style="color:#DCDCAA">lp</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">13</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#C586C0">  for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">int</span><span style="color:#9CDCFE"> k</span><span style="color:#D4D4D4"> : {</span><span style="color:#B5CEA8">18</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">16</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">22</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">21</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">8</span><span style="color:#D4D4D4">}) </span><span style="color:#9CDCFE">lp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">k</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  lp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#9CDCFE">  lp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">remove</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">16</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  lp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">remove</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">21</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  lp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#9CDCFE"> probes</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">  size_t</span><span style="color:#9CDCFE"> s</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">lp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">find</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">8</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">probes</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#4EC9B0">  std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"find(8): slot "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">", "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">probes</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">" probes</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">  lp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">20</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  lp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  lp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#9CDCFE">  lp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">rehash</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">26</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#4EC9B0">  std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"after rehash(26), tombstones gone:</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">  lp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // Quadratic probing, m = 13</span></span>
+<span class="line"><span style="color:#4EC9B0">  std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">quadratic probing</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#4EC9B0">  OpenAddressing</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#569CD6">int</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">int</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">> </span><span style="color:#DCDCAA">qp</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">13</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  int</span><span style="color:#9CDCFE"> qpairs</span><span style="color:#D4D4D4">[][</span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">] = {{</span><span style="color:#B5CEA8">17</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">33</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">18</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">20</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">44</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">11</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">5</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">19</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">6</span><span style="color:#D4D4D4">}, {</span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">}};</span></span>
+<span class="line"><span style="color:#C586C0">  for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">auto&#x26;</span><span style="color:#9CDCFE"> p</span><span style="color:#D4D4D4"> : </span><span style="color:#9CDCFE">qpairs</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">qp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4">[</span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">], </span><span style="color:#9CDCFE">p</span><span style="color:#D4D4D4">[</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">]);</span></span>
+<span class="line"><span style="color:#9CDCFE">  qp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"><span style="color:#9CDCFE">  qp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">remove</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">44</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  s</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">qp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">find</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">19</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">probes</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#4EC9B0">  std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"find(19): slot "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">s</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">", value "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">qp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">19</span><span style="color:#D4D4D4">) &#x3C;&#x3C; </span><span style="color:#CE9178">", "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">probes</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">" probes</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">  qp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">5</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">8</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#9CDCFE">  qp</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // Quadratic probing may never reach some free slots: i*i % 13 takes only 7 values.</span></span>
+<span class="line"><span style="color:#4EC9B0">  OpenAddressing</span><span style="color:#D4D4D4">&#x3C;</span><span style="color:#569CD6">int</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">int</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">true</span><span style="color:#D4D4D4">> </span><span style="color:#DCDCAA">few</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">13</span><span style="color:#D4D4D4">);</span></span>
+<span class="line"><span style="color:#569CD6">  int</span><span style="color:#9CDCFE"> stored</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">  for</span><span style="color:#D4D4D4"> (</span><span style="color:#569CD6">int</span><span style="color:#9CDCFE"> k</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">k</span><span style="color:#D4D4D4"> &#x3C; </span><span style="color:#B5CEA8">13</span><span style="color:#D4D4D4"> * </span><span style="color:#B5CEA8">13</span><span style="color:#D4D4D4">; </span><span style="color:#9CDCFE">k</span><span style="color:#D4D4D4"> += </span><span style="color:#B5CEA8">13</span><span style="color:#D4D4D4">) </span><span style="color:#9CDCFE">stored</span><span style="color:#D4D4D4"> += </span><span style="color:#9CDCFE">few</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">put</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">k</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">) ? </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> : </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">;</span><span style="color:#6A9955">   // 13 keys, all home slot 0</span></span>
+<span class="line"><span style="color:#4EC9B0">  std</span><span style="color:#D4D4D4">::</span><span style="color:#9CDCFE">cout</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">"</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">13 keys that all hash to slot 0: "</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#9CDCFE">stored</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">" stored, "</span></span>
+<span class="line"><span style="color:#D4D4D4">            &#x3C;&#x3C; </span><span style="color:#B5CEA8">13</span><span style="color:#D4D4D4"> - </span><span style="color:#9CDCFE">stored</span><span style="color:#D4D4D4"> &#x3C;&#x3C; </span><span style="color:#CE9178">" rejected</span><span style="color:#D7BA7D">\n</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">}</span></span></code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="256"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>展开全部（256 行）</span></button><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>输出：</p>
+<div class="code-collapse is-collapsed"><pre data-language="text"><code class="language-text">0: (14,3) (28,2)
+1:
+2: (9,4)
+3: (3,1)
+4:
+5: (47,5)
+6:
+get(28) = 2, get(47) = 5, n = 5, load factor = 0.714286
+after remove(14):
+0: (28,2)
+1:
+2: (9,4)
+3: (3,1)
+4:
+5: (47,5)
+6:
+after rehash(14):
+0: (28,2)
+1:
+2:
+3: (3,1)
+4:
+5: (47,5)
+6:
+7:
+8:
+9: (9,4)
+10:
+11:
+12:
+13:
+
+linear probing
+. . . 3 16 18 . . 21 22 8 . . 
+. . . 3 X 18 . . X 22 8 . . 
+find(8): slot 10, 3 probes
+. . . 3 X 18 . 20 7 22 8 . . 
+after rehash(26), tombstones gone:
+. . . 3 . . . 7 8 . . . . . . . . . 18 . 20 . 22 . . . 
+
+quadratic probing
+. . . 7 17 18 44 33 20 . 19 11 . 
+find(19): slot 10, value 6, 3 probes
+. . . 7 17 18 5 33 20 . 19 11 . 
+
+13 keys that all hash to slot 0: 7 stored, 6 rejected</code></pre><button type="button" class="code-collapse-btn" aria-expanded="false" data-lines="46"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>展开全部（46 行）</span></button><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<h2 id="8-速查与五个要点">8. 速查与五个要点</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>拉链法</th>
+<th>线性探测</th>
+<th>二次探测</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>存储</td>
+<td>m 个链表的数组</td>
+<td>一个数组，键存放在槽中</td>
+<td>一个数组</td>
+</tr>
+<tr>
+<td>冲突时</td>
+<td>加入链（在头部）</td>
+<td>尝试 (h + i) % m</td>
+<td>尝试 (h + i²) % m</td>
+</tr>
+<tr>
+<td>查找停止于</td>
+<td>链 i 的末尾</td>
+<td>该键或一个<strong>空</strong>槽</td>
+<td>该键或一个空槽</td>
+</tr>
+<tr>
+<td>删除</td>
+<td>断开节点</td>
+<td>墓碑</td>
+<td>墓碑</td>
+</tr>
+<tr>
+<td>负载因子 α = n/m</td>
+<td>平均链长，可能 &gt; 1</td>
+<td>必须 &lt; 1；保持约为 ½</td>
+<td>必须 &lt; 1</td>
+</tr>
+<tr>
+<td>平均 / 最坏</td>
+<td>O(1) / O(n)</td>
+<td>O(1) / O(n)</td>
+<td>O(1) / O(n)</td>
+</tr>
+</tbody></table>
+<p><strong>必记的五个要点</strong></p>
+<ol>
+<li>拉链法：<code>i = hash(key) % m</code>，扫描链 i（若键已存在则更新），否则在头部插入新节点；查找只在链 i 中进行。</li>
+<li>平均代价与负载因子 n/m 成正比；通过随 n 增长而增大 m 来保持其为常数（探测时在 ½ 处加倍、在 ⅛ 处减半）；扩容意味着对每个键重新哈希：一次性 O(n)，均摊 O(1)。</li>
+<li>线性探测的查找只在该键或空槽处停止，因此删除必须留下墓碑；查找会跳过墓碑，插入可以复用它们。</li>
+<li>线性探测在实践中很快（内存、局部性、缓存），但存在主聚集的问题；命中的探测次数约为 ½(1 + 1/(1−α))，未命中约为 ½(1 + 1/(1−α)²)，因此应保持 α ≈ ½。</li>
+<li>二次探测使用 (h(k) + c₁i + c₂i²) % m，其中 c₂ ≠ 0（c₂ = 0 即线性探测）；哈希表平均为 O(1)，但最坏为 O(n)，且不支持有序操作。</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="笔记翻页" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/notes/ics-46/topic-search-trees/zh-CN/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>上一篇 · 话题 · 搜索树</span><span class="pager-title" data-astro-cid-gxyjxt6l>搜索树</span></a><a class="card interactive pager-card pager-next" href="/notes/ics-46/" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>课程主页<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>ICS 46 · Data Structure Implementation and Analysis</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>快捷键<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> 上一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> 下一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> 切换语言</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="目录" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>顶部</button><script type="module" src="/_astro/NoteReader.astro_astro_type_script_index_0_lang.C9lxm8KA.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/assets/js/bento.js" defer></script><script src="/assets/js/chat-widget.js" defer></script></body></html>

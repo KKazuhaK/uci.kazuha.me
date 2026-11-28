@@ -1,0 +1,1232 @@
+<!DOCTYPE html><html lang="zh-CN"><head><title>CS 121 网络爬虫 | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="网页数据采集的几种方式（数据转储、URL 下载、Web API、爬取）、URI/URL/URN 与 URL 的结构、基本爬取算法与待爬队列、robots.txt 与 sitemap、礼貌性、DNS 与爬取耗时估算、爬虫陷阱、重复内容、噪声、深网与客户端脚本、新鲜度、年龄与期望年龄、分布式爬取、聚焦爬取与桌面爬取、文档订阅源（RSS、WebSub），以及伦理、隐私、版权、合理使用与相关法律案例。"><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-crawling/zh-CN/"><link rel="icon" href="/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-crawling/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-crawling/zh-CN/"><link rel="stylesheet" href="/_astro/BaseLayout.CnlNRG6h.css"><link rel="stylesheet" href="/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/_astro/katex.mPfuf26R.css"><link rel="stylesheet" href="/_astro/index.BWdCFSBs.css"></head><body data-nav-path="/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="zh-CN" data-viz-base="/assets/viz/" data-viz-version="1795857807" data-source-url="/notes/cs-121/topic-crawling/zh-CN/source.md" data-editor-url="/tools/md-editor/" data-alt-url="/notes/cs-121/topic-crawling/en-US/" data-prev-url="/notes/cs-121/topic-search-engines/zh-CN/" data-next-url="/notes/cs-121/topic-documents/zh-CN/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="上一篇 / 下一篇" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/notes/cs-121/topic-search-engines/zh-CN/" title="上一篇: 搜索引擎与 Web ([)" aria-label="上一篇: 话题 · 搜索引擎与 Web" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>话题 · 搜索引擎与 Web</span></a><label class="rb-title" title="跳到其他讲" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>CS 121</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>话题 · 网络爬虫</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg><select class="rb-jump" data-rb-jump aria-label="跳到其他讲" autocomplete="off" data-astro-cid-gxyjxt6l><option value="/notes/cs-121/week-01/zh-CN/" data-astro-cid-gxyjxt6l>第 1 周 — 课程介绍、信息检索与网络、搜索引擎架构</option><option value="/notes/cs-121/week-02/zh-CN/" data-astro-cid-gxyjxt6l>第 2 周 — 网络语料、搜索引擎优化与网络爬虫</option><option value="/notes/cs-121/week-03/zh-CN/" data-astro-cid-gxyjxt6l>第 3 周 — 网络爬虫</option><option value="/notes/cs-121/week-04/zh-CN/" data-astro-cid-gxyjxt6l>第 4 周 — 字符编码、文档存储、重复检测与 Zipf 定律</option><option value="/notes/cs-121/week-05/zh-CN/" data-astro-cid-gxyjxt6l>第 5 周 — 文本处理、词项-文档矩阵</option><option value="/notes/cs-121/week-06/zh-CN/" data-astro-cid-gxyjxt6l>第 6 周 — 倒排索引、索引构建</option><option value="/notes/cs-121/week-07/zh-CN/" data-astro-cid-gxyjxt6l>第 7 周 — 扩展索引、查询处理、tf-idf</option><option value="/notes/cs-121/week-08/zh-CN/" data-astro-cid-gxyjxt6l>第 8 周 — 向量空间模型与余弦排序</option><option value="/notes/cs-121/week-09/zh-CN/" data-astro-cid-gxyjxt6l>第 9 周 — 高效打分、链接分析、评价</option><option value="/notes/cs-121/topic-search-engines/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 搜索引擎与 Web — 搜索引擎与 Web</option><option value="/notes/cs-121/topic-crawling/zh-CN/" selected data-astro-cid-gxyjxt6l>话题 · 网络爬虫 — 网络爬虫</option><option value="/notes/cs-121/topic-documents/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 文档转换、存储与去重 — 文档转换、存储与去重</option><option value="/notes/cs-121/topic-text-processing/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 文本处理 — 文本处理</option><option value="/notes/cs-121/topic-indexing/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 倒排索引与索引构建 — 倒排索引与索引构建</option><option value="/notes/cs-121/topic-retrieval-models/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 检索模型：布尔、tf-idf 与向量空间 — 检索模型：布尔、tf-idf 与向量空间</option><option value="/notes/cs-121/topic-query-processing/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 查询处理与高效 Top-K — 查询处理与高效 Top-K</option><option value="/notes/cs-121/topic-link-analysis/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 链接分析：HITS 与 PageRank — 链接分析：HITS 与 PageRank</option><option value="/notes/cs-121/topic-evaluation/zh-CN/" data-astro-cid-gxyjxt6l>话题 · 搜索引擎评测 — 搜索引擎评测</option></select></label><a class="rb-btn rb-lang" href="/notes/cs-121/topic-crawling/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>EN</span></a><a class="rb-btn rb-next rb-side-next" href="/notes/cs-121/topic-documents/zh-CN/" title="下一篇: 文档转换、存储与去重 (])" aria-label="下一篇: 话题 · 文档转换、存储与去重" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>话题 · 文档转换、存储与去重</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/notes/cs-121/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>CS 121</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>话题 · 网络爬虫</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/notes/cs-121/topic-crawling/en-US/" data-lang-switch hreflang="en-US" lang="en-US" title="切换到 English (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>English</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>目录</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>在编辑器中打开</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>信息检索课程阅读笔记</h2><p id="reader-description" data-astro-cid-gxyjxt6l>这页整理的是 CS 121 话题 · 网络爬虫 的课程笔记，适合按周复习文本处理、网络图、SEO、网络爬虫，以及搜索引擎如何索引网页并为其排序。下面这条路径可以带你回到 Notes、Course Notes、课程主页，或定位到当前笔记。将鼠标悬停在右侧的 ≡ 图标上可以打开目录。</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>最后编辑于 2026 年 11 月 25 日</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="cs-121-information-retrieval--话题网络爬虫">CS 121: Information Retrieval — 话题：网络爬虫</h1>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#1-%E8%8E%B7%E5%8F%96%E7%BD%91%E9%A1%B5%E6%95%B0%E6%8D%AE%E5%9B%9B%E7%A7%8D%E6%96%B9%E5%BC%8F">1. 获取网页数据：四种方式</a></li>
+<li><a href="#2-uriurl-%E4%B8%8E-urn">2. URI、URL 与 URN</a></li>
+<li><a href="#3-%E5%9F%BA%E6%9C%AC%E7%88%AC%E5%8F%96%E7%AE%97%E6%B3%95">3. 基本爬取算法</a></li>
+<li><a href="#4-%E7%88%AC%E5%8F%96%E8%AE%B8%E5%8F%AFrobotstxt">4. 爬取许可：robots.txt</a></li>
+<li><a href="#5-sitemap%E6%8F%90%E4%BE%9B%E7%BB%99%E7%88%AC%E8%99%AB%E7%9A%84%E4%BF%A1%E6%81%AF">5. Sitemap：提供给爬虫的信息</a></li>
+<li><a href="#6-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9F%BA%E6%9C%AC%E7%AE%97%E6%B3%95%E4%B8%8D%E5%A4%9F%E7%94%A8">6. 为什么基本算法不够用</a></li>
+<li><a href="#7-%E7%A4%BC%E8%B2%8C%E6%80%A7%E4%B8%8E%E6%80%A7%E8%83%BD">7. 礼貌性与性能</a></li>
+<li><a href="#8-%E7%88%AC%E8%99%AB%E9%99%B7%E9%98%B1">8. 爬虫陷阱</a></li>
+<li><a href="#9-%E9%87%8D%E5%A4%8D%E6%95%B0%E6%8D%AE%E5%99%AA%E5%A3%B0%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%84%9A%E6%9C%AC%E4%B8%8E%E6%B7%B1%E7%BD%91">9. 重复、数据噪声、客户端脚本与深网</a></li>
+<li><a href="#10-%E4%BD%95%E6%97%B6%E9%87%8D%E6%96%B0%E7%88%AC%E5%8F%96%E6%96%B0%E9%B2%9C%E5%BA%A6%E4%B8%8E%E5%B9%B4%E9%BE%84">10. 何时重新爬取：新鲜度与年龄</a></li>
+<li><a href="#11-%E5%88%86%E5%B8%83%E5%BC%8F%E7%88%AC%E5%8F%96">11. 分布式爬取</a></li>
+<li><a href="#12-%E5%85%B6%E4%BB%96%E7%B1%BB%E5%9E%8B%E7%9A%84%E7%88%AC%E5%8F%96%E8%81%9A%E7%84%A6%E6%A1%8C%E9%9D%A2%E4%B8%8E%E6%96%87%E6%A1%A3%E8%AE%A2%E9%98%85%E6%BA%90">12. 其他类型的爬取：聚焦、桌面与文档订阅源</a></li>
+<li><a href="#13-%E4%BC%A6%E7%90%86%E4%B8%8E%E6%B3%95%E5%BE%8B">13. 伦理与法律</a></li>
+<li><a href="#14-%E9%9A%90%E7%A7%81%E4%BD%A0%E7%9A%84%E7%88%AC%E8%99%AB%E7%95%99%E4%B8%8B%E4%BA%86%E4%BB%80%E4%B9%88">14. 隐私：你的爬虫留下了什么</a></li>
+<li><a href="#15-%E7%89%88%E6%9D%83%E5%90%88%E7%90%86%E4%BD%BF%E7%94%A8%E4%B8%8E%E6%B3%95%E5%BE%8B%E6%A1%88%E4%BE%8B">15. 版权、合理使用与法律案例</a></li>
+<li><a href="#16-%E9%80%9F%E6%9F%A5%E4%B8%8E%E4%BA%94%E6%9D%A1%E8%A6%81%E7%82%B9">16. 速查与五条要点</a></li>
+</ul>
+<blockquote>
+<p>本章讲的是<strong>文本获取</strong>：搜索引擎如何从网络上获得它的文档。它位于 <a href="/notes/cs-121/topic-search-engines/zh-CN/">搜索引擎与 Web</a> 所描述的架构的最前端；爬虫存下的内容，会按 <a href="/notes/cs-121/topic-documents/zh-CN/">文档转换、存储与去重</a> 的方式进行转换与去重，然后再建立 <a href="/notes/cs-121/topic-indexing/zh-CN/">倒排索引与索引构建</a>。</p>
+</blockquote>
+<h2 id="1-获取网页数据四种方式">1. 获取网页数据：四种方式</h2>
+<p>在任何搜索或排序之前，引擎都需要数据。从网络获取数据有四种方式：</p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>工作原理</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>数据转储</strong></td>
+<td>网站定期打包自己的数据，以“转储”（dump）的形式提供</td>
+<td>维基百科（建议用 torrent 下载）；arXiv 的批量全文访问</td>
+</tr>
+<tr>
+<td><strong>URL 下载</strong></td>
+<td>两步：（1）找出特定资源的 URL；（2）对这份列表运行下载器</td>
+<td>例如从 SourceForge / GitHub“爬取”源代码，或论文、网页等。一些网站使用规则的 URL：<code>http://link.springer.com/chapter/10.1007/978-3-642-34213-4_1</code>、<code>…_2</code>，…；Google Code 的 <code>http://code.google.com/p/python-for-android/downloads/list</code></td>
+</tr>
+<tr>
+<td><strong>Web API</strong></td>
+<td>网站提供（REST）接口来获取其数据</td>
+<td>通常<strong>层级更高</strong>（无需解析 HTML），但通常<strong>限制较多</strong>（只提供部分数据）。Facebook Graph API、YouTube API、Twitter API、arXiv API 等</td>
+</tr>
+<tr>
+<td><strong>网页爬取</strong></td>
+<td>像人一样：获取 HTML 页面及其他文档，并在过程中<strong>发现新的 URL</strong></td>
+<td>适合<strong>不断变化</strong>的集合和<strong>未知</strong>的文档。网站管理员不喜欢爬虫：它们消耗了本该供人使用的资源（本章其余部分讨论的正是这种张力）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>💡 <strong>关键洞见</strong>：只有在事先不知道 URL 时，爬取才是必需的；URL 下载则需要可预测的模式，例如 <code>…34213-4_1</code>、<code>…_2</code>。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="http://en.wikipedia.org/wiki/Wikipedia:Database_download">Wikipedia：数据库下载</a> · <a href="https://arxiv.org/help/bulk_data_s3">arXiv 批量数据（S3）</a> · <a href="https://arxiv.org/help/api/index">arXiv API</a> · <a href="https://developers.facebook.com/docs/reference/api/">Facebook Graph API</a> · <a href="https://developers.facebook.com/docs/reference/api/examples/">Graph API 示例</a> · <a href="https://developers.google.com/youtube/">YouTube API</a> · <a href="https://dev.twitter.com/docs">Twitter API 文档</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.4 Document Feeds</a></p>
+</blockquote>
+<h2 id="2-uriurl-与-urn">2. URI、URL 与 URN</h2>
+<p>爬虫以 URL 为生，因此必须精确地使用这些概念。注意 URI、URN 与 URL 之间的区别。</p>
+<h3 id="21-定义">2.1 定义</h3>
+<p><strong>URI</strong> 是用来标识资源的字符串。（有时它被展开为 &quot;Universal Resource Identifier&quot;；标准名称是 <strong>Uniform</strong> Resource Identifier。）</p>
+<table>
+<thead>
+<tr>
+<th>示例 URI</th>
+<th>类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>http://www.ics.uci.edu</code></td>
+<td>URL</td>
+</tr>
+<tr>
+<td>ISBN 0-486-27777-3</td>
+<td>URN</td>
+</tr>
+<tr>
+<td><code>ftp://ftp.ics.uci.edu</code></td>
+<td>URL</td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>URL（定位符）</strong>：必须指明资源<strong>在哪里</strong>。</li>
+<li><strong>URN（名称）</strong>：只说明资源<strong>是什么</strong>。</li>
+<li>本章关注的是 URL，但 “URI” 常被当作同义词混用。</li>
+</ul>
+<h3 id="22-url-的组成">2.2 URL 的组成</h3>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">scheme://domain:port/path?query_string#fragment_id
+         \_________/
+          authority</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>scheme://domain</code> 是<strong>必需的</strong>；<code>:port/path?query_string#fragment_id</code> 是<strong>可选的</strong>。域名与端口合起来构成<strong>授权部分</strong>（authority）。完整情况稍微复杂一些（参见完整规范）。</p>
+<p>两个带标注的 URL：</p>
+<table>
+<thead>
+<tr>
+<th>URL</th>
+<th>各部分</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>http://www.ics.uci.edu/~lopes</code></td>
+<td><code>http</code> = 位于 Web 服务器上 · <code>www.ics.uci.edu</code> = 没有端口，只有域名 · <code>~lopes</code> = 路径</td>
+</tr>
+<tr>
+<td><code>http://calendar.ics.uci.edu/calendar.php?type=month&amp;calendar=1&amp;category=&amp;month=02&amp;year=2013</code></td>
+<td>域名 <code>calendar.ics.uci.edu</code> · 路径 <code>calendar.php</code> · 查询 <code>type=month&amp;calendar=1&amp;category=&amp;month=02&amp;year=2013</code></td>
+</tr>
+</tbody></table>
+<p><strong>域名与子域名</strong>：在 <code>calendar.ics.uci.edu</code> 中，<strong>域名</strong>是 <code>uci.edu</code>；<code>ics</code> 和 <code>calendar</code> 是子域名。</p>
+<p><strong>绝对 URL 与相对 URL</strong>，对爬虫至关重要：<code>&lt;a href=&quot;http://www.ics.uci.edu/~algol/somesite.html&quot;&gt;</code> 是绝对 URL；<code>&lt;a href=&quot;/somesite.html&quot;&gt;</code> 是相对 URL，必须相对于它所在的页面来解析。</p>
+<p>动手试一试：逐步查看解析过程、查询参数和相对路径的解析（编辑 URL 后点击运行）：</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;URL 的组成&quot;, &quot;html&quot;: &quot;&lt;p&gt;See the console.&lt;/p&gt;&quot;, &quot;js&quot;: &quot;const urls = [\n  \&quot;http://www.ics.uci.edu/~lopes\&quot;,\n  \&quot;http://calendar.ics.uci.edu/calendar.php?type=month&amp;calendar=1&amp;category=&amp;month=02&amp;year=2013\&quot;\n];\nfor (const s of urls) {\n  const u = new URL(s);\n  console.log(s);\n  console.log({ scheme: u.protocol, host: u.hostname, port: u.port, path: u.pathname, query: u.search, fragment: u.hash });\n}&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;The query string is a list of name=value pairs; category is present but empty.&quot;, &quot;js&quot;: &quot;\nconst q = new URL(urls[1]).searchParams;\nfor (const [name, value] of q) console.log(name, \&quot;=\&quot;, JSON.stringify(value));&quot;}, {&quot;note&quot;: &quot;Relative links are resolved against the page they appear on: a leading / restarts at the domain.&quot;, &quot;js&quot;: &quot;\nconst page = \&quot;http://www.ics.uci.edu/~algol/somesite.html\&quot;;\nconsole.log(new URL(\&quot;/somesite.html\&quot;, page).href);\nconsole.log(new URL(\&quot;somesite.html\&quot;, page).href);&quot;}, {&quot;note&quot;: &quot;Every optional part filled in (illustrative URL): port, path, query, fragment.&quot;, &quot;js&quot;: &quot;\nconst full = new URL(\&quot;http://www.ics.uci.edu:8080/~lopes/index.html?lang=en#top\&quot;);\nconsole.log({ host: full.hostname, port: full.port, path: full.pathname, query: full.search, fragment: full.hash });&quot;}], &quot;height&quot;: 60, &quot;interactive&quot;: true}</code></pre><p>在 Python 中，<code>urllib.parse</code> 给出相同的各个部分：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> urllib.parse </span><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> urlsplit, urljoin</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">p = urlsplit(</span><span style="color:#CE9178">"http://calendar.ics.uci.edu/calendar.php"</span></span>
+<span class="line"><span style="color:#CE9178">             "?type=month&#x26;calendar=1&#x26;category=&#x26;month=02&#x26;year=2013"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(p.scheme, p.hostname, p.port, p.path)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(p.query)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">page = </span><span style="color:#CE9178">"http://www.ics.uci.edu/~algol/somesite.html"</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(urljoin(page, </span><span style="color:#CE9178">"/somesite.html"</span><span style="color:#D4D4D4">))</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(urljoin(page, </span><span style="color:#CE9178">"somesite.html"</span><span style="color:#D4D4D4">))</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">http calendar.ics.uci.edu None /calendar.php
+type=month&amp;calendar=1&amp;category=&amp;month=02&amp;year=2013
+http://www.ics.uci.edu/somesite.html
+http://www.ics.uci.edu/~algol/somesite.html</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：上面两个链接<strong>并不是</strong>同一个页面。在 <code>http://www.ics.uci.edu/~algol/somesite.html</code> 上，<code>href=&quot;/somesite.html&quot;</code> 解析为 <code>http://www.ics.uci.edu/somesite.html</code>，开头的 <code>/</code> 去掉了 <code>~algol/</code>。在把每个链接加入队列之前，都要先解析（<code>urljoin</code>）。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="http://www.w3.org/Addressing/URL/url-spec.txt">W3C：URL 规范</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.1 Retrieving Web Pages（书中第 33 页）</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#23-%E7%BB%83%E4%B9%A0">§2.3</a></p>
+</blockquote>
+<h3 id="23-练习">2.3 练习</h3>
+<h4 id="拆解-url">拆解 URL</h4>
+<p>按照 <code>scheme://domain:port/path?query_string#fragment_id</code>，给出 (a) <code>http://www.ics.uci.edu/~lopes</code> 和 (b) <code>http://calendar.ics.uci.edu/calendar.php?type=month&amp;calendar=1&amp;category=&amp;month=02&amp;year=2013</code> 的每一个部分。(b) 中的域名是什么？哪些部分是必需的？</p>
+<details>
+<summary>解答</summary>
+
+<table>
+<thead>
+<tr>
+<th>组成部分</th>
+<th>(a)</th>
+<th>(b)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>协议（scheme）</td>
+<td><code>http</code></td>
+<td><code>http</code></td>
+</tr>
+<tr>
+<td>域名（主机）</td>
+<td><code>www.ics.uci.edu</code></td>
+<td><code>calendar.ics.uci.edu</code></td>
+</tr>
+<tr>
+<td>端口</td>
+<td>未写出（只有域名）</td>
+<td>未写出</td>
+</tr>
+<tr>
+<td>路径</td>
+<td><code>/~lopes</code></td>
+<td><code>/calendar.php</code></td>
+</tr>
+<tr>
+<td>查询字符串</td>
+<td>无</td>
+<td><code>type=month&amp;calendar=1&amp;category=&amp;month=02&amp;year=2013</code>，共 5 对；<code>category</code> 为空</td>
+</tr>
+<tr>
+<td>片段（fragment）</td>
+<td>无</td>
+<td>无</td>
+</tr>
+</tbody></table>
+<p>(b) 中的域名是 <code>uci.edu</code>（<code>ics</code>、<code>calendar</code> 是子域名）。只有 <code>scheme://domain</code> 是必需的。这些值与 <code>urlsplit</code> 以及 <a href="#22-url-%E7%9A%84%E7%BB%84%E6%88%90">§2.2</a> 中的演示得到的结果相同。</p>
+</details>
+
+<h4 id="uriurl-还是-urn">URI、URL 还是 URN？</h4>
+<p>判断 <code>http://www.ics.uci.edu</code>、ISBN 0-486-27777-3 和 <code>ftp://ftp.ics.uci.edu</code> 各属于哪一类。</p>
+<details>
+<summary>解答</summary>
+
+<p>三者都是 <strong>URI</strong>。<code>http://www.ics.uci.edu</code> 和 <code>ftp://ftp.ics.uci.edu</code> 是 <strong>URL</strong>，它们说明资源<strong>在哪里</strong>。ISBN 是 <strong>URN</strong>，它说明书<strong>是什么</strong>，而不是某一本副本在哪里。</p>
+</details>
+
+<h2 id="3-基本爬取算法">3. 基本爬取算法</h2>
+<p><strong>爬虫</strong>（crawler，或称 spider）是一个程序，它像人点击浏览一样，获取 HTML 页面并跟随其中的链接。在搜索引擎的架构图上，爬取属于 <strong>文本获取（Text Acquisition）</strong> 模块。</p>
+<h3 id="31-什么算是算法">3.1 什么算是算法？</h3>
+<p>在写下爬取循环之前，先用 <strong>Knuth 的定义</strong> 检验它是否真的是一个算法。一个过程若具备以下性质，就是算法：</p>
+<table>
+<thead>
+<tr>
+<th>性质</th>
+<th>要问的问题</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>有限性</strong>（Finiteness）</td>
+<td>它是否会在有限步之后结束？</td>
+</tr>
+<tr>
+<td><strong>确定性</strong>（Definiteness）</td>
+<td>每一步是否被严格且无歧义地规定？</td>
+</tr>
+<tr>
+<td><strong>输入</strong>（Input）</td>
+<td>它是否有零个或多个输入？</td>
+</tr>
+<tr>
+<td><strong>输出</strong>（Output）</td>
+<td>它是否有一个或多个与输入相关的输出？</td>
+</tr>
+<tr>
+<td><strong>有效性</strong>（Effectiveness）</td>
+<td>每一步操作是否基础到一个人只用纸和笔就能完成？</td>
+</tr>
+</tbody></table>
+<p>设计爬取循环时要牢记这些性质：面对庞大且不断变化的网络（<a href="/notes/cs-121/topic-search-engines/zh-CN/">搜索引擎与 Web</a>），要认真考虑有限性。</p>
+<h3 id="32-循环待爬队列与伪代码">3.2 循环、待爬队列与伪代码</h3>
+<p>基本爬取算法：</p>
+<ol>
+<li>初始化一个 URL 队列，即<strong>种子</strong>（seeds）。</li>
+<li>重复以下步骤，直到队列中没有更多 URL：<ul>
+<li>从队列中取出一个 URL；</li>
+<li>如果该页面允许爬取，则获取对应的页面；</li>
+<li>存储该页面的表示形式；</li>
+<li>从页面中提取 URL，并加入队列。</li>
+</ul>
+</li>
+</ol>
+<p>该队列称为<strong>待爬队列</strong>（frontier）。可以想象三个区域：<strong>已爬取的网页</strong>、<strong>URL 待爬队列</strong>，以及<strong>网络的其余部分</strong>。网络蜘蛛从种子页面出发：每次获取都把一个页面移入“已爬取”，而它的链接则把“网络的其余部分”中的新页面拉入待爬队列。</p>
+<p>Croft 版本的伪代码：</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">procedure CrawlerThread(frontier)
+    while not frontier.done() do
+        website ← frontier.nextSite()
+        url ← website.nextURL()
+        if website.permitsCrawl(url) then
+            text ← retrieveURL(url)
+            storeDocument(url, text)
+            for each url in parse(text) do
+                frontier.addURL(url)
+            end for
+        end if
+        frontier.releaseSite(website)
+    end while
+end procedure</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>两项主要工作：<strong>在获得授权的前提下下载网页，并发现新的 URL</strong>。<code>website.permitsCrawl(url)</code> 这一调用提出了一个问题：<em>怎么知道网站是否允许爬取？</em>（<a href="#4-%E7%88%AC%E5%8F%96%E8%AE%B8%E5%8F%AFrobotstxt">§4</a>）待爬队列先交出一个<em>站点</em>，然后再从中取出一个 URL；<strong>礼貌性</strong>就在这里生效（<a href="#7-%E7%A4%BC%E8%B2%8C%E6%80%A7%E4%B8%8E%E6%80%A7%E8%83%BD">§7</a>）。</p>
+<p>下面的演示爬取一张图：四个主机（<code>www.cs.umass.edu</code>、<code>www.bbc.co.uk</code>、<code>www.whitehouse.gov</code>、<code>www.cnn.com</code>），每个主机三页，页面之间既有站内链接也有跨站链接；箭头标出 <code>nextSite()</code> 与 <code>nextURL()</code>。它从 umass 和 cnn 的首页开始。可以逐步查看，也可以编辑图结构后点击运行：</p>
+<pre data-language="viz" data-viz="crawl-frontier"><code>{&quot;title&quot;: &quot;基本爬取：“爬虫眼中的网络”&quot;, &quot;web&quot;: &quot;www.cs.umass.edu/index.html -&gt; www.cs.umass.edu/courses, www.cs.umass.edu/news; www.cs.umass.edu/news -&gt; www.bbc.co.uk/index.html, www.cnn.com/2006/09/story.html; www.bbc.co.uk/index.html -&gt; www.bbc.co.uk/today, www.bbc.co.uk/2005/story.html; www.bbc.co.uk/2005/story.html -&gt; www.whitehouse.gov/index.html; www.whitehouse.gov/index.html -&gt; www.whitehouse.gov/news.html, www.whitehouse.gov/about.html; www.cnn.com/index.html -&gt; www.cnn.com/2006/09/story.html, www.cnn.com/2003/04/story.html&quot;, &quot;seeds&quot;: &quot;www.cs.umass.edu/index.html, www.cnn.com/index.html&quot;, &quot;interactive&quot;: true}</code></pre><p>全部 12 个页面以 FIFO（广度优先）的顺序，在 12 次获取中被爬取。<code>www.cnn.com/2006/09/story.html</code> 被链接了两次，但只入队一次：待爬队列会记住它见过哪些 URL。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：“重复直到队列中没有更多 URL”只有在待爬队列拒绝已经见过的 URL 时才会结束。没有已见集合，两个互相链接的页面就会无限循环。这与重复<em>内容</em>的检测不同（<a href="#9-%E9%87%8D%E5%A4%8D%E6%95%B0%E6%8D%AE%E5%99%AA%E5%A3%B0%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%84%9A%E6%9C%AC%E4%B8%8E%E6%B7%B1%E7%BD%91">§9</a>）。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2 Crawling the Web（书中第 32 页）</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.2 The Web Crawler（书中第 35 页）</a></p>
+</blockquote>
+<h2 id="4-爬取许可robotstxt">4. 爬取许可：robots.txt</h2>
+<p><strong>爬取前先礼貌地询问网站是否允许你爬取。</strong> <strong>机器人排除标准</strong>（Robots Exclusion Standard），又称 <code>robots.txt</code>，是网站可以放在根目录下的一个文件（<code>http://www.cnn.com/robots.txt</code>、<code>http://en.wikipedia.org/robots.txt</code>）。它的语法非常简单。多年来它没有正式标准，只是一种约定；之后它被写成了 RFC 9309。它依靠<strong>君子协定</strong>运作，<strong>它不是安全机制</strong>：忽略它的爬虫仍然能拿到页面。</p>
+<h3 id="41-五个经典示例">4.1 五个经典示例</h3>
+<p>来自 robotstxt.org：</p>
+<table>
+<thead>
+<tr>
+<th>目标</th>
+<th>robots.txt</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>禁止所有机器人访问整个服务器</td>
+<td><code>User-agent: *</code> / <code>Disallow: /</code></td>
+</tr>
+<tr>
+<td>允许所有机器人完全访问</td>
+<td><code>User-agent: *</code> / <code>Disallow:</code>（留空）</td>
+</tr>
+<tr>
+<td>禁止所有机器人访问站点的一部分</td>
+<td><code>User-agent: *</code> / <code>Disallow: /cgi-bin/</code> / <code>Disallow: /tmp/</code> / <code>Disallow: /junk/</code></td>
+</tr>
+<tr>
+<td>禁止单个机器人</td>
+<td><code>User-agent: BadBot</code> / <code>Disallow: /</code></td>
+</tr>
+<tr>
+<td>允许单个机器人</td>
+<td><code>User-agent: Google</code> / <code>Disallow:</code> — 空行 — <code>User-agent: *</code> / <code>Disallow: /</code></td>
+</tr>
+</tbody></table>
+<p>（<code>/</code> 用于分隔文件中的各行。）<code>Disallow:</code> 后面留空，表示不禁止任何内容，即“全部允许”。<code>Disallow: /</code> 禁止一切，因为每个路径都以 <code>/</code> 开头。</p>
+<blockquote>
+<p>💡 <strong>关键洞见</strong>：<strong>有一条优先级规则</strong>：如果存在专门针对某个机器人的分组，那么对该机器人适用的规则<strong>只有</strong>该分组中的规则。在“允许单个机器人”的例子中，Google 只读取自己的分组（<code>Disallow:</code> 即全部允许），而永远看不到 <code>*</code> 分组中的 <code>Disallow: /</code>。</p>
+</blockquote>
+<h3 id="42-禁止文件夹中的-allow">4.2 禁止文件夹中的 Allow</h3>
+<p>你可以禁止一个文件夹，同时允许其中的一个资源，例如一个列出你<em>希望</em>被索引的链接的页面。CNN 的文件有六行 <code>Sitemap:</code>、<code>User-agent: *</code>、若干 <code>Allow</code> 行，然后是约 35 行 <code>Disallow</code>（<code>/*.jsx$</code>、<code>/ads/</code>、<code>/aol/</code>、<code>/audio/</code>，……，<code>/partners/</code>，……，<code>/search/</code>，……，<code>/webview/</code>）。其中值得关注的是两对规则：<code>Allow: /audio/podcasts/</code> 与 <code>Disallow: /audio/</code>，以及 <code>Allow: /partners/ipad/live-video.json</code> 与 <code>Disallow: /partners/</code>。</p>
+<p>为什么 <code>Allow</code> 会胜出？今天的规则（RFC 9309、Google 以及较新的 Python）是<strong>最长匹配</strong>：最长的匹配路径获胜，平局时 <code>Allow</code> 获胜。下面的演示把这一规则应用于 CNN 文件的节选版本：</p>
+<pre data-language="viz" data-viz="robots-txt"><code>{&quot;title&quot;: &quot;CNN 的 robots.txt（节选）&quot;, &quot;robots&quot;: &quot;User-agent: *\nAllow: /audio/podcasts/\nAllow: /partners/ipad/live-video.json\nDisallow: /*.jsx$\nDisallow: /ads/\nDisallow: /audio/\nDisallow: /partners/\nDisallow: /search/&quot;, &quot;urls&quot;: &quot;/audio/podcasts/ep1.mp3, /audio/live.html, /partners/ipad/live-video.json, /partners/ipad/x.json, /2026/10/14/world/index.html, /video/player.jsx&quot;, &quot;interactive&quot;: true}</code></pre><p>允许访问的是：播客、<code>live-video.json</code> 和文章（没有规则匹配）。禁止访问的是：<code>/audio/live.html</code>、<code>/partners/ipad/x.json</code>，以及 <code>/video/player.jsx</code>（通配符规则 <code>/*.jsx$</code>）。用 Python 实现如下：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> urllib.robotparser </span><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> RobotFileParser</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">rules = </span><span style="color:#CE9178">"""User-agent: *</span></span>
+<span class="line"><span style="color:#CE9178">Allow: /audio/podcasts/</span></span>
+<span class="line"><span style="color:#CE9178">Allow: /partners/ipad/live-video.json</span></span>
+<span class="line"><span style="color:#CE9178">Disallow: /*.jsx$</span></span>
+<span class="line"><span style="color:#CE9178">Disallow: /audio/</span></span>
+<span class="line"><span style="color:#CE9178">Disallow: /partners/</span></span>
+<span class="line"><span style="color:#CE9178">"""</span></span>
+<span class="line"><span style="color:#D4D4D4">rp = RobotFileParser()</span></span>
+<span class="line"><span style="color:#D4D4D4">rp.parse(rules.splitlines())   </span><span style="color:#6A9955"># or set_url(...) + read()</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> path </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> [</span><span style="color:#CE9178">"/audio/podcasts/ep1.mp3"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/audio/live.html"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">             "/partners/ipad/live-video.json"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">             "/video/player.jsx"</span><span style="color:#D4D4D4">]:</span></span>
+<span class="line"><span style="color:#D4D4D4">    url = </span><span style="color:#CE9178">"https://www.cnn.com"</span><span style="color:#D4D4D4"> + path</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(path, rp.can_fetch(</span><span style="color:#CE9178">"MyCrawler"</span><span style="color:#D4D4D4">, url))</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">/audio/podcasts/ep1.mp3 True
+/audio/live.html False
+/partners/ipad/live-video.json True
+/video/player.jsx False</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>这是在 Python 3.13 上的输出。在 Python 3.11 和 3.12 上，前三行相同，但最后一行是 <code>/video/player.jsx True</code>：旧版解析器不认识 <code>Disallow: /*.jsx$</code> 中的 <code>*</code> 和 <code>$</code>。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：较旧版本的 Python robotparser（已测试 3.11.18 和 3.12.3）会采用文件中<strong>第一条匹配的行</strong>，并且把 <code>*</code> 和 <code>$</code> 当作字面字符。CNN 把 <code>Allow</code> 行放在最前面，因此只有 <code>/*.jsx$</code> 会出错。但如果把 <code>Disallow: /audio/</code> 放在 <code>Allow: /audio/podcasts/</code> 之上，旧解析器就会阻止播客（对这个文件，3.11.18 上 <code>can_fetch</code> 返回 <code>False</code>，3.13.18 上返回 <code>True</code>）。在演示中设置 <code>&quot;match&quot;: &quot;first&quot;</code> 即可看到这一点。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="http://www.cnn.com/robots.txt">cnn.com/robots.txt</a> · <a href="http://en.wikipedia.org/robots.txt">en.wikipedia.org/robots.txt</a> · <a href="http://www.robotstxt.org/robotstxt.html">robotstxt.org: About /robots.txt</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.2 The Web Crawler（书中第 35 页）</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#43-%E7%BB%83%E4%B9%A0">§4.3</a></p>
+</blockquote>
+<h3 id="43-练习">4.3 练习</h3>
+<h4 id="哪条-robotstxt-规则适用">哪条 robots.txt 规则适用？</h4>
+<p>共有五个 robots.txt 文件：(1) <code>User-agent: *</code> / <code>Disallow: /</code>；(2) <code>User-agent: *</code> / <code>Disallow:</code>；(3) <code>User-agent: *</code>，并有 <code>Disallow: /cgi-bin/</code>、<code>Disallow: /tmp/</code>、<code>Disallow: /junk/</code>；(4) <code>User-agent: BadBot</code> / <code>Disallow: /</code>；(5) <code>User-agent: Google</code> / <code>Disallow:</code>，然后空一行，再接 <code>User-agent: *</code> / <code>Disallow: /</code>。对每个文件，机器人 <code>BadBot</code>、<code>Google</code> 和 <code>MyCrawler</code> 是否可以获取 <code>/</code>、<code>/tmp/a.html</code> 和 <code>/index.html</code>？</p>
+<details>
+<summary>解答</summary>
+
+<p>先选出分组（指名该机器人的分组优先于 <code>*</code>），再匹配路径。这些结果已用 Python 的 <code>urllib.robotparser</code> 验证（3.11.18 与 3.13.18 上完全相同）：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>BadBot</th>
+<th>Google</th>
+<th>MyCrawler</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>(1) 全部禁止（<code>*</code>：<code>Disallow: /</code>）</td>
+<td>无</td>
+<td>无</td>
+<td>无</td>
+</tr>
+<tr>
+<td>(2) 全部允许（<code>*</code>：<code>Disallow:</code>）</td>
+<td>全部</td>
+<td>全部</td>
+<td>全部</td>
+</tr>
+<tr>
+<td>(3) 部分禁止（<code>*</code>：<code>/cgi-bin/</code>、<code>/tmp/</code>、<code>/junk/</code>）</td>
+<td><code>/</code>、<code>/index.html</code>（不含 <code>/tmp/a.html</code>）</td>
+<td>同上</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>(4) 禁止单个机器人（<code>BadBot</code>：<code>Disallow: /</code>）</td>
+<td>无</td>
+<td>全部（没有分组适用）</td>
+<td>全部</td>
+</tr>
+<tr>
+<td>(5) 允许单个机器人（<code>Google</code>：<code>Disallow:</code> + <code>*</code>：<code>Disallow: /</code>）</td>
+<td>无</td>
+<td><strong>全部</strong></td>
+<td>无</td>
+</tr>
+</tbody></table>
+<p>最后一行正是优先级规则：Google 自己的分组允许一切，<code>*</code> 分组对它不适用。验证：</p>
+<pre data-language="viz" data-viz="robots-txt"><code>{&quot;title&quot;: &quot;允许单个机器人与优先级规则&quot;, &quot;robots&quot;: &quot;User-agent: Google\nDisallow:\n\nUser-agent: *\nDisallow: /&quot;, &quot;urls&quot;: &quot;/index.html, /tmp/a.html&quot;, &quot;agent&quot;: &quot;Google&quot;}</code></pre><p>（robotparser 会把分组名作为子串匹配，因此 <code>Googlebot/2.1</code> 也会匹配 <code>Google</code> 分组；RFC 9309 要求精确匹配令牌。）</p>
+</details>
+
+<h4 id="禁止文件夹中的允许规则">禁止文件夹中的允许规则</h4>
+<p>某个 robots.txt（针对 <code>User-agent: *</code>）包含 <code>Allow: /audio/podcasts/</code>、<code>Allow: /partners/ipad/live-video.json</code>、<code>Disallow: /audio/</code> 和 <code>Disallow: /partners/</code>。判断 <code>/audio/podcasts/ep1.mp3</code>、<code>/audio/live.html</code>、<code>/partners/ipad/live-video.json</code> 和 <code>/partners/ipad/x.json</code> 各自是否允许访问。</p>
+<details>
+<summary>解答</summary>
+
+<p>找出所有路径是 URL 路径前缀的规则，让最长的那条获胜：</p>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>匹配的规则</th>
+<th>胜出者</th>
+<th>结论</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/audio/podcasts/ep1.mp3</code></td>
+<td><code>Allow: /audio/podcasts/</code>（16），<code>Disallow: /audio/</code>（7）</td>
+<td>Allow</td>
+<td><strong>允许</strong></td>
+</tr>
+<tr>
+<td><code>/audio/live.html</code></td>
+<td><code>Disallow: /audio/</code></td>
+<td>Disallow</td>
+<td>禁止</td>
+</tr>
+<tr>
+<td><code>/partners/ipad/live-video.json</code></td>
+<td><code>Allow: …/live-video.json</code>（30），<code>Disallow: /partners/</code>（10）</td>
+<td>Allow</td>
+<td><strong>允许</strong></td>
+</tr>
+<tr>
+<td><code>/partners/ipad/x.json</code></td>
+<td><code>Disallow: /partners/</code></td>
+<td>Disallow</td>
+<td>禁止</td>
+</tr>
+</tbody></table>
+<p>这个文件夹是关闭的，只有网站希望被爬取的那个资源例外。只有 <code>Allow</code> 行被列在最前面，“先匹配者胜出”的规则才会得到相同的结果。代码如下：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">rules = [(</span><span style="color:#CE9178">"Allow"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/audio/podcasts/"</span><span style="color:#D4D4D4">), (</span><span style="color:#CE9178">"Allow"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/partners/ipad/live-video.json"</span><span style="color:#D4D4D4">),</span></span>
+<span class="line"><span style="color:#D4D4D4">         (</span><span style="color:#CE9178">"Disallow"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/audio/"</span><span style="color:#D4D4D4">), (</span><span style="color:#CE9178">"Disallow"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/partners/"</span><span style="color:#D4D4D4">)]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> allowed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">path</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#D4D4D4">    hits = [(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(p), kind == </span><span style="color:#CE9178">"Allow"</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> kind, p </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> rules </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> path.startswith(p)]</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#DCDCAA"> max</span><span style="color:#D4D4D4">(hits)[</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">] </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> hits </span><span style="color:#C586C0">else</span><span style="color:#569CD6"> True</span><span style="color:#6A9955">      # longest wins, Allow wins a tie</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> path </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> [</span><span style="color:#CE9178">"/audio/podcasts/ep1.mp3"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/audio/live.html"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">             "/partners/ipad/live-video.json"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/partners/ipad/x.json"</span><span style="color:#D4D4D4">]:</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(path, allowed(path))</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">/audio/podcasts/ep1.mp3 True
+/audio/live.html False
+/partners/ipad/live-video.json True
+/partners/ipad/x.json False</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+</details>
+
+<h2 id="5-sitemap提供给爬虫的信息">5. Sitemap：提供给爬虫的信息</h2>
+<p>robots.txt 告诉爬虫<strong>不要</strong>去哪里。<strong>Sitemap</strong>（由 Google 推出）让网站管理员向爬虫提供<strong>正面</strong>信息：</p>
+<ul>
+<li>它们包含 <strong>URL 列表</strong>，以及关于这些 URL 的数据，例如<strong>修改时间</strong>和<strong>修改频率</strong>。</li>
+<li>它们<strong>列在 robots.txt 中</strong>（CNN 的前六行，以 <code>Sitemap: https://www.cnn.com/sitemaps/cnn/index.xml</code> 开头）。</li>
+<li>它们由服务器管理员生成，通常通过脚本完成。</li>
+<li>它们可以告诉爬虫那些<strong>可能找不到的页面</strong>，即没有被任何地方链接的页面。</li>
+<li>它们给出页面的<strong>相对重要性</strong>，以及<strong>何时该检查页面是否有变化</strong>的提示（更新频率）。</li>
+</ul>
+<p>CNN 的 <code>index.xml</code> 是一个 <strong>sitemap 索引</strong>：一个 <code>&lt;sitemapindex&gt;</code>，列出更多的 sitemap（<code>video-2020-01.xml</code>、<code>article-2020-01.xml</code>、…），每个都带有 <code>&lt;lastmod&gt;</code>。其中每一个都是一个 <code>&lt;urlset&gt;</code>，每个页面对应一个 <code>&lt;url&gt;</code>：</p>
+<div class="code-wrap"><pre data-language="xml" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">url</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">loc</span><span style="color:#808080">></span><span style="color:#D4D4D4">https://www.cnn.com/2012/01/25/world/gallery/wus-us-mia/index.html</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">loc</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">lastmod</span><span style="color:#808080">></span><span style="color:#D4D4D4">2012-01-25T18:24:37Z</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">lastmod</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">changefreq</span><span style="color:#808080">></span><span style="color:#D4D4D4">daily</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">changefreq</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">priority</span><span style="color:#808080">></span><span style="color:#D4D4D4">0.5</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">priority</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">image:image</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">image:loc</span><span style="color:#808080">></span><span style="color:#D4D4D4">https://i2.cdn.turner.com/cnnnext/dam/assets/120111071718-jpac1-plane-story-top.jpg</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">image:loc</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">image:caption</span><span style="color:#808080">></span><span style="color:#D4D4D4">Gunnery Sgt. Bryon Bebout with the wreckage of a B-24 …</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">image:caption</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">image:image</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">url</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>&lt;loc&gt;</code> = URL，<code>&lt;lastmod&gt;</code> = 修改时间，<code>&lt;changefreq&gt;</code> = 修改频率，<code>&lt;priority&gt;</code> = 相对重要性。爬虫用 <code>&lt;lastmod&gt;</code> 和 <code>&lt;changefreq&gt;</code> 来决定<em>何时</em>再次访问（<a href="#10-%E4%BD%95%E6%97%B6%E9%87%8D%E6%96%B0%E7%88%AC%E5%8F%96%E6%96%B0%E9%B2%9C%E5%BA%A6%E4%B8%8E%E5%B9%B4%E9%BE%84">§10</a>）。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://www.cnn.com/sitemaps/cnn/index.xml">CNN sitemap 索引</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.6 Sitemaps</a></p>
+</blockquote>
+<h2 id="6-为什么基本算法不够用">6. 为什么基本算法不够用</h2>
+<p>基本算法<strong>理论上是正确的</strong>，但在实践中<strong>严重不足</strong>。它：</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问题</th>
+<th>参见</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>会惹恼网站管理员（不礼貌），它在滥用 Web 服务器</td>
+<td><a href="#7-%E7%A4%BC%E8%B2%8C%E6%80%A7%E4%B8%8E%E6%80%A7%E8%83%BD">§7</a></td>
+</tr>
+<tr>
+<td>2</td>
+<td>非常慢，一次只处理一个页面</td>
+<td><a href="#7-%E7%A4%BC%E8%B2%8C%E6%80%A7%E4%B8%8E%E6%80%A7%E8%83%BD">§7</a></td>
+</tr>
+<tr>
+<td>3</td>
+<td>会陷入陷阱和无限序列</td>
+<td><a href="#8-%E7%88%AC%E8%99%AB%E9%99%B7%E9%98%B1">§8</a></td>
+</tr>
+<tr>
+<td>4</td>
+<td>会在不知情的情况下获取重复内容</td>
+<td><a href="#9-%E9%87%8D%E5%A4%8D%E6%95%B0%E6%8D%AE%E5%99%AA%E5%A3%B0%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%84%9A%E6%9C%AC%E4%B8%8E%E6%B7%B1%E7%BD%91">§9</a></td>
+</tr>
+<tr>
+<td>5</td>
+<td>会引入数据噪声</td>
+<td><a href="#9-%E9%87%8D%E5%A4%8D%E6%95%B0%E6%8D%AE%E5%99%AA%E5%A3%B0%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%84%9A%E6%9C%AC%E4%B8%8E%E6%B7%B1%E7%BD%91">§9</a></td>
+</tr>
+<tr>
+<td>6</td>
+<td>会因客户端脚本而遗漏内容</td>
+<td><a href="#9-%E9%87%8D%E5%A4%8D%E6%95%B0%E6%8D%AE%E5%99%AA%E5%A3%B0%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%84%9A%E6%9C%AC%E4%B8%8E%E6%B7%B1%E7%BD%91">§9</a></td>
+</tr>
+</tbody></table>
+<p>重复与近似重复的数学原理在 <a href="/notes/cs-121/topic-documents/zh-CN/">文档转换、存储与去重</a> 中讨论。</p>
+<h2 id="7-礼貌性与性能">7. 礼貌性与性能</h2>
+<h3 id="71-礼貌性">7.1 礼貌性</h3>
+<p><strong>避免过于频繁地访问任何网站：网站是为人服务的，而不是为机器人服务的。</strong> 如果忽视礼貌性，你的爬虫就是一次<strong>拒绝服务（DoS）攻击</strong>。要保持礼貌：<strong>对同一服务器的请求之间使用人为延迟</strong>。</p>
+<h3 id="72-性能爬虫大部分时间在等待">7.2 性能：爬虫大部分时间在等待</h3>
+<p>获取一个页面需要经过多次网络往返：</p>
+<ol>
+<li>爬虫（一个客户端程序）连接到 <strong>DNS</strong> 服务器。</li>
+<li>DNS 把主机名翻译为 <strong>IP 地址</strong>。</li>
+<li>爬虫连接到服务器主机的特定 <strong>端口</strong>。</li>
+<li>它发送一个 <strong>HTTP 请求</strong> 获取该页面，通常是 <code>GET</code>。</li>
+</ol>
+<p>粗略估算：每次获取 500 毫秒，<strong>一次一个地抓取 100 万个页面需要 500,000 秒，约 5.8 天</strong>，而服务器无响应时情况还会更糟。大部分时间里线程都在<strong>等待网络数据</strong>（<a href="#74-%E7%BB%83%E4%B9%A0">§7.4</a>）。</p>
+<p>这一权衡的各步如下：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>问题</td>
+<td>网络爬虫花费大量时间<strong>等待</strong>请求的响应</td>
+</tr>
+<tr>
+<td>解决方案</td>
+<td>使用<strong>线程</strong>，一次获取数百个页面（或分布式地进行爬取，见 <a href="#11-%E5%88%86%E5%B8%83%E5%BC%8F%E7%88%AC%E5%8F%96">§11</a>）</td>
+</tr>
+<tr>
+<td>缺点</td>
+<td>爬虫可能会向网站<strong>泛滥请求</strong></td>
+</tr>
+<tr>
+<td>缓解措施</td>
+<td><strong>礼貌策略</strong>：例如把请求分散到不同服务器，对同一 Web 服务器的请求之间设置延迟，等等</td>
+</tr>
+</tbody></table>
+<p>使用线程时，礼貌性更难控制，但仍然可以做到，例如让不同的线程访问不同的服务器。</p>
+<p><strong>在哪里执行礼貌策略？</strong> 在 <a href="#32-%E5%BE%AA%E7%8E%AF%E5%BE%85%E7%88%AC%E9%98%9F%E5%88%97%E4%B8%8E%E4%BC%AA%E4%BB%A3%E7%A0%81">§3.2</a> 的伪代码中，它可以放在 <code>website ← frontier.nextSite()</code> 中，也可以放在 <code>url ← website.nextURL()</code> 中。在演示中，每个主机在一次获取之后必须休息 2 个 tick；<code>nextSite()</code> 会跳过正在休息的主机，而当所有主机都在休息时，线程会等待：</p>
+<pre data-language="viz" data-viz="crawl-frontier"><code>{&quot;title&quot;: &quot;礼貌性：每个主机休息 2 个 tick&quot;, &quot;web&quot;: &quot;www.cs.umass.edu/index.html -&gt; www.cs.umass.edu/courses, www.cs.umass.edu/news; www.cs.umass.edu/news -&gt; www.bbc.co.uk/index.html, www.cnn.com/2006/09/story.html; www.bbc.co.uk/index.html -&gt; www.bbc.co.uk/today, www.bbc.co.uk/2005/story.html; www.bbc.co.uk/2005/story.html -&gt; www.whitehouse.gov/index.html; www.whitehouse.gov/index.html -&gt; www.whitehouse.gov/news.html, www.whitehouse.gov/about.html; www.cnn.com/index.html -&gt; www.cnn.com/2006/09/story.html, www.cnn.com/2003/04/story.html&quot;, &quot;seeds&quot;: &quot;www.cs.umass.edu/index.html, www.cnn.com/index.html&quot;, &quot;politeness&quot;: 2, &quot;start&quot;: 8}</code></pre><p>同样的 12 个页面现在需要 22 个 tick，而不是 12 个，其中 10 个用于等待。在单线程下，礼貌性会耗费时间，这也是爬虫要用许多线程访问许多主机的原因。</p>
+<h3 id="73-dns-查询">7.3 DNS 查询</h3>
+<p>在任何获取之前，爬虫必须把域名转换为 IP 地址：<code>www.ics.uci.edu</code> → <code>128.195.1.83</code>。DNS 是一组分布式服务器：<strong>延迟可能很高（2 秒并不罕见）</strong>，常见实现是<strong>阻塞式</strong>的（一次只处理一个请求），而且结果会被<strong>缓存</strong>。若每次查询需要 800 毫秒，查询整个 Web 要多久？没有给出主机数量，按每百万个域名计算，约为 <strong>9.3 天</strong>（每次 2 秒则约 23 天）。</p>
+<blockquote>
+<p>💡 <strong>关键洞见</strong>：爬虫是 <strong>I/O 密集型</strong>的（Go 中用 goroutine，Python 中用线程或异步 I/O），而按主机缓存 DNS 是最便宜的加速方法。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.1 Retrieving Web Pages（书中第 33 页）</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.2 The Web Crawler（书中第 35 页）</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#74-%E7%BB%83%E4%B9%A0">§7.4</a></p>
+</blockquote>
+<h3 id="74-练习">7.4 练习</h3>
+<h4 id="爬取-100-万个页面的时间">爬取 100 万个页面的时间</h4>
+<p>获取一个页面需要 500 毫秒。一次一个地爬取 100 万个页面需要多长时间？使用线程后会有什么变化？</p>
+<details>
+<summary>解答</summary>
+
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup><mo>×</mo><mn>0.5</mn><mtext> s</mtext><mo>=</mo><mn>500</mn><mo separator="true" lspace="0em" rspace="0em">,</mo><mn>000</mn><mtext> s</mtext></mrow><annotation encoding="application/x-tex">10^6 \times 0.5\ \text{s} = 500{,}000\ \text{s}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.5</span><span class="mspace"> </span><span class="mord text"><span class="mord">s</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">500</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">000</span><span class="mspace"> </span><span class="mord text"><span class="mord">s</span></span></span></span></span> ≈ 138.9 小时 ≈ <strong>5.8 天</strong>，实际情况更糟（服务器无响应），而且几乎全部时间都在等待网络。若用 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span> 个线程并行（分布在不同服务器上以保持礼貌），理想时间为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>500</mn><mo separator="true" lspace="0em" rspace="0em">,</mo><mn>000</mn><mi mathvariant="normal">/</mi><mi>k</mi></mrow><annotation encoding="application/x-tex">500{,}000 / k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">500</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">000/</span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span> 秒：10 个线程约 13.9 小时，100 个约 1.4 小时，500 个约 17 分钟。</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">n, fetch = </span><span style="color:#B5CEA8">1_000_000</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">0.5</span><span style="color:#6A9955">            # pages, seconds per fetch</span></span>
+<span class="line"><span style="color:#D4D4D4">total = n * fetch</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">f</span><span style="color:#CE9178">"1 thread: </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">total</span><span style="color:#569CD6">:,.0f}</span><span style="color:#CE9178"> s = </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">total/</span><span style="color:#B5CEA8">3600</span><span style="color:#569CD6">:.1f}</span><span style="color:#CE9178"> h = </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">total/</span><span style="color:#B5CEA8">86400</span><span style="color:#569CD6">:.1f}</span><span style="color:#CE9178"> days"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> k </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> (</span><span style="color:#B5CEA8">10</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">100</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">500</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#D4D4D4">    s = total / k</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">f</span><span style="color:#CE9178">"</span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">k</span><span style="color:#569CD6">:>3}</span><span style="color:#CE9178"> threads: </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">s/</span><span style="color:#B5CEA8">3600</span><span style="color:#569CD6">:.1f}</span><span style="color:#CE9178"> h = </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">s/</span><span style="color:#B5CEA8">60</span><span style="color:#569CD6">:.0f}</span><span style="color:#CE9178"> min"</span><span style="color:#D4D4D4">)</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">1 thread: 500,000 s = 138.9 h = 5.8 days
+ 10 threads: 13.9 h = 833 min
+100 threads: 1.4 h = 83 min
+500 threads: 0.3 h = 17 min</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+</details>
+
+<h4 id="每次-dns-查询-800-毫秒">每次 DNS 查询 800 毫秒</h4>
+<p>一次 DNS 查询需要 800 毫秒，而且常见的解析器是阻塞式的（一次只处理一个请求）。“查询整个 Web”需要多长时间？</p>
+<details>
+<summary>解答</summary>
+
+<p>没有给出主机数量，因此按每百万个名字计算：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup><mo>×</mo><mn>0.8</mn><mtext> s</mtext><mo>=</mo><mn>800</mn><mo separator="true" lspace="0em" rspace="0em">,</mo><mn>000</mn><mtext> s</mtext><mo>≈</mo><mn>9.3</mn></mrow><annotation encoding="application/x-tex">10^6 \times 0.8\ \text{s} = 800{,}000\ \text{s} \approx 9.3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.8</span><span class="mspace"> </span><span class="mord text"><span class="mord">s</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">800</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">000</span><span class="mspace"> </span><span class="mord text"><span class="mord">s</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">9.3</span></span></span></span> 天；若每次 2 秒，约为 23 天。修复办法：<strong>缓存</strong>（一次查询可以服务于某个主机的所有 URL），并且不要阻塞，即并发地解析。</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">n = </span><span style="color:#B5CEA8">1_000_000</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> lookup </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> (</span><span style="color:#B5CEA8">0.8</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2.0</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#D4D4D4">    s = n * lookup</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">f</span><span style="color:#CE9178">"DNS at </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">lookup</span><span style="color:#569CD6">}</span><span style="color:#CE9178"> s per name, per million names: </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">s</span><span style="color:#569CD6">:,.0f}</span><span style="color:#CE9178"> s = </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">s/</span><span style="color:#B5CEA8">86400</span><span style="color:#569CD6">:.1f}</span><span style="color:#CE9178"> days"</span><span style="color:#D4D4D4">)</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">DNS at 0.8 s per name, per million names: 800,000 s = 9.3 days
+DNS at 2.0 s per name, per million names: 2,000,000 s = 23.1 days</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+</details>
+
+<h2 id="8-爬虫陷阱">8. 爬虫陷阱</h2>
+<p><strong>爬虫陷阱</strong>可能会把爬虫永远困在一个站点上：Web 服务器返回不断变化的 URL 和内容，通常来自动态页面。陷阱可以是：</p>
+<ul>
+<li><strong>无意的</strong>：例如<strong>ICS 日历就是一个爬虫陷阱</strong>。每个月份页面都链接到下一个月份，永无止境。</li>
+<li><strong>有意的</strong>：一些网站管理员设置陷阱来惩罚不礼貌的爬虫（fleiner.com/bots），例如非常大的文档，它们在 robots.txt 中被禁止，目的是消耗资源，或破坏忽略 robots.txt 的爬虫中设计不良的解析器。</li>
+</ul>
+<p>演示中的日历总是链接到一个从未见过的 URL（<code>?n=1</code>、<code>?n=2</code>、…），因此已见集合永远不起作用，只有 10 次获取的预算能让它停下来：</p>
+<pre data-language="viz" data-viz="crawl-frontier"><code>{&quot;title&quot;: &quot;爬虫陷阱：ICS 日历&quot;, &quot;web&quot;: &quot;www.ics.uci.edu/ -&gt; www.ics.uci.edu/calendar, www.ics.uci.edu/about; www.ics.uci.edu/about -&gt; www.ics.uci.edu/&quot;, &quot;seeds&quot;: &quot;www.ics.uci.edu/&quot;, &quot;trap&quot;: &quot;www.ics.uci.edu/calendar&quot;, &quot;maxFetches&quot;: 10}</code></pre><p>该站点只有 3 个真实页面，但 10 次获取中有 8 次都花在了日历上，而待爬队列仍然没有清空。</p>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：有意设置的陷阱针对的是<strong>忽略 robots.txt</strong> 的爬虫。遵守 robots.txt 是第一道防线；限制每个主机的页面数量或 URL 深度，以及发现几乎相同的页面，则可以捕获无意的陷阱。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="http://www.fleiner.com/bots/">fleiner.com/bots — 让恶意机器人远离</a></p>
+</blockquote>
+<h2 id="9-重复数据噪声客户端脚本与深网">9. 重复、数据噪声、客户端脚本与深网</h2>
+<p><strong>重复内容。</strong> 完全重复与近似重复都非常普遍：副本、镜像站点、版本、垃圾信息、抄袭。研究发现，<strong>30% 的网页是其他 70% 的[近似]重复</strong>。它们几乎没有价值：对搜索引擎和用户来说都是噪声，用户应该只看到一份副本（也许附带一个“显示相似结果”的链接）。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>完全重复</th>
+<th>近似重复</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>检测方法</td>
+<td>简单：<strong>哈希、校验和</strong></td>
+<td>较难：<strong>页面指纹</strong></td>
+</tr>
+<tr>
+<td>常见程度</td>
+<td>少见</td>
+<td>常见</td>
+</tr>
+</tbody></table>
+<p>指纹方法本身（校验和、simhash 等）见 <a href="/notes/cs-121/topic-documents/zh-CN/">文档转换、存储与去重</a>。</p>
+<p><strong>数据噪声。</strong> 页面包含与内容无关的部分，例如<strong>广告、模板</strong>（典型页面顶部有横幅广告，左右两栏环绕着真正的内容），而噪声会损害检索效果。<strong>查找内容块</strong>的技术之一是<strong>标签的累积分布</strong>（<em>文档斜率曲线</em>，Finn、Kushmerick 与 Smyth，2001）。图的横轴是<strong>词元数</strong>（0–3,500），纵轴是<strong>标签数</strong>（0–900）。曲线在标签密集处上升，而在<strong>“文本区域”</strong>（约 1,000–1,500 个词元）几乎变平，那里就是正文。文献中还有其他技术。</p>
+<p><strong>客户端脚本。</strong> 现代网站大量使用脚本（JavaScript、TypeScript），内容隐藏在 <code>XMLHttpRequest</code> 之后。要获取这些内容，必须与脚本交互，即<strong>用户交互模拟</strong>（例如 Selenium），而这很困难。大多数爬虫不这样做，因此这些内容从未被索引。</p>
+<p><strong>深网</strong>是爬虫很少涉足的地方：隐藏在<strong>登录表单</strong>之后的内容、隐藏在 <strong>JavaScript/TypeScript</strong> 之后的内容，以及<strong>没有被任何地方链接</strong>的站点（站点地图有助于处理后两类，见 <a href="#5-sitemap%E6%8F%90%E4%BE%9B%E7%BB%99%E7%88%AC%E8%99%AB%E7%9A%84%E4%BF%A1%E6%81%AF">§5</a>）。据估计，它的规模是<strong>浅网的 400–500 倍</strong>。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="http://dx.doi.org/10.3998/3336451.0007.104">深网估计（doi:10.3998/3336451.0007.104）</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.5 Deep Web</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.7 Detecting Duplicates</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.8 Removing Noise</a></p>
+</blockquote>
+<h2 id="10-何时重新爬取新鲜度与年龄">10. 何时重新爬取：新鲜度与年龄</h2>
+<h3 id="101-新鲜度">10.1 新鲜度</h3>
+<p>页面会不断被<strong>添加、删除和修改</strong>。<strong>过时的</strong>副本不再反映真实的页面，因此爬虫必须反复<strong>重新访问</strong>，以维持<strong>新鲜度</strong>（freshness）。HTTP 的 <strong><code>HEAD</code></strong> 请求返回的是页面的<em>相关信息</em>，而不是页面本身：</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">Client request:  HEAD /csinfo/people.html HTTP/1.1
+                 Host: www.cs.umass.edu
+
+Server response: HTTP/1.1 200 OK
+                 Date: Thu, 03 Apr 2008 05:17:54 GMT
+                 Server: Apache/2.0.52 (CentOS)
+                 Last-Modified: Fri, 04 Jan 2008 15:28:39 GMT
+                 ETag: &quot;239c33-2576-2a2837c0&quot;
+                 Accept-Ranges: bytes
+                 Content-Length: 9590
+                 Connection: close
+                 Content-Type: text/html; charset=ISO-8859-1</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>要看的关键头部是 <strong><code>Last-Modified</code></strong>：把它与你存储副本的日期做比较。你可以自己试一试：</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">curl</span><span style="color:#569CD6"> --head</span><span style="color:#CE9178"> https://www.ics.uci.edu/~algol/index.html</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>你无法持续检查每个页面，因此应该检查<strong>重要的</strong>和<strong>经常变化的</strong>页面。<strong>新鲜度</strong>是集合中新鲜页面所占的比例，而优化它是<strong>危险的</strong>：一个总在更新的站点，在你的副本中几乎永远不是新鲜的，因此一个以新鲜度最大化为目标的引擎会<em>停止爬取它</em>。另一个指标是<strong>年龄</strong>。</p>
+<h3 id="102-新鲜度与年龄">10.2 新鲜度与年龄</h3>
+<p>在同一条时间轴上：爬取、更新、爬取、更新、爬取。</p>
+<table>
+<thead>
+<tr>
+<th>事件</th>
+<th>新鲜度</th>
+<th>年龄</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>爬取</td>
+<td>1（副本与页面一致）</td>
+<td>0</td>
+</tr>
+<tr>
+<td>爬取之后页面更新</td>
+<td>降为 0</td>
+<td>从 0 开始线性增长</td>
+</tr>
+<tr>
+<td>下次爬取前又发生更新</td>
+<td>保持为 0</td>
+<td>继续增长（从<em>第一次错过的</em>变化开始计时）</td>
+</tr>
+<tr>
+<td>下一次爬取</td>
+<td>恢复为 1</td>
+<td>恢复为 0</td>
+</tr>
+</tbody></table>
+<p>新鲜度是非真即假的阶跃；年龄衡量副本<strong>过时了多久</strong>。</p>
+<h3 id="103-期望年龄">10.3 期望年龄</h3>
+<p>页面在上次爬取后 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span> 天的期望年龄是：</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>Age</mtext><mo stretchy="false">(</mo><mi>λ</mi><mo separator="true">,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><msubsup><mo>∫</mo><mn>0</mn><mi>t</mi></msubsup><mi>P</mi><mo stretchy="false">(</mo><mtext>page changed at time </mtext><mi>x</mi><mo stretchy="false">)</mo><mtext> </mtext><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><mi>x</mi><mo stretchy="false">)</mo><mtext> </mtext><mi>d</mi><mi>x</mi></mrow><annotation encoding="application/x-tex">\text{Age}(\lambda, t) = \int_0^t P(\text{page changed at time } x)\,(t - x)\,dx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Age</span></span><span class="mopen">(</span><span class="mord mathnormal">λ</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.4554em;vertical-align:-0.9119em;"></span><span class="mop"><span class="mop op-symbol large-op" style="margin-right:0.44445em;position:relative;top:-0.0011em;">∫</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.5435em;"><span style="top:-1.7881em;margin-left:-0.4445em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span><span style="top:-3.8129em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.9119em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mopen">(</span><span class="mord text"><span class="mord">page changed at time </span></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">d</span><span class="mord mathnormal">x</span></span></span></span></span></div>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false">(</mo><mtext>page changed at time </mtext><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">P(\text{page changed at time } x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mopen">(</span><span class="mord text"><span class="mord">page changed at time </span></span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span> 是页面在时刻 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi></mrow><annotation encoding="application/x-tex">x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span> 发生变化的概率；<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(t - x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span> 是该变化与现在之间的时间，即副本已经过时了多久。平均而言，更新服从<strong>泊松过程</strong>（Cho &amp; Garcia-Molina，2003），因此到下一次更新的时间服从<strong>指数分布</strong>，其均值为变化频率 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">λ</span></span></span></span>（每天的变化次数）：</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>Age</mtext><mo stretchy="false">(</mo><mi>λ</mi><mo separator="true">,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><msubsup><mo>∫</mo><mn>0</mn><mi>t</mi></msubsup><mi>λ</mi><msup><mi>e</mi><mrow><mo>−</mo><mi>λ</mi><mi>x</mi></mrow></msup><mtext> </mtext><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><mi>x</mi><mo stretchy="false">)</mo><mtext> </mtext><mi>d</mi><mi>x</mi><mo>=</mo><mi>t</mi><mo>−</mo><mfrac><mrow><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>λ</mi><mi>t</mi></mrow></msup></mrow><mi>λ</mi></mfrac></mrow><annotation encoding="application/x-tex">\text{Age}(\lambda, t) = \int_0^t \lambda e^{-\lambda x}\,(t - x)\,dx = t - \frac{1 - e^{-\lambda t}}{\lambda}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Age</span></span><span class="mopen">(</span><span class="mord mathnormal">λ</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.4554em;vertical-align:-0.9119em;"></span><span class="mop"><span class="mop op-symbol large-op" style="margin-right:0.44445em;position:relative;top:-0.0011em;">∫</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.5435em;"><span style="top:-1.7881em;margin-left:-0.4445em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span><span style="top:-3.8129em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.9119em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">λ</span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8991em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">λ</span><span class="mord mathnormal mtight">x</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">d</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6984em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.2121em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.5261em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">λ</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">λ</span><span class="mord mathnormal mtight">t</span></span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></div>
+<p>对于 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>1</mn><mi mathvariant="normal">/</mi><mn>7</mn></mrow><annotation encoding="application/x-tex">\lambda = 1/7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">λ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/7</span></span></span></span>（每周一次变化），且 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span> 从 0 到约 7 天，曲线<strong>向上弯曲</strong>：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">t = 2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span></span></span></span> 时为 0.26，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">t = 4</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">4</span></span></span></span> 时为 0.95，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">t = 6</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">6</span></span></span></span> 时为 1.97，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">t = 7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">7</span></span></span></span> 时为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>7</mn><mi mathvariant="normal">/</mi><mi>e</mi><mo>≈</mo><mn>2.58</mn></mrow><annotation encoding="application/x-tex">7/e \approx 2.58</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">7/</span><span class="mord mathnormal">e</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2.58</span></span></span></span>。数值积分与闭式解一致：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> math </span><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> exp</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">lam = </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> / </span><span style="color:#B5CEA8">7</span><span style="color:#6A9955">                                   # one change per week, per day</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> age</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">t</span><span style="color:#D4D4D4">):                                   </span><span style="color:#6A9955"># closed form</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> t - (</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> - exp(-lam * t)) / lam</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> age_numeric</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">t</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4">=</span><span style="color:#B5CEA8">100_000</span><span style="color:#D4D4D4">):                </span><span style="color:#6A9955"># midpoint rule on the integral</span></span>
+<span class="line"><span style="color:#D4D4D4">    dx = t / n</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#DCDCAA"> sum</span><span style="color:#D4D4D4">(lam * exp(-lam * x) * (t - x) * dx</span></span>
+<span class="line"><span style="color:#C586C0">               for</span><span style="color:#D4D4D4"> x </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> ((i + </span><span style="color:#B5CEA8">0.5</span><span style="color:#D4D4D4">) * dx </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> i </span><span style="color:#C586C0">in</span><span style="color:#DCDCAA"> range</span><span style="color:#D4D4D4">(n)))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> t </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> (</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">6</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(t, </span><span style="color:#DCDCAA">round</span><span style="color:#D4D4D4">(age(t), </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">), </span><span style="color:#DCDCAA">round</span><span style="color:#D4D4D4">(age_numeric(t), </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">))</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4"> / exp(</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">))</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">1 0.07 0.07
+2 0.26 0.26
+4 0.95 0.95
+6 1.97 1.97
+7 2.58 2.58
+2.5751560882000963</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>💡 <strong>关键洞见</strong>：“页面越老，不去爬取它的代价就越大”：期望年龄的增长<em>快于</em>线性，因此每多等一天的代价都比前一天更大，对 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">λ</span></span></span></span> 较大的页面而言尤其如此。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.3 Freshness</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#104-%E7%BB%83%E4%B9%A0">§10.4</a></p>
+</blockquote>
+<h3 id="104-练习">10.4 练习</h3>
+<h4 id="每周变化一次时的期望年龄">每周变化一次时的期望年龄</h4>
+<p>若 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>1</mn><mi mathvariant="normal">/</mi><mn>7</mn></mrow><annotation encoding="application/x-tex">\lambda = 1/7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">λ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/7</span></span></span></span>（每天的变化次数），页面在爬取后 2、4、6 和 7 天的期望年龄分别是多少？</p>
+<details>
+<summary>解答</summary>
+
+<p>对 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><msup><mi>e</mi><mrow><mo>−</mo><mi>λ</mi><mi>x</mi></mrow></msup><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\lambda e^{-\lambda x}(t - x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0991em;vertical-align:-0.25em;"></span><span class="mord mathnormal">λ</span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">λ</span><span class="mord mathnormal mtight">x</span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span> 从 0 积分到 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span>，得到 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext>Age</mtext><mo stretchy="false">(</mo><mi>λ</mi><mo separator="true">,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><mi>t</mi><mo>−</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>λ</mi><mi>t</mi></mrow></msup><mo stretchy="false">)</mo><mi mathvariant="normal">/</mi><mi>λ</mi></mrow><annotation encoding="application/x-tex">\text{Age}(\lambda, t) = t - (1 - e^{-\lambda t})/\lambda</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Age</span></span><span class="mopen">(</span><span class="mord mathnormal">λ</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6984em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0991em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">λ</span><span class="mord mathnormal mtight">t</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mord">/</span><span class="mord mathnormal">λ</span></span></span></span>：</p>
+<table>
+<thead>
+<tr>
+<th><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span>（天）</th>
+<th>1</th>
+<th>2</th>
+<th>4</th>
+<th>6</th>
+<th>7</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>期望年龄（天）</td>
+<td>0.07</td>
+<td>0.26</td>
+<td>0.95</td>
+<td>1.97</td>
+<td>2.58</td>
+</tr>
+</tbody></table>
+<p>曲线在右端升至约 2.5，并向上弯曲；在 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">t = 7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">7</span></span></span></span> 时，年龄恰好为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>7</mn><msup><mi>e</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">7e^{-1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">7</span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>。第 4 天到第 6 天的期望年龄增加了约 1 天，而第 0 天到第 2 天只增加了约 0.26。</p>
+</details>
+
+<h2 id="11-分布式爬取">11. 分布式爬取</h2>
+<p>使用多台计算机进行爬取有三个理由：</p>
+<ol>
+<li>它让爬虫<strong>更接近它所爬取的站点</strong>，从而降低网络需求。</li>
+<li>它<strong>减少每个爬虫需要记住的站点数量</strong>，从而降低本地内存需求。</li>
+<li>它总体上<strong>减少了本地所需的资源</strong>。</li>
+</ol>
+<p>分布式爬虫可能会用<strong>哈希函数</strong>，根据 URL 的<strong>主机部分</strong>把 URL 分配给计算机或线程，这样每个主机只由一个爬虫负责，从而能保持礼貌。<a href="#32-%E5%BE%AA%E7%8E%AF%E5%BE%85%E7%88%AC%E9%98%9F%E5%88%97%E4%B8%8E%E4%BC%AA%E4%BB%A3%E7%A0%81">§3.2</a> 中的 <code>CrawlerThread</code> 伪代码把 <code>frontier</code> 作为参数，是有原因的：<strong>待爬队列的信息应当共享</strong>（一个已见集合，一份礼貌性状态）。</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.7 Distributed Crawling</a></p>
+</blockquote>
+<h2 id="12-其他类型的爬取聚焦桌面与文档订阅源">12. 其他类型的爬取：聚焦、桌面与文档订阅源</h2>
+<p><strong>聚焦爬取</strong>（focused crawling）只下载与<strong>某个特定主题</strong>相关（或围绕特定时间事件）的页面，用于垂直搜索，或为某一主题改进搜索引擎。同一主题的页面往往<strong>链接到同一主题的页面</strong>；热门页面可以作为种子（例如用户搜索某个关键词后点击最多的页面），并由<strong>文本分类器</strong>判断页面是否属于该主题。</p>
+<p><strong>桌面爬取</strong>（desktop crawls）用于桌面与企业搜索，它与 Web 爬取不同：数据更容易找到（文件系统类似于站点地图）；对更新做出快速响应更为重要；它们必须节省磁盘、内存和 CPU，并且对用户透明；必须处理多种文档格式；数据隐私也重要得多。</p>
+<p><strong>文档订阅源</strong>（document feed）。许多文档只是被<strong>发布</strong>，即创建一次，很少更新，例如新闻、博客文章、新闻稿和电子邮件。来自同一来源的已发布文档形成一个序列，即文档订阅源；爬虫要在订阅源的<strong>末尾</strong>寻找新文档。订阅源有两种类型：</p>
+<ul>
+<li><strong>推送订阅源</strong>（push feed）会提醒订阅者有新文档，例如新闻社的订阅源。推送需要订阅，例如 <strong>WebSub</strong>。</li>
+<li><strong>拉取订阅源</strong>（pull feed）要求订阅者定期检查新文档。最常见的拉取格式是 <strong>RSS</strong>，即 Really Simple Syndication / RDF Site Summary / Rich Site Summary。</li>
+</ul>
+<p>RSS 示例：</p>
+<div class="code-wrap"><pre data-language="xml" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;?</span><span style="color:#569CD6">xml</span><span style="color:#9CDCFE"> version</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"1.0"</span><span style="color:#808080">?></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">rss</span><span style="color:#9CDCFE"> version</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"2.0"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">channel</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">title</span><span style="color:#808080">></span><span style="color:#D4D4D4">Search Engine News</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">title</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">link</span><span style="color:#808080">></span><span style="color:#D4D4D4">http://www.search-engine-news.org/</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">link</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">description</span><span style="color:#808080">></span><span style="color:#D4D4D4">News about search engines.</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">description</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">language</span><span style="color:#808080">></span><span style="color:#D4D4D4">en-us</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">language</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">pubDate</span><span style="color:#808080">></span><span style="color:#D4D4D4">Tue, 19 Jun 2008 05:17:00 GMT</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">pubDate</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ttl</span><span style="color:#808080">></span><span style="color:#D4D4D4">60</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ttl</span><span style="color:#808080">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">title</span><span style="color:#808080">></span><span style="color:#D4D4D4">Upcoming SIGIR Conference</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">title</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">link</span><span style="color:#808080">></span><span style="color:#D4D4D4">http://www.sigir.org/conference</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">link</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">description</span><span style="color:#808080">></span><span style="color:#D4D4D4">The annual SIGIR conference is coming!</span></span>
+<span class="line"><span style="color:#D4D4D4">        Mark your calendars and check for cheap</span></span>
+<span class="line"><span style="color:#D4D4D4">        flights.</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">description</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">pubDate</span><span style="color:#808080">></span><span style="color:#D4D4D4">Tue, 05 Jun 2008 09:50:11 GMT</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">pubDate</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">guid</span><span style="color:#808080">></span><span style="color:#D4D4D4">http://search-engine-news.org#500</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">guid</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;/</span><span style="color:#569CD6">item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">    ...</span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">title</span><span style="color:#808080">></span><span style="color:#D4D4D4">New Search Engine Textbook</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">title</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">link</span><span style="color:#808080">></span><span style="color:#D4D4D4">http://www.cs.umass.edu/search-book</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">link</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">description</span><span style="color:#808080">></span><span style="color:#D4D4D4">A new textbook about search engines</span></span>
+<span class="line"><span style="color:#D4D4D4">        will be published soon.</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">description</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">pubDate</span><span style="color:#808080">></span><span style="color:#D4D4D4">Tue, 05 Jun 2008 09:33:01 GMT</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">pubDate</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">guid</span><span style="color:#808080">></span><span style="color:#D4D4D4">http://search-engine-news.org#499</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">guid</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;/</span><span style="color:#569CD6">item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">channel</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">rss</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>第一个 <code>&lt;item&gt;</code> 之前是<strong>订阅源的频道信息</strong>；每个 <code>&lt;item&gt;</code> 是<strong>条目信息</strong>；<code>&lt;pubDate&gt;</code> 和 <code>&lt;ttl&gt;</code> 是爬虫要读取的部分。对爬虫而言：</p>
+<ul>
+<li><code>&lt;ttl&gt;</code>（存活时间）是内容应被缓存的时长，<strong>单位为分钟</strong>，这里是 60。</li>
+<li>订阅源像网页一样通过 HTTP <code>GET</code> 访问；用 <code>HEAD</code> 检查订阅源是否有变化。</li>
+<li>订阅源很容易解析（它就是 XML），新信息也容易找到：<code>GET</code>、解析，然后取出所有新的 <code>&lt;item&gt;</code> … <code>&lt;/item&gt;</code> 条目。</li>
+</ul>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="https://www.w3.org/TR/websub/">W3C WebSub</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.4 Focused Crawling</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.3 Crawling Documents and Email</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.4 Document Feeds</a></p>
+</blockquote>
+<h2 id="13-伦理与法律">13. 伦理与法律</h2>
+<blockquote>
+<p>💡 <strong>关键洞见</strong>：<strong>“你能做，不代表你就该做。”</strong> 这是整个伦理讨论的主旨。</p>
+</blockquote>
+<h3 id="131-给机器人编写者的指南">13.1 给机器人编写者的指南</h3>
+<p>这是 robotstxt.org 上的一份文本，写于 1993 年，年代虽久，但仍然非常切题：</p>
+<table>
+<thead>
+<tr>
+<th>准则</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>再三考虑</strong></td>
+<td>你真的需要机器人吗？</td>
+</tr>
+<tr>
+<td><strong>承担责任</strong></td>
+<td>如果你的行为造成了问题，要能迅速采取行动加以应对</td>
+</tr>
+<tr>
+<td><strong>本地测试</strong></td>
+<td>在把爬虫放给别人之前，先逐步扩大范围</td>
+</tr>
+<tr>
+<td><strong>不占用资源</strong></td>
+<td>Web 服务器首先是为人服务的。慢慢走，不要跑</td>
+</tr>
+<tr>
+<td><strong>保持跟进</strong></td>
+<td>“了解你的机器人在做什么，并确保它始终处于控制之下，这一点至关重要”</td>
+</tr>
+</tbody></table>
+<p>此外，还要<strong>了解网站的爬取政策</strong>，并<strong>联系网站管理员</strong>。例如 GitHub 的第 5 条“抓取与 API 使用限制”：研究人员可以抓取公开的非个人信息，<em>前提是</em>其成果为开放获取；档案管理人员可以抓取公开数据；为发送垃圾信息或出售用户个人信息（给猎头、招聘网站）而进行的抓取是被禁止的；所有使用都必须遵守 GitHub 的隐私声明。</p>
+<h3 id="132-伦理比法律的范围更大">13.2 伦理比法律的范围更大</h3>
+<p><em>法律</em>只是<em>伦理问题</em>这个大圆圈中的一个小圆圈：很多合法的事情仍然是不道德的。</p>
+<h3 id="133-web-与法律">13.3 Web 与法律</h3>
+<p>Web 只有约三十年的历史，是一片“狂野的西部（或者说狂野的 Web……）”，法律很少、未经检验或已经过时，因此<strong>你自己的判断和行为至关重要</strong>。它诞生于 CERN，最初用于物理研究：Tim Berners-Lee 1989 年的提案，针对的是 CERN 中复杂演化系统的信息丢失问题，方案是一个分布式超文本系统。约 1993 年的第一个网站至今仍然在线，1993 年 NeXT 浏览器的截图也还在。</p>
+<h3 id="134-最早的-web-搜索引擎">13.4 最早的 Web 搜索引擎</h3>
+<table>
+<thead>
+<tr>
+<th>年份</th>
+<th>引擎</th>
+<th>新在哪里</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1993</td>
+<td>W3Catalogue</td>
+<td>原始的目录</td>
+</tr>
+<tr>
+<td>1993</td>
+<td>World Wide Web Wanderer</td>
+<td>第一个网络爬虫，最初用于测量 Web 的规模</td>
+</tr>
+<tr>
+<td>1993</td>
+<td>JumpStation</td>
+<td>爬取、索引、搜索：第一个“现代”引擎</td>
+</tr>
+<tr>
+<td>1994</td>
+<td>Excite</td>
+<td>早期商业 Web 的搜索引擎</td>
+</tr>
+<tr>
+<td>1994</td>
+<td>WebCrawler</td>
+<td>全文索引</td>
+</tr>
+<tr>
+<td>1996</td>
+<td>RankDex</td>
+<td>基于链接的排名，启发了 Google 的 PageRank</td>
+</tr>
+</tbody></table>
+<p>（JumpStation 有时被写作 “JumpSearch”；它的搜索页标题为 &quot;NCSA Mosaic – JumpStation II Document Search Page&quot;。RankDex 基于链接的排名，是 <a href="/notes/cs-121/topic-link-analysis/zh-CN/">链接分析：HITS 与 PageRank</a> 中 PageRank 的前身。）</p>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="http://www.robotstxt.org/guidelines.html">robotstxt.org: Guidelines for robot writers</a> · <a href="https://help.github.com/en/github/site-policy/github-acceptable-use-policies#5-scraping-and-api-usage-restrictions">GitHub: scraping and API usage restrictions</a> · <a href="https://www.w3.org/History/1989/proposal.html">Berners-Lee&#39;s 1989 proposal</a> · <a href="http://info.cern.ch/hypertext/WWW/TheProject.html">The first website</a> · <a href="http://info.cern.ch/NextBrowser1.html">NeXT browser screenshot, 1993</a></p>
+</blockquote>
+<h2 id="14-隐私你的爬虫留下了什么">14. 隐私：你的爬虫留下了什么</h2>
+<p>隐私是双向的：<strong>用户</strong>和<strong>提供者</strong>都可能伤害对方，伤害可能来自<strong>个人信息（隐私）</strong>，也可能来自<strong>内容（安全）</strong>。网站可以发布<strong>隐私声明</strong>，说明它们收集什么以及如何使用。你的爬虫同样会留下记录：每一个请求都会进入 Web 服务器的访问日志，例如下面这些 Apache 日志行：</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">66.249.66.18 - - [25/Jan/2012:00:18:27 -0800] &quot;GET /xwiki/bin/export/Stats/CurrentYearActivity?format=rtf HTTP/1.1&quot; 404 335 &quot;-&quot; &quot;Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)&quot;
+180.76.6.28 - - [25/Jan/2012:00:18:31 -0800] &quot;GET / HTTP/1.1&quot; 200 45 &quot;-&quot; &quot;Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)&quot;
+66.249.66.18 - - [25/Jan/2012:00:19:02 -0800] &quot;GET /calswim/coverage-s1.png HTTP/1.1&quot; 200 961543 &quot;-&quot; &quot;Googlebot-Image/1.0&quot;
+173.192.98.90 - - [25/Jan/2012:00:33:00 -0800] &quot;GET / HTTP/1.1&quot; 404 290 &quot;-&quot; &quot;Python-urllib/2.4&quot;
+80.165.186.186 - - [25/Jan/2012:01:21:24 -0800] &quot;GET /events-dataset-api/ HTTP/1.1&quot; 200 3214 &quot;http://www.kdnuggets.com/datasets/index.html&quot; &quot;Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1&quot;
+180.76.5.65 - - [25/Jan/2012:02:18:20 -0800] &quot;GET / HTTP/1.1&quot; 200 45 &quot;-&quot; &quot;Mozilla/5.0 (compatible; Baiduspider/2.0; …</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>每一行都记录了客户端的 <strong>IP</strong>、<strong>时间</strong>、<strong>请求</strong>、<strong>状态</strong>、<strong>字节数</strong>、<strong>来源页</strong>（referrer）和<strong>用户代理</strong>（user agent）。Googlebot 和 Baiduspider 通过一个 URL 表明自己的身份；<code>Python-urllib/2.4</code> 是一个匿名脚本；那条 Firefox 日志则是一个人从 KDnuggets 点进来的。管理员可以看到谁在爬取什么、多久爬取一次。</p>
+<blockquote>
+<p>💡 <strong>关键洞见</strong>：给你的爬虫一个诚实、可识别的 User-Agent。管理员正是通过这样的日志行，来决定是联系你还是封禁你。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="http://uci.edu/privacy.php">UCI 隐私声明</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>练习</strong>：<a href="#141-%E7%BB%83%E4%B9%A0">§14.1</a></p>
+</blockquote>
+<h3 id="141-练习">14.1 练习</h3>
+<h4 id="解读一条-apache-日志">解读一条 Apache 日志</h4>
+<p>把下面这一行拆分为各个字段：<code>80.165.186.186 - - [25/Jan/2012:01:21:24 -0800] &quot;GET /events-dataset-api/ HTTP/1.1&quot; 200 3214 &quot;http://www.kdnuggets.com/datasets/index.html&quot; &quot;Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1&quot;</code>。它是机器人吗？（作为对比，同一份日志中另一行的用户代理是 <code>Python-urllib/2.4</code>，请求是 <code>GET / HTTP/1.1</code>，来源页是 <code>&quot;-&quot;</code>。）</p>
+<details>
+<summary>解答</summary>
+
+<p>用 combined log format 的正则表达式解析：</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> re</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">line = (</span><span style="color:#CE9178">'80.165.186.186 - - [25/Jan/2012:01:21:24 -0800] "GET /events-dataset-api/ HTTP/1.1" 200 3214 '</span></span>
+<span class="line"><span style="color:#CE9178">        '"http://www.kdnuggets.com/datasets/index.html" '</span></span>
+<span class="line"><span style="color:#CE9178">        '"Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1"'</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">pat = re.compile(</span><span style="color:#569CD6">r</span><span style="color:#D16969">'</span><span style="color:#CE9178">(</span><span style="color:#D16969">\S</span><span style="color:#D7BA7D">+</span><span style="color:#CE9178">)</span><span style="color:#CE9178"> (</span><span style="color:#D16969">\S</span><span style="color:#D7BA7D">+</span><span style="color:#CE9178">)</span><span style="color:#CE9178"> (</span><span style="color:#D16969">\S</span><span style="color:#D7BA7D">+</span><span style="color:#CE9178">)</span><span style="color:#D7BA7D"> \[</span><span style="color:#CE9178">([^</span><span style="color:#D7BA7D">\]</span><span style="color:#CE9178">]</span><span style="color:#D7BA7D">+</span><span style="color:#CE9178">)</span><span style="color:#D7BA7D">\]</span><span style="color:#D16969"> "</span><span style="color:#CE9178">([^</span><span style="color:#D16969">"</span><span style="color:#CE9178">]</span><span style="color:#D7BA7D">*</span><span style="color:#CE9178">)</span><span style="color:#D16969">" </span><span style="color:#CE9178">(</span><span style="color:#D16969">\d</span><span style="color:#D7BA7D">+</span><span style="color:#CE9178">)</span><span style="color:#CE9178"> (</span><span style="color:#D16969">\d</span><span style="color:#D7BA7D">+</span><span style="color:#D4D4D4">|</span><span style="color:#D16969">-</span><span style="color:#CE9178">)</span><span style="color:#D16969"> "</span><span style="color:#CE9178">([^</span><span style="color:#D16969">"</span><span style="color:#CE9178">]</span><span style="color:#D7BA7D">*</span><span style="color:#CE9178">)</span><span style="color:#D16969">" "</span><span style="color:#CE9178">([^</span><span style="color:#D16969">"</span><span style="color:#CE9178">]</span><span style="color:#D7BA7D">*</span><span style="color:#CE9178">)</span><span style="color:#D16969">"'</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">names = [</span><span style="color:#CE9178">"ip"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"ident"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"user"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"time"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"request"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"status"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"bytes"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"referrer"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"user agent"</span><span style="color:#D4D4D4">]</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> name, v </span><span style="color:#C586C0">in</span><span style="color:#DCDCAA"> zip</span><span style="color:#D4D4D4">(names, pat.match(line).groups()):</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">f</span><span style="color:#CE9178">"</span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">name</span><span style="color:#569CD6">:10}</span><span style="color:#569CD6"> {</span><span style="color:#D4D4D4">v</span><span style="color:#569CD6">}</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4">)</span></span></code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">ip         80.165.186.186
+ident      -
+user       -
+time       25/Jan/2012:01:21:24 -0800
+request    GET /events-dataset-api/ HTTP/1.1
+status     200
+bytes      3214
+referrer   http://www.kdnuggets.com/datasets/index.html
+user agent Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1</code></pre><button type="button" class="code-copy-btn" title="复制代码" aria-label="复制代码"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>客户端 IP</td>
+<td><code>80.165.186.186</code></td>
+</tr>
+<tr>
+<td>身份、用户</td>
+<td><code>-</code>、<code>-</code>（未知）</td>
+</tr>
+<tr>
+<td>时间</td>
+<td><code>25/Jan/2012:01:21:24 -0800</code></td>
+</tr>
+<tr>
+<td>请求</td>
+<td><code>GET /events-dataset-api/ HTTP/1.1</code></td>
+</tr>
+<tr>
+<td>状态</td>
+<td><code>200</code>（OK）</td>
+</tr>
+<tr>
+<td>字节数</td>
+<td><code>3214</code></td>
+</tr>
+<tr>
+<td>来源页</td>
+<td><code>http://www.kdnuggets.com/datasets/index.html</code></td>
+</tr>
+<tr>
+<td>用户代理</td>
+<td>Windows NT 5.1 上的 Firefox 9.0.1</td>
+</tr>
+</tbody></table>
+<p>这是一个人，而不是机器人：使用的是浏览器用户代理，并且是从 KDnuggets 的链接跳转过来的（来源页）。对比 <code>Python-urllib/2.4</code> 那一行：没有来源页，只有一个库的用户代理，是一个不说明运行者是谁的脚本。</p>
+</details>
+
+<h2 id="15-版权合理使用与法律案例">15. 版权、合理使用与法律案例</h2>
+<p><strong>版权。</strong> 智力成果，例如 Web 内容和源代码，受版权法保护：这是一种以美国宪法为基础、由法律授予的保护，适用于以有形媒介固定的原创作品，无论是否发表（copyright.gov）。那么你能使用网络上的材料吗？</p>
+<p><strong>合理使用</strong>（fair use）。为<strong>批评、评论、新闻、教学、学术和研究</strong>等目的而进行的复制，可能被视为合理使用，但这是一个非常模糊的领域。有四个因素决定某一具体使用是否合理：</p>
+<ol>
+<li><strong>使用的目的与性质</strong>，包括是否具有商业性，或是否为非营利的教育目的。</li>
+<li>受版权保护作品的<strong>性质</strong>。</li>
+<li>所使用部分的<strong>数量与实质性</strong>，相对于作品整体而言。</li>
+<li>对作品<strong>潜在市场或价值</strong>的影响。</li>
+</ol>
+<p><strong>法律案例。</strong> 两起案件都是依据“<strong>侵占动产</strong>（trespass to chattels）”获胜的，即干扰他人的财产，这里指他们的计算机系统。</p>
+<table>
+<thead>
+<tr>
+<th>案件</th>
+<th>日期</th>
+<th>发生了什么</th>
+<th>裁决</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>eBay vs. Bidder&#39;s Edge</td>
+<td>2000年5月24日</td>
+<td>eBay 阻止了 Bidder&#39;s Edge 的爬虫</td>
+<td>故意、未经授权地干扰 eBay 的计算机系统，并造成损害</td>
+</tr>
+<tr>
+<td>American Airlines vs. FareChase</td>
+<td>2003年3月10日</td>
+<td>AA 阻止 FareChase 抓取 AA.com 的“web fares”（票价比较）</td>
+<td>故意、未经同意；损害了 AA 的网络和财产。同年晚些时候达成和解</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>⚠️ <strong>易错点</strong>：两起案件都与<strong>爬取</strong>有关（对服务器造成的负载，以及对服务器的未经授权使用），而不是复制文本。尊重 robots.txt 和礼貌性，不仅是良好的礼仪，也是法律层面的要求。</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>延伸阅读</strong>：<a href="http://www.copyright.gov">copyright.gov</a> · <a href="https://www.copyright.gov/help/faq/faq-general.html">Copyright FAQ</a> · <a href="https://www.copyright.gov/fls/fl102.html">Fair use (FL-102)</a> · <a href="https://law.justia.com/cases/federal/district-courts/FSupp2/100/1058/2478126/">eBay v. Bidder&#39;s Edge (Justia)</a> · <a href="https://www.eff.org/document/preliminary-injunction-american-airlines-v-farechase-inc">AA v. FareChase injunction (EFF)</a></p>
+</blockquote>
+<h2 id="16-速查与五条要点">16. 速查与五条要点</h2>
+<table>
+<thead>
+<tr>
+<th>robots.txt</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>User-agent: Name</code></td>
+<td>针对该机器人的分组；如果存在，则<strong>只有</strong>它的规则适用于该机器人</td>
+</tr>
+<tr>
+<td><code>Disallow: /</code> / <code>Disallow:</code></td>
+<td>禁止一切 / 不禁止任何内容</td>
+</tr>
+<tr>
+<td><code>Disallow: /tmp/</code></td>
+<td>禁止以 <code>/tmp/</code> 开头的路径</td>
+</tr>
+<tr>
+<td><code>Disallow: /audio/</code> 下的 <code>Allow: /audio/podcasts/</code></td>
+<td>在关闭的文件夹中重新开放一个资源（最长匹配获胜）</td>
+</tr>
+<tr>
+<td><code>Sitemap: URL</code></td>
+<td>站点地图的位置</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>爬虫问题</th>
+<th>解决办法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>不礼貌</td>
+<td>按主机设置人为延迟；在 <code>nextSite()</code> / <code>nextURL()</code> 中执行</td>
+</tr>
+<tr>
+<td>慢（等待网络与 DNS）</td>
+<td>线程 / 分布式爬取；缓存 DNS</td>
+</tr>
+<tr>
+<td>陷阱</td>
+<td>遵守 robots.txt；留意不断变化的 URL（例如 ICS 日历）</td>
+</tr>
+<tr>
+<td>重复内容</td>
+<td>哈希 / 校验和（完全重复）、指纹（近似重复）</td>
+</tr>
+<tr>
+<td>噪声</td>
+<td>内容块：标签的累积分布</td>
+</tr>
+<tr>
+<td>客户端脚本</td>
+<td>用户交互模拟（Selenium）；大多数爬虫会跳过它</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>URL / URN / URI</td>
+<td>资源在哪里 / 资源是什么 / 两者的统称</td>
+</tr>
+<tr>
+<td>待爬队列（frontier）</td>
+<td>等待爬取的 URL 队列；从种子开始</td>
+</tr>
+<tr>
+<td><code>HEAD</code></td>
+<td>只请求头部信息的 HTTP 请求（<code>Last-Modified</code>）</td>
+</tr>
+<tr>
+<td>新鲜度</td>
+<td>集合中保持最新的副本所占的比例</td>
+</tr>
+<tr>
+<td>年龄</td>
+<td>副本已经过时多久；<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext>Age</mtext><mo stretchy="false">(</mo><mi>λ</mi><mo separator="true">,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><msubsup><mo>∫</mo><mn>0</mn><mi>t</mi></msubsup><mi>λ</mi><msup><mi>e</mi><mrow><mo>−</mo><mi>λ</mi><mi>x</mi></mrow></msup><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><mi>x</mi><mo stretchy="false">)</mo><mtext> </mtext><mi>d</mi><mi>x</mi></mrow><annotation encoding="application/x-tex">\text{Age}(\lambda,t) = \int_0^t \lambda e^{-\lambda x}(t-x)\,dx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Age</span></span><span class="mopen">(</span><span class="mord mathnormal">λ</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.3443em;vertical-align:-0.3558em;"></span><span class="mop"><span class="mop op-symbol small-op" style="margin-right:0.19445em;position:relative;top:-0.0006em;">∫</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.9885em;"><span style="top:-2.3442em;margin-left:-0.1945em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span><span style="top:-3.2579em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3558em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">λ</span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">λ</span><span class="mord mathnormal mtight">x</span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">d</span><span class="mord mathnormal">x</span></span></span></span></td>
+</tr>
+<tr>
+<td>分布式爬取</td>
+<td>对<strong>主机</strong>做哈希后分配给爬虫；共享待爬队列</td>
+</tr>
+<tr>
+<td>推送 / 拉取订阅源</td>
+<td>发布者提醒你（WebSub）/ 你自己轮询（RSS，<code>&lt;ttl&gt;</code> 以分钟计）</td>
+</tr>
+<tr>
+<td>深网</td>
+<td>隐藏在登录、脚本之后，或没有被链接；是浅网的 400–500 倍</td>
+</tr>
+<tr>
+<td>侵占动产</td>
+<td>eBay v. Bidder&#39;s Edge 与 AA v. FareChase 案所依据的诉由（trespass to chattels）</td>
+</tr>
+</tbody></table>
+<p><strong>五条要点</strong></p>
+<ol>
+<li>爬取循环：待爬队列 → 是否允许？ → 获取 → 存储 → 提取 → 加入<strong>未见过的</strong>链接（先解析相对 URL）；礼貌性位于 <code>nextSite()</code>/<code>nextURL()</code> 之中。</li>
+<li>robots.txt：针对某个机器人的分组会完全覆盖 <code>*</code>；在被 <code>Disallow</code> 的文件夹中，<code>Allow</code> 依靠<strong>最长匹配</strong>获胜；它基于君子协定，而不是安全机制。</li>
+<li>爬取是 I/O 密集型的：100 万个页面 × 500 毫秒 ≈ 单线程下 5.8 天，因此要使用多个线程，并且对每个主机保持礼貌。</li>
+<li>优化<strong>新鲜度</strong>可能会让你放弃变化很快的站点；<strong>年龄</strong>随着自上次爬取以来的时间增长，而且增长快于线性。</li>
+<li>“你能做，不代表你就该做”：遵循机器人编写者指南，标明你的机器人身份；并记住两起法律案例都与爬取有关（侵占动产）。</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="笔记翻页" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/notes/cs-121/topic-search-engines/zh-CN/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>上一篇 · 话题 · 搜索引擎与 Web</span><span class="pager-title" data-astro-cid-gxyjxt6l>搜索引擎与 Web</span></a><a class="card interactive pager-card pager-next" href="/notes/cs-121/topic-documents/zh-CN/" rel="next" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>话题 · 文档转换、存储与去重 · 下一篇<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>文档转换、存储与去重</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>快捷键<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> 上一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> 下一篇</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> 切换语言</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="目录" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>顶部</button><script type="module" src="/_astro/NoteReader.astro_astro_type_script_index_0_lang.C9lxm8KA.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/assets/js/bento.js" defer></script><script src="/assets/js/chat-widget.js" defer></script></body></html>

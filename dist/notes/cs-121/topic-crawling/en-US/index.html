@@ -1,0 +1,1232 @@
+<!DOCTYPE html><html lang="en-US"><head><title>CS 121 Web Crawling | Kazuha Mo — UC Irvine</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Flavors of web data collection (dumps, URL downloads, web APIs, crawling), URIs, URLs and URNs and URL anatomy, the basic crawl algorithm and frontier, robots.txt and sitemaps, politeness, DNS and crawl-time estimates, crawler traps, duplicates, noise, deep web and client-side scripting, freshness, age and expected age, distributed, focused and desktop crawling, document feeds (RSS, WebSub), and ethics, privacy, copyright, fair use and legal cases."><link rel="canonical" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-crawling/en-US/"><link rel="icon" href="/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/assets/css/bento.css"><script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("kzh-theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        } catch (e) {}
+      })();
+    </script><link rel="expect" href="#rb-dock-ready" blocking="render"><link rel="alternate" hreflang="en-US" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-crawling/en-US/"><link rel="alternate" hreflang="zh-CN" href="https://ics.uci.edu/~kazuhak/notes/cs-121/topic-crawling/zh-CN/"><link rel="stylesheet" href="/_astro/BaseLayout.CnlNRG6h.css"><link rel="stylesheet" href="/_astro/Icon.BKTMkr4U.css"><link rel="stylesheet" href="/_astro/katex.mPfuf26R.css"><link rel="stylesheet" href="/_astro/index.BWdCFSBs.css"></head><body data-nav-path="/notes/"><div class="app"><nav class="nav" aria-label="Primary"><div class="nav-brand"><a href="/" class="nav-logo" aria-label="Home">K</a><span class="nav-name">Kazuha Mo</span></div><div class="nav-links"><a href="/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Home</a><a href="/notes/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16H14"></path></svg>Notes</a><a href="/tools/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>Tools</a><a href="/about.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>About</a></div><div class="nav-actions"><button class="theme-btn" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button></div></nav><main id="main" class="alt" data-note-reader data-lang="en-US" data-viz-base="/assets/viz/" data-viz-version="1795857807" data-source-url="/notes/cs-121/topic-crawling/en-US/source.md" data-editor-url="/tools/md-editor/" data-alt-url="/notes/cs-121/topic-crawling/zh-CN/" data-prev-url="/notes/cs-121/topic-search-engines/en-US/" data-next-url="/notes/cs-121/topic-documents/en-US/" data-astro-cid-gxyjxt6l><section id="one" data-astro-cid-gxyjxt6l><div class="inner notes-shell" data-astro-cid-gxyjxt6l><nav class="reading-bar" data-reading-bar aria-label="Previous / next note" data-astro-cid-gxyjxt6l><a class="rb-btn rb-prev rb-side-prev" href="/notes/cs-121/topic-search-engines/en-US/" title="Previous: Search Engines &amp; the Web ([)" aria-label="Previous: Topic · Search Engines &amp; the Web" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="rb-text" data-astro-cid-gxyjxt6l>Topic · Search Engines &amp; the Web</span></a><label class="rb-title" title="Jump to another note" data-astro-cid-gxyjxt6l><span class="rb-course" data-astro-cid-gxyjxt6l>CS 121</span><span class="rb-dot" data-astro-cid-gxyjxt6l>·</span><span class="rb-label" data-astro-cid-gxyjxt6l>Topic · Web Crawling</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg><select class="rb-jump" data-rb-jump aria-label="Jump to another note" autocomplete="off" data-astro-cid-gxyjxt6l><option value="/notes/cs-121/week-01/en-US/" data-astro-cid-gxyjxt6l>Week 1 — Course Intro, IR and the Web, Architecture</option><option value="/notes/cs-121/week-02/en-US/" data-astro-cid-gxyjxt6l>Week 2 — The Web Corpus, SEO, Web Crawling</option><option value="/notes/cs-121/week-03/en-US/" data-astro-cid-gxyjxt6l>Week 3 — Web Crawling</option><option value="/notes/cs-121/week-04/en-US/" data-astro-cid-gxyjxt6l>Week 4 — Encodings, Storing Documents, Duplicates, Zipf&#39;s Law</option><option value="/notes/cs-121/week-05/en-US/" data-astro-cid-gxyjxt6l>Week 5 — Text Processing, Term-Document Matrices</option><option value="/notes/cs-121/week-06/en-US/" data-astro-cid-gxyjxt6l>Week 6 — Inverted Index, Index Construction</option><option value="/notes/cs-121/week-07/en-US/" data-astro-cid-gxyjxt6l>Week 7 — Scaling the Index, Query Processing, tf-idf</option><option value="/notes/cs-121/week-08/en-US/" data-astro-cid-gxyjxt6l>Week 8 — The Vector Space Model and Cosine Ranking</option><option value="/notes/cs-121/week-09/en-US/" data-astro-cid-gxyjxt6l>Week 9 — Efficient Scoring, Link Analysis, Evaluation</option><option value="/notes/cs-121/topic-search-engines/en-US/" data-astro-cid-gxyjxt6l>Topic · Search Engines &amp; the Web — Search Engines &amp; the Web</option><option value="/notes/cs-121/topic-crawling/en-US/" selected data-astro-cid-gxyjxt6l>Topic · Web Crawling — Web Crawling</option><option value="/notes/cs-121/topic-documents/en-US/" data-astro-cid-gxyjxt6l>Topic · Document Conversion, Storage &amp; Duplicates — Document Conversion, Storage &amp; Duplicates</option><option value="/notes/cs-121/topic-text-processing/en-US/" data-astro-cid-gxyjxt6l>Topic · Text Processing — Text Processing</option><option value="/notes/cs-121/topic-indexing/en-US/" data-astro-cid-gxyjxt6l>Topic · Inverted Indexes &amp; Index Construction — Inverted Indexes &amp; Index Construction</option><option value="/notes/cs-121/topic-retrieval-models/en-US/" data-astro-cid-gxyjxt6l>Topic · Retrieval Models: Boolean, tf-idf &amp; Vector Space — Retrieval Models: Boolean, tf-idf &amp; Vector Space</option><option value="/notes/cs-121/topic-query-processing/en-US/" data-astro-cid-gxyjxt6l>Topic · Query Processing &amp; Efficient Top-K — Query Processing &amp; Efficient Top-K</option><option value="/notes/cs-121/topic-link-analysis/en-US/" data-astro-cid-gxyjxt6l>Topic · Link Analysis: HITS &amp; PageRank — Link Analysis: HITS &amp; PageRank</option><option value="/notes/cs-121/topic-evaluation/en-US/" data-astro-cid-gxyjxt6l>Topic · Search Engine Evaluation — Search Engine Evaluation</option></select></label><a class="rb-btn rb-lang" href="/notes/cs-121/topic-crawling/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-astro-cid-gxyjxt6l>中</span></a><a class="rb-btn rb-next rb-side-next" href="/notes/cs-121/topic-documents/en-US/" title="Next: Document Conversion, Storage &amp; Duplicates (])" aria-label="Next: Topic · Document Conversion, Storage &amp; Duplicates" data-astro-cid-gxyjxt6l><span class="rb-text" data-astro-cid-gxyjxt6l>Topic · Document Conversion, Storage &amp; Duplicates</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a><span class="rb-progress" data-reading-progress data-astro-cid-gxyjxt6l></span></nav><div class="notes-intro" id="notes-intro" data-astro-cid-gxyjxt6l><nav class="crumbs notes-breadcrumb" aria-label="Breadcrumb" data-astro-cid-gxyjxt6l><a href="/notes/" class="crumb" data-astro-cid-gxyjxt6l>Notes</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><a href="/notes/cs-121/" class="crumb" data-hub-link data-astro-cid-gxyjxt6l>CS 121</a><span class="crumb-sep" data-astro-cid-gxyjxt6l>›</span><span class="crumb crumb-current" data-astro-cid-gxyjxt6l>Topic · Web Crawling</span><div class="intro-actions" data-astro-cid-gxyjxt6l><a class="intro-pill pill-blue" href="/notes/cs-121/topic-crawling/zh-CN/" data-lang-switch hreflang="zh-CN" lang="zh-CN" title="Switch to 中文 (L)" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>中文</a><button type="button" class="viewer-goto-btn" id="goto-heading-viewer" title="Go to heading… (Ctrl/Cmd+Shift+O)" aria-label="Go to heading" hidden data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-gxyjxt6l><path d="M15 6h6" data-astro-cid-gxyjxt6l></path><path d="M15 12h6" data-astro-cid-gxyjxt6l></path><path d="M15 18h6" data-astro-cid-gxyjxt6l></path><circle cx="6" cy="9" r="3" data-astro-cid-gxyjxt6l></circle><path d="m11 14-2.5-2.5" data-astro-cid-gxyjxt6l></path></svg><span data-astro-cid-gxyjxt6l>Headings</span></button><button type="button" class="intro-pill pill-green" data-open-editor data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>Open in Editor</button></div></nav><h2 id="reader-heading" data-astro-cid-gxyjxt6l>Information Retrieval Reading Notes</h2><p id="reader-description" data-astro-cid-gxyjxt6l>This page presents CS 121 Topic · Web Crawling notes in a structured reading format so you can review text processing, the web graph, SEO, web crawling, and how search engines index and rank pages week by week. The path below takes you back to Notes, Course Notes, the course page, or this note file. Hover over the ≡ icon on the right side to open the Table of Contents.</p><p class="notes-date" id="notes-date" data-astro-cid-gxyjxt6l>Last edited on November 25, 2026</p></div><script>
+        // Place the reading bar (just above, in the flow of .notes-shell, sticky at the top
+        // of the screen) over the intro card: centred in the breadcrumb row when it fits
+        // there, otherwise over a row made for it at the top of the card. Its margins
+        // cancel its height, so the card doesn't move. Also called by reading-bar.ts on
+        // resize and load. After a jump with its ‹ › (or [ ]; reading-bar.ts saves the
+        // target and where the bar was on screen), the page opens scrolled so the bar is
+        // back under the pointer. Runs before first paint (render-blocking via rel="expect"
+        // on #rb-dock-ready in the page head), so nothing shifts and the page transition
+        // sees the bar in place.
+        (function () {
+          var bar = document.querySelector("[data-reading-bar]");
+          var intro = document.getElementById("notes-intro");
+          if (!bar || !intro) return;
+          bar.classList.add("rb-ready");
+          // Run fn with every transition in the bar off, so state set on arrival or while
+          // measuring snaps into place instead of animating (shared with reading-bar.ts).
+          var instantDepth = 0;
+          function instant(fn) {
+            instantDepth++;
+            bar.classList.add("rb-instant");
+            try { fn(); } finally {
+              if (--instantDepth === 0) {
+                void bar.offsetWidth;
+                bar.classList.remove("rb-instant");
+              }
+            }
+          }
+          window.__kzhRbInstant = instant;
+          function layout() {
+            // Measure the in-card form (the floating pill is wider, and sits elsewhere).
+            var wasFloating = bar.classList.contains("is-floating");
+            var w = 0, h = 0;
+            instant(function () {
+              bar.classList.remove("is-floating");
+              w = bar.offsetWidth;
+              h = bar.offsetHeight;
+              if (wasFloating) bar.classList.add("is-floating");
+            });
+            var shell = bar.parentElement.getBoundingClientRect();
+            var cx = shell.left + shell.width / 2;
+            var crumbs = intro.querySelector(".notes-breadcrumb");
+            var cur = intro.querySelector(".crumb-current");
+            var acts = intro.querySelector(".intro-actions");
+            var room = intro.querySelector(".rb-room");
+            var fits = false;
+            if (crumbs && cur && acts) {
+              // Measure with the Headings button shown: goto.ts reveals it later.
+              var gotoBtn = document.getElementById("goto-heading-viewer");
+              var wasHidden = !!gotoBtn && gotoBtn.hidden;
+              if (gotoBtn) gotoBtn.hidden = false;
+              var a = cur.getBoundingClientRect(), b = acts.getBoundingClientRect();
+              if (gotoBtn) gotoBtn.hidden = wasHidden;
+              fits = a.top < b.bottom && b.top < a.bottom && a.right + 16 <= cx - w / 2 && cx + w / 2 <= b.left - 16;
+            }
+            // The spacer row only comes and goes when that choice changes.
+            var spot;
+            if (fits) {
+              if (room) room.remove();
+              var r = crumbs.getBoundingClientRect();
+              spot = r.top + r.height / 2 - h / 2;
+            } else {
+              if (!room) {
+                room = document.createElement("div");
+                room.className = "rb-room";
+                intro.insertBefore(room, intro.firstChild);
+              }
+              room.style.height = h + 10 + "px";
+              spot = room.getBoundingClientRect().top;
+            }
+            var x = spot - intro.getBoundingClientRect().top;
+            bar.style.marginTop = x + "px";
+            bar.style.marginBottom = -(x + h) + "px";
+          }
+          window.__kzhRbLayout = layout;
+          layout();
+
+          var jump = null;
+          try { jump = JSON.parse(sessionStorage.getItem("kzh-rb-jump") || "null"); sessionStorage.removeItem("kzh-rb-jump"); } catch (e) {}
+          var same = function (p) { return String(p).replace(/index\.html$/, ""); };
+          // A jump older than a minute was abandoned (navigation stopped): ignore it.
+          if (!jump || same(jump.to) !== same(location.pathname) || Date.now() - (jump.at || 0) >= 60000) return;
+          var at = typeof jump.top === "number" ? Math.max(12, jump.top) : 12;
+          var target = Math.max(0, bar.getBoundingClientRect().top + window.scrollY - at);
+          // The rest of the page isn't parsed yet, so it may be too short to scroll that
+          // far: hold the height until it is.
+          var root = document.documentElement;
+          root.style.minHeight = target + window.innerHeight + "px";
+          document.addEventListener("DOMContentLoaded", function () { root.style.minHeight = ""; });
+          window.scrollTo({ top: target, behavior: "instant" });
+          // Already at the top of the screen: show it as the floating pill from the first
+          // paint, as on the page before (reading-bar.ts keeps this up to date).
+          if (window.scrollY > 0 && bar.getBoundingClientRect().top <= 12.5) instant(function () { bar.classList.add("is-floating"); });
+        })();
+      </script><span id="rb-dock-ready" hidden data-astro-cid-gxyjxt6l></span><div class="viewer-card" id="viewer-card" data-astro-cid-gxyjxt6l><article class="markdown-body" id="content" data-astro-cid-gxyjxt6l><h1 id="cs-121-information-retrieval--topic-web-crawling">CS 121: Information Retrieval — Topic: Web Crawling</h1>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-acquiring-web-data-four-flavors">1. Acquiring Web Data: Four Flavors</a></li>
+<li><a href="#2-uris-urls-and-urns">2. URIs, URLs and URNs</a></li>
+<li><a href="#3-the-basic-crawl-algorithm">3. The Basic Crawl Algorithm</a></li>
+<li><a href="#4-permission-to-crawl-robotstxt">4. Permission to Crawl: robots.txt</a></li>
+<li><a href="#5-sitemaps-information-to-crawlers">5. Sitemaps: Information to Crawlers</a></li>
+<li><a href="#6-why-the-basic-algorithm-is-not-enough">6. Why the Basic Algorithm Is Not Enough</a></li>
+<li><a href="#7-politeness-and-performance">7. Politeness and Performance</a></li>
+<li><a href="#8-crawler-traps">8. Crawler Traps</a></li>
+<li><a href="#9-duplicates-data-noise-client-side-scripting-and-the-deep-web">9. Duplicates, Data Noise, Client-Side Scripting and the Deep Web</a></li>
+<li><a href="#10-when-to-crawl-again-freshness-and-age">10. When to Crawl Again: Freshness and Age</a></li>
+<li><a href="#11-distributed-crawling">11. Distributed Crawling</a></li>
+<li><a href="#12-other-types-of-crawling-focused-desktop-document-feeds">12. Other Types of Crawling: Focused, Desktop, Document Feeds</a></li>
+<li><a href="#13-ethics-and-the-law">13. Ethics and the Law</a></li>
+<li><a href="#14-privacy-what-your-crawler-leaves-behind">14. Privacy: What Your Crawler Leaves Behind</a></li>
+<li><a href="#15-copyright-fair-use-and-legal-cases">15. Copyright, Fair Use and Legal Cases</a></li>
+<li><a href="#16-quick-reference--top-5-things-to-remember">16. Quick Reference &amp; Top 5 Things to Remember</a></li>
+</ul>
+<blockquote>
+<p>This chapter covers <strong>text acquisition</strong>: how a search engine gets its documents from the web in the first place. It sits at the front of the architecture described in <a href="/notes/cs-121/topic-search-engines/en-US/">Search Engines &amp; the Web</a>; what the crawler stores is converted and deduplicated as described in <a href="/notes/cs-121/topic-documents/en-US/">Document Conversion, Storage &amp; Duplicates</a>, and then indexed (<a href="/notes/cs-121/topic-indexing/en-US/">Inverted Indexes &amp; Index Construction</a>).</p>
+</blockquote>
+<h2 id="1-acquiring-web-data-four-flavors">1. Acquiring Web Data: Four Flavors</h2>
+<p>Before any searching or ranking, the engine needs the data. There are four ways to acquire it from the web:</p>
+<table>
+<thead>
+<tr>
+<th>Flavor</th>
+<th>How it works</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Data dumps</strong></td>
+<td>Sites package their data periodically and provide it as a &quot;dump&quot;</td>
+<td>Wikipedia (it suggests you torrent it); arXiv bulk full-text access</td>
+</tr>
+<tr>
+<td><strong>URL downloads</strong></td>
+<td>Two steps: (1) find out the URLs of specific resources; (2) run a downloader over that list</td>
+<td>E.g. &quot;crawling&quot; (!) SourceForge / GitHub for source code — or papers, pages, etc. Some sites use regular URLs: <code>http://link.springer.com/chapter/10.1007/978-3-642-34213-4_1</code>, <code>…_2</code>, …; Google Code&#39;s <code>http://code.google.com/p/python-for-android/downloads/list</code></td>
+</tr>
+<tr>
+<td><strong>Web APIs</strong></td>
+<td>Sites provide (REST) interfaces for getting their data</td>
+<td>Usually <strong>higher-level</strong> (no HTML parsing) but usually <strong>restrictive</strong> (only part of the data). Facebook Graph API, YouTube API, Twitter API, arXiv API, …</td>
+</tr>
+<tr>
+<td><strong>Web crawling</strong></td>
+<td>Like people: get HTML pages and other documents, <strong>discovering new URLs as it goes</strong></td>
+<td>Good for <strong>changing</strong> collections and <strong>unknown</strong> documents. Web admins don&#39;t like crawlers: they consume resources meant for people (the rest of this chapter is about exactly that tension)</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: Only crawling works when you don&#39;t know the URLs in advance; URL downloads need a predictable pattern like <code>…34213-4_1</code>, <code>…_2</code>.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="http://en.wikipedia.org/wiki/Wikipedia:Database_download">Wikipedia: Database download</a> · <a href="https://arxiv.org/help/bulk_data_s3">arXiv bulk data (S3)</a> · <a href="https://arxiv.org/help/api/index">arXiv API</a> · <a href="https://developers.facebook.com/docs/reference/api/">Facebook Graph API</a> · <a href="https://developers.facebook.com/docs/reference/api/examples/">Graph API examples</a> · <a href="https://developers.google.com/youtube/">YouTube API</a> · <a href="https://dev.twitter.com/docs">Twitter API docs</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.4 Document Feeds</a></p>
+</blockquote>
+<h2 id="2-uris-urls-and-urns">2. URIs, URLs and URNs</h2>
+<p>A crawler lives on URLs, so be precise about them. Pay attention to the difference between URI, URN and URL.</p>
+<h3 id="21-definitions">2.1 Definitions</h3>
+<p>A <strong>URI</strong> is a string of characters used to identify a resource. (It is sometimes expanded as &quot;Universal Resource Identifier&quot;; the standard name is <strong>Uniform</strong> Resource Identifier.)</p>
+<table>
+<thead>
+<tr>
+<th>Example URI</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>http://www.ics.uci.edu</code></td>
+<td>URL</td>
+</tr>
+<tr>
+<td>ISBN 0-486-27777-3</td>
+<td>URN</td>
+</tr>
+<tr>
+<td><code>ftp://ftp.ics.uci.edu</code></td>
+<td>URL</td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>URL (locator)</strong>: must specify <strong>where</strong> the resource is.</li>
+<li><strong>URN (name)</strong>: just <strong>what</strong> it is.</li>
+<li>This chapter focuses on URLs, but &quot;URI&quot; often slips in as a synonym.</li>
+</ul>
+<h3 id="22-anatomy-of-a-url">2.2 Anatomy of a URL</h3>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">scheme://domain:port/path?query_string#fragment_id
+         \_________/
+          authority</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>scheme://domain</code> is <strong>mandatory</strong>; <code>:port/path?query_string#fragment_id</code> is <strong>optional</strong>. Together, domain and port form the <strong>authority</strong>. The full picture is slightly more complicated (see the full spec).</p>
+<p>Two annotated URLs:</p>
+<table>
+<thead>
+<tr>
+<th>URL</th>
+<th>Parts</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>http://www.ics.uci.edu/~lopes</code></td>
+<td><code>http</code> = on a web server · <code>www.ics.uci.edu</code> = no port, just domain · <code>~lopes</code> = path</td>
+</tr>
+<tr>
+<td><code>http://calendar.ics.uci.edu/calendar.php?type=month&amp;calendar=1&amp;category=&amp;month=02&amp;year=2013</code></td>
+<td>domain <code>calendar.ics.uci.edu</code> · path <code>calendar.php</code> · query <code>type=month&amp;calendar=1&amp;category=&amp;month=02&amp;year=2013</code></td>
+</tr>
+</tbody></table>
+<p><strong>Domains and subdomains</strong>: in <code>calendar.ics.uci.edu</code>, the <strong>domain name</strong> is <code>uci.edu</code>; <code>ics</code> and <code>calendar</code> are subdomains.</p>
+<p><strong>Absolute vs. relative URLs</strong> — essential for a crawler: <code>&lt;a href=&quot;http://www.ics.uci.edu/~algol/somesite.html&quot;&gt;</code> is absolute; <code>&lt;a href=&quot;/somesite.html&quot;&gt;</code> is relative and has to be resolved against the page it appears on.</p>
+<p>Try it — step through the parsing, the query parameters and relative resolution (edit the URLs and press Run):</p>
+<pre data-language="viz" data-viz="web-demo"><code>{&quot;title&quot;: &quot;Anatomy of a URL&quot;, &quot;html&quot;: &quot;&lt;p&gt;See the console.&lt;/p&gt;&quot;, &quot;js&quot;: &quot;const urls = [\n  \&quot;http://www.ics.uci.edu/~lopes\&quot;,\n  \&quot;http://calendar.ics.uci.edu/calendar.php?type=month&amp;calendar=1&amp;category=&amp;month=02&amp;year=2013\&quot;\n];\nfor (const s of urls) {\n  const u = new URL(s);\n  console.log(s);\n  console.log({ scheme: u.protocol, host: u.hostname, port: u.port, path: u.pathname, query: u.search, fragment: u.hash });\n}&quot;, &quot;steps&quot;: [{&quot;note&quot;: &quot;The query string is a list of name=value pairs; category is present but empty.&quot;, &quot;js&quot;: &quot;\nconst q = new URL(urls[1]).searchParams;\nfor (const [name, value] of q) console.log(name, \&quot;=\&quot;, JSON.stringify(value));&quot;}, {&quot;note&quot;: &quot;Relative links are resolved against the page they appear on: a leading / restarts at the domain.&quot;, &quot;js&quot;: &quot;\nconst page = \&quot;http://www.ics.uci.edu/~algol/somesite.html\&quot;;\nconsole.log(new URL(\&quot;/somesite.html\&quot;, page).href);\nconsole.log(new URL(\&quot;somesite.html\&quot;, page).href);&quot;}, {&quot;note&quot;: &quot;Every optional part filled in (illustrative URL): port, path, query, fragment.&quot;, &quot;js&quot;: &quot;\nconst full = new URL(\&quot;http://www.ics.uci.edu:8080/~lopes/index.html?lang=en#top\&quot;);\nconsole.log({ host: full.hostname, port: full.port, path: full.pathname, query: full.search, fragment: full.hash });&quot;}], &quot;height&quot;: 60, &quot;interactive&quot;: true}</code></pre><p>In Python, <code>urllib.parse</code> gives the same parts:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> urllib.parse </span><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> urlsplit, urljoin</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">p = urlsplit(</span><span style="color:#CE9178">"http://calendar.ics.uci.edu/calendar.php"</span></span>
+<span class="line"><span style="color:#CE9178">             "?type=month&#x26;calendar=1&#x26;category=&#x26;month=02&#x26;year=2013"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(p.scheme, p.hostname, p.port, p.path)</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(p.query)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">page = </span><span style="color:#CE9178">"http://www.ics.uci.edu/~algol/somesite.html"</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(urljoin(page, </span><span style="color:#CE9178">"/somesite.html"</span><span style="color:#D4D4D4">))</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(urljoin(page, </span><span style="color:#CE9178">"somesite.html"</span><span style="color:#D4D4D4">))</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">http calendar.ics.uci.edu None /calendar.php
+type=month&amp;calendar=1&amp;category=&amp;month=02&amp;year=2013
+http://www.ics.uci.edu/somesite.html
+http://www.ics.uci.edu/~algol/somesite.html</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: The two links above are <strong>not</strong> the same page. On <code>http://www.ics.uci.edu/~algol/somesite.html</code>, <code>href=&quot;/somesite.html&quot;</code> resolves to <code>http://www.ics.uci.edu/somesite.html</code> — the leading <code>/</code> drops <code>~algol/</code>. Resolve every link (<code>urljoin</code>) before you queue it.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="http://www.w3.org/Addressing/URL/url-spec.txt">W3C: URL specification</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.1 Retrieving Web Pages</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#23-practice">§2.3</a></p>
+</blockquote>
+<h3 id="23-practice">2.3 Practice</h3>
+<h4 id="take-the-urls-apart">Take the URLs apart</h4>
+<p>Using <code>scheme://domain:port/path?query_string#fragment_id</code>, give every part of (a) <code>http://www.ics.uci.edu/~lopes</code> and (b) <code>http://calendar.ics.uci.edu/calendar.php?type=month&amp;calendar=1&amp;category=&amp;month=02&amp;year=2013</code>. What is the domain name in (b)? Which parts are mandatory?</p>
+<details>
+<summary>Solution</summary>
+
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>(a)</th>
+<th>(b)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>scheme</td>
+<td><code>http</code></td>
+<td><code>http</code></td>
+</tr>
+<tr>
+<td>domain (host)</td>
+<td><code>www.ics.uci.edu</code></td>
+<td><code>calendar.ics.uci.edu</code></td>
+</tr>
+<tr>
+<td>port</td>
+<td>none written (just the domain)</td>
+<td>none written</td>
+</tr>
+<tr>
+<td>path</td>
+<td><code>/~lopes</code></td>
+<td><code>/calendar.php</code></td>
+</tr>
+<tr>
+<td>query string</td>
+<td>none</td>
+<td><code>type=month&amp;calendar=1&amp;category=&amp;month=02&amp;year=2013</code> — 5 pairs; <code>category</code> is empty</td>
+</tr>
+<tr>
+<td>fragment</td>
+<td>none</td>
+<td>none</td>
+</tr>
+</tbody></table>
+<p>Domain name in (b): <code>uci.edu</code> (<code>ics</code>, <code>calendar</code> are subdomains). Only <code>scheme://domain</code> is mandatory. These are the same values <code>urlsplit</code> and the demo in <a href="#22-anatomy-of-a-url">§2.2</a> produce.</p>
+</details>
+
+<h4 id="uri-url-or-urn">URI, URL or URN?</h4>
+<p>Classify <code>http://www.ics.uci.edu</code>, ISBN 0-486-27777-3 and <code>ftp://ftp.ics.uci.edu</code>.</p>
+<details>
+<summary>Solution</summary>
+
+<p>All three are <strong>URIs</strong>. <code>http://www.ics.uci.edu</code> and <code>ftp://ftp.ics.uci.edu</code> are <strong>URLs</strong> — they say <strong>where</strong> the resource is. The ISBN is a <strong>URN</strong> — it names <strong>what</strong> the book is, not where a copy is.</p>
+</details>
+
+<h2 id="3-the-basic-crawl-algorithm">3. The Basic Crawl Algorithm</h2>
+<p>A <strong>crawler</strong> (or spider) is a program that, like a person clicking around, gets HTML pages and follows their links. On the architecture map of a search engine, crawling is the <strong>Text Acquisition</strong> box.</p>
+<h3 id="31-what-counts-as-an-algorithm">3.1 What counts as an algorithm?</h3>
+<p>Before writing the crawl loop down, ask whether it is an algorithm at all, using <strong>Knuth&#39;s definition</strong>. A procedure is an algorithm if it has:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>The question to ask</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Finiteness</strong></td>
+<td>Does it end after a finite number of steps?</td>
+</tr>
+<tr>
+<td><strong>Definiteness</strong></td>
+<td>Are the steps rigorously and unambiguously specified?</td>
+</tr>
+<tr>
+<td><strong>Input</strong></td>
+<td>Does it have zero or more inputs?</td>
+</tr>
+<tr>
+<td><strong>Output</strong></td>
+<td>Does it have one or more outputs related to the inputs?</td>
+</tr>
+<tr>
+<td><strong>Effectiveness</strong></td>
+<td>Are the operations basic enough for someone to perform them using pencil and paper only?</td>
+</tr>
+</tbody></table>
+<p>Keep these in mind for the crawl loop — on a huge, ever-changing web (<a href="/notes/cs-121/topic-search-engines/en-US/">Search Engines &amp; the Web</a>), think hard about finiteness.</p>
+<h3 id="32-the-loop-the-frontier-and-the-pseudocode">3.2 The loop, the frontier and the pseudocode</h3>
+<p>The basic crawl algorithm:</p>
+<ol>
+<li>Initialize a queue of URLs — the <strong>seeds</strong>.</li>
+<li>Repeat until there are no more URLs in the queue:<ul>
+<li>get one URL from the queue;</li>
+<li>if the page can be crawled, fetch the associated page;</li>
+<li>store a representation of the page;</li>
+<li>extract the URLs from the page and add them to the queue.</li>
+</ul>
+</li>
+</ol>
+<p>The queue is called the <strong>frontier</strong>. Picture three zones — <strong>crawled web pages</strong>, the <strong>URL frontier</strong>, and <strong>the rest of the web</strong> — with the web spider starting from the seed pages: each fetch moves a page into &quot;crawled&quot;, and its links pull new pages from &quot;the rest of the web&quot; into the frontier.</p>
+<p>The pseudocode, in Croft&#39;s version:</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">procedure CrawlerThread(frontier)
+    while not frontier.done() do
+        website ← frontier.nextSite()
+        url ← website.nextURL()
+        if website.permitsCrawl(url) then
+            text ← retrieveURL(url)
+            storeDocument(url, text)
+            for each url in parse(text) do
+                frontier.addURL(url)
+            end for
+        end if
+        frontier.releaseSite(website)
+    end while
+end procedure</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Two major jobs: <strong>download web pages if authorized, and discover new URLs</strong>. The call <code>website.permitsCrawl(url)</code> raises the question <em>how do you know if the website allows you to crawl?</em> (<a href="#4-permission-to-crawl-robotstxt">§4</a>). The frontier hands out a <em>site</em> first, then a URL from it; that is where politeness lives (<a href="#7-politeness-and-performance">§7</a>).</p>
+<p>The demo below uses a graph of four hosts with three pages each (<code>www.cs.umass.edu</code>, <code>www.bbc.co.uk</code>, <code>www.whitehouse.gov</code>, <code>www.cnn.com</code>), with links inside and across hosts and one machine, <code>crawler.searchengine.com</code>, talking to all four; arrows mark <code>nextSite()</code> and <code>nextURL()</code>. It starts from the umass and cnn index pages as seeds. Step through it, or edit the graph and press Run:</p>
+<pre data-language="viz" data-viz="crawl-frontier"><code>{&quot;title&quot;: &quot;Basic crawl over “How the crawler sees the web”&quot;, &quot;web&quot;: &quot;www.cs.umass.edu/index.html -&gt; www.cs.umass.edu/courses, www.cs.umass.edu/news; www.cs.umass.edu/news -&gt; www.bbc.co.uk/index.html, www.cnn.com/2006/09/story.html; www.bbc.co.uk/index.html -&gt; www.bbc.co.uk/today, www.bbc.co.uk/2005/story.html; www.bbc.co.uk/2005/story.html -&gt; www.whitehouse.gov/index.html; www.whitehouse.gov/index.html -&gt; www.whitehouse.gov/news.html, www.whitehouse.gov/about.html; www.cnn.com/index.html -&gt; www.cnn.com/2006/09/story.html, www.cnn.com/2003/04/story.html&quot;, &quot;seeds&quot;: &quot;www.cs.umass.edu/index.html, www.cnn.com/index.html&quot;, &quot;interactive&quot;: true}</code></pre><p>All 12 pages are crawled in 12 fetches, in FIFO (breadth-first) order. <code>www.cnn.com/2006/09/story.html</code> is linked twice but queued once: the frontier remembers which URLs it has seen.</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: &quot;Repeat until no more URLs in queue&quot; only ends if the frontier refuses URLs it has already seen — without a seen-set, two pages linking to each other loop forever. That&#39;s separate from duplicate <em>content</em> detection (<a href="#9-duplicates-data-noise-client-side-scripting-and-the-deep-web">§9</a>).</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2 Crawling the Web</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.2 The Web Crawler</a></p>
+</blockquote>
+<h2 id="4-permission-to-crawl-robotstxt">4. Permission to Crawl: robots.txt</h2>
+<p><strong>Be polite: ask the website whether you may crawl it first.</strong> The <strong>Robots Exclusion Standard</strong>, a.k.a. <code>robots.txt</code>, is a file that sites may put at their root (<code>http://www.cnn.com/robots.txt</code>, <code>http://en.wikipedia.org/robots.txt</code>). The syntax is very simple. For decades there was no formal standard (it was a convention); it has since been written up as RFC 9309. It works on an <strong>honor basis</strong> — <strong>it&#39;s not a security mechanism</strong>: a crawler that ignores it still gets the pages.</p>
+<h3 id="41-the-five-classic-examples">4.1 The five classic examples</h3>
+<p>From robotstxt.org:</p>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>robots.txt</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Exclude all robots from the whole server</td>
+<td><code>User-agent: *</code> / <code>Disallow: /</code></td>
+</tr>
+<tr>
+<td>Allow all robots complete access</td>
+<td><code>User-agent: *</code> / <code>Disallow:</code> (empty)</td>
+</tr>
+<tr>
+<td>Exclude all robots from part of the site</td>
+<td><code>User-agent: *</code> / <code>Disallow: /cgi-bin/</code> / <code>Disallow: /tmp/</code> / <code>Disallow: /junk/</code></td>
+</tr>
+<tr>
+<td>Exclude a single robot</td>
+<td><code>User-agent: BadBot</code> / <code>Disallow: /</code></td>
+</tr>
+<tr>
+<td>Allow a single robot</td>
+<td><code>User-agent: Google</code> / <code>Disallow:</code> — blank line — <code>User-agent: *</code> / <code>Disallow: /</code></td>
+</tr>
+</tbody></table>
+<p>(<code>/</code> separates lines of the file.) <code>Disallow:</code> followed by nothing disallows nothing, so it means &quot;allow all&quot;. <code>Disallow: /</code> blocks everything, because every path starts with <code>/</code>.</p>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: <strong>There is a precedence rule</strong>: if there is a section that is specific for a bot, the rules that are valid for that bot are <strong>only</strong> the rules in that section. In &quot;allow a single robot&quot;, Google reads only its own group (<code>Disallow:</code> = everything allowed) and never sees the <code>*</code> group&#39;s <code>Disallow: /</code>.</p>
+</blockquote>
+<h3 id="42-allow-inside-a-disallowed-folder">4.2 Allow inside a Disallowed folder</h3>
+<p>You can disallow a folder but allow one resource in it — e.g. a page listing the links you <em>want</em> indexed. CNN&#39;s file is six <code>Sitemap:</code> lines, <code>User-agent: *</code>, the <code>Allow</code> lines, then about 35 <code>Disallow</code> lines (<code>/*.jsx$</code>, <code>/ads/</code>, <code>/aol/</code>, <code>/audio/</code>, … <code>/partners/</code>, … <code>/search/</code>, … <code>/webview/</code>). The interesting pairs are <code>Allow: /audio/podcasts/</code> vs <code>Disallow: /audio/</code> and <code>Allow: /partners/ipad/live-video.json</code> vs <code>Disallow: /partners/</code>.</p>
+<p>Why does the <code>Allow</code> win? Today&#39;s rule (RFC 9309, Google, and recent Python) is <strong>longest match</strong>: the longest matching path wins, and <code>Allow</code> wins a tie. The demo applies it to an abridged copy of CNN&#39;s file:</p>
+<pre data-language="viz" data-viz="robots-txt"><code>{&quot;title&quot;: &quot;CNN robots.txt, abridged&quot;, &quot;robots&quot;: &quot;User-agent: *\nAllow: /audio/podcasts/\nAllow: /partners/ipad/live-video.json\nDisallow: /*.jsx$\nDisallow: /ads/\nDisallow: /audio/\nDisallow: /partners/\nDisallow: /search/&quot;, &quot;urls&quot;: &quot;/audio/podcasts/ep1.mp3, /audio/live.html, /partners/ipad/live-video.json, /partners/ipad/x.json, /2026/10/14/world/index.html, /video/player.jsx&quot;, &quot;interactive&quot;: true}</code></pre><p>Allowed: the podcast, <code>live-video.json</code> and the article (no rule matches). Disallowed: <code>/audio/live.html</code>, <code>/partners/ipad/x.json</code>, and <code>/video/player.jsx</code> (wildcard rule <code>/*.jsx$</code>). In Python:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> urllib.robotparser </span><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> RobotFileParser</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">rules = </span><span style="color:#CE9178">"""User-agent: *</span></span>
+<span class="line"><span style="color:#CE9178">Allow: /audio/podcasts/</span></span>
+<span class="line"><span style="color:#CE9178">Allow: /partners/ipad/live-video.json</span></span>
+<span class="line"><span style="color:#CE9178">Disallow: /*.jsx$</span></span>
+<span class="line"><span style="color:#CE9178">Disallow: /audio/</span></span>
+<span class="line"><span style="color:#CE9178">Disallow: /partners/</span></span>
+<span class="line"><span style="color:#CE9178">"""</span></span>
+<span class="line"><span style="color:#D4D4D4">rp = RobotFileParser()</span></span>
+<span class="line"><span style="color:#D4D4D4">rp.parse(rules.splitlines())   </span><span style="color:#6A9955"># or set_url(...) + read()</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> path </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> [</span><span style="color:#CE9178">"/audio/podcasts/ep1.mp3"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/audio/live.html"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">             "/partners/ipad/live-video.json"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">             "/video/player.jsx"</span><span style="color:#D4D4D4">]:</span></span>
+<span class="line"><span style="color:#D4D4D4">    url = </span><span style="color:#CE9178">"https://www.cnn.com"</span><span style="color:#D4D4D4"> + path</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(path, rp.can_fetch(</span><span style="color:#CE9178">"MyCrawler"</span><span style="color:#D4D4D4">, url))</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">/audio/podcasts/ep1.mp3 True
+/audio/live.html False
+/partners/ipad/live-video.json True
+/video/player.jsx False</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>That is the output on Python 3.13. On Python 3.11 and 3.12 the first three lines are the same, but the last one is <code>/video/player.jsx True</code>: the older parser does not understand the <code>*</code> and <code>$</code> in <code>Disallow: /*.jsx$</code>.</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: Older Pythons&#39; robotparser (3.11.18 and 3.12.3 tested) takes the <strong>first matching line in file order</strong> and treats <code>*</code> and <code>$</code> literally. CNN lists its <code>Allow</code> lines first, so only <code>/*.jsx$</code> breaks — but put <code>Disallow: /audio/</code> <em>above</em> <code>Allow: /audio/podcasts/</code> and the old parser blocks the podcasts (<code>can_fetch</code> returned <code>False</code> on 3.11.18 and <code>True</code> on 3.13.18 for exactly that file). Set <code>&quot;match&quot;: &quot;first&quot;</code> in the demo to see it.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="http://www.cnn.com/robots.txt">cnn.com/robots.txt</a> · <a href="http://en.wikipedia.org/robots.txt">en.wikipedia.org/robots.txt</a> · <a href="http://www.robotstxt.org/robotstxt.html">robotstxt.org: About /robots.txt</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.2 The Web Crawler</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#43-practice">§4.3</a></p>
+</blockquote>
+<h3 id="43-practice">4.3 Practice</h3>
+<h4 id="which-robotstxt-rule-applies">Which robots.txt rule applies?</h4>
+<p>Five robots.txt files are in play: (1) <code>User-agent: *</code> / <code>Disallow: /</code>; (2) <code>User-agent: *</code> / <code>Disallow:</code>; (3) <code>User-agent: *</code> with <code>Disallow: /cgi-bin/</code>, <code>Disallow: /tmp/</code>, <code>Disallow: /junk/</code>; (4) <code>User-agent: BadBot</code> / <code>Disallow: /</code>; (5) <code>User-agent: Google</code> / <code>Disallow:</code>, a blank line, then <code>User-agent: *</code> / <code>Disallow: /</code>. For each file, may the robots <code>BadBot</code>, <code>Google</code> and <code>MyCrawler</code> fetch <code>/</code>, <code>/tmp/a.html</code> and <code>/index.html</code>?</p>
+<details>
+<summary>Solution</summary>
+
+<p>First pick the group (a group naming the bot wins over <code>*</code>), then match the paths. These results were checked with Python&#39;s <code>urllib.robotparser</code> (identical on 3.11.18 and 3.13.18):</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>BadBot</th>
+<th>Google</th>
+<th>MyCrawler</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>(1) Exclude all (<code>*</code>: <code>Disallow: /</code>)</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+</tr>
+<tr>
+<td>(2) Allow all (<code>*</code>: <code>Disallow:</code>)</td>
+<td>all</td>
+<td>all</td>
+<td>all</td>
+</tr>
+<tr>
+<td>(3) Exclude part (<code>*</code>: <code>/cgi-bin/</code>, <code>/tmp/</code>, <code>/junk/</code>)</td>
+<td><code>/</code>, <code>/index.html</code> (not <code>/tmp/a.html</code>)</td>
+<td>same</td>
+<td>same</td>
+</tr>
+<tr>
+<td>(4) Exclude a single robot (<code>BadBot</code>: <code>Disallow: /</code>)</td>
+<td>none</td>
+<td>all (no group applies)</td>
+<td>all</td>
+</tr>
+<tr>
+<td>(5) Allow a single robot (<code>Google</code>: <code>Disallow:</code> + <code>*</code>: <code>Disallow: /</code>)</td>
+<td>none</td>
+<td><strong>all</strong></td>
+<td>none</td>
+</tr>
+</tbody></table>
+<p>The last row is the precedence rule: Google&#39;s own group allows everything, and the <code>*</code> group doesn&#39;t apply to it. Check:</p>
+<pre data-language="viz" data-viz="robots-txt"><code>{&quot;title&quot;: &quot;Allow a single robot + the precedence rule&quot;, &quot;robots&quot;: &quot;User-agent: Google\nDisallow:\n\nUser-agent: *\nDisallow: /&quot;, &quot;urls&quot;: &quot;/index.html, /tmp/a.html&quot;, &quot;agent&quot;: &quot;Google&quot;}</code></pre><p>(robotparser matches the group name as a substring, so <code>Googlebot/2.1</code> also gets the <code>Google</code> group; RFC 9309 wants the exact token.)</p>
+</details>
+
+<h4 id="allow-inside-a-disallowed-folder">Allow inside a Disallowed folder</h4>
+<p>A robots.txt for <code>User-agent: *</code> has <code>Allow: /audio/podcasts/</code>, <code>Allow: /partners/ipad/live-video.json</code>, <code>Disallow: /audio/</code> and <code>Disallow: /partners/</code>. Decide <code>/audio/podcasts/ep1.mp3</code>, <code>/audio/live.html</code>, <code>/partners/ipad/live-video.json</code> and <code>/partners/ipad/x.json</code>.</p>
+<details>
+<summary>Solution</summary>
+
+<p>Find every rule whose path is a prefix of the URL path, and let the longest one win:</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Matching rules</th>
+<th>Winner</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/audio/podcasts/ep1.mp3</code></td>
+<td><code>Allow: /audio/podcasts/</code> (16), <code>Disallow: /audio/</code> (7)</td>
+<td>Allow</td>
+<td><strong>allowed</strong></td>
+</tr>
+<tr>
+<td><code>/audio/live.html</code></td>
+<td><code>Disallow: /audio/</code></td>
+<td>Disallow</td>
+<td>disallowed</td>
+</tr>
+<tr>
+<td><code>/partners/ipad/live-video.json</code></td>
+<td><code>Allow: …/live-video.json</code> (30), <code>Disallow: /partners/</code> (10)</td>
+<td>Allow</td>
+<td><strong>allowed</strong></td>
+</tr>
+<tr>
+<td><code>/partners/ipad/x.json</code></td>
+<td><code>Disallow: /partners/</code></td>
+<td>Disallow</td>
+<td>disallowed</td>
+</tr>
+</tbody></table>
+<p>The folder is closed except for the resource the site wants crawled. First-match gives the same answers only because the <code>Allow</code> lines are listed first. As code:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">rules = [(</span><span style="color:#CE9178">"Allow"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/audio/podcasts/"</span><span style="color:#D4D4D4">), (</span><span style="color:#CE9178">"Allow"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/partners/ipad/live-video.json"</span><span style="color:#D4D4D4">),</span></span>
+<span class="line"><span style="color:#D4D4D4">         (</span><span style="color:#CE9178">"Disallow"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/audio/"</span><span style="color:#D4D4D4">), (</span><span style="color:#CE9178">"Disallow"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/partners/"</span><span style="color:#D4D4D4">)]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> allowed</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">path</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#D4D4D4">    hits = [(</span><span style="color:#DCDCAA">len</span><span style="color:#D4D4D4">(p), kind == </span><span style="color:#CE9178">"Allow"</span><span style="color:#D4D4D4">) </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> kind, p </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> rules </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> path.startswith(p)]</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#DCDCAA"> max</span><span style="color:#D4D4D4">(hits)[</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">] </span><span style="color:#C586C0">if</span><span style="color:#D4D4D4"> hits </span><span style="color:#C586C0">else</span><span style="color:#569CD6"> True</span><span style="color:#6A9955">      # longest wins, Allow wins a tie</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> path </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> [</span><span style="color:#CE9178">"/audio/podcasts/ep1.mp3"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/audio/live.html"</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#CE9178">             "/partners/ipad/live-video.json"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"/partners/ipad/x.json"</span><span style="color:#D4D4D4">]:</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(path, allowed(path))</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">/audio/podcasts/ep1.mp3 True
+/audio/live.html False
+/partners/ipad/live-video.json True
+/partners/ipad/x.json False</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+</details>
+
+<h2 id="5-sitemaps-information-to-crawlers">5. Sitemaps: Information to Crawlers</h2>
+<p>robots.txt tells crawlers where <strong>not</strong> to go. <strong>Sitemaps</strong> (introduced by Google) let web masters send crawlers <strong>positive</strong> information:</p>
+<ul>
+<li>They contain <strong>lists of URLs</strong> and data about them, such as <strong>modification time</strong> and <strong>modification frequency</strong>.</li>
+<li>They&#39;re <strong>listed in robots.txt</strong> (CNN&#39;s first six lines, starting <code>Sitemap: https://www.cnn.com/sitemaps/cnn/index.xml</code>).</li>
+<li>They&#39;re generated by the server administrators, usually by scripts.</li>
+<li>They can tell the crawler about <strong>pages it might not find</strong> — pages that aren&#39;t linked from anywhere.</li>
+<li>They give the crawler their <strong>relative importance</strong> and a <strong>hint about when to check a page for changes</strong> (update frequency).</li>
+</ul>
+<p>CNN&#39;s <code>index.xml</code> is a <strong>sitemap index</strong>: a <code>&lt;sitemapindex&gt;</code> listing more sitemaps (<code>video-2020-01.xml</code>, <code>article-2020-01.xml</code>, …), each with a <code>&lt;lastmod&gt;</code>. Each of those is a <code>&lt;urlset&gt;</code> with one <code>&lt;url&gt;</code> per page:</p>
+<div class="code-wrap"><pre data-language="xml" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">url</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">loc</span><span style="color:#808080">></span><span style="color:#D4D4D4">https://www.cnn.com/2012/01/25/world/gallery/wus-us-mia/index.html</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">loc</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">lastmod</span><span style="color:#808080">></span><span style="color:#D4D4D4">2012-01-25T18:24:37Z</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">lastmod</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">changefreq</span><span style="color:#808080">></span><span style="color:#D4D4D4">daily</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">changefreq</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">priority</span><span style="color:#808080">></span><span style="color:#D4D4D4">0.5</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">priority</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">image:image</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">image:loc</span><span style="color:#808080">></span><span style="color:#D4D4D4">https://i2.cdn.turner.com/cnnnext/dam/assets/120111071718-jpac1-plane-story-top.jpg</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">image:loc</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">image:caption</span><span style="color:#808080">></span><span style="color:#D4D4D4">Gunnery Sgt. Bryon Bebout with the wreckage of a B-24 …</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">image:caption</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">image:image</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">url</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p><code>&lt;loc&gt;</code> = URL, <code>&lt;lastmod&gt;</code> = modification time, <code>&lt;changefreq&gt;</code> = modification frequency, <code>&lt;priority&gt;</code> = relative importance. <code>&lt;lastmod&gt;</code> and <code>&lt;changefreq&gt;</code> are what a crawler uses to decide <em>when</em> to come back (<a href="#10-when-to-crawl-again-freshness-and-age">§10</a>).</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://www.cnn.com/sitemaps/cnn/index.xml">CNN sitemap index</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.6 Sitemaps</a></p>
+</blockquote>
+<h2 id="6-why-the-basic-algorithm-is-not-enough">6. Why the Basic Algorithm Is Not Enough</h2>
+<p>The basic algorithm is <strong>theoretically correct</strong> but <strong>seriously lacking in practice</strong>. It:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Problem</th>
+<th>Covered in</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Will upset web admins (impolite) — it&#39;s abusing the web servers</td>
+<td><a href="#7-politeness-and-performance">§7</a></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Is very slow — 1 page at a time</td>
+<td><a href="#7-politeness-and-performance">§7</a></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Will get caught in traps and infinite sequences</td>
+<td><a href="#8-crawler-traps">§8</a></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Will fetch duplicates without noticing</td>
+<td><a href="#9-duplicates-data-noise-client-side-scripting-and-the-deep-web">§9</a></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Will bring in data noise</td>
+<td><a href="#9-duplicates-data-noise-client-side-scripting-and-the-deep-web">§9</a></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Will miss content due to client-side scripting</td>
+<td><a href="#9-duplicates-data-noise-client-side-scripting-and-the-deep-web">§9</a></td>
+</tr>
+</tbody></table>
+<p>The mathematics of duplicate and near-duplicate detection is treated in <a href="/notes/cs-121/topic-documents/en-US/">Document Conversion, Storage &amp; Duplicates</a>.</p>
+<h2 id="7-politeness-and-performance">7. Politeness and Performance</h2>
+<h3 id="71-politeness">7.1 Politeness</h3>
+<p><strong>Avoid hitting any site too often: sites are for people, not for bots.</strong> Ignore politeness and your crawler is a <strong>denial-of-service (DoS) attack</strong>. Be polite: <strong>use artificial delays</strong> between requests to the same server.</p>
+<h3 id="72-performance-the-crawler-mostly-waits">7.2 Performance: the crawler mostly waits</h3>
+<p>Retrieving one page takes several network round trips:</p>
+<ol>
+<li>The crawler (a client program) connects to a <strong>DNS</strong> server.</li>
+<li>DNS translates the host name into an <strong>IP address</strong>.</li>
+<li>The crawler connects to the server host on a specific <strong>port</strong>.</li>
+<li>It sends an <strong>HTTP request</strong> for the page, usually a <code>GET</code>.</li>
+</ol>
+<p>Back of the envelope: at 500 ms per fetch, <strong>1 million pages one at a time take 500,000 s ≈ 5.8 days</strong> — and it&#39;s worse than that with unresponsive servers. Most of that time the thread is <strong>waiting for network data</strong> (worked out in <a href="#74-practice">§7.4</a>).</p>
+<p>The trade-off, step by step:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Problem</td>
+<td>Web crawlers spend a lot of time <strong>waiting</strong> for responses to requests</td>
+</tr>
+<tr>
+<td>Solution</td>
+<td>Use <strong>threads</strong> and fetch hundreds of pages at once (or distribute the crawl, <a href="#11-distributed-crawling">§11</a>)</td>
+</tr>
+<tr>
+<td>Drawback</td>
+<td>Crawlers could <strong>flood sites</strong> with requests</td>
+</tr>
+<tr>
+<td>Mitigation</td>
+<td><strong>Politeness policies</strong>: e.g. distribute requests between different servers, delay between requests to the same web server, …</td>
+</tr>
+</tbody></table>
+<p>With threads, politeness is harder to control but possible, e.g. different threads on different servers.</p>
+<p><strong>Where to enforce politeness?</strong> In the pseudocode of <a href="#32-the-loop-the-frontier-and-the-pseudocode">§3.2</a> it can be enforced in <code>website ← frontier.nextSite()</code> and in <code>url ← website.nextURL()</code>. In the demo each host must rest 2 ticks after a fetch; <code>nextSite()</code> skips resting hosts, and the thread waits when all of them are resting:</p>
+<pre data-language="viz" data-viz="crawl-frontier"><code>{&quot;title&quot;: &quot;Politeness: 2-tick rest per host&quot;, &quot;web&quot;: &quot;www.cs.umass.edu/index.html -&gt; www.cs.umass.edu/courses, www.cs.umass.edu/news; www.cs.umass.edu/news -&gt; www.bbc.co.uk/index.html, www.cnn.com/2006/09/story.html; www.bbc.co.uk/index.html -&gt; www.bbc.co.uk/today, www.bbc.co.uk/2005/story.html; www.bbc.co.uk/2005/story.html -&gt; www.whitehouse.gov/index.html; www.whitehouse.gov/index.html -&gt; www.whitehouse.gov/news.html, www.whitehouse.gov/about.html; www.cnn.com/index.html -&gt; www.cnn.com/2006/09/story.html, www.cnn.com/2003/04/story.html&quot;, &quot;seeds&quot;: &quot;www.cs.umass.edu/index.html, www.cnn.com/index.html&quot;, &quot;politeness&quot;: 2, &quot;start&quot;: 8}</code></pre><p>The same 12 pages now take 22 ticks instead of 12 — 10 spent waiting. With one thread politeness costs time, which is why crawlers spread many threads over many hosts.</p>
+<h3 id="73-dns-lookups">7.3 DNS lookups</h3>
+<p>Before any fetch, the crawler must turn a domain name into an IP address: <code>www.ics.uci.edu</code> → <code>128.195.1.83</code>. DNS is a distributed set of servers: <strong>latency can be high (2 s is not unusual)</strong>, common implementations are <strong>blocking</strong> (one request at a time), and results are <strong>cached</strong>. At 800 ms per lookup, how long to look up the entire Web? With no host count given, per million names it is ≈ <strong>9.3 days</strong> (≈ 23 days at 2 s).</p>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: A crawler is <strong>I/O-bound</strong> — goroutines in Go, threads or async I/O in Python — and caching DNS per host is the cheapest speed-up.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.1 Retrieving Web Pages</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.2 The Web Crawler</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#74-practice">§7.4</a></p>
+</blockquote>
+<h3 id="74-practice">7.4 Practice</h3>
+<h4 id="crawl-time-for-1-million-pages">Crawl time for 1 million pages</h4>
+<p>One page fetch takes 500 ms. How long does it take to crawl 1 million pages one at a time? What changes with threads?</p>
+<details>
+<summary>Solution</summary>
+
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup><mo>×</mo><mn>0.5</mn><mtext> s</mtext><mo>=</mo><mn>500</mn><mo separator="true" lspace="0em" rspace="0em">,</mo><mn>000</mn><mtext> s</mtext></mrow><annotation encoding="application/x-tex">10^6 \times 0.5\ \text{s} = 500{,}000\ \text{s}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.5</span><span class="mspace"> </span><span class="mord text"><span class="mord">s</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">500</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">000</span><span class="mspace"> </span><span class="mord text"><span class="mord">s</span></span></span></span></span> ≈ 138.9 h ≈ <strong>5.8 days</strong> — worse in practice (unresponsive servers), and almost all of it waiting on the network. With <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span> threads in parallel (on different servers, to stay polite) the ideal is <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>500</mn><mo separator="true" lspace="0em" rspace="0em">,</mo><mn>000</mn><mi mathvariant="normal">/</mi><mi>k</mi></mrow><annotation encoding="application/x-tex">500{,}000 / k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">500</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">000/</span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span> s: 10 threads ≈ 13.9 h, 100 ≈ 1.4 h, 500 ≈ 17 min.</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">n, fetch = </span><span style="color:#B5CEA8">1_000_000</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">0.5</span><span style="color:#6A9955">            # pages, seconds per fetch</span></span>
+<span class="line"><span style="color:#D4D4D4">total = n * fetch</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">f</span><span style="color:#CE9178">"1 thread: </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">total</span><span style="color:#569CD6">:,.0f}</span><span style="color:#CE9178"> s = </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">total/</span><span style="color:#B5CEA8">3600</span><span style="color:#569CD6">:.1f}</span><span style="color:#CE9178"> h = </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">total/</span><span style="color:#B5CEA8">86400</span><span style="color:#569CD6">:.1f}</span><span style="color:#CE9178"> days"</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> k </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> (</span><span style="color:#B5CEA8">10</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">100</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">500</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#D4D4D4">    s = total / k</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">f</span><span style="color:#CE9178">"</span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">k</span><span style="color:#569CD6">:>3}</span><span style="color:#CE9178"> threads: </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">s/</span><span style="color:#B5CEA8">3600</span><span style="color:#569CD6">:.1f}</span><span style="color:#CE9178"> h = </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">s/</span><span style="color:#B5CEA8">60</span><span style="color:#569CD6">:.0f}</span><span style="color:#CE9178"> min"</span><span style="color:#D4D4D4">)</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">1 thread: 500,000 s = 138.9 h = 5.8 days
+ 10 threads: 13.9 h = 833 min
+100 threads: 1.4 h = 83 min
+500 threads: 0.3 h = 17 min</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+</details>
+
+<h4 id="dns-lookups-at-800-ms">DNS lookups at 800 ms</h4>
+<p>One DNS lookup takes 800 ms, and common resolvers are blocking (one request at a time). How long would it take to &quot;look up the entire Web&quot;?</p>
+<details>
+<summary>Solution</summary>
+
+<p>No host count is given, so per million names: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>6</mn></msup><mo>×</mo><mn>0.8</mn><mtext> s</mtext><mo>=</mo><mn>800</mn><mo separator="true" lspace="0em" rspace="0em">,</mo><mn>000</mn><mtext> s</mtext><mo>≈</mo><mn>9.3</mn></mrow><annotation encoding="application/x-tex">10^6 \times 0.8\ \text{s} = 800{,}000\ \text{s} \approx 9.3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">6</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.8</span><span class="mspace"> </span><span class="mord text"><span class="mord">s</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">800</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">000</span><span class="mspace"> </span><span class="mord text"><span class="mord">s</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">9.3</span></span></span></span> days; at 2 s, ≈ 23 days. Fixes: <strong>cache</strong> (one lookup serves all of a host&#39;s URLs) and don&#39;t block — resolve concurrently.</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#D4D4D4">n = </span><span style="color:#B5CEA8">1_000_000</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> lookup </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> (</span><span style="color:#B5CEA8">0.8</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2.0</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#D4D4D4">    s = n * lookup</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">f</span><span style="color:#CE9178">"DNS at </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">lookup</span><span style="color:#569CD6">}</span><span style="color:#CE9178"> s per name, per million names: </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">s</span><span style="color:#569CD6">:,.0f}</span><span style="color:#CE9178"> s = </span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">s/</span><span style="color:#B5CEA8">86400</span><span style="color:#569CD6">:.1f}</span><span style="color:#CE9178"> days"</span><span style="color:#D4D4D4">)</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">DNS at 0.8 s per name, per million names: 800,000 s = 9.3 days
+DNS at 2.0 s per name, per million names: 2,000,000 s = 23.1 days</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+</details>
+
+<h2 id="8-crawler-traps">8. Crawler Traps</h2>
+<p>A trap <strong>may trap the crawler on a site forever</strong>: the web server responds with <strong>ever-changing URLs and content</strong>, typically from dynamic pages. Traps can be:</p>
+<ul>
+<li><strong>Unintentional</strong>: e.g. <strong>the ICS calendar is a crawler trap</strong>. Every month page links to the next month, forever.</li>
+<li><strong>Intentional</strong>: some web admins create traps to penalize impolite crawlers (fleiner.com/bots) — e.g. very large documents, <em>disallowed in robots.txt</em>, built to consume resources or break the poorly designed parsers of crawlers that ignore robots.txt.</li>
+</ul>
+<p>The demo&#39;s calendar always links to a never-seen URL (<code>?n=1</code>, <code>?n=2</code>, …), so the seen-set never helps; only the 10-fetch budget stops it:</p>
+<pre data-language="viz" data-viz="crawl-frontier"><code>{&quot;title&quot;: &quot;A crawler trap: the ICS calendar&quot;, &quot;web&quot;: &quot;www.ics.uci.edu/ -&gt; www.ics.uci.edu/calendar, www.ics.uci.edu/about; www.ics.uci.edu/about -&gt; www.ics.uci.edu/&quot;, &quot;seeds&quot;: &quot;www.ics.uci.edu/&quot;, &quot;trap&quot;: &quot;www.ics.uci.edu/calendar&quot;, &quot;maxFetches&quot;: 10}</code></pre><p>The site has 3 real pages, but 8 of the 10 fetches go to the calendar and the frontier is still not empty.</p>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: The intentional traps are aimed at crawlers that <strong>ignore robots.txt</strong>. Honoring robots.txt is the first defense; a cap on pages per host / URL depth, and noticing near-identical pages, catch the unintentional ones.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="http://www.fleiner.com/bots/">fleiner.com/bots — keeping bad robots away</a></p>
+</blockquote>
+<h2 id="9-duplicates-data-noise-client-side-scripting-and-the-deep-web">9. Duplicates, Data Noise, Client-Side Scripting and the Deep Web</h2>
+<p><strong>Duplicates.</strong> Exact and near duplication are widespread: copies, mirror sites, versions, spam, plagiarism. Studies find <strong>30% of web pages are [near-]duplicates of the other 70%</strong>. They have little or no value: they&#39;re noise to the search engine and the user, who should see only one copy (perhaps with a &quot;show similar&quot; link).</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Exact duplicates</th>
+<th>Near duplicates</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Detection</td>
+<td>Easy: <strong>hashes, checksums</strong></td>
+<td>Harder: <strong>page fingerprints</strong></td>
+</tr>
+<tr>
+<td>How common</td>
+<td>Rare</td>
+<td>Common</td>
+</tr>
+</tbody></table>
+<p>The fingerprinting methods themselves (checksums, simhash, and so on) are in <a href="/notes/cs-121/topic-documents/en-US/">Document Conversion, Storage &amp; Duplicates</a>.</p>
+<p><strong>Data noise.</strong> Pages carry content not related to the page — <strong>ads, templates</strong> (a typical page has a top banner ad and left and right columns around the real content) — and noise hurts retrieval. <strong>Finding content blocks</strong>, technique 1: the <strong>cumulative distribution of tags</strong> (<em>document slope curve</em>, Finn, Kushmerick &amp; Smyth, 2001). The plot has <strong>token count</strong> (0–3,500) on x and <strong>tag count</strong> (0–900) on y; it climbs where tags are dense and goes nearly <strong>flat in the &quot;text area&quot;</strong> (≈ 1,000–1,500 tokens) — the main content. Other techniques exist in the literature.</p>
+<p><strong>Client-side scripting.</strong> Modern sites are heavily scripted (JavaScript, TypeScript), with content behind <code>XMLHttpRequest</code>s. Reaching it means interacting with the scripts — <strong>user-interaction emulation</strong> (e.g. Selenium), which is hard; most crawlers don&#39;t, so that content is never indexed.</p>
+<p><strong>The deep web</strong> is the places crawlers rarely go: content behind <strong>login forms</strong>, content behind <strong>JavaScript/TypeScript</strong>, and sites that <strong>aren&#39;t linked from anywhere</strong> (sitemaps help with these, <a href="#5-sitemaps-information-to-crawlers">§5</a>). It&#39;s estimated to be <strong>400–500× larger than the shallow web</strong>.</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="http://dx.doi.org/10.3998/3336451.0007.104">Deep web estimate (doi:10.3998/3336451.0007.104)</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.5 Deep Web</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.7 Detecting Duplicates</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.8 Removing Noise</a></p>
+</blockquote>
+<h2 id="10-when-to-crawl-again-freshness-and-age">10. When to Crawl Again: Freshness and Age</h2>
+<h3 id="101-freshness">10.1 Freshness</h3>
+<p>Pages are constantly <strong>added, deleted and modified</strong>; <strong>stale</strong> copies no longer reflect the real pages, so the crawler must keep <strong>revisiting</strong> to maintain <strong>freshness</strong>. HTTP&#39;s <strong><code>HEAD</code></strong> request returns information <em>about</em> the page, not the page itself:</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">Client request:  HEAD /csinfo/people.html HTTP/1.1
+                 Host: www.cs.umass.edu
+
+Server response: HTTP/1.1 200 OK
+                 Date: Thu, 03 Apr 2008 05:17:54 GMT
+                 Server: Apache/2.0.52 (CentOS)
+                 Last-Modified: Fri, 04 Jan 2008 15:28:39 GMT
+                 ETag: &quot;239c33-2576-2a2837c0&quot;
+                 Accept-Ranges: bytes
+                 Content-Length: 9590
+                 Connection: close
+                 Content-Type: text/html; charset=ISO-8859-1</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>The key header is <strong><code>Last-Modified</code></strong>: compare it with the date of your stored copy. Try it yourself:</p>
+<div class="code-wrap"><pre data-language="bash" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">curl</span><span style="color:#569CD6"> --head</span><span style="color:#CE9178"> https://www.ics.uci.edu/~algol/index.html</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>You can&#39;t check every page constantly: check <strong>important</strong> and <strong>frequently changing</strong> pages. <strong>Freshness</strong> = the proportion of fresh pages in the collection, and optimizing it is <strong>dangerous</strong>: a site that is always updated is almost never fresh in your copy, so a freshness-maximizing engine would <em>stop crawling it</em>. Another metric: <strong>age</strong>.</p>
+<h3 id="102-freshness-vs-age">10.2 Freshness vs. age</h3>
+<p>On one time axis — crawl, updates, crawl, update, crawl:</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Freshness</th>
+<th>Age</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Crawl</td>
+<td>1 (copy matches the page)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Page updates after the crawl</td>
+<td>drops to 0</td>
+<td>starts growing linearly from 0</td>
+</tr>
+<tr>
+<td>More updates before the next crawl</td>
+<td>stays 0</td>
+<td>keeps growing (it counts from the <em>first</em> missed change)</td>
+</tr>
+<tr>
+<td>Next crawl</td>
+<td>back to 1</td>
+<td>back to 0</td>
+</tr>
+</tbody></table>
+<p>Freshness is a yes/no step; age measures <strong>how long</strong> the copy has been out of date.</p>
+<h3 id="103-expected-age">10.3 Expected age</h3>
+<p>The expected age of a page <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span> days after it was last crawled:</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>Age</mtext><mo stretchy="false">(</mo><mi>λ</mi><mo separator="true">,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><msubsup><mo>∫</mo><mn>0</mn><mi>t</mi></msubsup><mi>P</mi><mo stretchy="false">(</mo><mtext>page changed at time </mtext><mi>x</mi><mo stretchy="false">)</mo><mtext> </mtext><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><mi>x</mi><mo stretchy="false">)</mo><mtext> </mtext><mi>d</mi><mi>x</mi></mrow><annotation encoding="application/x-tex">\text{Age}(\lambda, t) = \int_0^t P(\text{page changed at time } x)\,(t - x)\,dx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Age</span></span><span class="mopen">(</span><span class="mord mathnormal">λ</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.4554em;vertical-align:-0.9119em;"></span><span class="mop"><span class="mop op-symbol large-op" style="margin-right:0.44445em;position:relative;top:-0.0011em;">∫</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.5435em;"><span style="top:-1.7881em;margin-left:-0.4445em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span><span style="top:-3.8129em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.9119em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mopen">(</span><span class="mord text"><span class="mord">page changed at time </span></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">d</span><span class="mord mathnormal">x</span></span></span></span></span></div>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false">(</mo><mtext>page changed at time </mtext><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">P(\text{page changed at time } x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mopen">(</span><span class="mord text"><span class="mord">page changed at time </span></span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span> is the probability the page changed at time <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi></mrow><annotation encoding="application/x-tex">x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span>; <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(t - x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span> is the time between that change and now — how long the copy has been stale. Updates follow a <strong>Poisson process</strong> on average (Cho &amp; Garcia-Molina, 2003), so the time to the next update is <strong>exponential</strong> with mean change frequency <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">λ</span></span></span></span> (changes per day):</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>Age</mtext><mo stretchy="false">(</mo><mi>λ</mi><mo separator="true">,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><msubsup><mo>∫</mo><mn>0</mn><mi>t</mi></msubsup><mi>λ</mi><msup><mi>e</mi><mrow><mo>−</mo><mi>λ</mi><mi>x</mi></mrow></msup><mtext> </mtext><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><mi>x</mi><mo stretchy="false">)</mo><mtext> </mtext><mi>d</mi><mi>x</mi><mo>=</mo><mi>t</mi><mo>−</mo><mfrac><mrow><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>λ</mi><mi>t</mi></mrow></msup></mrow><mi>λ</mi></mfrac></mrow><annotation encoding="application/x-tex">\text{Age}(\lambda, t) = \int_0^t \lambda e^{-\lambda x}\,(t - x)\,dx = t - \frac{1 - e^{-\lambda t}}{\lambda}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Age</span></span><span class="mopen">(</span><span class="mord mathnormal">λ</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.4554em;vertical-align:-0.9119em;"></span><span class="mop"><span class="mop op-symbol large-op" style="margin-right:0.44445em;position:relative;top:-0.0011em;">∫</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.5435em;"><span style="top:-1.7881em;margin-left:-0.4445em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span><span style="top:-3.8129em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.9119em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">λ</span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8991em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">λ</span><span class="mord mathnormal mtight">x</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">d</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6984em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.2121em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.5261em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">λ</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">λ</span><span class="mord mathnormal mtight">t</span></span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></div>
+<p>For <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>1</mn><mi mathvariant="normal">/</mi><mn>7</mn></mrow><annotation encoding="application/x-tex">\lambda = 1/7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">λ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/7</span></span></span></span> (one change per week) and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span> from 0 to about 7 days, the curve bends <strong>upward</strong>: 0.26 at <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">t = 2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span></span></span></span>, 0.95 at <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">t = 4</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">4</span></span></span></span>, 1.97 at <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">t = 6</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">6</span></span></span></span>, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>7</mn><mi mathvariant="normal">/</mi><mi>e</mi><mo>≈</mo><mn>2.58</mn></mrow><annotation encoding="application/x-tex">7/e \approx 2.58</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">7/</span><span class="mord mathnormal">e</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2.58</span></span></span></span> at <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">t = 7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">7</span></span></span></span>. A numeric integration agrees with the closed form:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">from</span><span style="color:#D4D4D4"> math </span><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> exp</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">lam = </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> / </span><span style="color:#B5CEA8">7</span><span style="color:#6A9955">                                   # one change per week, per day</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> age</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">t</span><span style="color:#D4D4D4">):                                   </span><span style="color:#6A9955"># closed form</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4"> t - (</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> - exp(-lam * t)) / lam</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">def</span><span style="color:#DCDCAA"> age_numeric</span><span style="color:#D4D4D4">(</span><span style="color:#9CDCFE">t</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4">=</span><span style="color:#B5CEA8">100_000</span><span style="color:#D4D4D4">):                </span><span style="color:#6A9955"># midpoint rule on the integral</span></span>
+<span class="line"><span style="color:#D4D4D4">    dx = t / n</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#DCDCAA"> sum</span><span style="color:#D4D4D4">(lam * exp(-lam * x) * (t - x) * dx</span></span>
+<span class="line"><span style="color:#C586C0">               for</span><span style="color:#D4D4D4"> x </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> ((i + </span><span style="color:#B5CEA8">0.5</span><span style="color:#D4D4D4">) * dx </span><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> i </span><span style="color:#C586C0">in</span><span style="color:#DCDCAA"> range</span><span style="color:#D4D4D4">(n)))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> t </span><span style="color:#C586C0">in</span><span style="color:#D4D4D4"> (</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">6</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4">):</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(t, </span><span style="color:#DCDCAA">round</span><span style="color:#D4D4D4">(age(t), </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">), </span><span style="color:#DCDCAA">round</span><span style="color:#D4D4D4">(age_numeric(t), </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">))</span></span>
+<span class="line"><span style="color:#DCDCAA">print</span><span style="color:#D4D4D4">(</span><span style="color:#B5CEA8">7</span><span style="color:#D4D4D4"> / exp(</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">))</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">1 0.07 0.07
+2 0.26 0.26
+4 0.95 0.95
+6 1.97 1.97
+7 2.58 2.58
+2.5751560882000963</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: &quot;The older a page gets, the more it costs not to crawl it&quot;: expected age grows <em>faster</em> than linearly, so each extra day of waiting costs more than the last — sooner for pages with a large <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">λ</span></span></span></span>.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.3 Freshness</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#104-practice">§10.4</a></p>
+</blockquote>
+<h3 id="104-practice">10.4 Practice</h3>
+<h4 id="expected-age-for-one-change-per-week">Expected age for one change per week</h4>
+<p>With <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>1</mn><mi mathvariant="normal">/</mi><mn>7</mn></mrow><annotation encoding="application/x-tex">\lambda = 1/7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">λ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/7</span></span></span></span> changes per day, what is the expected age of a page 2, 4, 6 and 7 days after it was crawled?</p>
+<details>
+<summary>Solution</summary>
+
+<p>Integrating <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><msup><mi>e</mi><mrow><mo>−</mo><mi>λ</mi><mi>x</mi></mrow></msup><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\lambda e^{-\lambda x}(t - x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0991em;vertical-align:-0.25em;"></span><span class="mord mathnormal">λ</span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">λ</span><span class="mord mathnormal mtight">x</span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span> from 0 to <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span> gives <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext>Age</mtext><mo stretchy="false">(</mo><mi>λ</mi><mo separator="true">,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><mi>t</mi><mo>−</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>λ</mi><mi>t</mi></mrow></msup><mo stretchy="false">)</mo><mi mathvariant="normal">/</mi><mi>λ</mi></mrow><annotation encoding="application/x-tex">\text{Age}(\lambda, t) = t - (1 - e^{-\lambda t})/\lambda</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Age</span></span><span class="mopen">(</span><span class="mord mathnormal">λ</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6984em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0991em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">λ</span><span class="mord mathnormal mtight">t</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mord">/</span><span class="mord mathnormal">λ</span></span></span></span>:</p>
+<table>
+<thead>
+<tr>
+<th><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span> (days)</th>
+<th>1</th>
+<th>2</th>
+<th>4</th>
+<th>6</th>
+<th>7</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Expected age (days)</td>
+<td>0.07</td>
+<td>0.26</td>
+<td>0.95</td>
+<td>1.97</td>
+<td>2.58</td>
+</tr>
+</tbody></table>
+<p>The curve rises to about 2.5 at the right edge, bending upward; at <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">t = 7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">7</span></span></span></span> the age is exactly <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>7</mn><msup><mi>e</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">7e^{-1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">7</span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span>. Days 4→6 add ≈ 1 day of expected age; days 0→2 added only ≈ 0.26.</p>
+</details>
+
+<h2 id="11-distributed-crawling">11. Distributed Crawling</h2>
+<p>Three reasons to use multiple computers for crawling:</p>
+<ol>
+<li>It puts the crawler <strong>closer to the sites it crawls</strong> → lower network requirements.</li>
+<li>It <strong>reduces the number of sites each crawler has to remember</strong> → lower local memory requirements.</li>
+<li>It <strong>reduces the locally required resources</strong> in general.</li>
+</ol>
+<p>Distributed crawlers may use a <strong>hash function to assign URLs</strong> to computers/threads, computed on the <strong>host part</strong> of each URL — so one crawler owns each host and can keep it polite. The <code>CrawlerThread</code> pseudocode (<a href="#32-the-loop-the-frontier-and-the-pseudocode">§3.2</a>) takes the <code>frontier</code> as its argument for a reason: <strong>the frontier information should be shared</strong> (one seen-set, one politeness state).</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.7 Distributed Crawling</a></p>
+</blockquote>
+<h2 id="12-other-types-of-crawling-focused-desktop-document-feeds">12. Other Types of Crawling: Focused, Desktop, Document Feeds</h2>
+<p><strong>Focused crawling</strong> downloads only pages <strong>about a particular topic</strong> (or around specific events in time), for vertical search or to improve an engine on one topic. Pages on a topic tend to <strong>link to pages on the same topic</strong>; popular pages are the seeds (e.g. pages many users click after searching a keyword), and a <strong>text classifier</strong> decides whether a page is on topic.</p>
+<p><strong>Desktop crawls</strong>, for desktop and enterprise search, differ from web crawling: data is much easier to find (file system ~ sitemap); responding quickly to updates matters more; they must be conservative with disk, memory and CPU (transparent to the user); they must cope with many document formats; and data privacy matters much more.</p>
+<p><strong>Document feeds.</strong> Many documents are just <strong>published</strong> — created once and rarely updated (news, blog posts, press releases, e-mail). Published documents from one source form a sequence, a <strong>document feed</strong>; crawlers find new documents at <strong>the end of the feed</strong>. Two types:</p>
+<ul>
+<li>A <strong>push feed</strong> alerts the subscriber to new documents (e.g. news agencies). Push involves a subscription, e.g. <strong>WebSub</strong>.</li>
+<li>A <strong>pull feed</strong> requires the subscriber to check periodically for new documents. The most common pull format is <strong>RSS</strong> — Really Simple Syndication / RDF Site Summary / Rich Site Summary.</li>
+</ul>
+<p>An RSS example:</p>
+<div class="code-wrap"><pre data-language="xml" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&#x3C;?</span><span style="color:#569CD6">xml</span><span style="color:#9CDCFE"> version</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"1.0"</span><span style="color:#808080">?></span></span>
+<span class="line"><span style="color:#808080">&#x3C;</span><span style="color:#569CD6">rss</span><span style="color:#9CDCFE"> version</span><span style="color:#D4D4D4">=</span><span style="color:#CE9178">"2.0"</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;</span><span style="color:#569CD6">channel</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">title</span><span style="color:#808080">></span><span style="color:#D4D4D4">Search Engine News</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">title</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">link</span><span style="color:#808080">></span><span style="color:#D4D4D4">http://www.search-engine-news.org/</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">link</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">description</span><span style="color:#808080">></span><span style="color:#D4D4D4">News about search engines.</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">description</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">language</span><span style="color:#808080">></span><span style="color:#D4D4D4">en-us</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">language</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">pubDate</span><span style="color:#808080">></span><span style="color:#D4D4D4">Tue, 19 Jun 2008 05:17:00 GMT</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">pubDate</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">ttl</span><span style="color:#808080">></span><span style="color:#D4D4D4">60</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">ttl</span><span style="color:#808080">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">title</span><span style="color:#808080">></span><span style="color:#D4D4D4">Upcoming SIGIR Conference</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">title</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">link</span><span style="color:#808080">></span><span style="color:#D4D4D4">http://www.sigir.org/conference</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">link</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">description</span><span style="color:#808080">></span><span style="color:#D4D4D4">The annual SIGIR conference is coming!</span></span>
+<span class="line"><span style="color:#D4D4D4">        Mark your calendars and check for cheap</span></span>
+<span class="line"><span style="color:#D4D4D4">        flights.</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">description</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">pubDate</span><span style="color:#808080">></span><span style="color:#D4D4D4">Tue, 05 Jun 2008 09:50:11 GMT</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">pubDate</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">guid</span><span style="color:#808080">></span><span style="color:#D4D4D4">http://search-engine-news.org#500</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">guid</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;/</span><span style="color:#569CD6">item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#D4D4D4">    ...</span></span>
+<span class="line"><span style="color:#808080">    &#x3C;</span><span style="color:#569CD6">item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">title</span><span style="color:#808080">></span><span style="color:#D4D4D4">New Search Engine Textbook</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">title</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">link</span><span style="color:#808080">></span><span style="color:#D4D4D4">http://www.cs.umass.edu/search-book</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">link</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">description</span><span style="color:#808080">></span><span style="color:#D4D4D4">A new textbook about search engines</span></span>
+<span class="line"><span style="color:#D4D4D4">        will be published soon.</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">description</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">pubDate</span><span style="color:#808080">></span><span style="color:#D4D4D4">Tue, 05 Jun 2008 09:33:01 GMT</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">pubDate</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">      &#x3C;</span><span style="color:#569CD6">guid</span><span style="color:#808080">></span><span style="color:#D4D4D4">http://search-engine-news.org#499</span><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">guid</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">    &#x3C;/</span><span style="color:#569CD6">item</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">  &#x3C;/</span><span style="color:#569CD6">channel</span><span style="color:#808080">></span></span>
+<span class="line"><span style="color:#808080">&#x3C;/</span><span style="color:#569CD6">rss</span><span style="color:#808080">></span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Everything before the first <code>&lt;item&gt;</code> is the <strong>feed channel info</strong>; each <code>&lt;item&gt;</code> is <strong>item info</strong>; the <code>&lt;pubDate&gt;</code>s and <code>&lt;ttl&gt;</code> are what the crawler reads. For crawlers:</p>
+<ul>
+<li><code>&lt;ttl&gt;</code> (time to live) is how long, <strong>in minutes</strong>, the contents should be cached — here 60.</li>
+<li>Feeds are accessed like web pages, with HTTP <code>GET</code>; use <code>HEAD</code> to check whether the feed changed.</li>
+<li>Feeds are easy to parse (just XML), and new information is easy to find: <code>GET</code>, parse, and grab any new <code>&lt;item&gt;</code> … <code>&lt;/item&gt;</code> entries.</li>
+</ul>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="https://www.w3.org/TR/websub/">W3C WebSub</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.2.4 Focused Crawling</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.3 Crawling Documents and Email</a> · <a href="https://ciir.cs.umass.edu/downloads/SEIRiP.pdf">Croft §3.4 Document Feeds</a></p>
+</blockquote>
+<h2 id="13-ethics-and-the-law">13. Ethics and the Law</h2>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: <strong>&quot;Just because you can, doesn&#39;t mean you should.&quot;</strong> This is the main point of the whole ethics discussion.</p>
+</blockquote>
+<h3 id="131-guidelines-for-bot-writers">13.1 Guidelines for bot writers</h3>
+<p>An old (1993!) but still very relevant text from robotstxt.org:</p>
+<table>
+<thead>
+<tr>
+<th>Guideline</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Reconsider</strong></td>
+<td>Do you really need a bot?</td>
+</tr>
+<tr>
+<td><strong>Be accountable</strong></td>
+<td>If your actions cause problems, be available to take prompt action in response</td>
+</tr>
+<tr>
+<td><strong>Test locally</strong></td>
+<td>Expand the scope gradually before you unleash your crawler on others</td>
+</tr>
+<tr>
+<td><strong>Don&#39;t hog resources</strong></td>
+<td>Web servers are for people primarily. Walk, don&#39;t run</td>
+</tr>
+<tr>
+<td><strong>Stay with it</strong></td>
+<td>&quot;It&#39;s vital to know what your robot is doing, and that it remains under control&quot;</td>
+</tr>
+</tbody></table>
+<p>Also <strong>find out the site&#39;s crawling policy</strong> and <strong>contact the web admins</strong>. An example policy is GitHub&#39;s §5 &quot;Scraping and API Usage Restrictions&quot;: researchers may scrape public, non-personal information <em>if</em> their publications are open access; archivists may scrape public data; scraping for spam or to sell user personal information (to recruiters, headhunters, job boards) is forbidden; all use must follow GitHub&#39;s Privacy Statement.</p>
+<h3 id="132-ethics-is-bigger-than-law">13.2 Ethics is bigger than law</h3>
+<p><em>Laws</em> is a small circle inside the large circle of <em>Ethical Issues</em>: much that is legal is still unethical.</p>
+<h3 id="133-the-web-and-the-law">13.3 The Web and the law</h3>
+<p>The Web is only about three decades old — a &quot;Wild Wild West (or Wild Wild Web…)&quot; with very few laws, untested or outdated, so <strong>your own judgments and actions matter</strong>. It was born at CERN for physics research: Tim Berners-Lee&#39;s 1989 proposal addresses the loss of information about complex evolving systems at CERN with a distributed hypertext system. A copy of the first website from about 1993 is still online, as is a 1993 NeXT browser screenshot.</p>
+<h3 id="134-the-first-web-search-engines">13.4 The first web search engines</h3>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Engine</th>
+<th>What was new</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1993</td>
+<td>W3Catalogue</td>
+<td>Primitive catalogue</td>
+</tr>
+<tr>
+<td>1993</td>
+<td>World Wide Web Wanderer</td>
+<td>First web crawler, built to measure the size of the web</td>
+</tr>
+<tr>
+<td>1993</td>
+<td>JumpStation</td>
+<td>Crawling, indexing, searching: first &quot;modern&quot; engine</td>
+</tr>
+<tr>
+<td>1994</td>
+<td>Excite</td>
+<td>Search engine of the early commercial web</td>
+</tr>
+<tr>
+<td>1994</td>
+<td>WebCrawler</td>
+<td>Full-text indexing</td>
+</tr>
+<tr>
+<td>1996</td>
+<td>RankDex</td>
+<td>Link-based ranking that inspired Google&#39;s PageRank</td>
+</tr>
+</tbody></table>
+<p>(JumpStation is sometimes listed as &quot;JumpSearch&quot;; its search page was titled &quot;NCSA Mosaic – JumpStation II Document Search Page&quot;. RankDex&#39;s link-based ranking is the ancestor of the PageRank in <a href="/notes/cs-121/topic-link-analysis/en-US/">Link Analysis: HITS &amp; PageRank</a>.)</p>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="http://www.robotstxt.org/guidelines.html">robotstxt.org: Guidelines for robot writers</a> · <a href="https://help.github.com/en/github/site-policy/github-acceptable-use-policies#5-scraping-and-api-usage-restrictions">GitHub: scraping and API usage restrictions</a> · <a href="https://www.w3.org/History/1989/proposal.html">Berners-Lee&#39;s 1989 proposal</a> · <a href="http://info.cern.ch/hypertext/WWW/TheProject.html">The first website</a> · <a href="http://info.cern.ch/NextBrowser1.html">NeXT browser screenshot, 1993</a></p>
+</blockquote>
+<h2 id="14-privacy-what-your-crawler-leaves-behind">14. Privacy: What Your Crawler Leaves Behind</h2>
+<p>Privacy runs both ways: <strong>users</strong> and <strong>providers</strong> can each harm the other, through <strong>personal information (privacy)</strong> and through <strong>content (security)</strong>. Sites may publish <strong>privacy statements</strong> — what they collect and how it&#39;s used. Your crawler is on the record too: every request lands in the web server&#39;s access log, e.g. Apache lines like these:</p>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">66.249.66.18 - - [25/Jan/2012:00:18:27 -0800] &quot;GET /xwiki/bin/export/Stats/CurrentYearActivity?format=rtf HTTP/1.1&quot; 404 335 &quot;-&quot; &quot;Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)&quot;
+180.76.6.28 - - [25/Jan/2012:00:18:31 -0800] &quot;GET / HTTP/1.1&quot; 200 45 &quot;-&quot; &quot;Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)&quot;
+66.249.66.18 - - [25/Jan/2012:00:19:02 -0800] &quot;GET /calswim/coverage-s1.png HTTP/1.1&quot; 200 961543 &quot;-&quot; &quot;Googlebot-Image/1.0&quot;
+173.192.98.90 - - [25/Jan/2012:00:33:00 -0800] &quot;GET / HTTP/1.1&quot; 404 290 &quot;-&quot; &quot;Python-urllib/2.4&quot;
+80.165.186.186 - - [25/Jan/2012:01:21:24 -0800] &quot;GET /events-dataset-api/ HTTP/1.1&quot; 200 3214 &quot;http://www.kdnuggets.com/datasets/index.html&quot; &quot;Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1&quot;
+180.76.5.65 - - [25/Jan/2012:02:18:20 -0800] &quot;GET / HTTP/1.1&quot; 200 45 &quot;-&quot; &quot;Mozilla/5.0 (compatible; Baiduspider/2.0; …</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<p>Each line records client <strong>IP</strong>, <strong>time</strong>, <strong>request</strong>, <strong>status</strong>, <strong>bytes</strong>, <strong>referrer</strong> and <strong>user agent</strong>. Googlebot and Baiduspider identify themselves with a URL; <code>Python-urllib/2.4</code> is an anonymous script; the Firefox line is a person coming from KDnuggets. The admin sees who crawls what, how often.</p>
+<blockquote>
+<p>💡 <strong>Key Insight</strong>: Give your crawler an honest, identifying User-Agent. The log line is how a web admin decides whether to contact you or to block you.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="http://uci.edu/privacy.php">UCI privacy statement</a></p>
+</blockquote>
+<blockquote>
+<p>📝 <strong>Practice</strong>: <a href="#141-practice">§14.1</a></p>
+</blockquote>
+<h3 id="141-practice">14.1 Practice</h3>
+<h4 id="reading-an-apache-log-line">Reading an Apache log line</h4>
+<p>Split <code>80.165.186.186 - - [25/Jan/2012:01:21:24 -0800] &quot;GET /events-dataset-api/ HTTP/1.1&quot; 200 3214 &quot;http://www.kdnuggets.com/datasets/index.html&quot; &quot;Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1&quot;</code> into fields. Is it a bot? (For comparison, another line of the same log has the user agent <code>Python-urllib/2.4</code>, request <code>GET / HTTP/1.1</code>, and the referrer <code>&quot;-&quot;</code>.)</p>
+<details>
+<summary>Solution</summary>
+
+<p>Parsed with a combined-log-format regex:</p>
+<div class="code-wrap"><pre data-language="python" class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> re</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D4D4D4">line = (</span><span style="color:#CE9178">'80.165.186.186 - - [25/Jan/2012:01:21:24 -0800] "GET /events-dataset-api/ HTTP/1.1" 200 3214 '</span></span>
+<span class="line"><span style="color:#CE9178">        '"http://www.kdnuggets.com/datasets/index.html" '</span></span>
+<span class="line"><span style="color:#CE9178">        '"Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1"'</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">pat = re.compile(</span><span style="color:#569CD6">r</span><span style="color:#D16969">'</span><span style="color:#CE9178">(</span><span style="color:#D16969">\S</span><span style="color:#D7BA7D">+</span><span style="color:#CE9178">)</span><span style="color:#CE9178"> (</span><span style="color:#D16969">\S</span><span style="color:#D7BA7D">+</span><span style="color:#CE9178">)</span><span style="color:#CE9178"> (</span><span style="color:#D16969">\S</span><span style="color:#D7BA7D">+</span><span style="color:#CE9178">)</span><span style="color:#D7BA7D"> \[</span><span style="color:#CE9178">([^</span><span style="color:#D7BA7D">\]</span><span style="color:#CE9178">]</span><span style="color:#D7BA7D">+</span><span style="color:#CE9178">)</span><span style="color:#D7BA7D">\]</span><span style="color:#D16969"> "</span><span style="color:#CE9178">([^</span><span style="color:#D16969">"</span><span style="color:#CE9178">]</span><span style="color:#D7BA7D">*</span><span style="color:#CE9178">)</span><span style="color:#D16969">" </span><span style="color:#CE9178">(</span><span style="color:#D16969">\d</span><span style="color:#D7BA7D">+</span><span style="color:#CE9178">)</span><span style="color:#CE9178"> (</span><span style="color:#D16969">\d</span><span style="color:#D7BA7D">+</span><span style="color:#D4D4D4">|</span><span style="color:#D16969">-</span><span style="color:#CE9178">)</span><span style="color:#D16969"> "</span><span style="color:#CE9178">([^</span><span style="color:#D16969">"</span><span style="color:#CE9178">]</span><span style="color:#D7BA7D">*</span><span style="color:#CE9178">)</span><span style="color:#D16969">" "</span><span style="color:#CE9178">([^</span><span style="color:#D16969">"</span><span style="color:#CE9178">]</span><span style="color:#D7BA7D">*</span><span style="color:#CE9178">)</span><span style="color:#D16969">"'</span><span style="color:#D4D4D4">)</span></span>
+<span class="line"><span style="color:#D4D4D4">names = [</span><span style="color:#CE9178">"ip"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"ident"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"user"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"time"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"request"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"status"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"bytes"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"referrer"</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">"user agent"</span><span style="color:#D4D4D4">]</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> name, v </span><span style="color:#C586C0">in</span><span style="color:#DCDCAA"> zip</span><span style="color:#D4D4D4">(names, pat.match(line).groups()):</span></span>
+<span class="line"><span style="color:#DCDCAA">    print</span><span style="color:#D4D4D4">(</span><span style="color:#569CD6">f</span><span style="color:#CE9178">"</span><span style="color:#569CD6">{</span><span style="color:#D4D4D4">name</span><span style="color:#569CD6">:10}</span><span style="color:#569CD6"> {</span><span style="color:#D4D4D4">v</span><span style="color:#569CD6">}</span><span style="color:#CE9178">"</span><span style="color:#D4D4D4">)</span></span></code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<div class="code-wrap"><pre data-language="text"><code class="language-text">ip         80.165.186.186
+ident      -
+user       -
+time       25/Jan/2012:01:21:24 -0800
+request    GET /events-dataset-api/ HTTP/1.1
+status     200
+bytes      3214
+referrer   http://www.kdnuggets.com/datasets/index.html
+user agent Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1</code></pre><button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Client IP</td>
+<td><code>80.165.186.186</code></td>
+</tr>
+<tr>
+<td>Identity, user</td>
+<td><code>-</code>, <code>-</code> (unknown)</td>
+</tr>
+<tr>
+<td>Time</td>
+<td><code>25/Jan/2012:01:21:24 -0800</code></td>
+</tr>
+<tr>
+<td>Request</td>
+<td><code>GET /events-dataset-api/ HTTP/1.1</code></td>
+</tr>
+<tr>
+<td>Status</td>
+<td><code>200</code> (OK)</td>
+</tr>
+<tr>
+<td>Bytes</td>
+<td><code>3214</code></td>
+</tr>
+<tr>
+<td>Referrer</td>
+<td><code>http://www.kdnuggets.com/datasets/index.html</code></td>
+</tr>
+<tr>
+<td>User agent</td>
+<td>Firefox 9.0.1 on Windows NT 5.1</td>
+</tr>
+</tbody></table>
+<p>A person, not a bot: a browser user agent, arriving from a KDnuggets link (the referrer). Compare the <code>Python-urllib/2.4</code> line: no referrer, a bare library user agent — a script that doesn&#39;t say who runs it.</p>
+</details>
+
+<h2 id="15-copyright-fair-use-and-legal-cases">15. Copyright, Fair Use and Legal Cases</h2>
+<p><strong>Copyright.</strong> Products of intellect — web content, source code — are ruled by copyright law: &quot;a form of protection grounded in the U.S. Constitution and granted by law for original works of authorship fixed in a tangible medium of expression&quot;, published or not (copyright.gov). So can you use web material?</p>
+<p><strong>Fair use.</strong> Reproduction may be considered fair for purposes such as <strong>criticism, comment, news, teaching, scholarship, research</strong> — but it&#39;s a very grey area. Four factors decide whether a particular use is fair:</p>
+<ol>
+<li>The <strong>purpose and character</strong> of the use, including whether it&#39;s commercial or for nonprofit educational purposes.</li>
+<li>The <strong>nature</strong> of the copyrighted work.</li>
+<li>The <strong>amount and substantiality</strong> of the portion used, relative to the work as a whole.</li>
+<li>The <strong>effect on the potential market</strong> for, or value of, the work.</li>
+</ol>
+<p><strong>Legal cases.</strong> Both were won on <strong>&quot;trespass to chattels&quot;</strong>: interfering with someone else&#39;s property, here their computer systems.</p>
+<table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Date</th>
+<th>What happened</th>
+<th>Finding</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>eBay vs. Bidder&#39;s Edge</td>
+<td>May 24, 2000</td>
+<td>eBay stopped Bidder&#39;s Edge&#39;s crawlers</td>
+<td>Intentional, unauthorized interference with eBay&#39;s computer system that caused damage</td>
+</tr>
+<tr>
+<td>American Airlines vs. FareChase</td>
+<td>Mar 10, 2003</td>
+<td>AA stopped FareChase scraping AA.com &quot;web fares&quot; (fare comparison)</td>
+<td>Intentional, without consent; harms AA&#39;s network and property. Settled later that year</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>⚠️ <strong>Pitfall</strong>: Both cases were about <strong>crawling</strong> (load on, and unauthorized use of, the servers), not about copying text. Respecting robots.txt and politeness is the legal side of the story too, not just good manners.</p>
+</blockquote>
+<blockquote>
+<p>📘 <strong>Going further</strong>: <a href="http://www.copyright.gov">copyright.gov</a> · <a href="https://www.copyright.gov/help/faq/faq-general.html">Copyright FAQ</a> · <a href="https://www.copyright.gov/fls/fl102.html">Fair use (FL-102)</a> · <a href="https://law.justia.com/cases/federal/district-courts/FSupp2/100/1058/2478126/">eBay v. Bidder&#39;s Edge (Justia)</a> · <a href="https://www.eff.org/document/preliminary-injunction-american-airlines-v-farechase-inc">AA v. FareChase injunction (EFF)</a></p>
+</blockquote>
+<h2 id="16-quick-reference--top-5-things-to-remember">16. Quick Reference &amp; Top 5 Things to Remember</h2>
+<table>
+<thead>
+<tr>
+<th>robots.txt</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>User-agent: Name</code></td>
+<td>Group for that bot; if present, <strong>only</strong> its rules apply to it</td>
+</tr>
+<tr>
+<td><code>Disallow: /</code> / <code>Disallow:</code></td>
+<td>Block everything / block nothing</td>
+</tr>
+<tr>
+<td><code>Disallow: /tmp/</code></td>
+<td>Block paths starting with <code>/tmp/</code></td>
+</tr>
+<tr>
+<td><code>Allow: /audio/podcasts/</code> under <code>Disallow: /audio/</code></td>
+<td>Re-opens one resource in a closed folder (longest match wins)</td>
+</tr>
+<tr>
+<td><code>Sitemap: URL</code></td>
+<td>Where the sitemaps are</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Crawler problem</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Impolite</td>
+<td>Artificial delays per host; enforce in <code>nextSite()</code> / <code>nextURL()</code></td>
+</tr>
+<tr>
+<td>Slow (waiting on the network, DNS)</td>
+<td>Threads / distributed crawling; cache DNS</td>
+</tr>
+<tr>
+<td>Traps</td>
+<td>Honor robots.txt; watch for ever-changing URLs (e.g. the ICS calendar)</td>
+</tr>
+<tr>
+<td>Duplicates</td>
+<td>Hashes/checksums (exact), fingerprints (near)</td>
+</tr>
+<tr>
+<td>Noise</td>
+<td>Content blocks: cumulative tag distribution</td>
+</tr>
+<tr>
+<td>Client-side scripting</td>
+<td>User-interaction emulation (Selenium) — most crawlers skip it</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>URL / URN / URI</td>
+<td>Where a resource is / what it is / either (the umbrella term)</td>
+</tr>
+<tr>
+<td>Frontier</td>
+<td>Queue of URLs still to crawl; starts with the seeds</td>
+</tr>
+<tr>
+<td><code>HEAD</code></td>
+<td>HTTP request for headers only (<code>Last-Modified</code>)</td>
+</tr>
+<tr>
+<td>Freshness</td>
+<td>Fraction of the collection that is up to date</td>
+</tr>
+<tr>
+<td>Age</td>
+<td>How long a copy has been out of date; <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext>Age</mtext><mo stretchy="false">(</mo><mi>λ</mi><mo separator="true">,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><msubsup><mo>∫</mo><mn>0</mn><mi>t</mi></msubsup><mi>λ</mi><msup><mi>e</mi><mrow><mo>−</mo><mi>λ</mi><mi>x</mi></mrow></msup><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><mi>x</mi><mo stretchy="false">)</mo><mtext> </mtext><mi>d</mi><mi>x</mi></mrow><annotation encoding="application/x-tex">\text{Age}(\lambda,t) = \int_0^t \lambda e^{-\lambda x}(t-x)\,dx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Age</span></span><span class="mopen">(</span><span class="mord mathnormal">λ</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.3443em;vertical-align:-0.3558em;"></span><span class="mop"><span class="mop op-symbol small-op" style="margin-right:0.19445em;position:relative;top:-0.0006em;">∫</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.9885em;"><span style="top:-2.3442em;margin-left:-0.1945em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span><span style="top:-3.2579em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3558em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">λ</span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">λ</span><span class="mord mathnormal mtight">x</span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">d</span><span class="mord mathnormal">x</span></span></span></span></td>
+</tr>
+<tr>
+<td>Distributed crawl</td>
+<td>Hash the <strong>host</strong> → crawler; share the frontier</td>
+</tr>
+<tr>
+<td>Push / pull feed</td>
+<td>Publisher alerts you (WebSub) / you poll (RSS, <code>&lt;ttl&gt;</code> in minutes)</td>
+</tr>
+<tr>
+<td>Deep web</td>
+<td>Behind logins, scripts, or unlinked; 400–500× the shallow web</td>
+</tr>
+<tr>
+<td>Trespass to chattels</td>
+<td>The claim in eBay v. Bidder&#39;s Edge and AA v. FareChase</td>
+</tr>
+</tbody></table>
+<p><strong>Top 5 things to remember</strong></p>
+<ol>
+<li>Crawl loop: frontier → permitted? → fetch → store → extract → add the <strong>unseen</strong> links (resolve relative URLs first); politeness lives in <code>nextSite()</code>/<code>nextURL()</code>.</li>
+<li>robots.txt: a bot-specific group overrides <code>*</code> completely; <code>Allow</code> inside a <code>Disallow</code>ed folder wins by <strong>longest match</strong>; and it&#39;s honor-based, not security.</li>
+<li>Crawling is I/O-bound: 1M pages × 500 ms ≈ 5.8 days on one thread, so use many threads — and stay polite per host.</li>
+<li>Optimizing <strong>freshness</strong> can make you abandon fast-changing sites; <strong>age</strong> grows faster than linearly with time since the last crawl.</li>
+<li>&quot;Just because you can, doesn&#39;t mean you should&quot;: follow the bot-writer guidelines, identify your bot, and remember that both legal cases were about crawling (trespass to chattels).</li>
+</ol>
+</article></div><nav class="note-pager" aria-label="Note navigation" data-astro-cid-gxyjxt6l><a class="card interactive pager-card pager-prev" href="/notes/cs-121/topic-search-engines/en-US/" rel="prev" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Previous · Topic · Search Engines &amp; the Web</span><span class="pager-title" data-astro-cid-gxyjxt6l>Search Engines &amp; the Web</span></a><a class="card interactive pager-card pager-next" href="/notes/cs-121/topic-documents/en-US/" rel="next" data-astro-cid-gxyjxt6l><span class="pager-dir" data-astro-cid-gxyjxt6l>Topic · Document Conversion, Storage &amp; Duplicates · Next<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="pager-title" data-astro-cid-gxyjxt6l>Document Conversion, Storage &amp; Duplicates</span></a></nav><p class="pager-hint" data-astro-cid-gxyjxt6l>Shortcuts<span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>[</kbd> Previous</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>]</kbd> Next</span><span data-astro-cid-gxyjxt6l><kbd data-astro-cid-gxyjxt6l>L</kbd> Switch language</span></p></div></section></main><div id="toc-sidebar" hidden data-astro-cid-gxyjxt6l><div class="toc-marks" id="toc-marks" data-astro-cid-gxyjxt6l><div class="toc-marks-icon" title="Table of Contents" data-astro-cid-gxyjxt6l>≡</div><div class="toc-marks-track" id="toc-marks-track" data-astro-cid-gxyjxt6l></div></div><div class="toc-panel" id="toc-panel" data-astro-cid-gxyjxt6l></div></div><button id="back-to-top" aria-label="Back to top" data-astro-cid-gxyjxt6l><svg viewBox="0 0 24 24" data-astro-cid-gxyjxt6l><polyline points="18 15 12 9 6 15" data-astro-cid-gxyjxt6l></polyline></svg>Top</button><script type="module" src="/_astro/NoteReader.astro_astro_type_script_index_0_lang.C9lxm8KA.js"></script><footer class="foot"><span>© 2026 Kazuha Hub · Kazuha Mo</span><span>Email: <a href="mailto:kazuhak@uci.edu">kazuhak@uci.edu</a> · <a href="https://github.com/KKazuhaK" target="_blank" rel="noopener">GitHub</a></span></footer></div><script src="/assets/js/bento.js" defer></script><script src="/assets/js/chat-widget.js" defer></script></body></html>
